@@ -61,7 +61,7 @@ SAVE_DIR      = "models/stage1"
 LOG_DIR       = "logs/stage1"
 
 
-def make_env(seed: int = SEED) -> WirelessEnv:
+def make_env(seed: int = SEED, channel_mode: str = "mock") -> WirelessEnv:
     config = EnvironmentConfig(
         legitimate=AgentSpec(
             role=AgentRole.LEGITIMATE,
@@ -78,7 +78,7 @@ def make_env(seed: int = SEED) -> WirelessEnv:
             max_power_dbm=30.0,
             policy=None,  # RL controls this side
         ),
-        channel_mode="mock",
+        channel_mode=channel_mode,
         max_steps=200,
         seed=seed,
     )
@@ -92,27 +92,47 @@ def make_env(seed: int = SEED) -> WirelessEnv:
 # Custom callback: log mean SINR (jammer's primary metric)
 # ---------------------------------------------------------------------------
 
-class SINRLoggingCallback(BaseCallback):
+class MetricsCallback(BaseCallback):
     """
-    Logs mean SINR from info["mean_sinr_db"] to TensorBoard.
-    We log SINR (not just reward) to separate the signal from the reward shaping.
+    Tracks episode reward and mean SINR throughout training.
+    Saves to a .npz file at the end so plot_stage1.py can read it.
+    Also logs to TensorBoard if available.
     """
 
-    def __init__(self, verbose=0):
+    def __init__(self, save_path: str, verbose=0):
         super().__init__(verbose)
-        self._sinr_buffer = []
+        self.save_path = save_path
+        self._ep_rewards: list[float] = []
+        self._ep_sinr:    list[float] = []
+        self._ep_steps:   list[int]   = []
+        self._sinr_buf:   list[float] = []
 
     def _on_step(self) -> bool:
         for info in self.locals.get("infos", []):
             sinr = info.get("mean_sinr_db")
             if sinr is not None:
-                self._sinr_buffer.append(sinr)
-        if len(self._sinr_buffer) >= 100:
-            self.logger.record(
-                "custom/mean_sinr_db", np.mean(self._sinr_buffer)
-            )
-            self._sinr_buffer.clear()
+                self._sinr_buf.append(sinr)
+            # Monitor wraps episode end in "episode" key
+            ep = info.get("episode")
+            if ep is not None:
+                self._ep_rewards.append(float(ep["r"]))
+                self._ep_sinr.append(
+                    float(np.mean(self._sinr_buf)) if self._sinr_buf else float("nan")
+                )
+                self._ep_steps.append(self.num_timesteps)
+                self._sinr_buf.clear()
+                if _tb_available():
+                    self.logger.record("custom/mean_sinr_db", self._ep_sinr[-1])
         return True
+
+    def _on_training_end(self) -> None:
+        np.savez(
+            self.save_path,
+            steps=np.array(self._ep_steps),
+            ep_rewards=np.array(self._ep_rewards),
+            ep_sinr=np.array(self._ep_sinr),
+        )
+        print(f"  Metrics saved → {self.save_path}.npz")
 
 
 # ---------------------------------------------------------------------------
@@ -123,15 +143,17 @@ def train(args):
     os.makedirs(SAVE_DIR, exist_ok=True)
     os.makedirs(LOG_DIR, exist_ok=True)
 
+    ch = getattr(args, "channel_mode", "mock")
+
     # Training env (vectorized for SB3)
     train_env = make_vec_env(
-        lambda: Monitor(make_env(seed=SEED)),
+        lambda: Monitor(make_env(seed=SEED, channel_mode=ch)),
         n_envs=args.n_envs,
         seed=SEED,
     )
 
     # Separate env for evaluation (not used in training updates)
-    eval_env = Monitor(make_env(seed=SEED + 1))
+    eval_env = Monitor(make_env(seed=SEED + 1, channel_mode=ch))
 
     model = PPO(
         policy="MlpPolicy",
@@ -149,8 +171,9 @@ def train(args):
         seed=SEED,
     )
 
+    metrics_path = os.path.join(LOG_DIR, "metrics")
     callbacks = [
-        SINRLoggingCallback(),
+        MetricsCallback(save_path=metrics_path),
         EvalCallback(
             eval_env,
             best_model_save_path=os.path.join(SAVE_DIR, "best"),
@@ -182,6 +205,18 @@ def train(args):
 
     train_env.close()
     eval_env.close()
+
+    # Auto-generate plots
+    from simulations.plot_stage1 import generate_all
+    best_path = os.path.join(SAVE_DIR, "best", "best_model")
+    eval_model = best_path if os.path.exists(best_path + ".zip") else final_path
+    generate_all(
+        model_path=eval_model,
+        metrics_path=metrics_path + ".npz",
+        out_dir="plots/stage1",
+        channel_mode=args.channel_mode if hasattr(args, "channel_mode") else "mock",
+    )
+
     return model
 
 
@@ -225,6 +260,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--total-steps", type=int, default=TRAIN_STEPS)
     parser.add_argument("--n-envs", type=int, default=4)
+    parser.add_argument("--channel-mode", default="mock", choices=["mock", "sionna"],
+                        help="Channel model (mock=local dev, sionna=Colab/Euler)")
     parser.add_argument("--eval-only", type=str, default=None,
                         help="Path to saved model — skip training and just evaluate")
     args = parser.parse_args()
