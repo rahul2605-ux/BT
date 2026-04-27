@@ -70,9 +70,9 @@ Goal: outperform baselines in at least one well-defined scenario.
 
 | Where | Channel | GPU | When |
 |---|---|---|---|
-| MacBook (local) | `MockChannel` | None (NumPy only) | Editing, testing |
-| Google Colab | `MockChannel` → `SionnaChannel` | Free T4 | Training runs |
-| ETH Euler HPC | `SionnaChannel` | A100 | Production scale |
+| MacBook (local) | `MockChannel` | None (NumPy only) | Editing, unit tests |
+| Google Colab | `SionnaChannel` CDL-D | Free T4 | All training (Stage 1+) |
+| ETH Euler HPC | `SionnaChannel` CDL-D | A100 | Large-scale / long runs only |
 
 **Running locally:**
 ```bash
@@ -222,7 +222,7 @@ compute_sinr(tx_positions, rx_positions, jam_positions,
 - Aggregates TX signal, per-subcarrier jammer interference, and thermal noise
 - Handles zero jammers (empty arrays) correctly
 
-**`SionnaChannel`** — Euler only (not yet implemented):
+**`SionnaChannel`** — Colab + Euler (`channel/sionna_channel.py`, Sionna 2.x / PyTorch):
 - CDL-D fading profile (LOS-dominant, suited for UAV scenarios)
 - Use `sionna.channel.tr38901.CDL` with profile `"D"`
 - Positions updated every step → Sionna recomputes coefficients + Doppler
@@ -338,7 +338,7 @@ Phase 1 — Stage 1 Baselines
   1.2  Logging — wandb or tensorboard: reward, mean SINR, episode length
   1.3  True multi-agent: per-jammer obs/action dict interface (Nj > 1)
   1.4  CTDE: add centralized critic seeing full global state
-  1.5  Validate on Euler with SionnaChannel + CDL-D
+  1.5  Long runs on Euler if Colab T4 time limits are hit
 
 Phase 2 — Weakness Analysis
   2.1  Shuffle teammate ordering → measure SINR degradation
@@ -387,7 +387,7 @@ Phase 4 — Write-up
 | `stable-baselines3` | PPO training | Phase 1.1+ |
 | `matplotlib` | Simulation plots | Local + Colab |
 | `pytest` | Unit tests | Local |
-| `sionna` | CDL-D channel simulation | Euler only |
+| `sionna>=2.0` | CDL-D channel simulation (PyTorch backend) | Colab + Euler |
 | `torch` | Neural network backend | Colab + Euler |
 
 Conda env: **`sionna-thesis`** (Python 3.11, gymnasium 1.2.3, matplotlib 3.10.8)

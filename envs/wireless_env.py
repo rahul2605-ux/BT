@@ -36,12 +36,12 @@ def _build_channel(config: EnvironmentConfig) -> BaseChannel:
     if config.channel_mode == "mock":
         return MockChannel(seed=config.seed)
     elif config.channel_mode == "sionna":
-        # Import only when needed — Sionna requires GPU (Euler cluster)
-        # from channel.sionna_channel import SionnaChannel
-        # return SionnaChannel(config)
-        raise NotImplementedError(
-            "SionnaChannel is not yet implemented. "
-            "Use channel_mode='mock' for local and Colab development."
+        from channel.sionna_channel import SionnaChannel
+        return SionnaChannel(
+            carrier_frequency_hz=config.legitimate.ofdm.carrier_frequency_hz,
+            n_subcarriers=config.legitimate.ofdm.n_subcarriers,
+            subcarrier_spacing_hz=config.legitimate.ofdm.subcarrier_spacing_hz,
+            seed=config.seed,
         )
     else:
         raise ValueError(f"Unknown channel_mode: {config.channel_mode!r}")
