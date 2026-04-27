@@ -59,10 +59,10 @@ class SionnaChannel(BaseChannel):
         delay_spread_s: float = 30e-9,
         alpha: float = 3.5,
         pl0_db: float = 40.0,
-        device: str | None = None,
         seed: int | None = None,
     ):
         import torch
+        from sionna.phy import config as sionna_config
         from sionna.phy.channel.tr38901 import CDL, PanelArray
 
         self.carrier_freq        = carrier_frequency_hz
@@ -72,19 +72,8 @@ class SionnaChannel(BaseChannel):
         self.alpha               = alpha
         self.pl0_db              = pl0_db
 
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.device = device
-
         if seed is not None:
             torch.manual_seed(seed)
-
-        # Subcarrier frequency offsets from carrier centre  (N_sub,)
-        self._freq_offsets = torch.tensor(
-            (np.arange(n_subcarriers) - n_subcarriers // 2) * subcarrier_spacing_hz,
-            dtype=torch.float32,
-            device=self.device,
-        )
 
         # Single isotropic panel at UT and BS — no MIMO / beamforming in Stage 1
         _array = PanelArray(
@@ -95,6 +84,8 @@ class SionnaChannel(BaseChannel):
             antenna_pattern="38.901",
             carrier_frequency=carrier_frequency_hz,
         )
+        # Pass device=None — let Sionna pick from its own available_devices registry.
+        # On CPU-only machines that's "cpu"; on Colab/Euler with CUDA it auto-selects GPU.
         self._cdl = CDL(
             model="D",
             delay_spread=delay_spread_s,
@@ -104,7 +95,18 @@ class SionnaChannel(BaseChannel):
             direction="uplink",
             min_speed=0.0,
             max_speed=0.0,
-            device=device,
+            device=None,   # Sionna auto-selects; don't pass torch-style "cuda"
+        )
+
+        # Resolve the actual device Sionna chose, then use it for our tensors
+        self.device = sionna_config.device   # e.g. "cpu" or "gpu"
+        torch_device = "cuda" if self.device != "cpu" else "cpu"
+
+        # Subcarrier frequency offsets from carrier centre  (N_sub,)
+        self._freq_offsets = torch.tensor(
+            (np.arange(n_subcarriers) - n_subcarriers // 2) * subcarrier_spacing_hz,
+            dtype=torch.float32,
+            device=torch_device,
         )
 
         print(f"[SionnaChannel] CDL-D ready on {self.device} | "
