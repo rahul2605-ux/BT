@@ -3,7 +3,7 @@
 **Program:** BSc Informatik, FS26 (Spring 2026)
 **Author:** Rahul Rahman (`rrahman` / `rulecito`)
 **Supervisor:** Antonio Di Maio (ADM)
-**Last updated:** 2026-04-27
+**Last updated:** 2026-04-30
 
 ---
 
@@ -27,9 +27,8 @@ Each jammer:                         Adapt position + freq + power
   → structured jam waveform
 
          ↕  CDL-D fading channel (NVIDIA Sionna 2.x)
-             non-stationary: positions update each step
-             → Sionna recomputes channel coefficients,
-               path loss, Doppler each timestep
+             complex channel coefficients H ∈ C^(N_rx × N_sub)
+             positions update each step → new realization each step
 ```
 
 **Primary metric:** SINR per subcarrier, spectral efficiency
@@ -39,25 +38,23 @@ Each jammer:                         Adapt position + freq + power
 
 ## Research Methodology (3 Stages)
 
-### Stage 1 — Baselines
-1. **Barrage jammer** — uniform noise across all subcarriers (`TimedBarrageJamming`) ✓
-2. **PPO single-jammer** — MLP policy trained with SB3 PPO, MockChannel or SionnaChannel ✓
-3. **PPO CTDE team** — centralized critic during training, decentralized execution at test time *(next)*
+### Stage 1 — Baselines ✓
+1. **Barrage jammer** — uniform noise across all subcarriers (`TimedBarrageJamming`)
+2. **PPO single-jammer** — MLP policy, SB3 PPO (`train_stage1.py`)
+3. **PPO CTDE team** — parameter-sharing actor + centralized critic (`train_ctde.py`)
 
-### Stage 2 — Weakness Analysis
-Empirically identify limitations of MLP-based CTDE:
-- Permutation sensitivity to teammate ordering
+### Stage 2 — Weakness Analysis ← next
+Demonstrate MLP CTDE limitations:
+- Permutation sensitivity: shuffle jammer ordering → policy performance drops
 - No structural inductive bias for team coordination
 
 ### Stage 3 — Novel Method
 Replace MLP team encoder with a **permutation-invariant encoder** (Set Transformer or GNN).
-This encoder conditions the generative signal model.
-Goal: outperform Stage 1 baselines in at least one well-defined scenario.
 
-**Key open question:** Generative model architecture not yet fixed — GAN, VAE, or direct latent parameterization? Confirm with ADM.
+**Key open question:** Generative model architecture not yet fixed — GAN, VAE, or direct latent. Confirm with ADM.
 
 ### CTDE
-**Centralized Training, Decentralized Execution:** centralized critic sees global state during training; each jammer acts on local obs only at test time. This is an implementation choice, not a contribution (per supervisor).
+**Centralized Training, Decentralized Execution.** Implementation choice, not a contribution.
 
 ---
 
@@ -65,9 +62,9 @@ Goal: outperform Stage 1 baselines in at least one well-defined scenario.
 
 | Where | Channel | GPU | When |
 |---|---|---|---|
-| MacBook (local) | `MockChannel` | None — pure NumPy | Editing, unit tests |
+| MacBook (local) | `MockChannel` | None — NumPy only | Editing, unit tests |
 | Google Colab | `SionnaChannel` CDL-D | Free T4 | All training (Stage 1+) |
-| ETH Euler HPC | `SionnaChannel` CDL-D | A100 | Large-scale / very long runs |
+| ETH Euler HPC | `SionnaChannel` CDL-D | A100 | Large-scale / long runs |
 
 **Running locally:**
 ```bash
@@ -81,19 +78,15 @@ PYTHONPATH=. conda run -n sionna-thesis python -m pytest tests/ -v
 !git clone <repo_url>
 import sys; sys.path.insert(0, '/content/BT')
 
-# Single-jammer PPO training with Sionna
+# Single-jammer PPO (Stage 1b)
 !python simulations/train_stage1.py --total-steps 500000 --n-envs 4 --channel-mode sionna
+
+# CTDE team (Stage 1c) — 3 jammers
+!python simulations/train_ctde.py --n-jammers 3 --total-steps 1000000 --channel-mode sionna --n-envs 4
 
 # Multi-agent simulation (fixed strategies)
 !python simulations/multi_agent_sim.py --channel sionna --out /content/plots
-
-# Display results inline
-from IPython.display import Image, display
-for f in ['exp1_sweep_jammers.png', 'exp2_sweep_defenders.png', 'exp3_heatmap.png']:
-    display(Image(f'/content/plots/{f}'))
 ```
-
-No `pyproject.toml` needed — plain `sys.path.insert` is sufficient.
 
 ---
 
@@ -107,22 +100,26 @@ BT/
 │   └── scatter.py             # Agent placement: Random, Symmetric, Custom + factory
 │
 ├── channel/
-│   ├── base.py                # BaseChannel ABC + MockChannel (NumPy, no GPU)
+│   ├── base.py                # BaseChannel ABC + MockChannel — complex H interface
 │   └── sionna_channel.py      # SionnaChannel — CDL-D via Sionna 2.x / PyTorch
 │
 ├── envs/
-│   └── wireless_env.py        # gymnasium.Env — the simulation core  (READ THIRD)
+│   └── wireless_env.py        # gymnasium.Env — N jammers, per-jammer actions  (READ THIRD)
+│
+├── policies/
+│   └── ctde_mlp.py            # CTDEMlpPolicy — parameter-sharing actor + centralized critic
 │
 ├── wrappers/
 │   ├── sinr_normalize.py      # ObservationWrapper: SINR dB → [0, 1]
-│   ├── rescale_action.py      # ActionWrapper: policy [-1,1] → env [0, max_power_dbm]
-│   └── fixed_opponent.py      # Future: freeze one team for single-agent RL training
+│   ├── rescale_action.py      # ActionWrapper: policy [-1,1] → [0, max_power_dbm]
+│   └── fixed_opponent.py      # Future: freeze one team, single-agent interface
 │
 ├── simulations/
-│   ├── simple_barrage.py      # Stage 1a: one episode, barrage jammer, SINR plots
-│   ├── train_stage1.py        # Stage 1b: SB3 PPO training, auto-generates plots  (READ FIRST)
-│   ├── plot_stage1.py         # Standalone plotter: training curves + policy comparison
-│   └── multi_agent_sim.py     # Multi-jammer/defender simulation (fixed strategies)
+│   ├── simple_barrage.py      # Stage 1a: one episode, barrage, SINR plots
+│   ├── train_stage1.py        # Stage 1b: single-jammer SB3 PPO  (READ FIRST)
+│   ├── train_ctde.py          # Stage 1c: CTDE team PPO, N jammers
+│   ├── plot_stage1.py         # Standalone plotter (called automatically after training)
+│   └── multi_agent_sim.py     # Fixed-strategy multi-agent simulation
 │
 ├── tests/
 │   ├── test_scatter.py        # 11 tests
@@ -130,20 +127,13 @@ BT/
 │   ├── test_env.py            # 9 tests
 │   └── test_wrappers.py       # 12 tests  →  37 total, all passing
 │
-├── models/                    # Created at runtime by train_stage1.py
-│   └── stage1/
-│       ├── best/best_model.zip
-│       ├── checkpoints/
-│       └── ppo_jammer_final.zip
+├── models/                    # Created at runtime
+│   ├── stage1/                # single-jammer PPO
+│   └── ctde/                  # CTDE team PPO
 │
-├── logs/                      # Created at runtime
-│   └── stage1/metrics.npz     # episode rewards + SINR per step
-│
-├── plots/                     # Created at runtime
-│   ├── stage1/                # training_curves, policy_comparison, episode_heatmap
-│   └── multi_agent/           # exp1_sweep_jammers, exp2_sweep_defenders, exp3_heatmap
-│
-└── CONTEXT.md                 # Raw project brief from earlier Claude.ai sessions
+├── logs/                      # metrics.npz per run
+├── plots/                     # auto-generated after training
+└── CONTEXT.md
 ```
 
 ---
@@ -151,292 +141,181 @@ BT/
 ## How the Files Connect
 
 ```
-train_stage1.py  ←─── START HERE (or multi_agent_sim.py)
+train_ctde.py  (or train_stage1.py)  ←── START HERE
 │
-├── core/config.py            ← READ SECOND — every config knob lives here
+├── core/config.py             every config knob — EnvironmentConfig, AgentSpec, OFDMConfig
 │
-├── envs/wireless_env.py      ← READ THIRD — the heart of the simulation
-│   │   reset() → place agents → initial obs
-│   │   step(action) → compute SINR → reward → obs
+├── envs/wireless_env.py       the simulation loop
+│   │  reset() → scatter agents → initial obs
+│   │  step(action) → get_coefficients() → sinr_from_power() → reward → obs
 │   │
-│   ├── core/scatter.py       place(count, bounds) → positions (N,3)
+│   ├── core/scatter.py        place(count, bounds) → positions (N,3)
 │   │
-│   ├── channel/base.py       compute_sinr(positions, powers)
-│   │     MockChannel         → SINR (N_rx, N_sub) dB   [NumPy, local]
+│   ├── channel/base.py        get_coefficients() → H_tx, H_jam complex
+│   │   MockChannel            random-phase path loss  [NumPy, no GPU]
 │   │
 │   └── channel/sionna_channel.py
-│         SionnaChannel       → SINR with CDL-D fading   [PyTorch, Colab/Euler]
+│       SionnaChannel          CDL-D path loss × complex CDL H  [PyTorch, Colab/Euler]
 │
-├── wrappers/sinr_normalize.py   obs[:76] raw dB  → [0, 1]
-├── wrappers/rescale_action.py   policy [-1,1]    → [0, 30 dBm]
+├── wrappers/                  obs dB→[0,1]   action [-1,1]→[0,30dBm]
 │
-├── stable_baselines3.PPO     learns: obs → action  to maximise reward
-│     reward = −mean(SINR)    jammer wants SINR low at defender
+├── policies/ctde_mlp.py       ParameterSharingExtractor + CTDEMlpPolicy
+│   actor:  shared MLP applied to each jammer's local obs independently
+│   critic: separate MLP over full global state (centralized)
 │
-└── plot_stage1.py            auto-called at end of training
-      reads metrics.npz + saved model
-      writes: training_curves.png, policy_comparison.png, episode_heatmap.png
+└── stable_baselines3.PPO      trains the team, reward = −mean(SINR)
 ```
 
-**Data flowing through one step:**
+**Data through one step:**
 ```
-scatter.place()  ──► positions (x,y,z)
-                             │
-step(action)                 │
-  jam_power = action [76 dBm values]
-  channel.compute_sinr(positions, powers) ──► SINR (N_rx, 76) dB
-  reward = −mean(SINR)
-  obs = [SINR_per_sub(76) | norm_pos(3) | step_frac(1)]  shape=(80,)
+action = (N_jam × N_sub,) flat  →  reshape(N_jam, N_sub)  — per-jammer powers
+
+get_coefficients(positions) → H_tx (N_rx, N_tx, N_sub) complex
+                             → H_jam (N_rx, N_jam, N_sub) complex
+
+sinr_from_power(H_tx, H_jam, tx_pwr, jam_pwr) → SINR (N_rx, N_sub) dB
+reward = −mean(SINR)
+obs = [SINR(76) × N_jam | pos_i(3) × N_jam | step_frac(1)]
 ```
 
 ---
 
 ## Module Reference
 
-### `core/config.py`
+### `channel/base.py` — Channel Interface
 
-**`OFDMConfig`:**
+**Abstract method:**
 ```python
-n_subcarriers: int = 76           # ← confirm with ADM before locking obs shapes
-subcarrier_spacing_hz: float = 15e3
-carrier_frequency_hz: float = 3.5e9
-modulation: str = "QPSK"
+get_coefficients(tx_pos, rx_pos, jam_pos, n_sub)
+    → H_tx  (N_rx, N_tx,  N_sub) complex64
+    → H_jam (N_rx, N_jam, N_sub) complex64
 ```
 
-**`AgentSpec`:**
+**Static SINR helpers (call with pre-computed H):**
 ```python
-role: AgentRole                   # LEGITIMATE | JAMMER
-count: int
-policy: Optional[BaseStrategy]    # None = RL trains this; set = evaluation/fixed
-ofdm: OFDMConfig
-scatter_mode: ScatterMode         # RANDOM | SYMMETRIC | CUSTOM
-max_power_dbm: float = 30.0       # 30 dBm = 1 Watt
-mobile: bool = False              # mobility scaffold exists but NOT wired into step()
-waveform_type: str = "power"      # Stage 1; "latent" planned for Stage 3
-latent_dim: int = 16              # size of latent vector for generative model
+BaseChannel.sinr_from_power(H_tx, H_jam, tx_pwr_dbm, jam_pwr_dbm, noise_dbm)
+    → SINR (N_rx, N_sub) dB    # incoherent — Stage 1 power actions
+
+BaseChannel.sinr_from_signals(H_tx, H_jam, tx_pwr_dbm, jam_signals, noise_dbm)
+    → SINR (N_rx, N_sub) dB    # coherent   — Stage 3 complex actions
+    # interference = |Σ_jam H_jam · j_jam|²  (N² gain vs incoherent N)
 ```
 
-**`EnvironmentConfig`:**
+**Why static?** The env calls `get_coefficients()` once per step, stores H, builds obs from H, then calls `sinr_from_signals(H, ...)` with the policy action — same H for both. If H were regenerated inside compute_sinr, the jammer would coordinate against a different channel than it observed.
+
+**Convenience wrappers** (call `get_coefficients()` internally):
 ```python
-space_bounds: tuple = (100.0, 100.0, 50.0)  # metres
-channel_mode: str = "mock"        # "mock" | "sionna"
-max_steps: int = 200
-seed: Optional[int] = 42
+channel.compute_sinr(...)           # incoherent, backward-compat
+channel.compute_sinr_complex(...)   # coherent, for standalone use
 ```
 
-> **Known bug:** `EnvironmentConfig.__post_init__` is at module scope (line 77) — not inside the class. Validation never runs. Fix before production.
+**MockChannel:** random phase per (link, subcarrier). Cancels in `sinr_from_power` (|e^{jφ}|²=1). Phases are redrawn every call — cannot support learned phase coordination. Use SionnaChannel for coherent jamming experiments.
 
----
-
-### `core/strategy.py`
-
-```python
-BaseStrategy.act(obs: np.ndarray) -> np.ndarray  # local obs → action vector
-BaseStrategy.reset() -> None                      # called at episode start
-```
-
-| Class | Stage | Notes |
-|---|---|---|
-| `RandomStrategy(action_space)` | dev/test | uniform sample |
-| `TimedBarrageJamming(n_sub, silent_steps, max_power_dbm)` | Stage 1a | silent N steps then full power |
-| *(MLP CTDE policy)* | Stage 1b | **not yet implemented** |
-| *(Set Transformer / GNN)* | Stage 3 | placeholder at bottom of file |
-
----
-
-### `channel/base.py` — MockChannel
-
-```python
-compute_sinr(tx_pos, rx_pos, jam_pos, tx_power_dbm, jam_power_dbm,
-             noise_power_dbm, n_subcarriers) -> np.ndarray  # (N_rx, N_sub) dB
-```
-
-Log-distance path loss: `PL(d) = 40 + 10·3.5·log10(d)` dB. No fading. All subcarriers see identical SINR. Fast, no GPU. Use for local dev and unit tests only.
-
----
-
-### `channel/sionna_channel.py` — SionnaChannel
-
-**Sionna 2.0 is PyTorch-based** (not TensorFlow like 0.x). Module path: `sionna.phy.channel.tr38901.CDL`.
-
-Two-component model:
-1. **Large-scale path loss** — same log-distance formula as MockChannel
-2. **Small-scale fading** — CDL-D (LOS-dominant, 13 paths, 30 ns delay spread): frequency-selective SINR across subcarriers
-
-**Critical Sionna 2.0 gotcha:** Sionna uses its own device registry (`sionna.phy.config.available_devices`). Never pass `"cuda"` — it will raise `ValueError: Invalid device: cuda`. Always pass `device=None` to the CDL constructor and read back `sionna.phy.config.device` to know the chosen device.
-
-```python
-# Wrong — crashes on Colab
-CDL(..., device="cuda")
-
-# Correct — Sionna auto-selects from its own registry
-CDL(..., device=None)
-torch_device = "cuda" if sionna_config.device != "cpu" else "cpu"
-```
-
-Swap channel at config level — everything else stays identical:
-```python
-EnvironmentConfig(channel_mode="mock")    # local
-EnvironmentConfig(channel_mode="sionna")  # Colab/Euler
-```
+**SionnaChannel** (`sionna.phy.channel.tr38901.CDL`, PyTorch, CDL-D model):
+- Phase is now preserved — `_cdl_coefficients()` returns complex H instead of |H|² dB
+- `device=None` always — Sionna has its own device registry, never pass `"cuda"`
 
 ---
 
 ### `envs/wireless_env.py` — WirelessEnv
 
-Single-agent flat `gym.Env`. RL agent controls **jammer side**. Defenders are passive.
-
-**Observation** `(80,) float32`:
+**Observation** `(N_jam × (N_sub + 3) + 1,)`:
 ```
-obs[:76]   SINR per subcarrier (dB) at first defender RX
-obs[76:79] defender position normalised to [0, 1]
-obs[79]    step fraction (current_step / max_steps)
+[SINR(N_sub)] × N_jam    shared defender SINR repeated per jammer
+[norm_pos(3)] × N_jam    each jammer's own normalised position
+[step_frac(1)]
+Reshape to (N_jam, N_sub+3) for Set Transformer token input.
+N_jam=1 → (80,) — backward compatible.
 ```
 
-**Action** `(76,) float32`: per-subcarrier power in dBm, range `[0, max_power_dbm]`
+**Action** `(N_jam × N_sub,)`: per-jammer per-subcarrier power. Reshape to `(N_jam, N_sub)` in step().
 
-**Reward:** `−mean(SINR_dB)` — jammer minimises defender link quality
-
-**Modes:**
-- `jammers.policy = None` → training mode (RL supplies action)
-- `jammers.policy = SomeStrategy()` → evaluation mode (policy acts, action arg ignored)
+**Per step:**
+1. `get_coefficients()` → H_tx, H_jam stored as `self._H_tx`, `self._H_jam`
+2. `sinr_from_power(H, ...)` → SINR, reward
+3. H available for future `sinr_from_signals()` call (Phase 1.4 complex actions)
 
 **Outstanding TODOs:**
-1. TX/RX positions are the same array (`rx_positions=self.leg_positions`) — needs separate TX/RX once confirmed with ADM
-2. All jammers share one action via `np.tile` — Phase 1.3 will give each jammer its own action
-3. `mobile=True` in AgentSpec is not wired into `step()`
+1. TX/RX positions are same array — needs separate arrays (confirm with ADM)
+2. `mobile=True` scaffold exists but is not wired into `step()`
 
 ---
 
-### `wrappers/`
+### `policies/ctde_mlp.py` — CTDEMlpPolicy
 
-Stack in this order before handing to SB3:
 ```python
-env = WirelessEnv(config)
-env = SINRNormalizeObservation(env, n_subcarriers=76)  # obs[:76]: dB → [0,1]
-env = PowerRescaleAction(env)                          # action: [-1,1] → [0,30 dBm]
+from policies.ctde_mlp import CTDEMlpPolicy
+
+model = PPO(
+    policy=CTDEMlpPolicy,
+    env=env,
+    policy_kwargs=dict(n_jammers=N_jam, n_subcarriers=76, hidden_size=256),
+)
 ```
 
-`FixedOpponentWrapper` — for future multi-agent dict env. Freezes one team at a fixed strategy, exposes only the learner's obs/action to SB3. Not usable against the current flat env.
+**`ParameterSharingExtractor`:**
+- Actor: same 2-layer MLP applied to each jammer's local obs `(80,)` independently
+  → `(B × N_jam, 80) → (B × N_jam, hidden) → reshape → (B, N_jam × hidden)`
+- Critic: separate 2-layer MLP over full global obs `(N_jam × 79 + 1,)`
+  → `(B, N_jam×79+1) → (B, hidden)`
+
+SB3's `action_net = Linear(N_jam × hidden, N_jam × N_sub)` maps concatenated features to joint action.
+
+**The Stage 2 weakness:**  
+`action_net` maps the CONCATENATION `(hidden_0 | hidden_1 | ... | hidden_{N-1})` linearly to actions. Swapping jammer indices in the obs shuffles which feature block feeds which output slice — performance degrades for an identical physical scenario. Set Transformer (Stage 3) aggregates features permutation-invariantly before the output projection.
 
 ---
 
-### `simulations/train_stage1.py` — PPO Training
+### `simulations/train_ctde.py` — CTDE Training
 
 ```bash
-# local (MockChannel)
-PYTHONPATH=. conda run -n sionna-thesis python simulations/train_stage1.py \
-    --total-steps 500000 --n-envs 4
+# 3 jammers, MockChannel
+PYTHONPATH=. conda run -n sionna-thesis python simulations/train_ctde.py --n-jammers 3
 
-# Colab (SionnaChannel)
-python simulations/train_stage1.py --total-steps 500000 --n-envs 4 --channel-mode sionna
-
-# evaluate a saved model only (skip training)
-python simulations/train_stage1.py --eval-only models/stage1/best/best_model
+# Colab, SionnaChannel
+python simulations/train_ctde.py --n-jammers 3 --total-steps 1000000 --channel-mode sionna --n-envs 4
 ```
 
-Saves to:
-- `models/stage1/best/best_model.zip` — best checkpoint (EvalCallback)
-- `models/stage1/checkpoints/` — every 50k steps
-- `models/stage1/ppo_jammer_final.zip` — end of training
-- `logs/stage1/metrics.npz` — episode rewards + SINR per step
-
-Auto-calls `plot_stage1.py` at the end.
-
-SB3 PPO hyperparameters: `lr=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, ent_coef=0.01`.
+Saves to `models/ctde/`, `logs/ctde/`. Auto-plots to `plots/ctde_n{N}/`.
 
 ---
 
-### `simulations/plot_stage1.py` — Result Plots
-
-Auto-called by `train_stage1.py`. Can also run standalone:
-```bash
-python simulations/plot_stage1.py \
-    --model models/stage1/best/best_model \
-    --log   logs/stage1/metrics.npz \
-    --out   plots/stage1 \
-    --channel mock   # or sionna
-```
-
-Generates:
-- `training_curves.png` — reward + defender SINR over timesteps (smoothed)
-- `policy_comparison.png` — SINR box plots: PPO vs barrage vs random; learned power per subcarrier
-- `episode_heatmap.png` — per-subcarrier SINR over one episode: PPO vs barrage
-
----
-
-### `simulations/multi_agent_sim.py` — Multi-Agent Simulation
-
-Fixed-strategy simulation. No RL training. N jammers + M defenders, all using `TimedBarrageJamming`.
-
-```bash
-# local
-PYTHONPATH=. conda run -n sionna-thesis python simulations/multi_agent_sim.py
-
-# Colab with Sionna
-python simulations/multi_agent_sim.py --channel sionna --out /content/plots
-```
-
-Three experiments:
-- **Exp 1:** sweep N_jammers (1–5), N_def=1 → SINR vs jammer count (shows diminishing returns of barrage)
-- **Exp 2:** sweep N_defenders (1–3), N_jam=3 → per-defender SINR traces
-- **Exp 3:** N_jam=3, N_def=2, per-subcarrier SINR heatmap over episode
-
-> Note: all jammers share the same action in the current env (`np.tile`). Phase 1.3 will give each jammer its own learned action.
-
----
-
-### `tests/` — 37 Unit Tests, All Passing
+### `tests/` — 37 Tests, All Passing
 
 ```bash
 PYTHONPATH=. conda run -n sionna-thesis python -m pytest tests/ -v
 ```
-
-| File | Tests | Covers |
-|---|---|---|
-| `test_scatter.py` | 11 | shapes, bounds, left/right halves, altitude, custom validation, factory |
-| `test_channel.py` | 5 | output shape, finite values, no-jammer baseline, jammer proximity, multi-RX |
-| `test_env.py` | 9 | obs/action shapes, reward = −mean(SINR), truncation, info keys, seeded reproducibility |
-| `test_wrappers.py` | 12 | SINR normalised to [0,1], action maps ±1 to boundaries, roundtrip invertibility |
 
 ---
 
 ## Current Status & Roadmap
 
 ### Done ✓
-- [x] **Phase 0.1** — `envs/wireless_env.py`
-- [x] **Phase 0.2** — `simulations/simple_barrage.py` + barrage plot
-- [x] **Phase 0.3** — `wrappers/` (SINRNormalize, PowerRescale, FixedOpponent)
-- [x] **Phase 0.4** — `tests/` (37 passing)
-- [x] **Phase 1.1** — `simulations/train_stage1.py` (SB3 PPO, metrics callback, auto-plots)
-- [x] **Phase 1.1b** — `simulations/plot_stage1.py` (training curves, comparison, heatmap)
-- [x] **Phase 1.1c** — `channel/sionna_channel.py` (CDL-D, Sionna 2.0, Colab-ready)
-- [x] **Phase 1.1d** — `simulations/multi_agent_sim.py` (N jammers × M defenders, fixed strategies)
+- [x] Phase 0 — env, wrappers, tests (37 passing)
+- [x] Phase 1.1 — `train_stage1.py` single-jammer PPO + auto-plots
+- [x] Phase 1.1b — `channel/sionna_channel.py` CDL-D, Colab-ready
+- [x] Phase 1.1c — `multi_agent_sim.py` fixed-strategy multi-agent simulation
+- [x] **Phase 1.2 — Channel model redesign: complex H, `sinr_from_power`, `sinr_from_signals`**
+- [x] **Phase 1.3 — Per-jammer actions: `(N_jam × N_sub,)` action space, backward-compat**
+- [x] **Phase 1.4 — CTDE policy: `CTDEMlpPolicy` + `train_ctde.py`**
 
 ### Next
 ```
-Phase 1 — Stage 1 Baselines (continued)
-  1.3  Extend env: per-jammer actions (N_jam × N_sub action space)
-       → each jammer gets its own action vector, not np.tile of one shared action
-  1.4  CTDE centralized critic: PPO with shared MLP policy + value fn over global state
-  1.5  Long runs on Euler if Colab session limits hit
-
 Phase 2 — Weakness Analysis
-  2.1  Shuffle teammate ordering mid-training → measure SINR degradation
-  2.2  Ablation: vary Nj (1, 2, 4, 8) → show MLP CTDE breaks at scale
-  2.3  Document as motivation for Stage 3
+  2.1  Permutation experiment: train CTDE, shuffle jammer ordering at test time
+       → measure SINR degradation vs unshuffled
+  2.2  Team-size ablation: train with N_jam=1,2,3,4,8
+       → show MLP CTDE performance degrades as N grows
+  2.3  Document findings — motivation for Stage 3
 
 Phase 3 — Novel Method
-  3.1  Confirm generative model architecture with ADM (GAN / VAE / direct latent)
-  3.2  Implement Set Transformer or GNN team encoder
-  3.3  Wire: local obs → encoder → latent → generative model → waveform
-  3.4  Train + compare against Stage 1 baselines
-  3.5  Ablations: encoder type, latent dim, team size
+  3.1  Confirm generative model architecture with ADM (direct latent is simplest)
+  3.2  Implement Set Transformer or GNN team encoder in policies/
+  3.3  Wire: local obs → encoder → z_team → generative model → complex waveform
+  3.4  Train with complex actions (sinr_from_signals already in place)
+  3.5  Compare against Stage 1 baselines
 
 Phase 4 — Write-up
-  4.1  Figures: SINR curves, spectral heatmaps, team-size scaling
-  4.2  Results tables, ablation analysis
-  4.3  Paper draft
 ```
 
 ---
@@ -446,16 +325,16 @@ Phase 4 — Write-up
 | File | Line | Issue |
 |---|---|---|
 | [core/config.py](core/config.py#L77) | 77 | `EnvironmentConfig.__post_init__` at module scope — validation never runs |
-| [envs/wireless_env.py](envs/wireless_env.py#L203) | ~203 | `rx_positions=self.leg_positions` — TX and RX use same array; needs separate positions once confirmed with ADM |
+| [envs/wireless_env.py](envs/wireless_env.py) | ~step | TX/RX positions same array — needs separate arrays, confirm with ADM |
 
 ---
 
 ## Supervisor Guidance
 
-- Do not frame CTDE as a contribution — it is an implementation choice
-- Do not claim MLP failure is catastrophic — frame as a *limitation* that structured encoders improve
-- Keep literature review to ~1–1.5 columns, closely related work only
-- Confirm `n_subcarriers=76` and pilot structure with ADM before finalising obs/action shapes
+- CTDE is not a contribution — it is an implementation choice
+- MLP failure is a *limitation* that structured encoders improve, not catastrophic failure
+- Literature review: ~1–1.5 columns, closely related work only
+- Confirm `n_subcarriers=76` and pilot structure with ADM before locking obs shapes
 
 ---
 
@@ -473,4 +352,4 @@ Phase 4 — Write-up
 
 **Conda env:** `sionna-thesis` (Python 3.11)
 
-**Sionna 2.0 note:** completely rewrote from TensorFlow to PyTorch between 0.x and 2.0. Module paths changed: `sionna.channel.tr38901` → `sionna.phy.channel.tr38901`. Device strings: do not use PyTorch's `"cuda"` — pass `device=None` and let Sionna auto-select.
+**Sionna 2.0:** always pass `device=None` to CDL — never `"cuda"`. Module path: `sionna.phy.channel.tr38901.CDL`.
