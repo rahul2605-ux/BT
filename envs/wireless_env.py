@@ -1,19 +1,29 @@
 """
 envs/wireless_env.py
 --------------------
-Multi-agent wireless environment skeleton.
+Multi-agent wireless environment.
 
-Design decisions:
-- Exposes a flat gymnasium-compatible interface for now so it can be used
-  with standard SB3 wrappers. PettingZoo AEC API is a future extension.
-- The environment is mode-aware: training (jammers.policy=None) vs evaluation.
-- Channel backend is fully swappable via EnvironmentConfig.channel_mode.
+Flat gymnasium-compatible interface so standard SB3 wrappers work out of the box.
+Internally supports N jammers, each with its own action vector.
 
-TODOs:
-- Wire in SionnaChannel when channel_mode == "sionna" (Euler only).
-- Add mobility: agents currently remain at reset positions each episode.
-- Separate TX and RX positions for legitimate nodes (currently same array).
-- Extend to true multi-agent dict interface (one obs/action per jammer).
+Observation layout  (shape = N_jam * (N_sub + 3) + 1):
+  [SINR(N_sub)] × N_jam    — shared defender SINR, repeated once per jammer
+                              (same signal, different slot so each jammer's
+                               position slot lines up in the reshape below)
+  [norm_pos(3)] × N_jam    — each jammer's own normalised position
+  [step_frac(1)]           — current_step / max_steps
+
+  Reshape to (N_jam, N_sub + 3) to get per-jammer tokens for Set Transformer.
+  For N_jam=1 this collapses to the old (80,) obs — fully backward compatible.
+
+Action layout  (shape = N_jam * N_sub):
+  Per-jammer, per-subcarrier power in dBm, range [0, max_power_dbm].
+  Reshape to (N_jam, N_sub) inside step().
+  For N_jam=1 this is the old (76,) action — fully backward compatible.
+
+Channel matrices H_tx, H_jam are computed once per step and stored on the
+instance so they can be re-used for complex-signal SINR (Phase 1.4+) without
+re-calling the channel model.
 """
 
 from __future__ import annotations
@@ -53,36 +63,24 @@ def _build_channel(config: EnvironmentConfig) -> BaseChannel:
 
 class WirelessEnv(gym.Env):
     """
-    Single-agent wrapper around the multi-agent wireless scenario.
+    Flat gym.Env controlling the jammer team against passive defenders.
 
-    The RL agent controls the jammer team (attacker side).
-    Legitimate nodes are passive (fixed TX power, no learned policy yet).
-
-    Observation (from the first legitimate RX node — proxy for jammer feedback):
-        SINR per subcarrier : (n_subcarriers,)   in dB
-        Own position        : (3,)               normalised to [0, 1]
-        Step fraction       : (1,)               current_step / max_steps
-
-    Action (jammer team, training mode):
-        Transmit power per subcarrier : (n_subcarriers,)  in dBm, [0, max_power_dbm]
-        All jammers share this action for now (true MARL dict interface is future work).
-
-    Reward: −mean(SINR) — jammer wants to minimise defender link quality.
+    Reward: −mean(SINR_dB)   jammer wants SINR low at the defender.
     """
 
     metadata = {"render_modes": ["human"]}
 
     def __init__(self, config: EnvironmentConfig):
         super().__init__()
-        self.config = config
-        self._rng = np.random.default_rng(config.seed)
-        self._channel = _build_channel(config)
+        self.config      = config
+        self._rng        = np.random.default_rng(config.seed)
+        self._channel    = _build_channel(config)
 
-        self._n_sub = config.legitimate.ofdm.n_subcarriers
-        self._n_leg = config.legitimate.count
-        self._n_jam = config.jammers.count
-        self._max_power = config.jammers.max_power_dbm
-        self._noise_dbm = -90.0  # thermal noise floor — placeholder, confirm with ADM
+        self._n_sub      = config.legitimate.ofdm.n_subcarriers
+        self._n_leg      = config.legitimate.count
+        self._n_jam      = config.jammers.count
+        self._max_power  = config.jammers.max_power_dbm
+        self._noise_dbm  = -90.0   # thermal noise floor — confirm value with ADM
 
         # Positions (populated on reset)
         self.leg_positions: np.ndarray = np.zeros((self._n_leg, 3), dtype=np.float32)
@@ -91,8 +89,15 @@ class WirelessEnv(gym.Env):
         self._leg_scatter = self._build_scatter(config.legitimate)
         self._jam_scatter = self._build_scatter(config.jammers)
 
-        obs_dim = self._n_sub + 3 + 1  # SINR + normalised position + step fraction
-        act_dim = self._n_sub           # per-subcarrier power
+        # Channel matrices — updated every step, stored for reuse in Phase 1.4+
+        self._H_tx:  Optional[np.ndarray] = None  # (N_rx, N_tx,  N_sub) complex64
+        self._H_jam: Optional[np.ndarray] = None  # (N_rx, N_jam, N_sub) complex64
+
+        # Gym spaces
+        # obs: [SINR×N_jam | pos×N_jam | step_frac]
+        obs_dim = self._n_jam * (self._n_sub + 3) + 1
+        # act: [power_jam0 | power_jam1 | ... ]
+        act_dim = self._n_jam * self._n_sub
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf, shape=(obs_dim,), dtype=np.float32
@@ -102,7 +107,7 @@ class WirelessEnv(gym.Env):
         )
 
         self._step_count = 0
-        self._last_sinr: Optional[np.ndarray] = None
+        self._last_sinr: Optional[np.ndarray] = None   # (N_rx, N_sub)
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -118,45 +123,47 @@ class WirelessEnv(gym.Env):
         return make_scatter("random")
 
     def _compute_observation(self) -> np.ndarray:
-        sinr = (
-            self._last_sinr[0]
-            if self._last_sinr is not None
-            else np.zeros(self._n_sub, dtype=np.float32)
-        )
-        norm_pos = (
-            self.leg_positions[0]
-            / np.array(self.config.space_bounds, dtype=np.float32)
-        )
-        step_frac = np.array(
-            [self._step_count / self.config.max_steps], dtype=np.float32
-        )
-        return np.concatenate([sinr, norm_pos, step_frac])
+        """
+        Build the flat observation vector.
 
-    def _compute_jammer_observation(self) -> np.ndarray:
-        """Placeholder: jammer sees its own position + last SINR reading."""
-        norm_pos = (
-            self.jam_positions[0]
-            / np.array(self.config.space_bounds, dtype=np.float32)
+        Layout: [SINR(N_sub)] * N_jam | [norm_pos(3)] * N_jam | [step_frac]
+
+        The N_jam copies of SINR carry the same values — they're duplicated so
+        that each jammer's token (row in a (N_jam, N_sub+3) reshape) contains
+        the shared feedback signal + its own spatial coordinate.
+        """
+        sinr = (
+            self._last_sinr[0].astype(np.float32)   # first defender RX
+            if self._last_sinr is not None
+            else np.zeros(self._n_sub, dtype=np.float32)
         )
+        bounds    = np.array(self.config.space_bounds, dtype=np.float32)
+        step_frac = np.array([self._step_count / self.config.max_steps], dtype=np.float32)
+
+        sinr_block = np.tile(sinr, self._n_jam)                          # (N_jam * N_sub,)
+        pos_block  = (self.jam_positions / bounds).flatten()             # (N_jam * 3,)
+        return np.concatenate([sinr_block, pos_block, step_frac])        # (N_jam*(N_sub+3)+1,)
+
+    def _jammer_obs_for_policy(self, jammer_idx: int) -> np.ndarray:
+        """Local obs for a fixed-strategy policy (evaluation mode)."""
         sinr = (
             self._last_sinr[0]
             if self._last_sinr is not None
             else np.zeros(self._n_sub, dtype=np.float32)
         )
-        step_frac = np.array(
-            [self._step_count / self.config.max_steps], dtype=np.float32
-        )
-        return np.concatenate([sinr, norm_pos, step_frac])
+        bounds    = np.array(self.config.space_bounds, dtype=np.float32)
+        norm_pos  = self.jam_positions[jammer_idx] / bounds
+        step_frac = np.array([self._step_count / self.config.max_steps], dtype=np.float32)
+        return np.concatenate([sinr.astype(np.float32), norm_pos, step_frac])
 
     def _build_info(self) -> dict:
         return {
-            "step": self._step_count,
+            "step":         self._step_count,
             "leg_positions": self.leg_positions.copy(),
             "jam_positions": self.jam_positions.copy(),
             "mean_sinr_db": (
                 float(np.mean(self._last_sinr))
-                if self._last_sinr is not None
-                else None
+                if self._last_sinr is not None else None
             ),
         }
 
@@ -173,7 +180,9 @@ class WirelessEnv(gym.Env):
                 spec.policy.reset()
 
         self._step_count = 0
-        self._last_sinr = None
+        self._last_sinr  = None
+        self._H_tx       = None
+        self._H_jam      = None
 
         bounds = self.config.space_bounds
         self.leg_positions = self._leg_scatter.place(self._n_leg, bounds, self._rng)
@@ -183,32 +192,45 @@ class WirelessEnv(gym.Env):
 
     def step(self, action: np.ndarray):
         self._step_count += 1
-
-        # Resolve jammer action
-        if self.config.jammers.policy is not None:
-            jam_action = self.config.jammers.policy.act(self._compute_jammer_observation())
-        else:
-            jam_action = np.clip(action, 0.0, self._max_power).astype(np.float32)
-
-        # All jammers broadcast the same action for now
-        jam_power_dbm = np.tile(jam_action, (self._n_jam, 1))  # (N_jam, N_sub)
-
-        # Legitimate TX: fixed uniform power (defender side not trained yet)
         tx_power_dbm = np.full(self._n_leg, self.config.legitimate.max_power_dbm)
 
-        # TODO: leg_positions used for both TX and RX — needs separate TX/RX once
-        #       the system model is finalised with ADM.
-        self._last_sinr = self._channel.compute_sinr(
+        # --- Resolve per-jammer action ---
+        if self.config.jammers.policy is not None:
+            # Evaluation mode: fixed strategy, call once per jammer
+            # (most built-in strategies produce (N_sub,) per call)
+            rows = [
+                np.clip(
+                    self.config.jammers.policy.act(self._jammer_obs_for_policy(i)),
+                    0.0, self._max_power,
+                )
+                for i in range(self._n_jam)
+            ]
+            jam_power_dbm = np.stack(rows).astype(np.float32)  # (N_jam, N_sub)
+        else:
+            # Training mode: RL framework supplies flat (N_jam * N_sub,) action
+            jam_power_dbm = (
+                np.clip(action, 0.0, self._max_power)
+                .astype(np.float32)
+                .reshape(self._n_jam, self._n_sub)
+            )
+
+        # --- Channel: compute H once, store for reuse (Phase 1.4+) ---
+        # TODO: leg_positions used for both TX and RX — needs separate arrays
+        #       once the TX/RX system model is confirmed with ADM.
+        self._H_tx, self._H_jam = self._channel.get_coefficients(
             tx_positions=self.leg_positions,
             rx_positions=self.leg_positions,
             jam_positions=self.jam_positions,
-            tx_power_dbm=tx_power_dbm,
-            jam_power_dbm=jam_power_dbm,
-            noise_power_dbm=self._noise_dbm,
             n_subcarriers=self._n_sub,
         )
 
-        reward = float(-np.mean(self._last_sinr))  # jammer: minimise defender SINR
+        self._last_sinr = BaseChannel.sinr_from_power(
+            self._H_tx, self._H_jam,
+            tx_power_dbm, jam_power_dbm,
+            self._noise_dbm,
+        )  # (N_rx, N_sub)
+
+        reward   = float(-np.mean(self._last_sinr))
         truncated = self._step_count >= self.config.max_steps
 
         return self._compute_observation(), reward, False, truncated, self._build_info()
@@ -220,6 +242,6 @@ class WirelessEnv(gym.Env):
         print(
             f"Step {self._step_count:3d} | "
             f"Mean SINR: {np.mean(self._last_sinr):+6.2f} dB | "
-            f"LEG pos: {self.leg_positions[0].round(1)} | "
-            f"JAM pos: {self.jam_positions[0].round(1)}"
+            f"N_jam={self._n_jam} | "
+            f"JAM[0] pos: {self.jam_positions[0].round(1)}"
         )
