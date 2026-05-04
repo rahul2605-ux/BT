@@ -77,6 +77,7 @@ def train(args) -> PPO:
     model = PPO(
         policy=CTDEMlpPolicy,
         env=train_env,
+        device="cpu",
         policy_kwargs=dict(
             n_jammers=n_jam,
             n_subcarriers=N_SUB,
