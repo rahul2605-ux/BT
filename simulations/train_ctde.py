@@ -21,10 +21,11 @@ Usage
 
 import argparse
 import os
+import subprocess
 
 import numpy as np
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
+from stable_baselines3.common.callbacks import BaseCallback, EvalCallback, CheckpointCallback
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.monitor import Monitor
 
@@ -32,6 +33,27 @@ from core.config import AgentRole, AgentSpec, EnvironmentConfig, OFDMConfig, Sca
 from envs.wireless_env import WirelessEnv
 from policies.ctde_mlp import CTDEMlpPolicy
 from simulations.train_stage1 import MetricsCallback, _tb_available, evaluate
+
+
+class GpuStatsCallback(BaseCallback):
+    def __init__(self, every_n_steps: int = 5000):
+        super().__init__()
+        self.every_n_steps = every_n_steps
+
+    def _on_step(self) -> bool:
+        if self.n_calls % self.every_n_steps == 0:
+            r = subprocess.run(
+                ["nvidia-smi",
+                 "--query-gpu=utilization.gpu,memory.used,memory.total",
+                 "--format=csv,noheader,nounits"],
+                capture_output=True, text=True,
+            )
+            if r.returncode == 0:
+                gpu_pct, mem_used, mem_total = r.stdout.strip().split(", ")
+                print(f"  [GPU] step {self.num_timesteps:>8,} | "
+                      f"util {gpu_pct}% | VRAM {mem_used}/{mem_total} MiB")
+        return True
+
 
 N_SUB  = 76
 SEED   = 42
@@ -99,6 +121,7 @@ def train(args) -> PPO:
     metrics_path = os.path.join(LOG_DIR, "metrics")
     callbacks = [
         MetricsCallback(save_path=metrics_path),
+        GpuStatsCallback(every_n_steps=5000),
         EvalCallback(
             eval_env,
             best_model_save_path=os.path.join(SAVE_DIR, "best"),
