@@ -1,0 +1,6 @@
+/work/scratch/rrahman/bt_env/lib/python3.12/site-packages/torch/_inductor/compile_fx.py:320: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+W0619 09:00:10.834000 2334045 torch/_inductor/utils.py:1929] [0/0_1] Not enough SMs to use max_autotune_gemm mode
+/work/scratch/rrahman/bt_env/lib/python3.12/site-packages/torch/_inductor/lowering.py:2521: UserWarning: Torchinductor does not support code generation for complex operators. Performance may be worse than eager.
+  warnings.warn(
+[2026-06-19T09:06:49.359] error: *** JOB 100040 ON studgpu-node01 CANCELLED AT 2026-06-19T09:06:49 DUE to SIGNAL Terminated ***

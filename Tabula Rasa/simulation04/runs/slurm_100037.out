@@ -1,0 +1,22 @@
+imports starting...
+imports done — CUDA: True
+Run 005
+Using device: cuda
+training started...
+step     0 |  0.42 sps (avg 0.42) | RSS 2200MB | loss 2.8321 | BER 0.315 | det 1.000 | kurt -0.118 | p1=2.168  p2=2.185
+step    50 |  1.81 sps (avg 1.70) | RSS 2209MB | loss 1.7620 | BER 0.401 | det 0.791 | kurt -0.897 | p1=2.557  p2=2.600
+step   100 |  1.81 sps (avg 1.76) | RSS 2210MB | loss 0.2529 | BER 0.010 | det 0.027 | kurt -1.322 | p1=1.052  p2=1.117
+step   150 |  1.81 sps (avg 1.77) | RSS 2211MB | loss 0.1385 | BER 0.000 | det 0.001 | kurt -1.896 | p1=0.096  p2=0.098
+step   200 |  1.81 sps (avg 1.78) | RSS 2213MB | loss 0.1301 | BER 0.000 | det 0.000 | kurt -1.908 | p1=0.021  p2=0.020
+step   250 |  1.81 sps (avg 1.79) | RSS 2215MB | loss 0.1291 | BER 0.000 | det 0.000 | kurt -1.918 | p1=0.013  p2=0.012
+step   300 |  1.81 sps (avg 1.79) | RSS 2218MB | loss 0.1294 | BER 0.000 | det 0.000 | kurt -1.919 | p1=0.011  p2=0.012
+step   350 |  1.81 sps (avg 1.79) | RSS 2219MB | loss 0.1340 | BER 0.000 | det 0.001 | kurt -1.918 | p1=0.010  p2=0.011
+step   400 |  1.81 sps (avg 1.80) | RSS 2219MB | loss 0.1415 | BER 0.000 | det 0.002 | kurt -1.912 | p1=0.009  p2=0.010
+step   450 |  1.81 sps (avg 1.80) | RSS 2219MB | loss 0.1466 | BER 0.000 | det 0.002 | kurt -1.918 | p1=0.009  p2=0.010
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run005.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run005_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run005_model.pt
+step   500 |  1.19 sps (avg 1.71) | RSS 2291MB | loss 0.1286 | BER 0.000 | det 0.000 | kurt -1.924 | p1=0.010  p2=0.010
+step   550 |  1.81 sps (avg 1.72) | RSS 2291MB | loss 0.1354 | BER 0.000 | det 0.000 | kurt -1.924 | p1=0.008  p2=0.008
+step   600 |  1.81 sps (avg 1.73) | RSS 2291MB | loss 0.1298 | BER 0.000 | det 0.000 | kurt -1.929 | p1=0.011  p2=0.011
+step   650 |  1.81 sps (avg 1.73) | RSS 2291MB | loss 0.1353 | BER 0.000 | det 0.001 | kurt -1.927 | p1=0.009  p2=0.009

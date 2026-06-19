@@ -1,0 +1,121 @@
+imports starting...
+imports done — CUDA: True
+Run 006
+Using device: cuda
+torch.compile: enabled
+training started...
+step     0 |  0.02 sps (avg 0.02) | RSS 2466MB | loss 4.7726 | BER 0.682 | det 1.000 | kurt -0.127 | p1=2.191  p2=2.182
+step    50 | 19.56 sps (avg 1.03) | RSS 2473MB | loss 3.8278 | BER 0.600 | det 0.859 | kurt -0.873 | p1=2.751  p2=2.791
+step   100 | 19.22 sps (avg 1.93) | RSS 2475MB | loss 2.6222 | BER 0.724 | det 0.688 | kurt -0.925 | p1=1.099  p2=1.047
+step   150 | 19.24 sps (avg 2.75) | RSS 2475MB | loss 2.1357 | BER 1.000 | det 0.004 | kurt -1.829 | p1=0.191  p2=0.184
+step   200 | 19.26 sps (avg 3.50) | RSS 2475MB | loss 2.1039 | BER 0.999 | det 0.002 | kurt -1.748 | p1=0.060  p2=0.056
+step   250 | 19.48 sps (avg 4.18) | RSS 2475MB | loss 2.1006 | BER 0.998 | det 0.006 | kurt -1.714 | p1=0.045  p2=0.043
+step   300 | 15.25 sps (avg 4.75) | RSS 2475MB | loss 2.0830 | BER 0.995 | det 0.007 | kurt -1.652 | p1=0.052  p2=0.048
+step   350 | 20.25 sps (avg 5.33) | RSS 2475MB | loss 2.0493 | BER 0.987 | det 0.012 | kurt -1.503 | p1=0.071  p2=0.079
+step   400 | 19.59 sps (avg 5.87) | RSS 2475MB | loss 2.0201 | BER 0.981 | det 0.016 | kurt -1.425 | p1=0.086  p2=0.090
+step   450 | 19.83 sps (avg 6.36) | RSS 2476MB | loss 1.9946 | BER 0.972 | det 0.014 | kurt -1.360 | p1=0.096  p2=0.108
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step   500 |  2.91 sps (avg 5.69) | RSS 2542MB | loss 1.9684 | BER 0.964 | det 0.025 | kurt -1.307 | p1=0.108  p2=0.116
+step   550 | 20.18 sps (avg 6.09) | RSS 2542MB | loss 1.9464 | BER 0.957 | det 0.025 | kurt -1.292 | p1=0.116  p2=0.128
+step   600 | 20.16 sps (avg 6.46) | RSS 2542MB | loss 1.9366 | BER 0.948 | det 0.036 | kurt -1.259 | p1=0.125  p2=0.140
+step   650 | 20.42 sps (avg 6.82) | RSS 2542MB | loss 1.9073 | BER 0.939 | det 0.034 | kurt -1.257 | p1=0.140  p2=0.152
+step   700 | 20.39 sps (avg 7.16) | RSS 2542MB | loss 1.8880 | BER 0.929 | det 0.035 | kurt -1.252 | p1=0.153  p2=0.167
+step   750 | 20.05 sps (avg 7.48) | RSS 2542MB | loss 1.8680 | BER 0.920 | det 0.026 | kurt -1.262 | p1=0.170  p2=0.185
+step   800 | 19.78 sps (avg 7.78) | RSS 2542MB | loss 1.8543 | BER 0.905 | det 0.046 | kurt -1.237 | p1=0.202  p2=0.215
+step   850 | 20.19 sps (avg 8.07) | RSS 2542MB | loss 1.8350 | BER 0.895 | det 0.045 | kurt -1.244 | p1=0.229  p2=0.238
+step   900 | 20.36 sps (avg 8.35) | RSS 2542MB | loss 1.8213 | BER 0.884 | det 0.041 | kurt -1.240 | p1=0.258  p2=0.275
+step   950 | 17.10 sps (avg 8.58) | RSS 2542MB | loss 1.8075 | BER 0.872 | det 0.043 | kurt -1.242 | p1=0.284  p2=0.310
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  1000 |  2.81 sps (avg 7.78) | RSS 2546MB | loss 1.7889 | BER 0.863 | det 0.030 | kurt -1.242 | p1=0.303  p2=0.334
+step  1050 | 19.10 sps (avg 8.01) | RSS 2547MB | loss 1.7898 | BER 0.854 | det 0.047 | kurt -1.227 | p1=0.324  p2=0.366
+step  1100 | 19.16 sps (avg 8.23) | RSS 2547MB | loss 1.7581 | BER 0.843 | det 0.044 | kurt -1.240 | p1=0.353  p2=0.397
+step  1150 | 19.11 sps (avg 8.43) | RSS 2547MB | loss 1.7513 | BER 0.834 | det 0.038 | kurt -1.237 | p1=0.374  p2=0.424
+step  1200 | 19.27 sps (avg 8.64) | RSS 2547MB | loss 1.7304 | BER 0.824 | det 0.034 | kurt -1.242 | p1=0.403  p2=0.448
+step  1250 | 19.17 sps (avg 8.83) | RSS 2547MB | loss 1.7175 | BER 0.813 | det 0.039 | kurt -1.240 | p1=0.432  p2=0.467
+step  1300 | 19.25 sps (avg 9.02) | RSS 2547MB | loss 1.7323 | BER 0.803 | det 0.035 | kurt -1.232 | p1=0.465  p2=0.498
+step  1350 | 19.27 sps (avg 9.20) | RSS 2547MB | loss 1.6928 | BER 0.793 | det 0.036 | kurt -1.246 | p1=0.504  p2=0.525
+step  1400 | 19.17 sps (avg 9.37) | RSS 2547MB | loss 1.6857 | BER 0.785 | det 0.034 | kurt -1.245 | p1=0.536  p2=0.556
+step  1450 | 19.17 sps (avg 9.54) | RSS 2547MB | loss 1.6673 | BER 0.775 | det 0.032 | kurt -1.253 | p1=0.567  p2=0.599
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  1500 |  2.62 sps (avg 8.77) | RSS 2555MB | loss 1.6605 | BER 0.767 | det 0.037 | kurt -1.245 | p1=0.608  p2=0.630
+step  1550 | 19.26 sps (avg 8.93) | RSS 2555MB | loss 1.6543 | BER 0.759 | det 0.035 | kurt -1.240 | p1=0.627  p2=0.661
+step  1600 | 19.30 sps (avg 9.08) | RSS 2555MB | loss 1.6350 | BER 0.753 | det 0.030 | kurt -1.251 | p1=0.651  p2=0.677
+step  1650 | 20.00 sps (avg 9.23) | RSS 2555MB | loss 1.6289 | BER 0.744 | det 0.028 | kurt -1.254 | p1=0.667  p2=0.712
+step  1700 | 19.62 sps (avg 9.38) | RSS 2555MB | loss 1.6207 | BER 0.738 | det 0.026 | kurt -1.254 | p1=0.705  p2=0.737
+step  1750 | 19.98 sps (avg 9.52) | RSS 2555MB | loss 1.6007 | BER 0.730 | det 0.023 | kurt -1.256 | p1=0.734  p2=0.760
+step  1800 | 20.26 sps (avg 9.66) | RSS 2555MB | loss 1.5958 | BER 0.722 | det 0.021 | kurt -1.260 | p1=0.760  p2=0.783
+step  1850 | 19.06 sps (avg 9.79) | RSS 2555MB | loss 1.5833 | BER 0.716 | det 0.026 | kurt -1.250 | p1=0.789  p2=0.818
+step  1900 | 20.02 sps (avg 9.93) | RSS 2555MB | loss 1.5689 | BER 0.708 | det 0.017 | kurt -1.266 | p1=0.816  p2=0.850
+step  1950 | 19.37 sps (avg 10.05) | RSS 2555MB | loss 1.5593 | BER 0.704 | det 0.014 | kurt -1.273 | p1=0.839  p2=0.865
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  2000 |  2.69 sps (avg 9.41) | RSS 2576MB | loss 1.5530 | BER 0.699 | det 0.022 | kurt -1.269 | p1=0.862  p2=0.891
+step  2050 | 16.45 sps (avg 9.51) | RSS 2576MB | loss 1.5433 | BER 0.691 | det 0.019 | kurt -1.268 | p1=0.889  p2=0.925
+step  2100 | 20.42 sps (avg 9.63) | RSS 2576MB | loss 1.5402 | BER 0.687 | det 0.021 | kurt -1.269 | p1=0.909  p2=0.935
+step  2150 | 19.97 sps (avg 9.75) | RSS 2576MB | loss 1.5245 | BER 0.682 | det 0.012 | kurt -1.281 | p1=0.927  p2=0.950
+step  2200 | 19.31 sps (avg 9.86) | RSS 2576MB | loss 1.5238 | BER 0.676 | det 0.016 | kurt -1.280 | p1=0.946  p2=0.976
+step  2250 | 19.10 sps (avg 9.97) | RSS 2576MB | loss 1.5149 | BER 0.671 | det 0.011 | kurt -1.279 | p1=0.970  p2=0.995
+step  2300 | 20.12 sps (avg 10.08) | RSS 2576MB | loss 1.5002 | BER 0.665 | det 0.011 | kurt -1.294 | p1=0.980  p2=1.010
+step  2350 | 20.37 sps (avg 10.19) | RSS 2576MB | loss 1.4899 | BER 0.660 | det 0.012 | kurt -1.291 | p1=0.999  p2=1.050
+step  2400 | 19.21 sps (avg 10.29) | RSS 2576MB | loss 1.4787 | BER 0.654 | det 0.008 | kurt -1.298 | p1=1.025  p2=1.084
+step  2450 | 20.25 sps (avg 10.39) | RSS 2576MB | loss 1.4702 | BER 0.649 | det 0.008 | kurt -1.297 | p1=1.038  p2=1.077
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  2500 |  2.87 sps (avg 9.87) | RSS 2576MB | loss 1.4636 | BER 0.645 | det 0.006 | kurt -1.299 | p1=1.050  p2=1.089
+step  2550 | 20.57 sps (avg 9.98) | RSS 2576MB | loss 1.4624 | BER 0.641 | det 0.012 | kurt -1.292 | p1=1.066  p2=1.104
+step  2600 | 20.48 sps (avg 10.08) | RSS 2576MB | loss 1.4538 | BER 0.636 | det 0.015 | kurt -1.297 | p1=1.085  p2=1.116
+step  2650 | 20.43 sps (avg 10.17) | RSS 2576MB | loss 1.4527 | BER 0.632 | det 0.010 | kurt -1.291 | p1=1.099  p2=1.130
+step  2700 | 17.54 sps (avg 10.25) | RSS 2576MB | loss 1.4495 | BER 0.629 | det 0.013 | kurt -1.289 | p1=1.107  p2=1.123
+step  2750 | 20.25 sps (avg 10.34) | RSS 2576MB | loss 1.4367 | BER 0.625 | det 0.011 | kurt -1.292 | p1=1.112  p2=1.134
+step  2800 | 20.47 sps (avg 10.44) | RSS 2576MB | loss 1.4335 | BER 0.622 | det 0.009 | kurt -1.294 | p1=1.118  p2=1.140
+step  2850 | 20.55 sps (avg 10.53) | RSS 2576MB | loss 1.4258 | BER 0.618 | det 0.008 | kurt -1.295 | p1=1.136  p2=1.152
+step  2900 | 20.49 sps (avg 10.62) | RSS 2576MB | loss 1.4195 | BER 0.613 | det 0.010 | kurt -1.296 | p1=1.158  p2=1.167
+step  2950 | 20.46 sps (avg 10.70) | RSS 2576MB | loss 1.4148 | BER 0.610 | det 0.012 | kurt -1.294 | p1=1.157  p2=1.187
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  3000 |  2.88 sps (avg 10.24) | RSS 2576MB | loss 1.4138 | BER 0.607 | det 0.013 | kurt -1.284 | p1=1.171  p2=1.182
+step  3050 | 20.36 sps (avg 10.33) | RSS 2576MB | loss 1.4029 | BER 0.602 | det 0.011 | kurt -1.299 | p1=1.190  p2=1.203
+step  3100 | 19.42 sps (avg 10.40) | RSS 2576MB | loss 1.4080 | BER 0.600 | det 0.013 | kurt -1.303 | p1=1.192  p2=1.213
+step  3150 | 19.21 sps (avg 10.48) | RSS 2576MB | loss 1.3883 | BER 0.595 | det 0.007 | kurt -1.313 | p1=1.194  p2=1.221
+step  3200 | 20.32 sps (avg 10.56) | RSS 2576MB | loss 1.3867 | BER 0.593 | det 0.008 | kurt -1.318 | p1=1.215  p2=1.255
+step  3250 | 20.51 sps (avg 10.64) | RSS 2576MB | loss 1.3793 | BER 0.591 | det 0.008 | kurt -1.321 | p1=1.222  p2=1.244
+step  3300 | 20.49 sps (avg 10.72) | RSS 2576MB | loss 1.3745 | BER 0.588 | det 0.007 | kurt -1.323 | p1=1.231  p2=1.254
+step  3350 | 20.57 sps (avg 10.79) | RSS 2576MB | loss 1.3747 | BER 0.584 | det 0.009 | kurt -1.326 | p1=1.219  p2=1.280
+step  3400 | 18.18 sps (avg 10.86) | RSS 2576MB | loss 1.3668 | BER 0.583 | det 0.008 | kurt -1.327 | p1=1.253  p2=1.265
+step  3450 | 20.34 sps (avg 10.93) | RSS 2576MB | loss 1.3633 | BER 0.582 | det 0.011 | kurt -1.340 | p1=1.239  p2=1.275
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  3500 |  2.70 sps (avg 10.48) | RSS 2576MB | loss 1.3619 | BER 0.578 | det 0.014 | kurt -1.332 | p1=1.266  p2=1.288
+step  3550 | 20.16 sps (avg 10.55) | RSS 2576MB | loss 1.3549 | BER 0.574 | det 0.010 | kurt -1.349 | p1=1.272  p2=1.297
+step  3600 | 20.00 sps (avg 10.62) | RSS 2576MB | loss 1.3537 | BER 0.573 | det 0.009 | kurt -1.344 | p1=1.279  p2=1.304
+step  3650 | 19.09 sps (avg 10.68) | RSS 2576MB | loss 1.3499 | BER 0.571 | det 0.010 | kurt -1.342 | p1=1.283  p2=1.322
+step  3700 | 19.18 sps (avg 10.75) | RSS 2576MB | loss 1.3454 | BER 0.568 | det 0.011 | kurt -1.347 | p1=1.280  p2=1.325
+step  3750 | 20.37 sps (avg 10.82) | RSS 2576MB | loss 1.3411 | BER 0.564 | det 0.011 | kurt -1.351 | p1=1.291  p2=1.336
+step  3800 | 20.20 sps (avg 10.88) | RSS 2576MB | loss 1.3331 | BER 0.563 | det 0.007 | kurt -1.356 | p1=1.298  p2=1.346
+step  3850 | 19.62 sps (avg 10.95) | RSS 2576MB | loss 1.3287 | BER 0.559 | det 0.004 | kurt -1.366 | p1=1.324  p2=1.344
+step  3900 | 20.11 sps (avg 11.01) | RSS 2576MB | loss 1.3356 | BER 0.558 | det 0.009 | kurt -1.354 | p1=1.329  p2=1.352
+step  3950 | 19.16 sps (avg 11.07) | RSS 2576MB | loss 1.3232 | BER 0.557 | det 0.005 | kurt -1.362 | p1=1.312  p2=1.353
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006_model.pt
+step  4000 |  2.79 sps (avg 10.67) | RSS 2576MB | loss 1.3219 | BER 0.553 | det 0.009 | kurt -1.360 | p1=1.335  p2=1.383
+step  4050 | 20.57 sps (avg 10.74) | RSS 2576MB | loss 1.3147 | BER 0.553 | det 0.007 | kurt -1.376 | p1=1.327  p2=1.378
+step  4100 | 20.62 sps (avg 10.80) | RSS 2576MB | loss 1.3118 | BER 0.551 | det 0.007 | kurt -1.367 | p1=1.320  p2=1.388
+step  4150 | 20.55 sps (avg 10.86) | RSS 2576MB | loss 1.3099 | BER 0.550 | det 0.004 | kurt -1.374 | p1=1.344  p2=1.373
+step  4200 | 20.59 sps (avg 10.92) | RSS 2576MB | loss 1.3051 | BER 0.547 | det 0.009 | kurt -1.376 | p1=1.336  p2=1.389
+step  4250 | 19.33 sps (avg 10.98) | RSS 2576MB | loss 1.3039 | BER 0.544 | det 0.011 | kurt -1.372 | p1=1.350  p2=1.396
+step  4300 | 19.19 sps (avg 11.04) | RSS 2576MB | loss 1.3017 | BER 0.541 | det 0.008 | kurt -1.373 | p1=1.361  p2=1.390
+step  4350 | 19.87 sps (avg 11.09) | RSS 2576MB | loss 1.2983 | BER 0.542 | det 0.009 | kurt -1.376 | p1=1.348  p2=1.396
+step  4400 | 20.28 sps (avg 11.15) | RSS 2576MB | loss 1.2907 | BER 0.538 | det 0.008 | kurt -1.380 | p1=1.361  p2=1.417
+step  4450 | 19.50 sps (avg 11.20) | RSS 2576MB | loss 1.2959 | BER 0.537 | det 0.009 | kurt -1.377 | p1=1.357  p2=1.422
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/../artifacts/sim04/run006.png

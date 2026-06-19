@@ -1,0 +1,4 @@
+/home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/train.py:291: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  log_kurtosis.append(float(kurt.mean()))
+[2026-06-16T16:06:39.719] error: *** JOB 99211 ON studgpu-node01 CANCELLED AT 2026-06-16T16:06:39 DUE to SIGNAL Terminated ***

@@ -1,0 +1,10 @@
+imports starting...
+imports done — CUDA: False
+Run 001
+Using device: cpu
+training started...
+step     0 | loss 16.5085 | BER 0.254 | det 1.000 | kurt -0.223 | power 2.136
+step    50 | loss 11.6276 | BER 0.424 | det 0.203 | kurt -1.100 | power 4.841
+step   100 | loss 11.0072 | BER 0.454 | det 0.016 | kurt -1.176 | power 4.285
+step   150 | loss 10.7835 | BER 0.464 | det 0.016 | kurt -1.162 | power 3.441
+step   200 | loss 10.5906 | BER 0.474 | det 0.047 | kurt -1.169 | power 3.111

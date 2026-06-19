@@ -1,0 +1,515 @@
+imports starting...
+imports done — CUDA available: False
+Run 003
+creating env...
+env created, building model...
+Using cpu device
+Wrapping the env with a `Monitor` wrapper
+Wrapping the env in a DummyVecEnv.
+model ready, starting training...
+-----------------------------
+| time/              |      |
+|    fps             | 485  |
+|    iterations      | 1    |
+|    time_elapsed    | 4    |
+|    total_timesteps | 2048 |
+-----------------------------
+Early stopping at step 1 due to reaching max kl: 0.24
+----------------------------------------
+| time/                   |            |
+|    fps                  | 387        |
+|    iterations           | 2          |
+|    time_elapsed         | 10         |
+|    total_timesteps      | 4096       |
+| train/                  |            |
+|    approx_kl            | 0.23707744 |
+|    clip_fraction        | 0.0743     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0342    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 725        |
+|    n_updates            | 2          |
+|    policy_gradient_loss | -0.000947  |
+|    std                  | 1          |
+|    value_loss           | 1.5e+03    |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.08
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 362         |
+|    iterations           | 3           |
+|    time_elapsed         | 16          |
+|    total_timesteps      | 6144        |
+| train/                  |             |
+|    approx_kl            | 0.075025395 |
+|    clip_fraction        | 0.0336      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0301     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 738         |
+|    n_updates            | 4           |
+|    policy_gradient_loss | -0.000722   |
+|    std                  | 1           |
+|    value_loss           | 1.51e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.06
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 350         |
+|    iterations           | 4           |
+|    time_elapsed         | 23          |
+|    total_timesteps      | 8192        |
+| train/                  |             |
+|    approx_kl            | 0.059019316 |
+|    clip_fraction        | 0.0308      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0366     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 747         |
+|    n_updates            | 6           |
+|    policy_gradient_loss | -0.00241    |
+|    std                  | 1           |
+|    value_loss           | 1.46e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.07
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_model.zip  (step 10000)
+----------------------------------------
+| time/                   |            |
+|    fps                  | 303        |
+|    iterations           | 5          |
+|    time_elapsed         | 33         |
+|    total_timesteps      | 10240      |
+| train/                  |            |
+|    approx_kl            | 0.06692788 |
+|    clip_fraction        | 0.0355     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0302    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 770        |
+|    n_updates            | 8          |
+|    policy_gradient_loss | -0.00245   |
+|    std                  | 1          |
+|    value_loss           | 1.49e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.08
+----------------------------------------
+| time/                   |            |
+|    fps                  | 309        |
+|    iterations           | 6          |
+|    time_elapsed         | 39         |
+|    total_timesteps      | 12288      |
+| train/                  |            |
+|    approx_kl            | 0.07825608 |
+|    clip_fraction        | 0.0346     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0274    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 742        |
+|    n_updates            | 10         |
+|    policy_gradient_loss | -0.00155   |
+|    std                  | 1          |
+|    value_loss           | 1.48e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 313         |
+|    iterations           | 7           |
+|    time_elapsed         | 45          |
+|    total_timesteps      | 14336       |
+| train/                  |             |
+|    approx_kl            | 0.052680485 |
+|    clip_fraction        | 0.0298      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0565     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 759         |
+|    n_updates            | 12          |
+|    policy_gradient_loss | -0.00321    |
+|    std                  | 1           |
+|    value_loss           | 1.51e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.09
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 316         |
+|    iterations           | 8           |
+|    time_elapsed         | 51          |
+|    total_timesteps      | 16384       |
+| train/                  |             |
+|    approx_kl            | 0.090486936 |
+|    clip_fraction        | 0.0317      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0277     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 793         |
+|    n_updates            | 14          |
+|    policy_gradient_loss | -0.00172    |
+|    std                  | 1           |
+|    value_loss           | 1.53e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.15
+----------------------------------------
+| time/                   |            |
+|    fps                  | 319        |
+|    iterations           | 9          |
+|    time_elapsed         | 57         |
+|    total_timesteps      | 18432      |
+| train/                  |            |
+|    approx_kl            | 0.15173449 |
+|    clip_fraction        | 0.0279     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.038     |
+|    learning_rate        | 0.0001     |
+|    loss                 | 703        |
+|    n_updates            | 16         |
+|    policy_gradient_loss | -0.00131   |
+|    std                  | 1          |
+|    value_loss           | 1.48e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.22
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_model.zip  (step 20000)
+---------------------------------------
+| time/                   |           |
+|    fps                  | 304       |
+|    iterations           | 10        |
+|    time_elapsed         | 67        |
+|    total_timesteps      | 20480     |
+| train/                  |           |
+|    approx_kl            | 0.2154254 |
+|    clip_fraction        | 0.0322    |
+|    clip_range           | 0.1       |
+|    entropy_loss         | -390      |
+|    explained_variance   | -0.0515   |
+|    learning_rate        | 0.0001    |
+|    loss                 | 717       |
+|    n_updates            | 18        |
+|    policy_gradient_loss | -0.00121  |
+|    std                  | 1         |
+|    value_loss           | 1.5e+03   |
+---------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.09
+----------------------------------------
+| time/                   |            |
+|    fps                  | 309        |
+|    iterations           | 11         |
+|    time_elapsed         | 72         |
+|    total_timesteps      | 22528      |
+| train/                  |            |
+|    approx_kl            | 0.08669127 |
+|    clip_fraction        | 0.0298     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0245    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 714        |
+|    n_updates            | 20         |
+|    policy_gradient_loss | -0.00279   |
+|    std                  | 1          |
+|    value_loss           | 1.47e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.04
+----------------------------------------
+| time/                   |            |
+|    fps                  | 313        |
+|    iterations           | 12         |
+|    time_elapsed         | 78         |
+|    total_timesteps      | 24576      |
+| train/                  |            |
+|    approx_kl            | 0.04447276 |
+|    clip_fraction        | 0.0256     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -389       |
+|    explained_variance   | -0.0418    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 771        |
+|    n_updates            | 22         |
+|    policy_gradient_loss | -0.00142   |
+|    std                  | 1          |
+|    value_loss           | 1.5e+03    |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 316         |
+|    iterations           | 13          |
+|    time_elapsed         | 84          |
+|    total_timesteps      | 26624       |
+| train/                  |             |
+|    approx_kl            | 0.049478855 |
+|    clip_fraction        | 0.0275      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0495     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 728         |
+|    n_updates            | 24          |
+|    policy_gradient_loss | -0.00331    |
+|    std                  | 1           |
+|    value_loss           | 1.5e+03     |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.03
+----------------------------------------
+| time/                   |            |
+|    fps                  | 319        |
+|    iterations           | 14         |
+|    time_elapsed         | 89         |
+|    total_timesteps      | 28672      |
+| train/                  |            |
+|    approx_kl            | 0.03379855 |
+|    clip_fraction        | 0.0237     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0403    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 712        |
+|    n_updates            | 26         |
+|    policy_gradient_loss | -0.0018    |
+|    std                  | 1          |
+|    value_loss           | 1.46e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_model.zip  (step 30000)
+----------------------------------------
+| time/                   |            |
+|    fps                  | 309        |
+|    iterations           | 15         |
+|    time_elapsed         | 99         |
+|    total_timesteps      | 30720      |
+| train/                  |            |
+|    approx_kl            | 0.04764376 |
+|    clip_fraction        | 0.0251     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0523    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 767        |
+|    n_updates            | 28         |
+|    policy_gradient_loss | -0.00172   |
+|    std                  | 1          |
+|    value_loss           | 1.5e+03    |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.07
+----------------------------------------
+| time/                   |            |
+|    fps                  | 313        |
+|    iterations           | 16         |
+|    time_elapsed         | 104        |
+|    total_timesteps      | 32768      |
+| train/                  |            |
+|    approx_kl            | 0.06916069 |
+|    clip_fraction        | 0.0246     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0417    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 746        |
+|    n_updates            | 30         |
+|    policy_gradient_loss | -0.00244   |
+|    std                  | 1          |
+|    value_loss           | 1.51e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 316         |
+|    iterations           | 17          |
+|    time_elapsed         | 109         |
+|    total_timesteps      | 34816       |
+| train/                  |             |
+|    approx_kl            | 0.045990005 |
+|    clip_fraction        | 0.027       |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0401     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 736         |
+|    n_updates            | 32          |
+|    policy_gradient_loss | -0.00252    |
+|    std                  | 1           |
+|    value_loss           | 1.46e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.10
+----------------------------------------
+| time/                   |            |
+|    fps                  | 319        |
+|    iterations           | 18         |
+|    time_elapsed         | 115        |
+|    total_timesteps      | 36864      |
+| train/                  |            |
+|    approx_kl            | 0.09565357 |
+|    clip_fraction        | 0.0241     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -389       |
+|    explained_variance   | -0.0555    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 741        |
+|    n_updates            | 34         |
+|    policy_gradient_loss | -0.00138   |
+|    std                  | 1          |
+|    value_loss           | 1.49e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 322         |
+|    iterations           | 19          |
+|    time_elapsed         | 120         |
+|    total_timesteps      | 38912       |
+| train/                  |             |
+|    approx_kl            | 0.050078362 |
+|    clip_fraction        | 0.0204      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0655     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 719         |
+|    n_updates            | 36          |
+|    policy_gradient_loss | -0.00125    |
+|    std                  | 1           |
+|    value_loss           | 1.47e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_model.zip  (step 40000)
+----------------------------------------
+| time/                   |            |
+|    fps                  | 317        |
+|    iterations           | 20         |
+|    time_elapsed         | 128        |
+|    total_timesteps      | 40960      |
+| train/                  |            |
+|    approx_kl            | 0.04723338 |
+|    clip_fraction        | 0.0237     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0609    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 733        |
+|    n_updates            | 38         |
+|    policy_gradient_loss | -0.003     |
+|    std                  | 1          |
+|    value_loss           | 1.49e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.03
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 320         |
+|    iterations           | 21          |
+|    time_elapsed         | 134         |
+|    total_timesteps      | 43008       |
+| train/                  |             |
+|    approx_kl            | 0.033558786 |
+|    clip_fraction        | 0.0213      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0519     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 767         |
+|    n_updates            | 40          |
+|    policy_gradient_loss | -0.00156    |
+|    std                  | 1           |
+|    value_loss           | 1.53e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.03
+----------------------------------------
+| time/                   |            |
+|    fps                  | 323        |
+|    iterations           | 22         |
+|    time_elapsed         | 139        |
+|    total_timesteps      | 45056      |
+| train/                  |            |
+|    approx_kl            | 0.03441911 |
+|    clip_fraction        | 0.0213     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.0469    |
+|    learning_rate        | 0.0001     |
+|    loss                 | 712        |
+|    n_updates            | 42         |
+|    policy_gradient_loss | -0.00217   |
+|    std                  | 1          |
+|    value_loss           | 1.46e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.04
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 325         |
+|    iterations           | 23          |
+|    time_elapsed         | 144         |
+|    total_timesteps      | 47104       |
+| train/                  |             |
+|    approx_kl            | 0.044355463 |
+|    clip_fraction        | 0.0194      |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0819     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 734         |
+|    n_updates            | 44          |
+|    policy_gradient_loss | -0.00233    |
+|    std                  | 1           |
+|    value_loss           | 1.45e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.25
+----------------------------------------
+| time/                   |            |
+|    fps                  | 327        |
+|    iterations           | 24         |
+|    time_elapsed         | 150        |
+|    total_timesteps      | 49152      |
+| train/                  |            |
+|    approx_kl            | 0.13486847 |
+|    clip_fraction        | 0.0372     |
+|    clip_range           | 0.1        |
+|    entropy_loss         | -390       |
+|    explained_variance   | -0.123     |
+|    learning_rate        | 0.0001     |
+|    loss                 | 733        |
+|    n_updates            | 46         |
+|    policy_gradient_loss | -0.00388   |
+|    std                  | 1          |
+|    value_loss           | 1.51e+03   |
+----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.05
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_model.zip  (step 50000)
+-----------------------------------------
+| time/                   |             |
+|    fps                  | 323         |
+|    iterations           | 25          |
+|    time_elapsed         | 158         |
+|    total_timesteps      | 51200       |
+| train/                  |             |
+|    approx_kl            | 0.048269156 |
+|    clip_fraction        | 0.018       |
+|    clip_range           | 0.1         |
+|    entropy_loss         | -390        |
+|    explained_variance   | -0.0811     |
+|    learning_rate        | 0.0001      |
+|    loss                 | 731         |
+|    n_updates            | 48          |
+|    policy_gradient_loss | -0.00298    |
+|    std                  | 1           |
+|    value_loss           | 1.47e+03    |
+-----------------------------------------
+Early stopping at step 1 due to reaching max kl: 0.10
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_model.zip
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c/../artifacts/sim03c/run003_iq.png

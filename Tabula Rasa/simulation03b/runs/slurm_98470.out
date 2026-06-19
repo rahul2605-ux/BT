@@ -1,0 +1,377 @@
+imports starting...
+imports done — CUDA: False
+Run 003
+Using device: cpu
+training started...
+step     0 |   3.81 steps/s | loss 4.1896 | BER 0.257 | det 1.000 | kurt -0.232 | power 2.242
+step    50 |   8.03 steps/s | loss 2.9284 | BER 0.428 | det 0.516 | kurt -0.982 | power 2.733
+step   100 |   8.30 steps/s | loss 2.1463 | BER 0.001 | det 0.000 | kurt -1.627 | power 0.101
+step   150 |   8.46 steps/s | loss 2.1284 | BER 0.000 | det 0.000 | kurt -1.748 | power 0.060
+step   200 |   8.50 steps/s | loss 2.1268 | BER 0.001 | det 0.016 | kurt -1.721 | power 0.070
+step   250 |   8.54 steps/s | loss 2.1151 | BER 0.002 | det 0.000 | kurt -1.694 | power 0.080
+step   300 |   8.49 steps/s | loss 2.1174 | BER 0.002 | det 0.016 | kurt -1.652 | power 0.096
+step   350 |   8.48 steps/s | loss 2.0998 | BER 0.003 | det 0.000 | kurt -1.608 | power 0.105
+step   400 |   8.47 steps/s | loss 2.0978 | BER 0.004 | det 0.000 | kurt -1.610 | power 0.104
+step   450 |   8.46 steps/s | loss 2.0929 | BER 0.004 | det 0.000 | kurt -1.589 | power 0.110
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step   500 |   8.25 steps/s | loss 2.0844 | BER 0.011 | det 0.016 | kurt -1.504 | power 0.139
+step   550 |   8.26 steps/s | loss 2.0720 | BER 0.019 | det 0.047 | kurt -1.409 | power 0.174
+step   600 |   8.25 steps/s | loss 2.0646 | BER 0.019 | det 0.000 | kurt -1.418 | power 0.171
+step   650 |   8.22 steps/s | loss 2.0558 | BER 0.023 | det 0.016 | kurt -1.424 | power 0.170
+step   700 |   8.18 steps/s | loss 2.0528 | BER 0.020 | det 0.016 | kurt -1.387 | power 0.182
+step   750 |   8.14 steps/s | loss 2.0441 | BER 0.023 | det 0.016 | kurt -1.382 | power 0.183
+step   800 |   8.09 steps/s | loss 2.0364 | BER 0.029 | det 0.000 | kurt -1.336 | power 0.202
+step   850 |   8.05 steps/s | loss 2.0330 | BER 0.028 | det 0.016 | kurt -1.305 | power 0.206
+step   900 |   8.02 steps/s | loss 2.0380 | BER 0.027 | det 0.031 | kurt -1.321 | power 0.205
+step   950 |   8.00 steps/s | loss 2.0309 | BER 0.028 | det 0.016 | kurt -1.309 | power 0.201
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  1000 |   7.91 steps/s | loss 2.0208 | BER 0.027 | det 0.000 | kurt -1.361 | power 0.194
+step  1050 |   7.89 steps/s | loss 2.0291 | BER 0.027 | det 0.000 | kurt -1.341 | power 0.196
+step  1100 |   7.88 steps/s | loss 2.0219 | BER 0.030 | det 0.016 | kurt -1.319 | power 0.205
+step  1150 |   7.85 steps/s | loss 2.0042 | BER 0.035 | det 0.016 | kurt -1.282 | power 0.224
+step  1200 |   7.85 steps/s | loss 2.0015 | BER 0.036 | det 0.016 | kurt -1.264 | power 0.223
+step  1250 |   7.85 steps/s | loss 2.0104 | BER 0.033 | det 0.016 | kurt -1.307 | power 0.216
+step  1300 |   7.85 steps/s | loss 2.0088 | BER 0.027 | det 0.000 | kurt -1.359 | power 0.196
+step  1350 |   7.86 steps/s | loss 2.0039 | BER 0.040 | det 0.062 | kurt -1.262 | power 0.233
+step  1400 |   7.86 steps/s | loss 1.9902 | BER 0.035 | det 0.000 | kurt -1.282 | power 0.223
+step  1450 |   7.87 steps/s | loss 1.9898 | BER 0.040 | det 0.016 | kurt -1.260 | power 0.235
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  1500 |   7.81 steps/s | loss 1.9878 | BER 0.040 | det 0.031 | kurt -1.255 | power 0.236
+step  1550 |   7.81 steps/s | loss 1.9848 | BER 0.037 | det 0.016 | kurt -1.293 | power 0.224
+step  1600 |   7.80 steps/s | loss 1.9855 | BER 0.039 | det 0.031 | kurt -1.264 | power 0.237
+step  1650 |   7.80 steps/s | loss 1.9764 | BER 0.046 | det 0.047 | kurt -1.228 | power 0.248
+step  1700 |   7.79 steps/s | loss 1.9873 | BER 0.043 | det 0.047 | kurt -1.251 | power 0.248
+step  1750 |   7.79 steps/s | loss 1.9712 | BER 0.044 | det 0.031 | kurt -1.259 | power 0.247
+step  1800 |   7.79 steps/s | loss 1.9727 | BER 0.045 | det 0.016 | kurt -1.282 | power 0.247
+step  1850 |   7.79 steps/s | loss 1.9685 | BER 0.047 | det 0.016 | kurt -1.260 | power 0.258
+step  1900 |   7.79 steps/s | loss 1.9720 | BER 0.045 | det 0.000 | kurt -1.307 | power 0.248
+step  1950 |   7.80 steps/s | loss 1.9735 | BER 0.053 | det 0.031 | kurt -1.252 | power 0.283
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  2000 |   7.75 steps/s | loss 1.9688 | BER 0.051 | det 0.016 | kurt -1.250 | power 0.279
+step  2050 |   7.75 steps/s | loss 1.9597 | BER 0.053 | det 0.031 | kurt -1.251 | power 0.285
+step  2100 |   7.75 steps/s | loss 1.9549 | BER 0.055 | det 0.031 | kurt -1.255 | power 0.289
+step  2150 |   7.75 steps/s | loss 1.9541 | BER 0.056 | det 0.000 | kurt -1.255 | power 0.295
+step  2200 |   7.74 steps/s | loss 1.9547 | BER 0.054 | det 0.016 | kurt -1.270 | power 0.294
+step  2250 |   7.74 steps/s | loss 1.9453 | BER 0.058 | det 0.016 | kurt -1.264 | power 0.307
+step  2300 |   7.73 steps/s | loss 1.9497 | BER 0.057 | det 0.016 | kurt -1.282 | power 0.303
+step  2350 |   7.72 steps/s | loss 1.9448 | BER 0.056 | det 0.000 | kurt -1.270 | power 0.308
+step  2400 |   7.71 steps/s | loss 1.9465 | BER 0.058 | det 0.047 | kurt -1.249 | power 0.314
+step  2450 |   7.71 steps/s | loss 1.9444 | BER 0.056 | det 0.031 | kurt -1.300 | power 0.309
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  2500 |   7.66 steps/s | loss 1.9414 | BER 0.062 | det 0.000 | kurt -1.246 | power 0.326
+step  2550 |   7.65 steps/s | loss 1.9401 | BER 0.063 | det 0.016 | kurt -1.280 | power 0.328
+step  2600 |   7.65 steps/s | loss 1.9329 | BER 0.065 | det 0.000 | kurt -1.264 | power 0.334
+step  2650 |   7.65 steps/s | loss 1.9361 | BER 0.063 | det 0.031 | kurt -1.265 | power 0.326
+step  2700 |   7.65 steps/s | loss 1.9364 | BER 0.065 | det 0.047 | kurt -1.253 | power 0.337
+step  2750 |   7.65 steps/s | loss 1.9351 | BER 0.068 | det 0.016 | kurt -1.259 | power 0.350
+step  2800 |   7.65 steps/s | loss 1.9374 | BER 0.065 | det 0.047 | kurt -1.275 | power 0.344
+step  2850 |   7.65 steps/s | loss 1.9263 | BER 0.072 | det 0.047 | kurt -1.225 | power 0.359
+step  2900 |   7.66 steps/s | loss 1.9425 | BER 0.063 | det 0.031 | kurt -1.271 | power 0.332
+step  2950 |   7.66 steps/s | loss 1.9366 | BER 0.066 | det 0.047 | kurt -1.269 | power 0.336
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  3000 |   7.64 steps/s | loss 1.9360 | BER 0.070 | det 0.031 | kurt -1.275 | power 0.343
+step  3050 |   7.64 steps/s | loss 1.9169 | BER 0.076 | det 0.031 | kurt -1.212 | power 0.380
+step  3100 |   7.65 steps/s | loss 1.9308 | BER 0.072 | det 0.000 | kurt -1.292 | power 0.364
+step  3150 |   7.64 steps/s | loss 1.9250 | BER 0.072 | det 0.016 | kurt -1.280 | power 0.362
+step  3200 |   7.64 steps/s | loss 1.9227 | BER 0.080 | det 0.078 | kurt -1.241 | power 0.388
+step  3250 |   7.63 steps/s | loss 1.9265 | BER 0.078 | det 0.016 | kurt -1.297 | power 0.386
+step  3300 |   7.63 steps/s | loss 1.9240 | BER 0.077 | det 0.031 | kurt -1.276 | power 0.381
+step  3350 |   7.62 steps/s | loss 1.9340 | BER 0.081 | det 0.062 | kurt -1.236 | power 0.393
+step  3400 |   7.62 steps/s | loss 1.9177 | BER 0.081 | det 0.047 | kurt -1.242 | power 0.403
+step  3450 |   7.61 steps/s | loss 1.9133 | BER 0.082 | det 0.016 | kurt -1.277 | power 0.399
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  3500 |   7.59 steps/s | loss 1.9250 | BER 0.083 | det 0.047 | kurt -1.251 | power 0.420
+step  3550 |   7.58 steps/s | loss 1.9124 | BER 0.085 | det 0.047 | kurt -1.258 | power 0.420
+step  3600 |   7.58 steps/s | loss 1.9152 | BER 0.082 | det 0.000 | kurt -1.302 | power 0.397
+step  3650 |   7.58 steps/s | loss 1.9129 | BER 0.082 | det 0.000 | kurt -1.280 | power 0.412
+step  3700 |   7.57 steps/s | loss 1.9047 | BER 0.088 | det 0.047 | kurt -1.255 | power 0.436
+step  3750 |   7.57 steps/s | loss 1.9123 | BER 0.084 | det 0.016 | kurt -1.285 | power 0.414
+step  3800 |   7.56 steps/s | loss 1.9040 | BER 0.088 | det 0.016 | kurt -1.292 | power 0.428
+step  3850 |   7.56 steps/s | loss 1.9113 | BER 0.086 | det 0.016 | kurt -1.282 | power 0.426
+step  3900 |   7.56 steps/s | loss 1.9179 | BER 0.090 | det 0.078 | kurt -1.253 | power 0.439
+step  3950 |   7.55 steps/s | loss 1.9060 | BER 0.093 | det 0.062 | kurt -1.268 | power 0.450
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  4000 |   7.53 steps/s | loss 1.9061 | BER 0.095 | det 0.047 | kurt -1.279 | power 0.467
+step  4050 |   7.52 steps/s | loss 1.9012 | BER 0.094 | det 0.062 | kurt -1.238 | power 0.465
+step  4100 |   7.52 steps/s | loss 1.8966 | BER 0.094 | det 0.031 | kurt -1.271 | power 0.458
+step  4150 |   7.52 steps/s | loss 1.9013 | BER 0.094 | det 0.031 | kurt -1.245 | power 0.461
+step  4200 |   7.52 steps/s | loss 1.9031 | BER 0.097 | det 0.062 | kurt -1.245 | power 0.479
+step  4250 |   7.52 steps/s | loss 1.8982 | BER 0.098 | det 0.031 | kurt -1.254 | power 0.477
+step  4300 |   7.51 steps/s | loss 1.8876 | BER 0.095 | det 0.000 | kurt -1.278 | power 0.475
+step  4350 |   7.51 steps/s | loss 1.9089 | BER 0.101 | det 0.062 | kurt -1.238 | power 0.500
+step  4400 |   7.51 steps/s | loss 1.8949 | BER 0.099 | det 0.031 | kurt -1.268 | power 0.495
+step  4450 |   7.51 steps/s | loss 1.8951 | BER 0.100 | det 0.031 | kurt -1.304 | power 0.509
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  4500 |   7.49 steps/s | loss 1.8957 | BER 0.102 | det 0.031 | kurt -1.254 | power 0.519
+step  4550 |   7.49 steps/s | loss 1.8923 | BER 0.100 | det 0.016 | kurt -1.268 | power 0.504
+step  4600 |   7.48 steps/s | loss 1.8948 | BER 0.098 | det 0.016 | kurt -1.285 | power 0.492
+step  4650 |   7.48 steps/s | loss 1.8856 | BER 0.102 | det 0.016 | kurt -1.285 | power 0.512
+step  4700 |   7.47 steps/s | loss 1.8875 | BER 0.101 | det 0.016 | kurt -1.292 | power 0.504
+step  4750 |   7.48 steps/s | loss 1.8959 | BER 0.101 | det 0.031 | kurt -1.262 | power 0.518
+step  4800 |   7.47 steps/s | loss 1.8958 | BER 0.100 | det 0.016 | kurt -1.293 | power 0.508
+step  4850 |   7.48 steps/s | loss 1.8890 | BER 0.104 | det 0.062 | kurt -1.278 | power 0.530
+step  4900 |   7.48 steps/s | loss 1.8841 | BER 0.105 | det 0.016 | kurt -1.267 | power 0.540
+step  4950 |   7.47 steps/s | loss 1.8881 | BER 0.102 | det 0.016 | kurt -1.268 | power 0.520
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  5000 |   7.45 steps/s | loss 1.8852 | BER 0.102 | det 0.016 | kurt -1.283 | power 0.512
+step  5050 |   7.45 steps/s | loss 1.8758 | BER 0.106 | det 0.031 | kurt -1.271 | power 0.528
+step  5100 |   7.44 steps/s | loss 1.8907 | BER 0.103 | det 0.016 | kurt -1.316 | power 0.506
+step  5150 |   7.44 steps/s | loss 1.8912 | BER 0.102 | det 0.016 | kurt -1.274 | power 0.530
+step  5200 |   7.44 steps/s | loss 1.8860 | BER 0.109 | det 0.047 | kurt -1.274 | power 0.545
+step  5250 |   7.43 steps/s | loss 1.8858 | BER 0.104 | det 0.031 | kurt -1.272 | power 0.530
+step  5300 |   7.43 steps/s | loss 1.8862 | BER 0.097 | det 0.000 | kurt -1.290 | power 0.513
+step  5350 |   7.43 steps/s | loss 1.8887 | BER 0.103 | det 0.016 | kurt -1.280 | power 0.522
+step  5400 |   7.43 steps/s | loss 1.8824 | BER 0.101 | det 0.000 | kurt -1.301 | power 0.530
+step  5450 |   7.43 steps/s | loss 1.8813 | BER 0.108 | det 0.016 | kurt -1.260 | power 0.539
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  5500 |   7.42 steps/s | loss 1.8868 | BER 0.099 | det 0.016 | kurt -1.349 | power 0.491
+step  5550 |   7.42 steps/s | loss 1.8770 | BER 0.108 | det 0.016 | kurt -1.287 | power 0.540
+step  5600 |   7.42 steps/s | loss 1.8806 | BER 0.114 | det 0.031 | kurt -1.243 | power 0.553
+step  5650 |   7.41 steps/s | loss 1.8822 | BER 0.113 | det 0.047 | kurt -1.251 | power 0.565
+step  5700 |   7.41 steps/s | loss 1.8875 | BER 0.104 | det 0.031 | kurt -1.276 | power 0.537
+step  5750 |   7.41 steps/s | loss 1.8776 | BER 0.112 | det 0.047 | kurt -1.246 | power 0.566
+step  5800 |   7.41 steps/s | loss 1.8804 | BER 0.107 | det 0.000 | kurt -1.281 | power 0.550
+step  5850 |   7.42 steps/s | loss 1.8833 | BER 0.104 | det 0.000 | kurt -1.302 | power 0.540
+step  5900 |   7.41 steps/s | loss 1.8756 | BER 0.106 | det 0.016 | kurt -1.301 | power 0.540
+step  5950 |   7.41 steps/s | loss 1.8785 | BER 0.111 | det 0.031 | kurt -1.256 | power 0.548
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  6000 |   7.40 steps/s | loss 1.8754 | BER 0.110 | det 0.047 | kurt -1.247 | power 0.558
+step  6050 |   7.40 steps/s | loss 1.8660 | BER 0.111 | det 0.000 | kurt -1.297 | power 0.557
+step  6100 |   7.40 steps/s | loss 1.8769 | BER 0.104 | det 0.000 | kurt -1.311 | power 0.523
+step  6150 |   7.39 steps/s | loss 1.8638 | BER 0.114 | det 0.047 | kurt -1.277 | power 0.554
+step  6200 |   7.39 steps/s | loss 1.8823 | BER 0.110 | det 0.016 | kurt -1.301 | power 0.559
+step  6250 |   7.39 steps/s | loss 1.8780 | BER 0.107 | det 0.062 | kurt -1.294 | power 0.536
+step  6300 |   7.39 steps/s | loss 1.8671 | BER 0.116 | det 0.016 | kurt -1.285 | power 0.572
+step  6350 |   7.39 steps/s | loss 1.8616 | BER 0.113 | det 0.016 | kurt -1.285 | power 0.564
+step  6400 |   7.39 steps/s | loss 1.8635 | BER 0.116 | det 0.047 | kurt -1.257 | power 0.574
+step  6450 |   7.39 steps/s | loss 1.8684 | BER 0.112 | det 0.047 | kurt -1.287 | power 0.567
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  6500 |   7.38 steps/s | loss 1.8741 | BER 0.114 | det 0.031 | kurt -1.266 | power 0.583
+step  6550 |   7.38 steps/s | loss 1.8680 | BER 0.114 | det 0.016 | kurt -1.274 | power 0.568
+step  6600 |   7.38 steps/s | loss 1.8811 | BER 0.111 | det 0.062 | kurt -1.272 | power 0.559
+step  6650 |   7.38 steps/s | loss 1.8685 | BER 0.117 | det 0.031 | kurt -1.274 | power 0.589
+step  6700 |   7.39 steps/s | loss 1.8616 | BER 0.116 | det 0.000 | kurt -1.295 | power 0.586
+step  6750 |   7.39 steps/s | loss 1.8621 | BER 0.119 | det 0.016 | kurt -1.275 | power 0.608
+step  6800 |   7.39 steps/s | loss 1.8726 | BER 0.114 | det 0.031 | kurt -1.274 | power 0.597
+step  6850 |   7.39 steps/s | loss 1.8665 | BER 0.114 | det 0.000 | kurt -1.302 | power 0.579
+step  6900 |   7.40 steps/s | loss 1.8626 | BER 0.117 | det 0.062 | kurt -1.252 | power 0.588
+step  6950 |   7.40 steps/s | loss 1.8544 | BER 0.121 | det 0.031 | kurt -1.290 | power 0.611
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  7000 |   7.39 steps/s | loss 1.8596 | BER 0.117 | det 0.016 | kurt -1.275 | power 0.609
+step  7050 |   7.39 steps/s | loss 1.8632 | BER 0.121 | det 0.031 | kurt -1.282 | power 0.616
+step  7100 |   7.39 steps/s | loss 1.8628 | BER 0.123 | det 0.047 | kurt -1.267 | power 0.627
+step  7150 |   7.39 steps/s | loss 1.8603 | BER 0.121 | det 0.016 | kurt -1.229 | power 0.644
+step  7200 |   7.40 steps/s | loss 1.8702 | BER 0.125 | det 0.062 | kurt -1.251 | power 0.640
+step  7250 |   7.40 steps/s | loss 1.8641 | BER 0.118 | det 0.031 | kurt -1.280 | power 0.609
+step  7300 |   7.40 steps/s | loss 1.8661 | BER 0.119 | det 0.047 | kurt -1.273 | power 0.609
+step  7350 |   7.40 steps/s | loss 1.8664 | BER 0.122 | det 0.031 | kurt -1.283 | power 0.620
+step  7400 |   7.40 steps/s | loss 1.8610 | BER 0.124 | det 0.062 | kurt -1.275 | power 0.637
+step  7450 |   7.41 steps/s | loss 1.8629 | BER 0.127 | det 0.078 | kurt -1.279 | power 0.656
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  7500 |   7.40 steps/s | loss 1.8565 | BER 0.121 | det 0.000 | kurt -1.304 | power 0.618
+step  7550 |   7.40 steps/s | loss 1.9411 | BER 0.126 | det 0.062 | kurt -1.263 | power 0.653
+step  7600 |   7.40 steps/s | loss 1.8544 | BER 0.124 | det 0.031 | kurt -1.284 | power 0.643
+step  7650 |   7.40 steps/s | loss 1.8591 | BER 0.124 | det 0.016 | kurt -1.305 | power 0.645
+step  7700 |   7.40 steps/s | loss 1.8732 | BER 0.120 | det 0.062 | kurt -1.253 | power 0.633
+step  7750 |   7.40 steps/s | loss 1.8443 | BER 0.125 | det 0.016 | kurt -1.318 | power 0.622
+step  7800 |   7.41 steps/s | loss 1.8441 | BER 0.132 | det 0.016 | kurt -1.281 | power 0.661
+step  7850 |   7.41 steps/s | loss 1.8446 | BER 0.132 | det 0.031 | kurt -1.263 | power 0.667
+step  7900 |   7.42 steps/s | loss 1.8507 | BER 0.130 | det 0.062 | kurt -1.247 | power 0.678
+step  7950 |   7.42 steps/s | loss 1.8511 | BER 0.132 | det 0.016 | kurt -1.286 | power 0.686
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  8000 |   7.42 steps/s | loss 1.8461 | BER 0.129 | det 0.031 | kurt -1.291 | power 0.674
+step  8050 |   7.42 steps/s | loss 1.8449 | BER 0.136 | det 0.031 | kurt -1.264 | power 0.705
+step  8100 |   7.42 steps/s | loss 1.8613 | BER 0.130 | det 0.062 | kurt -1.289 | power 0.684
+step  8150 |   7.43 steps/s | loss 1.8429 | BER 0.128 | det 0.016 | kurt -1.316 | power 0.656
+step  8200 |   7.43 steps/s | loss 1.8635 | BER 0.136 | det 0.109 | kurt -1.236 | power 0.708
+step  8250 |   7.43 steps/s | loss 1.8498 | BER 0.132 | det 0.047 | kurt -1.277 | power 0.705
+step  8300 |   7.44 steps/s | loss 1.8516 | BER 0.124 | det 0.016 | kurt -1.318 | power 0.653
+step  8350 |   7.44 steps/s | loss 1.8364 | BER 0.133 | det 0.016 | kurt -1.282 | power 0.704
+step  8400 |   7.44 steps/s | loss 1.8419 | BER 0.137 | det 0.016 | kurt -1.280 | power 0.681
+step  8450 |   7.44 steps/s | loss 1.8503 | BER 0.130 | det 0.047 | kurt -1.313 | power 0.685
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  8500 |   7.43 steps/s | loss 1.8400 | BER 0.133 | det 0.000 | kurt -1.313 | power 0.699
+step  8550 |   7.43 steps/s | loss 1.8478 | BER 0.128 | det 0.000 | kurt -1.347 | power 0.677
+step  8600 |   7.44 steps/s | loss 1.8373 | BER 0.137 | det 0.016 | kurt -1.282 | power 0.714
+step  8650 |   7.44 steps/s | loss 1.8457 | BER 0.135 | det 0.000 | kurt -1.319 | power 0.705
+step  8700 |   7.44 steps/s | loss 1.8536 | BER 0.133 | det 0.016 | kurt -1.274 | power 0.701
+step  8750 |   7.44 steps/s | loss 1.8458 | BER 0.135 | det 0.016 | kurt -1.307 | power 0.681
+step  8800 |   7.44 steps/s | loss 1.8411 | BER 0.139 | det 0.047 | kurt -1.268 | power 0.738
+step  8850 |   7.44 steps/s | loss 1.8462 | BER 0.134 | det 0.000 | kurt -1.297 | power 0.719
+step  8900 |   7.44 steps/s | loss 1.8469 | BER 0.136 | det 0.016 | kurt -1.309 | power 0.725
+step  8950 |   7.44 steps/s | loss 1.8362 | BER 0.134 | det 0.000 | kurt -1.342 | power 0.717
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  9000 |   7.44 steps/s | loss 1.8313 | BER 0.145 | det 0.000 | kurt -1.292 | power 0.777
+step  9050 |   7.44 steps/s | loss 1.8412 | BER 0.137 | det 0.000 | kurt -1.294 | power 0.733
+step  9100 |   7.44 steps/s | loss 1.8537 | BER 0.139 | det 0.062 | kurt -1.292 | power 0.720
+step  9150 |   7.44 steps/s | loss 1.8410 | BER 0.138 | det 0.000 | kurt -1.312 | power 0.719
+step  9200 |   7.45 steps/s | loss 1.8338 | BER 0.145 | det 0.016 | kurt -1.283 | power 0.762
+step  9250 |   7.45 steps/s | loss 1.8393 | BER 0.140 | det 0.031 | kurt -1.299 | power 0.757
+step  9300 |   7.45 steps/s | loss 1.8256 | BER 0.147 | det 0.016 | kurt -1.295 | power 0.772
+step  9350 |   7.45 steps/s | loss 1.8277 | BER 0.143 | det 0.016 | kurt -1.316 | power 0.771
+step  9400 |   7.45 steps/s | loss 1.8226 | BER 0.142 | det 0.000 | kurt -1.295 | power 0.775
+step  9450 |   7.45 steps/s | loss 1.8383 | BER 0.146 | det 0.062 | kurt -1.265 | power 0.771
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step  9500 |   7.44 steps/s | loss 1.8310 | BER 0.137 | det 0.016 | kurt -1.324 | power 0.732
+step  9550 |   7.44 steps/s | loss 1.8194 | BER 0.148 | det 0.000 | kurt -1.294 | power 0.768
+step  9600 |   7.44 steps/s | loss 1.8423 | BER 0.144 | det 0.000 | kurt -1.273 | power 0.792
+step  9650 |   7.44 steps/s | loss 1.8181 | BER 0.145 | det 0.000 | kurt -1.322 | power 0.793
+step  9700 |   7.45 steps/s | loss 1.8255 | BER 0.149 | det 0.031 | kurt -1.291 | power 0.797
+step  9750 |   7.45 steps/s | loss 1.8204 | BER 0.151 | det 0.031 | kurt -1.270 | power 0.820
+step  9800 |   7.45 steps/s | loss 1.8388 | BER 0.138 | det 0.000 | kurt -1.333 | power 0.786
+step  9850 |   7.45 steps/s | loss 1.8273 | BER 0.147 | det 0.031 | kurt -1.254 | power 0.815
+step  9900 |   7.46 steps/s | loss 1.8199 | BER 0.147 | det 0.031 | kurt -1.311 | power 0.789
+step  9950 |   7.46 steps/s | loss 1.8163 | BER 0.150 | det 0.047 | kurt -1.268 | power 0.806
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 10000 |   7.45 steps/s | loss 1.8281 | BER 0.149 | det 0.031 | kurt -1.277 | power 0.815
+step 10050 |   7.45 steps/s | loss 1.8189 | BER 0.149 | det 0.016 | kurt -1.251 | power 0.818
+step 10100 |   7.46 steps/s | loss 1.8337 | BER 0.156 | det 0.047 | kurt -1.266 | power 0.850
+step 10150 |   7.46 steps/s | loss 1.8245 | BER 0.151 | det 0.031 | kurt -1.248 | power 0.830
+step 10200 |   7.46 steps/s | loss 1.8282 | BER 0.151 | det 0.047 | kurt -1.298 | power 0.838
+step 10250 |   7.46 steps/s | loss 1.8159 | BER 0.153 | det 0.000 | kurt -1.313 | power 0.815
+step 10300 |   7.46 steps/s | loss 1.8291 | BER 0.147 | det 0.047 | kurt -1.269 | power 0.778
+step 10350 |   7.46 steps/s | loss 1.8252 | BER 0.143 | det 0.000 | kurt -1.345 | power 0.768
+step 10400 |   7.46 steps/s | loss 1.8278 | BER 0.146 | det 0.031 | kurt -1.296 | power 0.798
+step 10450 |   7.46 steps/s | loss 1.8162 | BER 0.154 | det 0.031 | kurt -1.284 | power 0.833
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 10500 |   7.45 steps/s | loss 1.8212 | BER 0.147 | det 0.000 | kurt -1.325 | power 0.790
+step 10550 |   7.45 steps/s | loss 1.8104 | BER 0.151 | det 0.016 | kurt -1.304 | power 0.838
+step 10600 |   7.45 steps/s | loss 1.8261 | BER 0.152 | det 0.078 | kurt -1.275 | power 0.878
+step 10650 |   7.45 steps/s | loss 1.8040 | BER 0.157 | det 0.031 | kurt -1.299 | power 0.877
+step 10700 |   7.45 steps/s | loss 1.8203 | BER 0.150 | det 0.016 | kurt -1.286 | power 0.827
+step 10750 |   7.46 steps/s | loss 1.8099 | BER 0.157 | det 0.000 | kurt -1.325 | power 0.845
+step 10800 |   7.46 steps/s | loss 1.8075 | BER 0.152 | det 0.031 | kurt -1.301 | power 0.843
+step 10850 |   7.46 steps/s | loss 1.8237 | BER 0.147 | det 0.031 | kurt -1.319 | power 0.841
+step 10900 |   7.46 steps/s | loss 1.8088 | BER 0.154 | det 0.016 | kurt -1.297 | power 0.858
+step 10950 |   7.46 steps/s | loss 1.8152 | BER 0.156 | det 0.000 | kurt -1.301 | power 0.864
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 11000 |   7.45 steps/s | loss nan | BER 0.498 | det 0.000 | kurt nan | power nan
+step 11050 |   7.46 steps/s | loss nan | BER 0.495 | det 0.000 | kurt nan | power nan
+step 11100 |   7.46 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 11150 |   7.46 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 11200 |   7.46 steps/s | loss nan | BER 0.496 | det 0.000 | kurt nan | power nan
+step 11250 |   7.46 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 11300 |   7.46 steps/s | loss nan | BER 0.497 | det 0.000 | kurt nan | power nan
+step 11350 |   7.46 steps/s | loss nan | BER 0.497 | det 0.000 | kurt nan | power nan
+step 11400 |   7.46 steps/s | loss nan | BER 0.509 | det 0.000 | kurt nan | power nan
+step 11450 |   7.46 steps/s | loss nan | BER 0.498 | det 0.000 | kurt nan | power nan
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 11500 |   7.46 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 11550 |   7.46 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 11600 |   7.45 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 11650 |   7.45 steps/s | loss nan | BER 0.495 | det 0.000 | kurt nan | power nan
+step 11700 |   7.45 steps/s | loss nan | BER 0.496 | det 0.000 | kurt nan | power nan
+step 11750 |   7.45 steps/s | loss nan | BER 0.497 | det 0.000 | kurt nan | power nan
+step 11800 |   7.44 steps/s | loss nan | BER 0.498 | det 0.000 | kurt nan | power nan
+step 11850 |   7.44 steps/s | loss nan | BER 0.503 | det 0.000 | kurt nan | power nan
+step 11900 |   7.44 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 11950 |   7.44 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 12000 |   7.43 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 12050 |   7.43 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 12100 |   7.43 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 12150 |   7.44 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 12200 |   7.44 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 12250 |   7.44 steps/s | loss nan | BER 0.496 | det 0.000 | kurt nan | power nan
+step 12300 |   7.44 steps/s | loss nan | BER 0.493 | det 0.000 | kurt nan | power nan
+step 12350 |   7.44 steps/s | loss nan | BER 0.498 | det 0.000 | kurt nan | power nan
+step 12400 |   7.44 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 12450 |   7.45 steps/s | loss nan | BER 0.503 | det 0.000 | kurt nan | power nan
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 12500 |   7.44 steps/s | loss nan | BER 0.503 | det 0.000 | kurt nan | power nan
+step 12550 |   7.45 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 12600 |   7.45 steps/s | loss nan | BER 0.495 | det 0.000 | kurt nan | power nan
+step 12650 |   7.45 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 12700 |   7.45 steps/s | loss nan | BER 0.509 | det 0.000 | kurt nan | power nan
+step 12750 |   7.45 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 12800 |   7.45 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 12850 |   7.45 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 12900 |   7.46 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 12950 |   7.46 steps/s | loss nan | BER 0.503 | det 0.000 | kurt nan | power nan
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 13000 |   7.45 steps/s | loss nan | BER 0.505 | det 0.000 | kurt nan | power nan
+step 13050 |   7.46 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 13100 |   7.46 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 13150 |   7.46 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 13200 |   7.46 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 13250 |   7.46 steps/s | loss nan | BER 0.506 | det 0.000 | kurt nan | power nan
+step 13300 |   7.47 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 13350 |   7.47 steps/s | loss nan | BER 0.496 | det 0.000 | kurt nan | power nan
+step 13400 |   7.47 steps/s | loss nan | BER 0.496 | det 0.000 | kurt nan | power nan
+step 13450 |   7.47 steps/s | loss nan | BER 0.505 | det 0.000 | kurt nan | power nan
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 13500 |   7.47 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 13550 |   7.47 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 13600 |   7.47 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 13650 |   7.47 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 13700 |   7.48 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 13750 |   7.48 steps/s | loss nan | BER 0.500 | det 0.000 | kurt nan | power nan
+step 13800 |   7.48 steps/s | loss nan | BER 0.498 | det 0.000 | kurt nan | power nan
+step 13850 |   7.48 steps/s | loss nan | BER 0.498 | det 0.000 | kurt nan | power nan
+step 13900 |   7.48 steps/s | loss nan | BER 0.502 | det 0.000 | kurt nan | power nan
+step 13950 |   7.49 steps/s | loss nan | BER 0.504 | det 0.000 | kurt nan | power nan
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003.png
+Saved → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_iq.png
+Saved model → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/../artifacts/sim03b/run003_model.pt
+step 14000 |   7.48 steps/s | loss nan | BER 0.503 | det 0.000 | kurt nan | power nan
+step 14050 |   7.48 steps/s | loss nan | BER 0.501 | det 0.000 | kurt nan | power nan
+step 14100 |   7.48 steps/s | loss nan | BER 0.499 | det 0.000 | kurt nan | power nan
+step 14150 |   7.49 steps/s | loss nan | BER 0.497 | det 0.000 | kurt nan | power nan
+step 14200 |   7.49 steps/s | loss nan | BER 0.489 | det 0.000 | kurt nan | power nan
+step 14250 |   7.49 steps/s | loss nan | BER 0.497 | det 0.000 | kurt nan | power nan
+step 14300 |   7.49 steps/s | loss nan | BER 0.493 | det 0.000 | kurt nan | power nan
+step 14350 |   7.49 steps/s | loss nan | BER 0.506 | det 0.000 | kurt nan | power nan

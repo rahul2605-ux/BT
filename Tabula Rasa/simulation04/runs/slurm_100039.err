@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation04/train.py", line 4, in <module>
+    import psutil
+  File "/work/scratch/rrahman/bt_env/lib/python3.12/site-packages/psutil/__init__.py", line 94, in <module>
+    from . import _pslinux as _psplatform
+  File "/work/scratch/rrahman/bt_env/lib/python3.12/site-packages/psutil/_pslinux.py", line 26, in <module>
+    from . import _psutil_linux as cext
+ImportError: /work/scratch/rrahman/bt_env/lib/python3.12/site-packages/psutil/_psutil_linux.abi3.so: cannot open shared object file: No such file or directory

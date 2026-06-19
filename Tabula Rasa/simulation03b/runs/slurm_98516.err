@@ -1,0 +1,3 @@
+/home/rrahman/StudentClusterBT/Tabula Rasa/simulation03b/train.py:276: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /__w/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:821.)
+  log_kurtosis.append(float(kurt.mean()))
