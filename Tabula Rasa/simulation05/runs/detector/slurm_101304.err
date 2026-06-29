@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/train_detector.py", line 475, in <module>
+    main()
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/train_detector.py", line 402, in main
+    save_sample_spectrograms(dataset, run_id, runs_dir)
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/train_detector.py", line 331, in save_sample_spectrograms
+    ax.set_title(labels_text[label], fontsize=10)
+                 ~~~~~~~~~~~^^^^^^^
+KeyError: tensor(1)

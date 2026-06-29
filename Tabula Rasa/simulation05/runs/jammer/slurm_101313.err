@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/eval_jammer_vs_detector.py", line 267, in <module>
+    main()
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/eval_jammer_vs_detector.py", line 215, in main
+    marl_specs = [generate_marl_jammed_spectrogram(agents) for _ in range(N)]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/eval_jammer_vs_detector.py", line 154, in generate_marl_jammed_spectrogram
+    return spectrogram_to_rgb(spec)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/train_detector.py", line 141, in spectrogram_to_rgb
+    spec_np = spec_db.cpu().numpy()
+              ^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Can't call numpy() on Tensor that requires grad. Use tensor.detach().numpy() instead.

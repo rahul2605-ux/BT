@@ -474,53 +474,255 @@ sbatch submit.sh
 
 ---
 
-## Planned roadmap (sim05–08)
+## Simulation 05 — CNN spectrogram detector on flat QPSK (negative result)
 
-**Ordering rationale (2026-06-19):** upgrade the **detector first**, then the **channel**.
-The kurtosis detector is already solved (BER 0.65, <0.1% detection in sim04). A CNN detector
-is the critical milestone: it breaks differentiability, forcing the switch from direct gradient
-to MARL (PPO/SAC). This transition should happen on the simplest channel so we only debug one
-thing at a time. Once MARL works against a learned detector, adding channel effects is a
-controlled experiment.
+**Files:** `simulation05/train_detector.py`, `simulation05/eval_jammer_vs_detector.py`
 
-**Channel model rationale:** plain AWGN (just adding noise) doesn't meaningfully change the
-jamming dynamics — the jammer just needs slightly more power. The physically interesting
-effect for the UAV scenario is **per-link path loss + phase rotation**: each jammer→target
-pair has a different complex channel gain `h = (d_ref/d) · exp(jφ(d))`, so signal strength
-and phase depend on distance. This fundamentally changes cooperation — jammers at different
-positions must coordinate *who targets whom* and account for *how their signals arrive* at
-each target. That's where multi-agent becomes essential.
+**What it was:** Attempted to train a CNN spectrogram detector (EfficientNet-B0, replicating
+Li et al. IEEE Access 2022) on the flat QPSK channel from sim04. Binary classification:
+clean vs jammed (4 classical jammer types collapsed into one label).
 
-**IQ-level waveform generation is the novel contribution.** Unlike PyJama (power allocation)
-or standard RL jammers (channel selection / power levels), this project generates *raw IQ
-waveforms* cooperatively. Even on a simplified channel, demonstrating that cooperative MARL
-can produce deceptive waveforms that evade learned detection on OFDM would be a genuine
-research contribution — no existing paper combines cooperative RL + IQ-level generation +
-OFDM. Full 5G NR scale (1200+ subcarriers) is not needed: 802.11a uses 64 subcarriers with
-4 pilots = 128 real dims, exactly matching the current NSF action space.
+**Result: detector failed.** Best validation accuracy 78.9% (vs Li et al.'s 99.79%).
+Massive overfitting: train accuracy hit 99.7% while val accuracy stalled at ~75%.
+
+**Cross-evaluation (sim04 jammer vs CNN detector):**
+| Jammer | Detection Rate | Verdict |
+|---|---|---|
+| Clean | 2.5% | FAR — low, good |
+| Barrage | 2.5% | Undetected — same as clean |
+| Single-tone | 100.0% | Detected (spectral spike) |
+| Successive-pulse | 97.0% | Detected (periodic pattern) |
+| Protocol-aware | 1.0% | Undetected |
+| MARL (sim04) | 1.0% | Undetected |
+
+**Root cause:** flat QPSK has no time-frequency structure. Spectrograms of "QPSK + Gaussian
+noise" are indistinguishable from "QPSK at different SNR." The CNN only learned to detect
+spectral lines (single-tone) and periodic impulses (successive-pulse). Broadband/noise-like
+jammers are invisible in spectrogram space without OFDM structure to disrupt.
+
+**Conclusion:** spectrograms require OFDM for the CNN detector to be meaningful. This
+motivated merging the original sim05/06/07 roadmap into a single sim06 that combines OFDM
+channel + CNN detector + MAPPO.
+
+**Outputs:** `artifacts/sim05/detector/`, `artifacts/sim05/jammer/`
+
+---
+
+## Simulation 06 — OFDM + CNN detector + MAPPO jammers
+
+**Files:** `simulation06/ofdm.py`, `simulation06/detector.py`, `simulation06/jammer.py`,
+`simulation06/train_detector.py`, `simulation06/train_jammer.py`, `simulation06/eval.py`
+
+**What it is:** The core thesis contribution. Merges the original sim05/06/07 plan into one
+simulation with three simultaneous upgrades from sim04:
+
+| Component | sim04 | sim06 |
+|---|---|---|
+| Channel | Lossless flat QPSK | 64-subcarrier OFDM (802.11a-like, Sionna) |
+| Detector | Kurtosis (differentiable) | CNN EfficientNet-B0 (non-differentiable, frozen) |
+| Training | Direct-gradient | MAPPO (Yu et al. NeurIPS 2022) |
+| Reward | `soft_BER + λ·relu(kurt-thresh) + γ·power` | `BER - β·P(jammed) - γ·power` |
+
+**OFDM parameters (802.11a-like, via Sionna `ResourceGrid`):**
+| Parameter | Value |
+|---|---|
+| FFT size | 64 |
+| Cyclic prefix | 16 samples |
+| Effective subcarriers | 52 (48 data + 4 pilot) |
+| Guard carriers | 6 left + 5 right + DC null |
+| Pilot pattern | Kronecker (OFDM symbols 2, 11 all-pilot) |
+| Subcarrier spacing | 312.5 kHz |
+| OFDM symbols per frame | 14 |
+| Samples per frame | 1120 |
+
+**Phase 1 — Train CNN detector** (`train_detector.py`):
+EfficientNet-B0 on OFDM spectrograms, binary (clean vs jammed). Trained on 4 classical
+jammer types (barrage, single-tone, successive-pulse, protocol-aware). Li et al. hyperparams:
+SGD lr=0.001, batch=32, 100 epochs. Frozen after training.
+
+**Phase 2 — Train MAPPO jammers** (`train_jammer.py`):
+2 cooperative NSF jammer agents trained with MAPPO against the frozen CNN detector.
+CTDE pattern: centralized critic sees both agents' obs+actions, actors use local obs only.
+NSF flow provides exact `log_prob` for PPO importance ratio; Monte Carlo entropy estimate
+(8 rsamples). Jammers inject in the frequency domain (per subcarrier), before OFDM
+modulation. Each OFDM frame (14 symbols) = one episode.
+
+**Architecture:**
+- Per agent: MLP encoder [128→64→64] + NSF flow (3 transforms, hidden=[64,64], passes=2)
+- OBS_DIM = 128 (64 complex subcarriers → 128 real)
+- ACTION_DIM = 128 (output: 64 complex jam values per subcarrier)
+- Critic: MLP [512→256→128→1] (centralized, sees both agents)
+
+**Reward:** `BER - β·P(jammed) - γ·total_jam_power`
+- BER: hard-decision from Sionna demapper on data subcarriers
+- P(jammed): `softmax(CNN_logits)[1]` from frozen detector on full-frame spectrogram
+- Power: mean `|jam|²` across both agents
+
+**Design principle:** use Sionna wherever possible. The OFDM chain (`ResourceGrid`,
+`OFDMModulator`, `OFDMDemodulator`, `BinarySource`, `Mapper`, `Demapper`) runs on GPU
+via `sn.config.device`. Only the CNN detector and NSF jammer are custom PyTorch.
+
+**Phase 1 result (run002, 100 epochs, 312s):**
+| Metric | sim05 (flat QPSK) | sim06 (OFDM) | Li et al. (real SDR) |
+|---|---|---|---|
+| Accuracy | 78.9% | **99.79%** | 99.79% |
+| DR | 59.1% | **99.59%** | 99.79% |
+| FAR | 2.07% | **0.00%** | 0.03% |
+| F1 | 0.73 | **0.998** | 1.00 |
+
+Matches Li et al.'s paper results exactly — confirms OFDM structure was the missing piece.
+No overfitting: train and val both converge to 99%+ by epoch 5 and stay stable. Detector
+checkpoint: `artifacts/sim06/detector/run002_best.pt`.
+
+**Phase 2 — MAPPO jammer results (3 runs, all failed):**
+
+All three runs failed to learn detection avoidance. P(jam)≈0.999 throughout.
+
+**run001 (β=2.0 linear, γ=0.02, entropy=0.01):** power diverged 4→33, BER=0.43,
+entropy→294 (maximum). Agent learned "more noise = more BER" with no detection gradient.
+The entropy bonus actively pushed the policy toward high-variance random noise.
+
+**run002 (β=0.3 log-shaped, γ=0.1, entropy=0.01):** log reward shaping
+`-β·log(1 - P(jam) + ε)` amplified the penalty magnitude (det≈7.4 vs 1.0) but it was
+still a **constant** across all batch elements — P(jam)≈0.999 for every action, so no
+differentiation. Same power/entropy blowup as run001.
+
+**run003 (β=0.3 log + warmup, γ=0.1, entropy=0.0):** entropy=0 and β warmup (ramp over
+100 iters) prevented the power blowup (power stable at 4.4). But the policy completely
+froze — BER=0.318, entropy=179.7, power=4.4 all unchanged for 290 iterations. Without
+entropy bonus, PPO had no exploration mechanism. With constant P(jam)=0.999, no gradient
+to follow.
+
+**Diagnostic: why does the CNN always detect?** (`probe_1sc.py`)
+
+Tested P(jam) for different jamming strategies at various power levels:
+
+| Strategy | Scale | Power | P(jam) |
+|---|---|---|---|
+| 1SC: jam=-2*tx | 0.5 | 1.0 | **0.004** |
+| 1SC: jam=-2*tx | 2.0 | 16.0 | **0.007** |
+| 1SC: jam=-2*tx | 5.0 | 100.0 | 0.993 |
+| 1SC: random noise | 2.0 | 3.9 | **0.003** |
+| 1SC: random noise | 5.0 | 25.3 | 0.266 |
+| ALL SC: random noise | 0.1 | **0.01** | **1.000** |
+| ALL SC: random noise | 0.5 | 0.25 | 1.000 |
+| ALL SC: random noise | 1.0 | 1.0 | 0.999 |
+
+**Key finding:** the CNN is trivially fooled by single-subcarrier jamming at moderate
+power (P(jam)≈0.003), but detects **all-subcarrier broadband noise instantly — even at
+power=0.01 per SC**. The NSF flow initializes to ~N(0,1) on all 128 dims, producing
+textbook broadband noise. Every action the agent ever tried was immediately detected with
+P(jam)≈0.999. There was never any reward differentiation, making MAPPO structurally unable
+to learn stealth.
+
+**Root cause analysis:** MAPPO fails on this problem due to the combination of:
+1. **128-dim continuous action space** where the optimal action is a structured function
+   of the input (`jam[k] ∝ -tx[k]` per subcarrier)
+2. **Holistic scalar reward** (frame-level BER) that doesn't decompose per subcarrier
+3. **NSF initialization** producing broadband noise that's instantly detected
+4. PPO's isotropic noise exploration cannot discover input-correlated strategies
+
+MAPPO works well for the cooperative multi-agent jamming papers in the literature because
+they use **low-dimensional or discrete** action spaces (channel selection, discrete power
+levels, 2D position). IQ-level waveform synthesis is a different class of problem.
+
+**Where MAPPO/SAC remain relevant:**
+- Spatial coordination in sim07+ (which jammer attacks which target)
+- Discrete decisions (subcarrier selection, resource allocation)
+- Non-differentiable environments (real channels, sim-to-real transfer)
+- The MAPPO negative result is itself publishable as an ablation
+
+**Next steps (sim06b):** single-subcarrier MAPPO to validate that the algorithm works
+when the action space is tractable (2D) and P(jam) varies with power level. Then either:
+(a) scale up subcarrier count with curriculum, or (b) make the CNN pipeline differentiable
+and use direct-gradient for the full 128-dim waveform (the entire path
+`jam → OFDM → spectrogram → CNN` is differentiable except for one integer LUT lookup in
+the viridis colormap, fixable with linear interpolation).
+
+**Outputs:** `artifacts/sim06/detector/`, `artifacts/sim06/jammer/`
+
+**How to run:**
+```bash
+# Phase 1: train detector
+cd "Tabula Rasa/simulation06"
+sbatch submit_detector.sh
+
+# Phase 2: train MAPPO jammers (after detector is trained)
+sbatch submit_jammer.sh
+```
+
+---
+
+## Simulation 06b — Single-subcarrier MAPPO (diagnostic)
+
+**Files:** `simulation06b/train_jammer_1sc.py`, `simulation06b/submit.sh`
+
+**What it is:** Diagnostic experiment to confirm MAPPO can learn `jam = -2·tx` and find
+the detection-avoidance sweet spot when the action space is tractable (2 real dims instead
+of 128). Uses the same OFDM chain and frozen CNN detector as sim06.
+
+**Motivation:** sim06's probe showed P(jam)≈0.003 for 1-SC jamming at moderate power,
+proving the CNN can be fooled. This experiment tests whether MAPPO discovers the optimal
+strategy when the exploration problem is tractable.
+
+**Architecture:**
+- Per agent: simple Gaussian MLP [2→64→64→2] (no NSF needed for 2D)
+- OBS_DIM = 2 (I/Q of target subcarrier)
+- ACTION_DIM = 2 (I/Q of jam signal on target subcarrier)
+- Critic: CTDE MLP [8→128→64→1]
+- TARGET_SC = 20 (FFT index, effective SC index 14)
+
+**Reward:** `per_SC_BER - β·P(jammed) - γ·power`
+- per_SC_BER: BER computed only on the target subcarrier's data symbols
+- P(jammed): full-frame CNN detection (same detector as sim06)
+- β=2.0 (linear — gradient exists in the 1-SC P(jam) range)
+- γ=0.02
+
+**What we're testing:**
+1. Does MAPPO discover `jam = -2·tx` through 2D exploration? (BER side)
+2. Does it find the power sweet spot where P(jam) transitions 0→1? (stealth side)
+3. Does the IQ scatter show structured output (rotated QPSK) vs random blob?
+
+If this works, the path forward is either:
+- (a) Scale up: 1→4→16→52 subcarriers with curriculum
+- (b) Hybrid: MAPPO for subcarrier selection + direct-gradient for waveform shaping
+- (c) Full direct-gradient: make CNN pipeline differentiable, bypass RL for waveform
+
+**Outputs:** `artifacts/sim06b/jammer/`
+
+**How to run:**
+```bash
+cd "Tabula Rasa/simulation06b"
+sbatch submit.sh
+```
+
+---
+
+## Planned roadmap (sim07–08)
+
+**Revised (2026-06-27):** MAPPO on full 128-dim action space failed (see sim06 Phase 2).
+Diagnostic (sim06b) testing whether MAPPO works on 1-subcarrier (2D) action space.
 
 ```
-sim05   upgrade detector → CNN (frozen, pretrained on classical jammers)
-        CNN is non-differentiable → direct-gradient breaks
-        switch to MAPPO/MASAC + NSF policy
-        novel contribution: cooperative MARL beats a learned detector
+sim06   (detector done, MAPPO failed) OFDM + CNN detector
+        detector: 99.79% accuracy ✓
+        MAPPO: broadband NSF output always detected → no gradient → failed
+        probe: CNN fooled by 1-SC jamming at moderate power
 
-sim06   upgrade channel → per-link path loss + phase + noise
+sim06b  (current) single-subcarrier MAPPO diagnostic
+        2D action space, Gaussian policy
+        tests whether MAPPO learns jam=-2*tx + finds stealth sweet spot
+        if works → scale up via curriculum or hybrid architecture
+
+sim07   upgrade channel → per-link path loss + phase + noise
         rx = h_tx · tx + Σ_i h_jam_i · jam_i + noise
         h = (d_ref/d) · exp(jφ(d)) per jammer→target link
-        different distances → different gains → spatial cooperation
-        jammers observe: overheard tx (with own channel), own position, target positions
+        spatial cooperation: who jams whom, accounting for channel gains
         Sionna channel models on GPU (validated in sim04b)
 
-sim07   upgrade channel → 64-subcarrier OFDM + 4 pilots (802.11a-scale)
-        adds frequency structure; pilots give detector a clean reference
-        action space stays 128 real dims (64 complex subcarriers)
-        jammer must learn to handle pilot positions without being told which they are
-        detector: CNN on received resource grid (2D time-frequency image)
-
-sim08   (stretch) add frequency-selective fading + UAV mobility
+sim08   (stretch) frequency-selective fading + UAV mobility
         channel changes per coherence interval → policy must generalize
-        randomized UAV positions each episode → spatial coordination under uncertainty
+        randomized UAV positions each episode → coordination under uncertainty
 ```
 
 **Future vision (beyond thesis scope):** multiple UAV jammers with randomized positions
@@ -539,8 +741,8 @@ send) jointly, while remaining undetectable to each target's local detector.
 | Kurtosis test | sim02–04 training reward (done) | `scipy.stats.kurtosis` / PyTorch |
 | GLRT | evaluation only | `scipy.stats` + ~20 lines custom |
 | Pilot variance | sim07 evaluation | scratch ~10 lines |
-| CNN on spectrogram | sim05+, training reward | `torchvision` resnet18 fine-tuned |
-| CNN on resource grid | sim07+, training reward | 2D CNN on time-frequency grid |
+| CNN on spectrogram (flat QPSK) | sim05 (failed — needs OFDM) | `torchvision` EfficientNet-B0 |
+| CNN on spectrogram (OFDM) | sim06 training reward (done: 99.79%) | EfficientNet-B0, Li et al. 2022 |
 | VAE anomaly detector | evaluation only | PyTorch (ref: arXiv:2410.01632) |
 | PyJama detectors | citation / reference only | see note below |
 
@@ -649,6 +851,91 @@ frozen CNN detector = discriminator, reward = `BER - β·D(rx)`). This connectio
 in the related work section without actually using GAN training mechanics. Cite the Sagduyu
 papers as the closest GAN-based prior work.
 
+### On CNN-based jamming detection (sim05 detector justification)
+
+CNNs on raw IQ samples / spectrograms are the established SOTA for jamming detection. The
+key papers that motivate using a CNN detector in sim05:
+
+**Foundational (DL on physical-layer signals):**
+- O'Shea & Hoydis, "An Introduction to Deep Learning for the Physical Layer" (IEEE TCCN
+  2017, ~2500 citations). Seminal paper on CNNs/autoencoders applied to raw IQ data.
+  Justifies using learned features over expert-crafted ones for any signal-level task.
+- O'Shea, Corgan, Clancy, "Convolutional Radio Modulation Recognition Networks" (EANN
+  2016, ~1100 citations). First CNN directly on raw IQ for modulation classification.
+
+**Jamming-specific:**
+- Erpek, Sagduyu, Shi, "Deep Learning for Launching and Mitigating Wireless Jamming
+  Attacks" (IEEE TCCN 2019, ~250 citations). CNN classifier detects jamming; frames it as
+  adversarial ML. **Most directly relevant** — our sim05 is the jammer side of this arms race.
+- Lichtman, Poston, Reed, "Jamming Signals Classification Using CNN" (IEEE SPAWC 2018).
+  CNN classifies jammer types from 2D IQ histograms, 91% accuracy in NLOS.
+- Li et al., "Jamming Detection in OFDM-Based UAVs via Spectrogram-Tailored ML" (IEEE
+  Access 2022). CNN on spectrograms, 99.8% accuracy, 0.03% false alarm — UAV context
+  matches our future scenario.
+- TU Darmstadt, "Detecting 5G Signal Jammers Using Spectrograms" (IEEE 2024). Generalizes
+  CNN detection to 5G; "watchdog" design with both supervised and unsupervised variants.
+
+**Our novelty vs these papers:** they all build *detectors*. We build *jammers that learn to
+evade* these detectors. The CNN detector is the adversary our MARL agents train against — a
+frozen, pretrained "opponent" that represents the best known detection approach. No existing
+paper trains a cooperative jammer against a learned CNN detector.
+
+### On MAPPO / MASAC (sim05 RL algorithm justification)
+
+**Foundational RL:**
+- Schulman et al., "Proximal Policy Optimization Algorithms" (arXiv 2017). PPO foundational
+  paper. Clipped surrogate objective, on-policy, stable training. MAPPO builds on this.
+- Haarnoja et al., "Soft Actor-Critic: Off-Policy Maximum Entropy Deep RL with a Stochastic
+  Actor" (ICML 2018). SAC foundational — entropy-regularized objective prevents premature
+  convergence in continuous action spaces. Off-policy = sample efficient.
+- Haarnoja et al., "Soft Actor-Critic Algorithms and Applications" (arXiv 2018). SAC v2
+  with automatic entropy temperature tuning — what modern implementations use.
+
+**Multi-agent:**
+- Yu et al., "The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games" (NeurIPS
+  2022). **MAPPO foundational paper.** Shows that simple PPO with parameter sharing +
+  proper normalization + centralized value function matches or beats QMIX, MAVEN, MADDPG
+  across cooperative benchmarks. Directly justifies MAPPO as first-line choice.
+- Lowe et al., "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments"
+  (NeurIPS 2017, MADDPG). Introduced the **CTDE paradigm**: centralized critic sees all
+  agents' observations during training, actors execute with local observations only.
+- Schroeder de Witt et al., "Is Independent Learning All You Need in the StarCraft
+  Multi-Agent Challenge?" (arXiv 2020). Demonstrates that independent learners with proper
+  tuning rival complex CTDE methods — supports MAPPO-style simplicity.
+
+**MASAC note:** there is no canonical "MASAC" paper. Multi-agent SAC is implemented by
+applying MADDPG's CTDE pattern (centralized critic) with SAC as the base algorithm. Cite
+SAC + MADDPG and describe the combination.
+
+**Decision (2026-06-23): start with MAPPO, then compare MASAC.**
+- MAPPO is simpler (on-policy, no replay buffer), well-validated for cooperative tasks
+  (Yu et al.), and directly compatible with NSF's `log_prob`.
+- MASAC is more sample-efficient (off-policy, replay buffer) — important when each step is
+  expensive. Test as a second algorithm once MAPPO baseline works.
+- Both use CTDE: centralized critic sees both agents' observations + actions during training;
+  each actor only sees its own observation at execution time.
+
+### On NSF as RL policy distribution (novelty justification)
+
+Using a normalizing flow instead of the standard diagonal Gaussian as a PPO/SAC policy is
+a key component of our approach. The literature basis:
+
+- Durkan, Bekasov, Murray, Papamakarios, "Neural Spline Flows" (NeurIPS 2019). The NSF
+  architecture we use — rational-quadratic spline coupling transforms for density estimation.
+- Ward, Smofsky, Bhatt, "Normalizing Flows for Reinforcement Learning" (ICML Workshop 2019).
+  **Directly proposes flow-based policies in PPO.** Shows flow policies capture multimodal
+  action distributions and improve performance on continuous control benchmarks.
+- Mazoure et al., "Soft Actor-Critic with Normalizing Flows Policies" (2020). Integrates
+  flows into SAC's max-entropy framework — relevant if we use MASAC.
+
+**Our novelty:** Ward et al. showed flow policies help in standard single-agent RL on
+MuJoCo benchmarks. **Nobody has used them for cooperative MARL, and nobody has applied them
+to wireless jamming.** The combination of NSF policy + MAPPO/MASAC + cooperative waveform
+generation is novel. The flow is essential because a diagonal Gaussian policy is structurally
+incapable of producing non-Gaussian signal statistics (proven in sim02/sim03c) — the jammer
+must shape its output distribution to evade statistical detection, which requires an
+expressive generative model.
+
 ### On RL baselines
 
 Most "RL jammer" papers in the literature are actually *anti-jamming* (a defender RL agent
@@ -673,7 +960,11 @@ standard MARL ablation and requires no external paper.
   low-dim distributions (see research note). NSF + direct-gradient (sim03b) is the carry-forward
   basis for sim04; NSF + MAPPO for sim05+.
 - **Detector pretrained and frozen** during jammer training. Gradients never flow into detector.
-- **Episode = 1 step for now.** No memory, no multi-step dependencies. Add episode structure with OFDM.
+- **Use Sionna wherever possible.** OFDM chain, source, mapper, demapper all via Sionna on GPU
+  (`sn.config.device`). Only hand-write what Sionna doesn't cover (CNN detector, NSF jammer).
+  sim04b validated Sionna on GPU is viable and performant.
+- **Episode = 1 OFDM frame (14 symbols) in sim06+.** Frame-level reward from CNN detector
+  broadcast to all timesteps. Per-symbol credit assignment deferred to future work.
 
 ---
 

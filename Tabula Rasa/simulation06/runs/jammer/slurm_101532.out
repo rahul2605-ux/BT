@@ -1,0 +1,19 @@
+CUDA: True
+Run 002
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Frozen detector loaded from ../artifacts/sim06/detector/run002_best.pt
+Agents: 2x JammerAgent, Critic: CTDE MLP, total params: 1,436,417
+
+Training: 390 iterations (100000 frames, batch=256)...
+
+iter    0/390 | BER=0.316 P(jam)=0.999 det=7.99 rew=-2.520 pow=4.403 | ent=184.9 c_loss=177.4615 | 8.9 fps | 29s
+iter   10/390 | BER=0.431 P(jam)=0.998 det=7.43 rew=-4.989 pow=31.910 | ent=290.9 c_loss=314.0564 | 9.8 fps | 289s
+iter   20/390 | BER=0.433 P(jam)=0.998 det=7.38 rew=-5.085 pow=33.045 | ent=293.9 c_loss=322.8217 | 9.8 fps | 549s
+iter   30/390 | BER=0.431 P(jam)=0.998 det=7.20 rew=-5.039 pow=33.085 | ent=294.2 c_loss=320.5908 | 9.8 fps | 810s
+iter   40/390 | BER=0.432 P(jam)=0.998 det=7.32 rew=-5.090 pow=33.244 | ent=294.3 c_loss=327.6531 | 9.8 fps | 1070s
+iter   50/390 | BER=0.432 P(jam)=0.999 det=7.35 rew=-5.083 pow=33.083 | ent=294.4 c_loss=319.6651 | 9.8 fps | 1331s
+iter   60/390 | BER=0.432 P(jam)=0.999 det=7.42 rew=-5.124 pow=33.298 | ent=294.4 c_loss=319.7475 | 9.8 fps | 1593s
+iter   70/390 | BER=0.432 P(jam)=0.999 det=7.46 rew=-5.133 pow=33.267 | ent=294.4 c_loss=324.6820 | 9.8 fps | 1854s
+iter   80/390 | BER=0.431 P(jam)=0.999 det=7.45 rew=-5.125 pow=33.199 | ent=294.4 c_loss=325.7226 | 9.8 fps | 2114s
+iter   90/390 | BER=0.433 P(jam)=0.999 det=7.28 rew=-5.084 pow=33.319 | ent=294.5 c_loss=317.7561 | 9.8 fps | 2375s
+iter  100/390 | BER=0.431 P(jam)=0.998 det=7.25 rew=-5.068 pow=33.247 | ent=294.5 c_loss=327.5870 | 9.8 fps | 2635s

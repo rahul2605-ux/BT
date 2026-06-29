@@ -1,0 +1,51 @@
+CUDA: True
+Run 001
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Target FFT SC: 20, effective SC idx: 14
+Frozen detector loaded from ../artifacts/sim06/detector/run002_best.pt
+Agents: 2x GaussianAgent (2D), Critic: CTDE MLP, total params: 18,441
+
+Training: 390 iterations (100000 frames, batch=256)...
+
+iter    0/390 | scBER=0.310 fBER=0.0060 P(jam)=0.0052 rew=0.218 pow=4.099 | ent=2.84 c_loss=1.5884 | 80.7 fps | 3s
+iter   10/390 | scBER=0.361 fBER=0.0069 P(jam)=0.0019 rew=0.280 pow=3.854 | ent=2.77 c_loss=1.4418 | 447.3 fps | 9s
+iter   20/390 | scBER=0.347 fBER=0.0067 P(jam)=0.0027 rew=0.265 pow=3.817 | ent=2.76 c_loss=1.4047 | 398.1 fps | 15s
+iter   30/390 | scBER=0.352 fBER=0.0068 P(jam)=0.0037 rew=0.268 pow=3.802 | ent=2.77 c_loss=1.4277 | 393.8 fps | 22s
+iter   40/390 | scBER=0.329 fBER=0.0063 P(jam)=0.0026 rew=0.249 pow=3.758 | ent=2.77 c_loss=1.2462 | 395.3 fps | 28s
+iter   50/390 | scBER=0.339 fBER=0.0065 P(jam)=0.0029 rew=0.257 pow=3.826 | ent=2.78 c_loss=1.2974 | 395.0 fps | 35s
+iter   60/390 | scBER=0.340 fBER=0.0065 P(jam)=0.0021 rew=0.260 pow=3.822 | ent=2.78 c_loss=1.3095 | 392.7 fps | 43s
+iter   70/390 | scBER=0.331 fBER=0.0064 P(jam)=0.0027 rew=0.250 pow=3.808 | ent=2.79 c_loss=1.1926 | 394.0 fps | 49s
+iter   80/390 | scBER=0.340 fBER=0.0065 P(jam)=0.0041 rew=0.252 pow=3.965 | ent=2.81 c_loss=1.2471 | 392.9 fps | 56s
+iter   90/390 | scBER=0.349 fBER=0.0067 P(jam)=0.0023 rew=0.264 pow=4.046 | ent=2.82 c_loss=1.2873 | 384.2 fps | 62s
+iter  100/390 | scBER=0.337 fBER=0.0065 P(jam)=0.0024 rew=0.252 pow=4.030 | ent=2.83 c_loss=1.2597 | 411.3 fps | 69s
+iter  110/390 | scBER=0.342 fBER=0.0066 P(jam)=0.0040 rew=0.251 pow=4.188 | ent=2.84 c_loss=1.2501 | 393.3 fps | 77s
+iter  120/390 | scBER=0.339 fBER=0.0065 P(jam)=0.0024 rew=0.249 pow=4.260 | ent=2.85 c_loss=1.2601 | 434.4 fps | 83s
+iter  130/390 | scBER=0.336 fBER=0.0065 P(jam)=0.0062 rew=0.240 pow=4.152 | ent=2.87 c_loss=1.4935 | 386.5 fps | 89s
+iter  140/390 | scBER=0.350 fBER=0.0067 P(jam)=0.0029 rew=0.257 pow=4.342 | ent=2.89 c_loss=1.2253 | 398.5 fps | 95s
+iter  150/390 | scBER=0.335 fBER=0.0065 P(jam)=0.0024 rew=0.245 pow=4.301 | ent=2.89 c_loss=1.2149 | 442.7 fps | 101s
+iter  160/390 | scBER=0.339 fBER=0.0065 P(jam)=0.0048 rew=0.241 pow=4.377 | ent=2.92 c_loss=1.2337 | 432.4 fps | 110s
+iter  170/390 | scBER=0.332 fBER=0.0064 P(jam)=0.0038 rew=0.236 pow=4.379 | ent=2.93 c_loss=1.1749 | 431.4 fps | 116s
+iter  180/390 | scBER=0.317 fBER=0.0061 P(jam)=0.0019 rew=0.225 pow=4.374 | ent=2.94 c_loss=1.0924 | 390.3 fps | 122s
+iter  190/390 | scBER=0.342 fBER=0.0066 P(jam)=0.0052 rew=0.240 pow=4.621 | ent=2.96 c_loss=1.2471 | 451.4 fps | 129s
+iter  200/390 | scBER=0.336 fBER=0.0065 P(jam)=0.0038 rew=0.233 pow=4.778 | ent=2.97 c_loss=1.1707 | 451.9 fps | 135s
+iter  210/390 | scBER=0.344 fBER=0.0066 P(jam)=0.0026 rew=0.244 pow=4.774 | ent=2.99 c_loss=1.2189 | 449.5 fps | 142s
+iter  220/390 | scBER=0.343 fBER=0.0066 P(jam)=0.0026 rew=0.240 pow=4.905 | ent=2.99 c_loss=1.1378 | 434.0 fps | 148s
+iter  230/390 | scBER=0.337 fBER=0.0065 P(jam)=0.0021 rew=0.236 pow=4.856 | ent=3.02 c_loss=1.0807 | 431.6 fps | 154s
+iter  240/390 | scBER=0.342 fBER=0.0066 P(jam)=0.0029 rew=0.239 pow=4.868 | ent=3.03 c_loss=1.2186 | 429.3 fps | 161s
+iter  250/390 | scBER=0.338 fBER=0.0065 P(jam)=0.0027 rew=0.235 pow=4.887 | ent=3.04 c_loss=1.1100 | 435.5 fps | 167s
+iter  260/390 | scBER=0.340 fBER=0.0065 P(jam)=0.0043 rew=0.228 pow=5.174 | ent=3.06 c_loss=1.2781 | 383.5 fps | 175s
+iter  270/390 | scBER=0.345 fBER=0.0066 P(jam)=0.0043 rew=0.233 pow=5.142 | ent=3.07 c_loss=1.1669 | 372.5 fps | 181s
+iter  280/390 | scBER=0.330 fBER=0.0063 P(jam)=0.0042 rew=0.217 pow=5.227 | ent=3.09 c_loss=1.0480 | 390.8 fps | 188s
+iter  290/390 | scBER=0.352 fBER=0.0068 P(jam)=0.0044 rew=0.240 pow=5.151 | ent=3.10 c_loss=1.2687 | 415.3 fps | 194s
+iter  300/390 | scBER=0.348 fBER=0.0067 P(jam)=0.0036 rew=0.233 pow=5.394 | ent=3.12 c_loss=1.1560 | 380.6 fps | 200s
+iter  310/390 | scBER=0.334 fBER=0.0064 P(jam)=0.0042 rew=0.221 pow=5.261 | ent=3.13 c_loss=1.1416 | 433.7 fps | 209s
+iter  320/390 | scBER=0.354 fBER=0.0068 P(jam)=0.0031 rew=0.237 pow=5.557 | ent=3.14 c_loss=1.1109 | 435.3 fps | 215s
+iter  330/390 | scBER=0.347 fBER=0.0067 P(jam)=0.0023 rew=0.232 pow=5.543 | ent=3.16 c_loss=1.1060 | 392.5 fps | 221s
+iter  340/390 | scBER=0.347 fBER=0.0067 P(jam)=0.0039 rew=0.223 pow=5.815 | ent=3.18 c_loss=1.0981 | 398.4 fps | 227s
+iter  350/390 | scBER=0.351 fBER=0.0067 P(jam)=0.0048 rew=0.228 pow=5.647 | ent=3.20 c_loss=1.1464 | 383.4 fps | 233s
+iter  360/390 | scBER=0.347 fBER=0.0067 P(jam)=0.0049 rew=0.222 pow=5.781 | ent=3.21 c_loss=1.1620 | 422.7 fps | 241s
+iter  370/390 | scBER=0.360 fBER=0.0069 P(jam)=0.0032 rew=0.233 pow=6.044 | ent=3.23 c_loss=1.1409 | 428.3 fps | 248s
+iter  380/390 | scBER=0.342 fBER=0.0066 P(jam)=0.0064 rew=0.207 pow=6.098 | ent=3.24 c_loss=1.1493 | 428.0 fps | 254s
+
+Training complete in 261.5s
+Final: scBER=0.362 P(jam)=0.0026 reward=0.235

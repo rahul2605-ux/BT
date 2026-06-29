@@ -1,0 +1,140 @@
+CUDA: True
+Device: cuda
+Run 001
+Generating dataset: 762 clean + 816 jammed = 1578 total
+  Generating 762 clean samples...
+    clean: 100/762
+    clean: 200/762
+    clean: 300/762
+    clean: 400/762
+    clean: 500/762
+    clean: 600/762
+    clean: 700/762
+  Generating 816 jammed samples...
+    jammed: 100/816
+    jammed: 200/816
+    jammed: 300/816
+    jammed: 400/816
+    jammed: 500/816
+    jammed: 600/816
+    jammed: 700/816
+    jammed: 800/816
+Dataset generated in 4.2s
+Train: 1104, Test: 474
+Downloading: "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth" to /home/rrahman/.cache/torch/hub/checkpoints/efficientnet_b0_rwightman-7f5810bc.pth
+EfficientNet-B0: 4,010,110 params (4,010,110 trainable)
+
+Training for 100 epochs...
+
+Epoch   1/100 | train_loss=0.6497 train_acc=64.7% | val_loss=0.6959 val_acc=48.9% DR=100.0% FAR=100.00% | 5.1s
+Epoch   2/100 | train_loss=0.5556 train_acc=70.7% | val_loss=0.4748 val_acc=78.9% DR=59.1% FAR=2.07% | 3.3s
+Epoch   3/100 | train_loss=0.5193 train_acc=72.8% | val_loss=0.4673 val_acc=76.8% DR=65.1% FAR=11.98% | 3.1s
+Epoch   4/100 | train_loss=0.4864 train_acc=74.1% | val_loss=0.4467 val_acc=78.9% DR=59.1% FAR=2.07% | 3.4s
+Epoch   5/100 | train_loss=0.4728 train_acc=75.7% | val_loss=0.4423 val_acc=78.1% DR=60.8% FAR=5.37% | 3.4s
+Epoch   6/100 | train_loss=0.4492 train_acc=78.0% | val_loss=0.4398 val_acc=77.4% DR=60.8% FAR=6.61% | 3.3s
+Epoch   7/100 | train_loss=0.4252 train_acc=80.3% | val_loss=0.4440 val_acc=75.3% DR=64.2% FAR=14.05% | 3.3s
+Epoch   8/100 | train_loss=0.4228 train_acc=78.8% | val_loss=0.4425 val_acc=76.6% DR=61.2% FAR=8.68% | 3.2s
+Epoch   9/100 | train_loss=0.3840 train_acc=82.2% | val_loss=0.4436 val_acc=76.2% DR=64.7% FAR=12.81% | 3.4s
+Epoch  10/100 | train_loss=0.3520 train_acc=85.2% | val_loss=0.4478 val_acc=76.6% DR=65.1% FAR=12.40% | 3.2s
+Epoch  11/100 | train_loss=0.3361 train_acc=86.3% | val_loss=0.4559 val_acc=76.8% DR=67.7% FAR=14.46% | 3.1s
+Epoch  12/100 | train_loss=0.2933 train_acc=90.1% | val_loss=0.4692 val_acc=74.7% DR=71.6% FAR=22.31% | 3.1s
+Epoch  13/100 | train_loss=0.2795 train_acc=90.2% | val_loss=0.4777 val_acc=74.5% DR=69.8% FAR=21.07% | 3.1s
+Epoch  14/100 | train_loss=0.2295 train_acc=93.6% | val_loss=0.4900 val_acc=75.9% DR=68.1% FAR=16.53% | 3.1s
+Epoch  15/100 | train_loss=0.1952 train_acc=93.9% | val_loss=0.5111 val_acc=76.2% DR=65.5% FAR=13.64% | 3.1s
+Epoch  16/100 | train_loss=0.1902 train_acc=94.2% | val_loss=0.5283 val_acc=74.7% DR=71.6% FAR=22.31% | 3.1s
+Epoch  17/100 | train_loss=0.1621 train_acc=94.8% | val_loss=0.5466 val_acc=74.3% DR=71.1% FAR=22.73% | 3.1s
+Epoch  18/100 | train_loss=0.1229 train_acc=96.8% | val_loss=0.5734 val_acc=73.2% DR=75.0% FAR=28.51% | 3.1s
+Epoch  19/100 | train_loss=0.1253 train_acc=96.0% | val_loss=0.5883 val_acc=73.6% DR=74.6% FAR=27.27% | 3.1s
+Epoch  20/100 | train_loss=0.1088 train_acc=96.6% | val_loss=0.6189 val_acc=75.7% DR=68.5% FAR=17.36% | 3.1s
+Epoch  21/100 | train_loss=0.1281 train_acc=95.4% | val_loss=0.6259 val_acc=72.8% DR=75.9% FAR=30.17% | 3.1s
+Epoch  22/100 | train_loss=0.0866 train_acc=98.1% | val_loss=0.6490 val_acc=73.2% DR=73.7% FAR=27.27% | 3.1s
+Epoch  23/100 | train_loss=0.0896 train_acc=97.7% | val_loss=0.6681 val_acc=72.8% DR=73.7% FAR=28.10% | 3.1s
+Epoch  24/100 | train_loss=0.0715 train_acc=98.2% | val_loss=0.6834 val_acc=73.4% DR=71.1% FAR=24.38% | 3.1s
+Epoch  25/100 | train_loss=0.0714 train_acc=98.6% | val_loss=0.7070 val_acc=73.2% DR=75.0% FAR=28.51% | 3.1s
+Epoch  26/100 | train_loss=0.0696 train_acc=98.2% | val_loss=0.7137 val_acc=74.5% DR=71.6% FAR=22.73% | 3.1s
+Epoch  27/100 | train_loss=0.0597 train_acc=98.4% | val_loss=0.7240 val_acc=75.1% DR=70.7% FAR=20.66% | 3.1s
+Epoch  28/100 | train_loss=0.0637 train_acc=97.8% | val_loss=0.7318 val_acc=73.8% DR=72.8% FAR=25.21% | 3.1s
+Epoch  29/100 | train_loss=0.0630 train_acc=98.1% | val_loss=0.7502 val_acc=73.8% DR=70.7% FAR=23.14% | 3.1s
+Epoch  30/100 | train_loss=0.0485 train_acc=98.9% | val_loss=0.7727 val_acc=74.7% DR=70.3% FAR=21.07% | 3.1s
+Epoch  31/100 | train_loss=0.0536 train_acc=98.0% | val_loss=0.7610 val_acc=73.2% DR=74.1% FAR=27.69% | 3.1s
+Epoch  32/100 | train_loss=0.0483 train_acc=98.6% | val_loss=0.7747 val_acc=73.2% DR=75.0% FAR=28.51% | 3.1s
+Epoch  33/100 | train_loss=0.0572 train_acc=98.0% | val_loss=0.8006 val_acc=74.7% DR=71.1% FAR=21.90% | 3.1s
+Epoch  34/100 | train_loss=0.0503 train_acc=98.4% | val_loss=0.7831 val_acc=73.8% DR=73.3% FAR=25.62% | 3.1s
+Epoch  35/100 | train_loss=0.0436 train_acc=98.8% | val_loss=0.8563 val_acc=77.2% DR=67.7% FAR=13.64% | 3.1s
+Epoch  36/100 | train_loss=0.0466 train_acc=98.6% | val_loss=0.8215 val_acc=75.1% DR=72.0% FAR=21.90% | 3.1s
+Epoch  37/100 | train_loss=0.0523 train_acc=98.0% | val_loss=0.8355 val_acc=74.7% DR=72.4% FAR=23.14% | 3.1s
+Epoch  38/100 | train_loss=0.0284 train_acc=99.5% | val_loss=0.8487 val_acc=73.6% DR=72.4% FAR=25.21% | 3.1s
+Epoch  39/100 | train_loss=0.0299 train_acc=99.4% | val_loss=0.8752 val_acc=70.3% DR=77.2% FAR=36.36% | 3.1s
+Epoch  40/100 | train_loss=0.0313 train_acc=99.4% | val_loss=0.8795 val_acc=74.3% DR=69.8% FAR=21.49% | 3.1s
+Epoch  41/100 | train_loss=0.0338 train_acc=98.8% | val_loss=0.9070 val_acc=75.7% DR=69.4% FAR=18.18% | 3.1s
+Epoch  42/100 | train_loss=0.0407 train_acc=98.6% | val_loss=0.8840 val_acc=74.1% DR=72.0% FAR=23.97% | 3.1s
+Epoch  43/100 | train_loss=0.0356 train_acc=98.6% | val_loss=0.9347 val_acc=74.7% DR=69.4% FAR=20.25% | 3.1s
+Epoch  44/100 | train_loss=0.0265 train_acc=99.4% | val_loss=0.9182 val_acc=73.2% DR=72.0% FAR=25.62% | 3.1s
+Epoch  45/100 | train_loss=0.0444 train_acc=98.4% | val_loss=0.9372 val_acc=74.9% DR=68.1% FAR=18.60% | 3.1s
+Epoch  46/100 | train_loss=0.0382 train_acc=99.0% | val_loss=0.9106 val_acc=71.9% DR=75.0% FAR=30.99% | 3.1s
+Epoch  47/100 | train_loss=0.0281 train_acc=99.0% | val_loss=0.9286 val_acc=72.8% DR=70.7% FAR=25.21% | 3.1s
+Epoch  48/100 | train_loss=0.0482 train_acc=97.9% | val_loss=0.9256 val_acc=73.4% DR=72.8% FAR=26.03% | 3.1s
+Epoch  49/100 | train_loss=0.0406 train_acc=98.6% | val_loss=0.9174 val_acc=72.2% DR=75.9% FAR=31.40% | 3.1s
+Epoch  50/100 | train_loss=0.0355 train_acc=98.6% | val_loss=0.9293 val_acc=73.2% DR=75.9% FAR=29.34% | 3.1s
+Epoch  51/100 | train_loss=0.0222 train_acc=99.5% | val_loss=0.9299 val_acc=74.9% DR=69.4% FAR=19.83% | 3.1s
+Epoch  52/100 | train_loss=0.0241 train_acc=99.4% | val_loss=0.9306 val_acc=73.8% DR=74.1% FAR=26.45% | 3.1s
+Epoch  53/100 | train_loss=0.0350 train_acc=98.9% | val_loss=0.9423 val_acc=75.1% DR=72.0% FAR=21.90% | 3.1s
+Epoch  54/100 | train_loss=0.0301 train_acc=99.3% | val_loss=0.9255 val_acc=75.1% DR=72.0% FAR=21.90% | 3.1s
+Epoch  55/100 | train_loss=0.0272 train_acc=99.2% | val_loss=0.9546 val_acc=73.8% DR=73.3% FAR=25.62% | 3.1s
+Epoch  56/100 | train_loss=0.0303 train_acc=99.3% | val_loss=0.9628 val_acc=73.0% DR=73.3% FAR=27.27% | 3.1s
+Epoch  57/100 | train_loss=0.0213 train_acc=99.5% | val_loss=0.9676 val_acc=73.6% DR=72.8% FAR=25.62% | 3.1s
+Epoch  58/100 | train_loss=0.0299 train_acc=99.2% | val_loss=0.9902 val_acc=74.1% DR=72.4% FAR=24.38% | 3.1s
+Epoch  59/100 | train_loss=0.0291 train_acc=99.2% | val_loss=0.9663 val_acc=73.2% DR=72.8% FAR=26.45% | 3.1s
+Epoch  60/100 | train_loss=0.0280 train_acc=98.9% | val_loss=1.0116 val_acc=74.9% DR=69.8% FAR=20.25% | 3.1s
+Epoch  61/100 | train_loss=0.0385 train_acc=98.5% | val_loss=0.9808 val_acc=71.5% DR=75.0% FAR=31.82% | 3.1s
+Epoch  62/100 | train_loss=0.0311 train_acc=98.9% | val_loss=0.9606 val_acc=72.6% DR=73.7% FAR=28.51% | 3.1s
+Epoch  63/100 | train_loss=0.0247 train_acc=99.5% | val_loss=0.9866 val_acc=73.4% DR=71.6% FAR=24.79% | 3.2s
+Epoch  64/100 | train_loss=0.0247 train_acc=99.1% | val_loss=0.9822 val_acc=74.1% DR=71.6% FAR=23.55% | 3.2s
+Epoch  65/100 | train_loss=0.0146 train_acc=99.7% | val_loss=0.9724 val_acc=74.3% DR=72.4% FAR=23.97% | 3.3s
+Epoch  66/100 | train_loss=0.0263 train_acc=99.2% | val_loss=0.9777 val_acc=73.6% DR=71.6% FAR=24.38% | 3.1s
+Epoch  67/100 | train_loss=0.0241 train_acc=99.2% | val_loss=0.9712 val_acc=73.2% DR=73.7% FAR=27.27% | 3.1s
+Epoch  68/100 | train_loss=0.0279 train_acc=98.9% | val_loss=1.0100 val_acc=76.2% DR=69.4% FAR=17.36% | 3.4s
+Epoch  69/100 | train_loss=0.0244 train_acc=99.3% | val_loss=0.9728 val_acc=74.9% DR=72.4% FAR=22.73% | 3.2s
+Epoch  70/100 | train_loss=0.0213 train_acc=99.4% | val_loss=0.9760 val_acc=73.8% DR=72.4% FAR=24.79% | 3.1s
+Epoch  71/100 | train_loss=0.0261 train_acc=99.1% | val_loss=0.9645 val_acc=74.3% DR=72.0% FAR=23.55% | 3.1s
+Epoch  72/100 | train_loss=0.0197 train_acc=99.5% | val_loss=0.9508 val_acc=73.6% DR=74.1% FAR=26.86% | 3.1s
+Epoch  73/100 | train_loss=0.0169 train_acc=99.5% | val_loss=0.9589 val_acc=74.7% DR=72.8% FAR=23.55% | 3.1s
+Epoch  74/100 | train_loss=0.0397 train_acc=98.4% | val_loss=1.0061 val_acc=75.3% DR=69.8% FAR=19.42% | 3.8s
+Epoch  75/100 | train_loss=0.0238 train_acc=99.3% | val_loss=1.0022 val_acc=74.1% DR=70.3% FAR=22.31% | 3.1s
+Epoch  76/100 | train_loss=0.0233 train_acc=99.3% | val_loss=0.9690 val_acc=73.4% DR=70.7% FAR=23.97% | 3.1s
+Epoch  77/100 | train_loss=0.0218 train_acc=99.5% | val_loss=0.9709 val_acc=74.1% DR=73.3% FAR=25.21% | 3.1s
+Epoch  78/100 | train_loss=0.0280 train_acc=99.1% | val_loss=0.9688 val_acc=73.8% DR=72.4% FAR=24.79% | 3.3s
+Epoch  79/100 | train_loss=0.0232 train_acc=99.4% | val_loss=0.9921 val_acc=71.7% DR=75.0% FAR=31.40% | 3.1s
+Epoch  80/100 | train_loss=0.0266 train_acc=99.0% | val_loss=0.9507 val_acc=73.4% DR=72.8% FAR=26.03% | 3.1s
+Epoch  81/100 | train_loss=0.0296 train_acc=98.9% | val_loss=0.9851 val_acc=74.1% DR=72.8% FAR=24.79% | 3.1s
+Epoch  82/100 | train_loss=0.0163 train_acc=99.4% | val_loss=0.9853 val_acc=74.1% DR=71.1% FAR=23.14% | 3.1s
+Epoch  83/100 | train_loss=0.0297 train_acc=98.7% | val_loss=0.9699 val_acc=73.8% DR=72.8% FAR=25.21% | 3.1s
+Epoch  84/100 | train_loss=0.0199 train_acc=99.1% | val_loss=0.9943 val_acc=74.1% DR=72.0% FAR=23.97% | 3.1s
+Epoch  85/100 | train_loss=0.0271 train_acc=99.2% | val_loss=0.9946 val_acc=74.5% DR=72.8% FAR=23.97% | 3.1s
+Epoch  86/100 | train_loss=0.0313 train_acc=98.9% | val_loss=0.9690 val_acc=74.5% DR=72.0% FAR=23.14% | 3.1s
+Epoch  87/100 | train_loss=0.0185 train_acc=99.7% | val_loss=0.9776 val_acc=74.3% DR=73.7% FAR=25.21% | 3.1s
+Epoch  88/100 | train_loss=0.0237 train_acc=99.3% | val_loss=0.9693 val_acc=74.7% DR=72.0% FAR=22.73% | 3.1s
+Epoch  89/100 | train_loss=0.0223 train_acc=99.1% | val_loss=0.9674 val_acc=74.5% DR=72.8% FAR=23.97% | 3.2s
+Epoch  90/100 | train_loss=0.0159 train_acc=99.6% | val_loss=0.9648 val_acc=73.8% DR=72.4% FAR=24.79% | 3.4s
+Epoch  91/100 | train_loss=0.0294 train_acc=99.1% | val_loss=0.9923 val_acc=74.5% DR=72.4% FAR=23.55% | 3.2s
+Epoch  92/100 | train_loss=0.0177 train_acc=99.5% | val_loss=0.9768 val_acc=74.5% DR=71.6% FAR=22.73% | 3.2s
+Epoch  93/100 | train_loss=0.0202 train_acc=99.5% | val_loss=0.9866 val_acc=74.5% DR=71.6% FAR=22.73% | 3.2s
+Epoch  94/100 | train_loss=0.0264 train_acc=99.4% | val_loss=0.9757 val_acc=73.6% DR=72.4% FAR=25.21% | 3.1s
+Epoch  95/100 | train_loss=0.0312 train_acc=99.1% | val_loss=0.9739 val_acc=73.8% DR=73.7% FAR=26.03% | 3.0s
+Epoch  96/100 | train_loss=0.0119 train_acc=99.7% | val_loss=0.9904 val_acc=71.7% DR=73.7% FAR=30.17% | 3.1s
+Epoch  97/100 | train_loss=0.0244 train_acc=98.9% | val_loss=1.0061 val_acc=75.1% DR=70.7% FAR=20.66% | 3.0s
+Epoch  98/100 | train_loss=0.0264 train_acc=99.5% | val_loss=0.9914 val_acc=74.3% DR=71.6% FAR=23.14% | 3.6s
+Epoch  99/100 | train_loss=0.0270 train_acc=99.1% | val_loss=0.9766 val_acc=74.3% DR=72.0% FAR=23.55% | 4.0s
+Epoch 100/100 | train_loss=0.0119 train_acc=99.7% | val_loss=0.9853 val_acc=74.9% DR=71.6% FAR=21.90% | 3.5s
+
+Training complete in 318.7s (5.3 min)
+
+Final test results (best checkpoint):
+  Accuracy:  78.90%
+  DR:        59.05%
+  FAR:       2.07%
+  F1:        0.7326
+  Precision: 0.9648
+  Recall:    0.5905
+
+Artifacts saved to /home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/../artifacts/sim05/run001_*

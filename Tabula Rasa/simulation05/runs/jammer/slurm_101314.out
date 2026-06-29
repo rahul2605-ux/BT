@@ -1,0 +1,33 @@
+CUDA: True
+Device: cuda
+CUDA: True
+Loaded 2-agent jammer from ../artifacts/sim04/run007_model.pt (step 33000)
+Loaded CNN detector from ../artifacts/sim05/detector/run001_best.pt
+
+Generating 200 clean samples...
+  Clean:           detection rate = 2.5% (want ~0%, FAR)
+Generating 200 Barrage jammed samples...
+  Barrage              detection rate = 2.5%
+Generating 200 Single-tone jammed samples...
+  Single-tone          detection rate = 100.0%
+Generating 200 Successive-pulse jammed samples...
+  Successive-pulse     detection rate = 97.0%
+Generating 200 Protocol-aware jammed samples...
+  Protocol-aware       detection rate = 1.0%
+Generating 200 MARL-jammed samples...
+  MARL (sim04)         detection rate = 1.0% (kurtosis-trained jammer vs CNN detector)
+
+============================================================
+DETECTION RATE SUMMARY
+============================================================
+  Category              Det. Rate  Interpretation
+------------------------------------------------------------
+  Clean                      2.5%  ← FAR (want low)
+  Barrage                    2.5%  ← evades!
+  Single-tone              100.0%  ← detected
+  Successive-pulse          97.0%  ← detected
+  Protocol-aware             1.0%  ← evades!
+  MARL (sim04)               1.0%  ← EVADES detector!
+============================================================
+
+Plot saved to /home/rrahman/StudentClusterBT/Tabula Rasa/simulation05/../artifacts/sim05/jammer/eval_jammer_vs_detector.png

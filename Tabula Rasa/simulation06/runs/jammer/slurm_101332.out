@@ -1,0 +1,51 @@
+CUDA: True
+Run 001
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Frozen detector loaded from ../artifacts/sim06/detector/run002_best.pt
+Agents: 2x JammerAgent, Critic: CTDE MLP, total params: 1,436,417
+
+Training: 390 iterations (100000 frames, batch=256)...
+
+iter    0/390 | BER=0.317 P(jam)=0.999 rew=-1.768 pow=4.345 | ent=184.5 c_loss=77.8532 | 8.9 fps | 29s
+iter   10/390 | BER=0.432 P(jam)=0.999 rew=-2.201 pow=31.823 | ent=290.6 c_loss=60.0411 | 9.4 fps | 301s
+iter   20/390 | BER=0.431 P(jam)=0.999 rew=-2.225 pow=32.976 | ent=293.8 c_loss=60.0299 | 9.4 fps | 573s
+iter   30/390 | BER=0.432 P(jam)=0.999 rew=-2.226 pow=33.059 | ent=294.2 c_loss=60.0715 | 9.4 fps | 846s
+iter   40/390 | BER=0.431 P(jam)=0.999 rew=-2.229 pow=33.120 | ent=294.3 c_loss=59.6618 | 9.4 fps | 1118s
+iter   50/390 | BER=0.432 P(jam)=0.999 rew=-2.230 pow=33.209 | ent=294.4 c_loss=60.3311 | 9.4 fps | 1390s
+iter   60/390 | BER=0.433 P(jam)=0.998 rew=-2.229 pow=33.268 | ent=294.4 c_loss=62.4811 | 9.4 fps | 1664s
+iter   70/390 | BER=0.431 P(jam)=0.999 rew=-2.232 pow=33.288 | ent=294.4 c_loss=60.1182 | 9.4 fps | 1937s
+iter   80/390 | BER=0.433 P(jam)=0.999 rew=-2.230 pow=33.224 | ent=294.4 c_loss=61.6285 | 9.4 fps | 2209s
+iter   90/390 | BER=0.431 P(jam)=0.999 rew=-2.233 pow=33.341 | ent=294.5 c_loss=60.1214 | 9.4 fps | 2481s
+iter  100/390 | BER=0.433 P(jam)=0.999 rew=-2.231 pow=33.308 | ent=294.5 c_loss=59.4829 | 9.4 fps | 2754s
+iter  110/390 | BER=0.431 P(jam)=0.999 rew=-2.230 pow=33.185 | ent=294.5 c_loss=60.0624 | 9.4 fps | 3027s
+iter  120/390 | BER=0.431 P(jam)=0.999 rew=-2.232 pow=33.301 | ent=294.5 c_loss=60.2669 | 9.4 fps | 3300s
+iter  130/390 | BER=0.431 P(jam)=0.998 rew=-2.230 pow=33.260 | ent=294.5 c_loss=58.9179 | 9.4 fps | 3572s
+iter  140/390 | BER=0.433 P(jam)=0.999 rew=-2.230 pow=33.298 | ent=294.5 c_loss=60.8520 | 9.4 fps | 3845s
+iter  150/390 | BER=0.431 P(jam)=0.998 rew=-2.233 pow=33.364 | ent=294.5 c_loss=59.7487 | 9.4 fps | 4117s
+iter  160/390 | BER=0.432 P(jam)=0.999 rew=-2.232 pow=33.344 | ent=294.5 c_loss=57.3499 | 9.4 fps | 4391s
+iter  170/390 | BER=0.432 P(jam)=0.998 rew=-2.231 pow=33.296 | ent=294.5 c_loss=60.1507 | 9.4 fps | 4663s
+iter  180/390 | BER=0.430 P(jam)=0.999 rew=-2.230 pow=33.164 | ent=294.5 c_loss=59.9157 | 9.4 fps | 4936s
+iter  190/390 | BER=0.432 P(jam)=0.999 rew=-2.233 pow=33.395 | ent=294.5 c_loss=58.7249 | 9.4 fps | 5208s
+iter  200/390 | BER=0.431 P(jam)=0.998 rew=-2.232 pow=33.280 | ent=294.5 c_loss=60.8483 | 9.4 fps | 5481s
+iter  210/390 | BER=0.433 P(jam)=0.999 rew=-2.233 pow=33.409 | ent=294.5 c_loss=60.0843 | 9.4 fps | 5754s
+iter  220/390 | BER=0.431 P(jam)=0.998 rew=-2.230 pow=33.217 | ent=294.5 c_loss=57.7753 | 9.4 fps | 6027s
+iter  230/390 | BER=0.430 P(jam)=0.999 rew=-2.231 pow=33.195 | ent=294.5 c_loss=60.1882 | 9.4 fps | 6299s
+iter  240/390 | BER=0.431 P(jam)=0.999 rew=-2.231 pow=33.241 | ent=294.5 c_loss=59.9006 | 9.4 fps | 6572s
+iter  250/390 | BER=0.430 P(jam)=0.999 rew=-2.235 pow=33.396 | ent=294.5 c_loss=58.9085 | 9.4 fps | 6844s
+iter  260/390 | BER=0.432 P(jam)=0.999 rew=-2.231 pow=33.307 | ent=294.5 c_loss=59.8571 | 9.4 fps | 7118s
+iter  270/390 | BER=0.432 P(jam)=0.999 rew=-2.230 pow=33.226 | ent=294.5 c_loss=61.5216 | 9.4 fps | 7390s
+iter  280/390 | BER=0.432 P(jam)=0.999 rew=-2.233 pow=33.369 | ent=294.6 c_loss=59.8062 | 9.4 fps | 7662s
+iter  290/390 | BER=0.432 P(jam)=0.999 rew=-2.231 pow=33.302 | ent=294.6 c_loss=59.8376 | 9.4 fps | 7935s
+iter  300/390 | BER=0.432 P(jam)=0.999 rew=-2.229 pow=33.191 | ent=294.6 c_loss=59.4100 | 9.4 fps | 8207s
+iter  310/390 | BER=0.432 P(jam)=0.999 rew=-2.230 pow=33.244 | ent=294.6 c_loss=60.3375 | 9.4 fps | 8481s
+iter  320/390 | BER=0.432 P(jam)=0.999 rew=-2.232 pow=33.365 | ent=294.6 c_loss=60.1608 | 9.4 fps | 8753s
+iter  330/390 | BER=0.433 P(jam)=0.999 rew=-2.231 pow=33.344 | ent=294.6 c_loss=62.2770 | 9.4 fps | 9025s
+iter  340/390 | BER=0.431 P(jam)=0.999 rew=-2.234 pow=33.350 | ent=294.6 c_loss=59.6177 | 9.4 fps | 9298s
+iter  350/390 | BER=0.433 P(jam)=0.999 rew=-2.231 pow=33.307 | ent=294.6 c_loss=58.5789 | 9.4 fps | 9570s
+iter  360/390 | BER=0.431 P(jam)=0.999 rew=-2.233 pow=33.308 | ent=294.6 c_loss=61.2034 | 9.4 fps | 9843s
+iter  370/390 | BER=0.430 P(jam)=0.999 rew=-2.232 pow=33.213 | ent=294.6 c_loss=61.0537 | 9.4 fps | 10115s
+iter  380/390 | BER=0.432 P(jam)=0.999 rew=-2.231 pow=33.280 | ent=294.6 c_loss=60.1978 | 9.4 fps | 10387s
+
+Training complete in 10633.5s
+Final: BER=0.431 P(jam)=0.998 reward=-2.234
+Artifacts → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation06/../artifacts/sim06/jammer/run001_*

@@ -1,0 +1,27 @@
+CUDA: True
+Run 001
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Generating dataset: 762 clean + 816 jammed = 1578 total
+  Generating 762 clean OFDM samples...
+    clean: 100/762
+    clean: 200/762
+    clean: 300/762
+    clean: 400/762
+    clean: 500/762
+    clean: 600/762
+    clean: 700/762
+  Generating 816 jammed OFDM samples...
+    jammed: 100/816
+    jammed: 200/816
+    jammed: 300/816
+    jammed: 400/816
+    jammed: 500/816
+    jammed: 600/816
+    jammed: 700/816
+    jammed: 800/816
+Dataset generated in 4.8s
+Train: 1104, Test: 474
+EfficientNet-B0: 4,010,110 params
+
+Training 100 epochs...
+
