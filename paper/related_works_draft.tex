@@ -1,0 +1,116 @@
+% ─── EXAMPLE DRAFT: Related Work section ───────────────────────────────────
+% Reference draft for structure/flow — NOT meant to be copied verbatim.
+% Target length: ~1–1.5 columns IEEE two-column format, + table*.
+% See README.md in this directory for full context and open decisions.
+%
+% STATUS: PyJama dropped (see README). Hameed/Ziemann inclusion still open.
+% ───────────────────────────────────────────────────────────────────────────
+
+\section{Related Work}
+
+Recent surveys~\cite{jamming_survey_2024} document the shift from fixed-heuristic
+jamming toward learning-based strategies. We organize prior work along the three
+axes central to our contribution: cooperative multi-agent jamming,
+deep-learning-based jamming detection, and generative models for adversarial
+signal synthesis.
+
+\paragraph{Cooperative MARL for jamming}
+Reinforcement learning has been applied to both attack and defense in wireless
+systems, but predominantly with discrete or low-dimensional action spaces.
+Zhang and Wu~\cite{article} coordinate multiple jammers against a
+frequency-hopping network via hierarchical DRL modeled as a Stackelberg game,
+achieving higher success rates than non-cooperative baselines; however, each
+jammer selects from a finite set of frequency--power combinations rather than
+synthesizing waveforms.
+Valianti et al.~\cite{valianti2024cooperative} employ cooperative Q-learning to
+neutralize rogue drone swarms with discrete power levels.
+On the defense side, Abolhassani et al.~\cite{abolhassani2025coordinated} use
+QMIX for coordinated anti-jamming spectrum access, training against simplistic
+energy-threshold adversaries that ignore the structure of transmitted data.
+The CTDE paradigm introduced by Lowe et al.~\cite{NIPS2017_68a97503} and the
+MAPPO algorithm of Yu et al.~\cite{yu2022mappo} provide well-validated
+multi-agent training foundations, yet no prior work applies cooperative MARL to
+continuous IQ-level waveform synthesis for jamming.
+
+\paragraph{Deep-learning-based jamming detection}
+CNN classifiers on spectrograms or raw IQ samples represent the current
+state of the art in jamming detection.
+Li et al.~\cite{li2022jamming_ofdm} achieve 99.8\% accuracy on OFDM
+spectrograms using EfficientNet-B0, a result we replicate as our frozen
+adversarial detector.
+Erpek et al.~\cite{erpek2019deep} frame jamming as an adversarial ML problem,
+training CNNs to both detect attacks and improve jammer strategies.
+% OPEN: include Hameed et al. here? Transmitter-side evasion, not jamming,
+% but directly demonstrates "shape waveform statistics to evade a learned
+% classifier" — closest conceptual match to the stealth objective.
+% In parallel, Hameed et al.~\cite{hameed2021offense} show that a legitimate
+% transmitter can perturb its own symbols to evade a DL-based modulation
+% classifier while preserving decodability---demonstrating that adversarial
+% waveform shaping can defeat learned detectors.
+These results motivate a jammer that shapes its signal statistics to evade
+detection, a capability absent from all cooperative MARL jamming work above.
+
+\paragraph{Generative models for adversarial wireless signals}
+Shi et al.~\cite{sagduyu2021gan} use a GAN to synthesize spoofing IQ signals
+over the air that fool a deep-learning classifier, demonstrating that generative
+models can produce realistic adversarial wireless waveforms.
+Wen et al.~\cite{wen2025generative} extend this idea to cooperative jammers with
+GAN-aided covert communication.
+However, GANs cannot provide the exact action log-probabilities required by
+policy-gradient methods such as PPO, precluding their use as MARL policy heads.
+% OPEN: include Ziemann & Metzler here? Radar domain (LPD waveform design),
+% not communications, but it's the strongest existing validation of the
+% "generative model for dual-objective (effective + undetectable) waveform
+% design" paradigm you're applying to comms. Cross-domain cite — your call
+% on whether it strengthens or distracts.
+% In the radar domain, Ziemann and Metzler~\cite{ziemann2024lpd} show that a
+% generative model can synthesize waveforms that are simultaneously effective
+% for sensing and statistically indistinguishable from the RF background,
+% validating the dual-objective (effective + undetectable) waveform design
+% paradigm we adopt for communications.
+Ward et al.~\cite{ward2019nf_rl} demonstrate that normalizing-flow policies
+capture multimodal action distributions and outperform Gaussian baselines in
+continuous control, providing the policy architecture we extend to the
+multi-agent wireless domain.
+
+\paragraph{Research gap}
+As summarized in Table~\ref{tab:related_works}, existing work addresses
+individual aspects of intelligent jamming but no prior method combines all three:
+(i)~IQ-level waveform generation via expressive generative models,
+(ii)~cooperative multi-agent coordination, and
+(iii)~learned stealth against a neural-network detector.
+We fill this gap by equipping MAPPO agents with neural spline flow
+(NSF)~\cite{durkan2019nsf} policies that synthesize complex-valued OFDM jamming
+signals, jointly optimizing for disruption and detection avoidance under a
+black-box threat model.
+
+% ─── Comparison table ──────────────────────────────────────────────────────
+\begin{table*}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{Comparison of related work along the three novelty axes of the proposed
+method. ``IQ Waveform'' indicates whether the method generates raw complex-valued
+signals rather than selecting from discrete actions.}
+\label{tab:related_works}
+\centering
+\begin{tabular}{l l c c c c}
+\hline\hline
+\textbf{Reference} & \textbf{Method} & \textbf{IQ Waveform} & \textbf{MARL}
+  & \textbf{Cooperative} & \textbf{Det.\ Avoidance} \\
+\hline
+Zhang \& Wu~\cite{article}
+  & HDRL (Stackelberg)     & No  & Yes & Yes & No  \\
+Valianti \emph{et al.}~\cite{valianti2024cooperative}
+  & Cooperative Q-learning & No  & Yes & Yes & No  \\
+Abolhassani \emph{et al.}~\cite{abolhassani2025coordinated}
+  & QMIX (defense)         & No  & Yes & Yes & No  \\
+Shi \emph{et al.}~\cite{sagduyu2021gan}
+  & GAN spoofing           & Yes & No  & No  & Partial \\
+Wen \emph{et al.}~\cite{wen2025generative}
+  & GAN-aided covert comm. & No  & No  & Yes & Yes \\
+% Ziemann \& Metzler~\cite{ziemann2024lpd} & GAN (radar LPD) & Yes & No & No & Yes \\  % OPEN: include?
+\textbf{Proposed}
+  & \textbf{MAPPO + NSF}   & \textbf{Yes} & \textbf{Yes}
+  & \textbf{Yes} & \textbf{Yes} \\
+\hline\hline
+\end{tabular}
+\end{table*}

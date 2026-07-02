@@ -1,0 +1,45 @@
+CUDA: True
+Run 004
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Frozen detector loaded (black-box: score only, no gradients)
+Agents: 2x JammerAgent (NSF, blind/causal), Critic: CTDE MLP, total params: 1,436,417
+
+Training: iters 0..390 (100000 frames, batch=256)
+Observation: CAUSAL tx[t-1] (blind for data, pilot-aware at t=3,12)
+Threat model: black-box (score-based, no detector gradients)
+
+iter    0/390 | BER=0.013 P(jam)=0.429 β_eff=0.000 rew=-0.003 pow=0.32 pilot_r=1.01 | ent=179.3 c_loss=0.006 | 9.4 fps | 27s
+iter   10/390 | BER=0.013 P(jam)=0.442 β_eff=0.015 rew=-0.020 pow=0.32 pilot_r=1.00 | ent=179.4 c_loss=0.020 | 9.8 fps | 287s
+iter   20/390 | BER=0.013 P(jam)=0.396 β_eff=0.030 rew=-0.030 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=0.051 | 9.8 fps | 548s
+iter   30/390 | BER=0.013 P(jam)=0.392 β_eff=0.045 rew=-0.041 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=0.109 | 9.8 fps | 810s
+iter   40/390 | BER=0.013 P(jam)=0.364 β_eff=0.060 rew=-0.054 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=0.230 | 9.8 fps | 1070s
+iter   50/390 | BER=0.013 P(jam)=0.388 β_eff=0.075 rew=-0.074 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=0.444 | 9.8 fps | 1330s
+iter   60/390 | BER=0.013 P(jam)=0.368 β_eff=0.090 rew=-0.084 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=0.629 | 9.8 fps | 1593s
+iter   70/390 | BER=0.014 P(jam)=0.374 β_eff=0.105 rew=-0.084 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=0.535 | 9.8 fps | 1853s
+iter   80/390 | BER=0.013 P(jam)=0.370 β_eff=0.120 rew=-0.100 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=0.915 | 9.8 fps | 2115s
+iter   90/390 | BER=0.013 P(jam)=0.359 β_eff=0.135 rew=-0.108 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=0.940 | 9.8 fps | 2375s
+iter  100/390 | BER=0.013 P(jam)=0.382 β_eff=0.150 rew=-0.143 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=1.833 | 9.8 fps | 2636s
+iter  110/390 | BER=0.013 P(jam)=0.372 β_eff=0.165 rew=-0.144 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=1.879 | 9.8 fps | 2898s
+iter  120/390 | BER=0.013 P(jam)=0.396 β_eff=0.180 rew=-0.161 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=2.035 | 9.8 fps | 3158s
+iter  130/390 | BER=0.013 P(jam)=0.388 β_eff=0.195 rew=-0.172 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=2.465 | 9.8 fps | 3420s
+iter  140/390 | BER=0.013 P(jam)=0.404 β_eff=0.210 rew=-0.205 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=3.353 | 9.8 fps | 3680s
+iter  150/390 | BER=0.014 P(jam)=0.383 β_eff=0.225 rew=-0.207 pow=0.32 pilot_r=0.98 | ent=179.3 c_loss=3.777 | 9.8 fps | 3941s
+iter  160/390 | BER=0.013 P(jam)=0.394 β_eff=0.240 rew=-0.231 pow=0.32 pilot_r=1.02 | ent=179.3 c_loss=4.830 | 9.8 fps | 4203s
+iter  170/390 | BER=0.013 P(jam)=0.371 β_eff=0.255 rew=-0.211 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=3.849 | 9.8 fps | 4463s
+iter  180/390 | BER=0.014 P(jam)=0.354 β_eff=0.270 rew=-0.231 pow=0.32 pilot_r=1.00 | ent=179.4 c_loss=5.529 | 9.8 fps | 4725s
+iter  190/390 | BER=0.014 P(jam)=0.383 β_eff=0.285 rew=-0.257 pow=0.32 pilot_r=1.01 | ent=179.3 c_loss=5.922 | 9.8 fps | 4985s
+iter  200/390 | BER=0.013 P(jam)=0.392 β_eff=0.300 rew=-0.268 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=5.793 | 9.8 fps | 5245s
+iter  210/390 | BER=0.013 P(jam)=0.421 β_eff=0.300 rew=-0.310 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=7.528 | 9.8 fps | 5509s
+iter  220/390 | BER=0.013 P(jam)=0.398 β_eff=0.300 rew=-0.296 pow=0.32 pilot_r=1.00 | ent=179.4 c_loss=7.784 | 9.8 fps | 5769s
+iter  230/390 | BER=0.013 P(jam)=0.415 β_eff=0.300 rew=-0.300 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=7.045 | 9.8 fps | 6031s
+iter  240/390 | BER=0.013 P(jam)=0.338 β_eff=0.300 rew=-0.211 pow=0.32 pilot_r=1.01 | ent=179.4 c_loss=4.425 | 9.8 fps | 6291s
+iter  250/390 | BER=0.013 P(jam)=0.397 β_eff=0.300 rew=-0.292 pow=0.32 pilot_r=1.00 | ent=179.4 c_loss=7.709 | 9.8 fps | 6551s
+iter  260/390 | BER=0.013 P(jam)=0.365 β_eff=0.300 rew=-0.240 pow=0.32 pilot_r=0.98 | ent=179.3 c_loss=5.172 | 9.8 fps | 6814s
+iter  270/390 | BER=0.013 P(jam)=0.354 β_eff=0.300 rew=-0.238 pow=0.32 pilot_r=0.99 | ent=179.3 c_loss=5.659 | 9.8 fps | 7074s
+iter  280/390 | BER=0.013 P(jam)=0.380 β_eff=0.300 rew=-0.277 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=7.559 | 9.8 fps | 7336s
+iter  290/390 | BER=0.013 P(jam)=0.354 β_eff=0.300 rew=-0.247 pow=0.32 pilot_r=1.02 | ent=179.3 c_loss=5.925 | 9.8 fps | 7596s
+iter  300/390 | BER=0.013 P(jam)=0.388 β_eff=0.300 rew=-0.276 pow=0.32 pilot_r=1.01 | ent=179.3 c_loss=6.853 | 9.8 fps | 7857s
+iter  310/390 | BER=0.013 P(jam)=0.390 β_eff=0.300 rew=-0.276 pow=0.32 pilot_r=1.02 | ent=179.3 c_loss=6.182 | 9.8 fps | 8119s
+iter  320/390 | BER=0.013 P(jam)=0.378 β_eff=0.300 rew=-0.264 pow=0.32 pilot_r=1.00 | ent=179.4 c_loss=6.175 | 9.8 fps | 8379s
+iter  330/390 | BER=0.013 P(jam)=0.378 β_eff=0.300 rew=-0.257 pow=0.32 pilot_r=1.01 | ent=179.3 c_loss=5.977 | 9.8 fps | 8641s
+iter  340/390 | BER=0.013 P(jam)=0.398 β_eff=0.300 rew=-0.281 pow=0.32 pilot_r=1.00 | ent=179.3 c_loss=6.364 | 9.8 fps | 8901s

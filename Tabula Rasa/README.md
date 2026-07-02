@@ -8,6 +8,67 @@ Fresh restart of baseline experiments. Goal: build intuition step by step before
 
 ---
 
+## Current status (2026-07-02)
+
+**Active:** sim07 (job 101817, run005) — blind causal MAPPO jammer, black-box threat model,
+top-K=1 subcarrier sparsity masking + temporally-stable held-frame action (frequency-hopping fix).
+
+**System as implemented:** 1 TX → 1 RX (64-SC OFDM, QPSK, 802.11a-like) on a lossless
+channel. 2 cooperative NSF jammer agents trained with MAPPO (CTDE). Frozen EfficientNet-B0
+CNN detector (99.79% accuracy) provides P(jammed) as a black-box scalar score — no
+gradients through the detector, ever. Jammer observes tx[t-1] (causal delay), making it
+effectively blind for data symbols. Reward: `BER - β·log(1-P(jam)+ε) - γ·power`. Each
+agent's output is now forced sparse (only the highest-magnitude subcarrier survives, the
+other 63 are zeroed) before a hard per-agent power cap — see sim07 run history below for
+why this was necessary.
+
+**What's been established:**
+- sim00–04: progressive complexity from lossless to 2-jammer NSF (direct-gradient found
+  QPSK-like structure, BER=0.33+, kurtosis evasion)
+- sim05: CNN detector needs OFDM structure (flat QPSK failed, 78.9% accuracy)
+- sim06 Phase 1: CNN detector on OFDM = 99.79% accuracy ✓
+- sim06 Phase 2: MAPPO failed on 128-dim omniscient setting (3 runs: broadband NSF output
+  always detected P(jam)≈0.999, no reward gradient). Probe showed CNN fooled by 1-SC
+  jamming at moderate power but catches ANY broadband noise even at power=0.01.
+- sim06b: MAPPO failed on 2-dim omniscient setting too (stealth OK at P(jam)≈0.003, but
+  BER=0.35 vs optimal 1.0 — Gaussian blobs, no input correlation). Confirms scalar reward
+  cannot teach input-correlated waveforms at ANY dimensionality.
+- sim06 audit: omniscient observation makes the problem trivially solvable (jam=-2*tx).
+  De-trivialized by switching to causal observation in sim07.
+- sim07 run001–003: causal observation alone does NOT fix the broadband-detection wall.
+  Power capping and removing the entropy bonus only reduce P(jam) marginally (0.999→0.99);
+  the real fix is forcing structural sparsity (top-K subcarrier masking). See sim07 section
+  below for full diagnosis, including a direct spectrogram probe of the detector showing a
+  hard cliff at exactly 4 simultaneously-active subcarriers.
+
+**Key open question:** with sparsity now enforced (K=1 active subcarrier per agent, ≤2
+active in the frame), can MAPPO learn a non-trivial blind waveform/SC-selection policy
+that's both stealthy (P(jam)≈0, validated achievable by direct probe) and produces
+meaningful BER? Or is BER from only 1–2 active subcarriers per frame too low to matter,
+in which case the next pivot is to drop the "fool the CNN outright" framing in favor of
+reporting jammer effectiveness/evasion across the full detector suite (power threshold,
+kurtosis, GLRT, pilot variance, CNN) rather than a single binary pass/fail against the
+hardest detector.
+
+**Paper status:** related works section in progress in a separate session — see
+`paper/README.md` for full reference triage, structure decisions, and open questions
+(Hameed/Ziemann inclusion, PyJama dropped). System model and methodology sections are
+stubs. No experimental results from lossless channels will appear in the paper — sim08
+(realistic channel) is where paper claims begin.
+
+**Cluster/compute notes (2026-06-30):** confirmed via `sacct` that sim07 jobs land on
+`studgpu-node01`, a 5060ti node — already the fastest standard GPU on this cluster (other
+options: 1080ti ×24 nodes, 2080ti ×4 nodes, gb10 [DGX Spark-style] ×6 nodes/1 GPU each).
+No GPU-hour budget is enforced on the `projects` account (only a concurrency cap of 1 GPU
+job at a time via `MaxJobsPU=1`); usage this month was 41 GPU-hours. The `projects_4gpus`
+account exists but has `GrpTRESMins=gres/gpu=0` (provisioned, unfunded — confirmed via a
+rejected dry-run submission) — likely what the supervisor's "100 exceptional GPU hours"
+request targets. Note even if funded, `projects_4gpus`' `MaxJobsPU=1` means it enables one
+job using up to 4 GPUs at once (multi-GPU data-parallel), NOT multiple parallel single-GPU
+sweep jobs — for that, `MaxJobsPU` on the regular `projects` QOS would need to be raised.
+
+---
+
 ## Simulation 00 — Lossless channel, no learning
 
 **File:** `simulation00/baseline_lossless.py`
@@ -683,10 +744,26 @@ strategy when the exploration problem is tractable.
 2. Does it find the power sweet spot where P(jam) transitions 0→1? (stealth side)
 3. Does the IQ scatter show structured output (rotated QPSK) vs random blob?
 
-If this works, the path forward is either:
-- (a) Scale up: 1→4→16→52 subcarriers with curriculum
-- (b) Hybrid: MAPPO for subcarrier selection + direct-gradient for waveform shaping
-- (c) Full direct-gradient: make CNN pipeline differentiable, bypass RL for waveform
+**run001 result (390 iters, 261s, ~400 fps):**
+Stealth solved: P(jam)≈0.003 throughout — completely undetected. But waveform learning
+failed: per-SC BER plateaued at 0.35 (theoretical optimum = 1.0 for jam=-2*tx). IQ
+scatter shows Gaussian blobs in both jammers, no input correlation — identical to sim06.
+Power drifted 4.0→6.0 (entropy bonus pushing variance up).
+
+**Conclusion:** even in 2D with a working stealth gradient (P(jam) varies meaningfully),
+MAPPO converges to random noise rather than structured jam=-2*tx. The problem is NOT
+dimensionality — it's that a scalar reward fundamentally cannot teach input-output
+correlation. PPO would need to randomly sample an action near -2*tx, get a high reward,
+and reinforce that specific input-dependent direction.
+
+Combined with sim06's results, this gives a clean negative result: MAPPO fails for
+IQ-level waveform synthesis regardless of action-space dimensionality, because the
+scalar frame-level reward carries no per-dimension structural information.
+
+**However:** this negative result applies to the OMNISCIENT setting where the optimal
+strategy requires input-correlated output. In the BLIND setting (sim07), the jammer
+learns a fixed waveform distribution, not a mapping obs→jam — a fundamentally different
+and potentially more RL-tractable problem.
 
 **Outputs:** `artifacts/sim06b/jammer/`
 
@@ -698,38 +775,248 @@ sbatch submit.sh
 
 ---
 
-## Planned roadmap (sim07–08)
+## Simulation 07 — Blind causal MAPPO jammer (black-box threat model)
 
-**Revised (2026-06-27):** MAPPO on full 128-dim action space failed (see sim06 Phase 2).
-Diagnostic (sim06b) testing whether MAPPO works on 1-subcarrier (2D) action space.
+**Files:** `simulation07/train_jammer.py`, `simulation07/submit.sh`
+
+**What it is:** Changes exactly ONE axis from sim06 — the observation model — plus
+locks in the black-box threat model. No channel, fading, noise, or SINR changes.
+One axis at a time so that if results misbehave, the cause is unambiguous.
+
+### Threat model: black-box, score-based
+
+The jammer accesses the frozen CNN detector ONLY through a scalar detection score
+`P(jammed)`. No gradients flow through the detector — ever. The `@torch.no_grad()`
+wiring in `detect()` is load-bearing, not incidental. This forces MAPPO (RL), not
+direct-gradient. Direct-gradient backprops through the detector and is white-box by
+definition — it is not used, even as a training shortcut.
+
+If convergence is hard, the correct responses are curriculum/reward-shaping, NOT
+switching to gradient access. The black-box constraint holds during training as well
+as evaluation.
+
+### Observation model: causal delay
+
+The jammer observes `tx[t-1]`, not `tx[t]`. At t=0, zeros. This is a 3-line change
+in the rollout loop; OBS_DIM, agent architecture, buffer, and GAE all stay the same.
+
+**Rationale:** sim06's optimum was the trivial `jam ≈ −2·tx` because the jammer saw
+the exact current symbol. With i.i.d. QPSK, `tx[t-1]` is uninformative about `tx[t]`,
+so the cancellation shortcut is mathematically unreachable. The jammer must learn a
+blind waveform distribution — a genuinely non-trivial learning problem.
+
+**What the jammer actually is:** a BLIND jammer learning a fixed stealthy waveform
+distribution, not a reactive function of the current signal. The NSF is therefore
+essentially unconditional (conditioned on an uninformative observation for data symbols).
+It is learning the shape of a distribution to sample from.
+
+**EXCEPTION — pilots:** OFDM symbols 2 and 11 carry deterministic pilot values. When
+the jammer observes `tx[t-1]` and that happens to be a pilot (at t=3 or t=12), it can
+recognize the known pattern. Any concentration of energy on pilot-adjacent symbols is
+**protocol-aware jamming discovered through learning** — a key expected result, not an
+artifact. Tracked via `pilot_power_ratio` metric and per-symbol power bar chart.
+
+### Generative model role
+
+The NSF learns a largely unconditional stealthy waveform distribution. The observation
+is uninformative for data symbols, so the flow is NOT learning a mapping obs→jam — it is
+learning the shape of a distribution to sample from. This is why a normalizing flow fits
+the blind setting: it can represent complex, non-Gaussian waveform distributions with
+exact `log_prob` for PPO's importance ratio. A GAN-discriminator-as-detector framing
+does NOT apply here because the detector is black-box (no discriminator gradients).
+
+### Key parameters
+
+| Parameter | Value | Rationale |
+|---|---|---|
+| Observation | `tx[t-1]` (causal) | De-trivializes; blind for data, pilot-aware |
+| TOTAL_FRAMES | 100,000 | Diagnostic first; extend via checkpoint-resume if learning |
+| ENTROPY_COEFF | 0.005 | Moderate: some exploration without power blowup |
+| BETA_DETECT | 0.3 (log-shaped) | Amplifies gradient near P(jam)≈1 |
+| WARMUP_ITERS | 200 | β ramps from 0; learn power control first |
+| GAMMA_POWER | 0.05 | Moderate power penalty |
+| N_JAMMERS | 2 (fixed) | Permutation-invariant encoder worthless at N=2 |
+| Detector gradients | None (black-box) | `@torch.no_grad()` in `detect()` |
+
+**Checkpoint-and-resume:** saves full state (agents, critic, optimizers, logs,
+iteration) so training can span multiple 8h SLURM jobs. Resume with
+`--resume ../artifacts/sim07/jammer/run001_ckpt.pt`.
+
+**Expected convergence:** uncertain. First run (100k frames, ~3h) is a "does it learn
+at all" diagnostic, not a final result. Extend via checkpoint-resume if learning signal
+appears. If P(jam) stays flat at 0.999 (same broadband-noise wall as sim06), the causal
+delay alone hasn't helped and curriculum/reward-shaping is the next lever.
+
+**Key convergence risk:** the NSF's initial output is still broadband noise → P(jam)≈0.999
+→ no detection gradient. The causal delay changes the PROBLEM (blind vs omniscient) but
+not the INITIALIZATION. sim06's probe showed the CNN catches even power=0.01 broadband
+noise. If the jammer can't accidentally produce sparse/structured output early in training,
+it will face the same constant-P(jam) wall. The β warmup (200 iters) is designed to let
+the agent learn power control before detection kicks in — if this works, the agent should
+settle at moderate power and then adapt to the detection signal.
+
+### sim07 run history (2026-06-30)
+
+**run001 (job 101622, baseline causal/blind, no mitigations, 150 iters before kill):**
+Confirmed the predicted convergence risk exactly. `P(jam)` pinned at 0.999 for the entire
+run — zero variance. `ENTROPY_COEFF=0.005` actively made things worse: policy entropy shot
+to its ceiling (~294) within 10 iterations and total jam power diverged 4→33 (entropy bonus
+rewards high-variance broadband output, which is exactly what the detector catches hardest).
+Critic loss climbed monotonically (0→58) — the critic chasing a moving target as β warmup
+ramped, never converging. Reward fell monotonically. No learning signal anywhere. Killed.
+
+**run002 (job 101632, + hard per-agent power cap at 1.0, entropy coeff → 0):**
+Mechanically fixed the power blowup (total power flat at 2.00 instead of 33) but did NOT
+fix detection — `P(jam)` still pinned at 0.999, all metrics (BER=0.243, entropy=178.8,
+power=2.00) bit-for-bit flat across 60 iterations. Root cause: capping power doesn't help
+because the detector catches **broadband noise at any power level** (sim06 probe: even
+power=0.01/SC broadband → P(jam)=1.0). The NSF's raw output is ~N(0,1) across all 128
+dims regardless of overall scale — i.e. inherently broadband — so power scaling alone
+can't put the agent into a regime where stealth is even possible. Killed.
+
+**run003 (job 101650, + top-K=8 subcarrier masking on top of run002's fixes):**
+First real movement: `P(jam)` dropped from pinned-0.999 to ~0.985–0.996 (noisy but
+distinctly lower). Still **not learning** — entropy varied by <0.05% across 190 iterations
+(178.75–178.83, pure sampling noise), BER/power similarly flat. Critic loss kept climbing
+(0→40+). Diagnosis: K=8 active subcarriers is still too many for the detector to treat as
+stealthy — confirmed by direct spectrogram probe (below), so there was no usable gradient
+to learn from even with masking in place. Killed.
+
+**Spectrogram probe (2026-06-30) — root-caused the sparsity threshold directly:**
+Generated actual spectrograms through the trained CNN detector at controlled subcarrier
+counts (`artifacts/sim07/diagnostics/spectrogram_probe_comparison.png` and `_v1.png`).
+Result is a **sharp, power-independent cliff between 3 and 4 simultaneously active
+subcarriers**:
+
+| Active SCs | Power=1.0 | Power=8.0 |
+|---|---|---|
+| 1 | P(jam)=0.0002 | P(jam)=0.0001 |
+| 2 | P(jam)=0.0002 | P(jam)=0.0017 |
+| 3 | P(jam)=0.0013 | P(jam)=0.0119 |
+| **4** | **P(jam)=0.9955** | **P(jam)=0.9955** |
+| 8 | P(jam)=0.9973 | — |
+| 64 (broadband) | P(jam)=0.9999 (even at power=0.01/SC) | — |
+
+The CNN appears to key off the *number* of anomalous spectrogram rows present, not their
+magnitude (P(jam) is nearly identical at power=1 and power=8 for a given SC count — only
+the SC count moves the needle, until 4+ SCs are active, at which point it's saturated
+regardless of power). Visually: a single bright frequency line (1 SC) is indistinguishable
+from normal channel/pilot variation; 4+ simultaneous lines are not. Plausible explanation:
+the detector's training set only had "1 active tone" (single-tone jammer) and "all tones"
+(barrage) as sparse/dense extremes, so it never learned a graceful boundary in between —
+it generalizes conservatively (flags as jammed) anywhere in the unseen middle ground.
+
+**run004 (job 101657, top-K reduced 8→1, killed ~2026-07-02):** K=1 masking reduced P(jam)
+to ~0.35–0.44 (as hoped — well below the 0.999 wall) but NOT near-zero as the static probe
+predicted (expected P(jam)≈0.0002 for 1-SC jamming). Root cause identified via spectrogram
+probe: **frequency-hopping**. The NSF resamples a fresh jam waveform at every one of 14 OFDM
+symbols per frame. Each symbol potentially targets a *different* top-1 subcarrier. The
+frame-level spectrogram aggregates all 14 activations → looks multi-tone/broadband → detected
+at P(jam)≈0.46. Confirmed by a controlled probe: `hopping_2sc(2agents)` at power=1 gives
+P(jam)=0.4633, matching the live run exactly, vs P(jam)≈0.0002 for a temporally-fixed single
+SC. The discrepancy was not a learning failure — it was a structural mismatch between the
+per-symbol rollout (resamples every symbol) and the frame-level spectrogram (aggregates all 14
+symbols). Killed.
+
+**run005 (job 101817, + temporally-stable held-frame action, 2026-07-02):** Fixes the
+frequency-hopping problem by restructuring the rollout loop:
+1. Sample jam waveform ONCE per agent per frame using `obs0 = zeros` (canonical blind context)
+2. Hold this fixed across ALL data-symbol timesteps (t not in {3, 12})
+3. Resample fresh ONLY at pilot-reactive timesteps t=3 and t=12 (where `tx[t-1]` is a known
+   pilot → pilot-aware jamming discovered through learning; `PILOT_REACT_TIMESTEPS = {3, 12}`)
+
+The held-frame action means the frame-level spectrogram sees a single stable frequency line
+(or two, if both agents pick different SCs) across all 14 symbols — matching the static probe
+condition where P(jam)≈0.0002. This is the first run where the agent should actually observe
+P(jam) close to zero when it jams sparsely, providing a usable PPO gradient.
+
+Raw jam_flat from the NSF (pre-masking) is still stored in the replay buffer for the PPO
+importance ratio — the `apply_sparsity_and_power_cap()` transform is applied post-sample and
+the log_prob from the NSF over raw outputs is used for PPO, preserving importance ratio
+correctness.
+
+**Inductive bias caveat (own concern, raised and discussed 2026-06-30):** top-K masking is
+a real architectural prior — it presupposes "the solution is sparse" rather than letting
+the agent discover this through gradient descent. Argued (and still believe) this is
+justified as a *feasibility check*: an NSF initialized to ~N(0,1) across 128 dims has no
+natural pathway to produce sparse samples (concentration-of-measure in high dimensions
+means no batch element looks meaningfully different from any other), so the policy
+gradient is provably flat in the unmasked regime — this isn't a "needs more steps" problem,
+it's structurally the same wall as sim02/sim03c (Gaussian/GMM policies structurally
+incapable of producing non-Gaussian output). If K=1 masking produces a working policy, a
+natural follow-up ablation is removing the mask and confirming it fails unconstrained —
+turning the inductive-bias compromise into a documented finding ("unconstrained continuous
+RL cannot discover sparse evasive strategies from broadband initialization without a
+structural prior") rather than a quietly-shipped shortcut.
+
+**Strategic fallback (discussed, not yet decided):** if even K=1 doesn't produce meaningful
+BER, or if full CNN evasion turns out to be unreachable by black-box RL regardless of
+masking, the recommended pivot is away from "did we fully evade the strongest detector"
+as a binary claim, toward reporting jammer effectiveness/evasion across the **full detector
+roadmap** (power threshold, kurtosis, GLRT, pilot variance, CNN) — i.e. showing the
+cooperative jammer defeats simple statistical detectors outright and meaningfully reduces
+(without necessarily eliminating) CNN detection. This is more honest, lower-risk, and
+consistent with the negative/boundary-result narrative already established by sim02/03c/06.
+
+**Outputs:** `artifacts/sim07/jammer/` — training curves, IQ scatter, per-OFDM-symbol
+power bar chart (pilot vs data symbols). `artifacts/sim07/diagnostics/` — spectrogram
+probe comparison images.
+
+**How to run:**
+```bash
+cd "Tabula Rasa/simulation07"
+sbatch submit.sh
+
+# To resume:
+# Edit submit.sh to uncomment RESUME= line with checkpoint path
+sbatch submit.sh
+```
+
+---
+
+## Staging / roadmap
+
+**Principle: one axis per step.** If results misbehave, the cause is unambiguous.
 
 ```
-sim06   (detector done, MAPPO failed) OFDM + CNN detector
+sim06   plumbing milestone — lossless + omniscient
         detector: 99.79% accuracy ✓
-        MAPPO: broadband NSF output always detected → no gradient → failed
-        probe: CNN fooled by 1-SC jamming at moderate power
+        MAPPO: failed (broadband noise always detected; scalar reward
+          cannot teach input-correlated waveforms even in 2D — sim06b)
+        probe: CNN fooled by 1-SC jamming at moderate power ✓
+        NO scientific claims from sim06 — the lossless omniscient setup
+          has a trivial analytical optimum (jam=-2*tx)
 
-sim06b  (current) single-subcarrier MAPPO diagnostic
-        2D action space, Gaussian policy
-        tests whether MAPPO learns jam=-2*tx + finds stealth sweet spot
-        if works → scale up via curriculum or hybrid architecture
+sim07   observation fixed (current step)
+        causal tx[t-1] → blind jammer, de-trivializes the problem
+        black-box threat model locked in (score-based, no detector gradients)
+        same lossless channel — isolates observation change only
 
-sim07   upgrade channel → per-link path loss + phase + noise
-        rx = h_tx · tx + Σ_i h_jam_i · jam_i + noise
-        h = (d_ref/d) · exp(jφ(d)) per jammer→target link
+sim08   realistic channel + noise + SINR (deferred)
+        rx = h_tx·tx + Σ h_jam·jam + noise
+        per-link path loss, phase, fading via Sionna channel models
         spatial cooperation: who jams whom, accounting for channel gains
-        Sionna channel models on GPU (validated in sim04b)
-
-sim08   (stretch) frequency-selective fading + UAV mobility
-        channel changes per coherence interval → policy must generalize
-        randomized UAV positions each episode → coordination under uncertainty
 ```
 
-**Future vision (beyond thesis scope):** multiple UAV jammers with randomized positions
-coordinate IQ-level waveforms targeting multiple receivers. Each jammer's signal travels a
-different distance to each target, arriving with different power and phase. The MARL policy
-must learn spatial resource allocation (who jams whom) and waveform shaping (what signal to
-send) jointly, while remaining undetectable to each target's local detector.
+### Explicitly deferred (with reasons)
+
+- **Realistic channel/SINR (sim08):** deliberately separated from the observation
+  change so each axis is testable in isolation. Adding both at once would make
+  failure diagnosis ambiguous.
+- **Permutation-invariant encoder + N≥4 scaling:** only earns its keep at N≈6–8
+  (see analysis). At N=2, fixed-order concatenation MLP is strictly simpler with
+  no measurable downside. Separate reduced-setting experiment if pursued.
+- **Co-adaptive/learning defender:** currently fixed-policy (frozen CNN) by design.
+  An adaptive defender creates a non-stationary training environment that compounds
+  the convergence difficulty. Deferred until the jammer reliably converges against
+  the fixed detector.
+
+### Known limitation (keep visible)
+
+sim06's lossless channel and sim07's lossless channel are NOT realistic. No results
+from a lossless channel make scientific claims in the paper. The channel is a
+controlled simplification for isolating observation-model and training-algorithm
+effects. Realistic channel (sim08) is where the paper's experimental claims begin.
 
 ---
 

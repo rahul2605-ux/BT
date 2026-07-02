@@ -1,0 +1,11 @@
+CUDA: True
+Run 001
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Frozen detector loaded (black-box: score only, no gradients)
+Agents: 2x JammerAgent (NSF, blind/causal), Critic: CTDE MLP, total params: 1,436,417
+
+Training: iters 0..1953 (500000 frames, batch=256)
+Observation: CAUSAL tx[t-1] (blind for data, pilot-aware at t=3,12)
+Threat model: black-box (score-based, no detector gradients)
+
+iter    0/1953 | BER=0.318 P(jam)=0.999 β_eff=0.000 rew=0.098 pow=4.40 pilot_r=0.99 | ent=185.6 c_loss=0.121 | 8.9 fps | 29s

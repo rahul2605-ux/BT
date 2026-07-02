@@ -1,0 +1,18 @@
+CUDA: True
+Run 005
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Frozen detector loaded (black-box: score only, no gradients)
+Agents: 2x JammerAgent (NSF, blind/causal), Critic: CTDE MLP, total params: 1,436,417
+
+Training: iters 0..390 (100000 frames, batch=256)
+Observation: CAUSAL tx[t-1] (blind for data, pilot-aware at t=3,12)
+Threat model: black-box (score-based, no detector gradients)
+
+iter    0/390 | BER=0.013 P(jam)=0.286 β_eff=0.000 rew=-0.003 pow=0.31 pilot_r=1.00 | ent=178.4 c_loss=0.006 | 9.0 fps | 28s
+iter   10/390 | BER=0.014 P(jam)=0.324 β_eff=0.015 rew=-0.019 pow=0.33 pilot_r=1.00 | ent=178.3 c_loss=0.025 | 9.9 fps | 287s
+iter   20/390 | BER=0.014 P(jam)=0.262 β_eff=0.030 rew=-0.029 pow=0.32 pilot_r=1.00 | ent=178.4 c_loss=0.085 | 9.9 fps | 545s
+iter   30/390 | BER=0.014 P(jam)=0.323 β_eff=0.045 rew=-0.051 pow=0.32 pilot_r=1.00 | ent=178.4 c_loss=0.209 | 9.9 fps | 805s
+iter   40/390 | BER=0.014 P(jam)=0.321 β_eff=0.060 rew=-0.072 pow=0.31 pilot_r=1.00 | ent=178.3 c_loss=0.422 | 9.9 fps | 1063s
+iter   50/390 | BER=0.013 P(jam)=0.344 β_eff=0.075 rew=-0.096 pow=0.33 pilot_r=1.01 | ent=178.4 c_loss=0.754 | 9.9 fps | 1320s
+iter   60/390 | BER=0.013 P(jam)=0.330 β_eff=0.090 rew=-0.108 pow=0.32 pilot_r=1.00 | ent=178.4 c_loss=1.085 | 9.9 fps | 1581s
+iter   70/390 | BER=0.013 P(jam)=0.286 β_eff=0.105 rew=-0.108 pow=0.31 pilot_r=1.00 | ent=178.4 c_loss=1.264 | 9.9 fps | 1840s

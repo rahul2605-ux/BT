@@ -1,0 +1,30 @@
+CUDA: True
+Run 003
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Frozen detector loaded (black-box: score only, no gradients)
+Agents: 2x JammerAgent (NSF, blind/causal), Critic: CTDE MLP, total params: 1,436,417
+
+Training: iters 0..390 (100000 frames, batch=256)
+Observation: CAUSAL tx[t-1] (blind for data, pilot-aware at t=3,12)
+Threat model: black-box (score-based, no detector gradients)
+
+iter    0/390 | BER=0.097 P(jam)=0.991 β_eff=0.000 rew=0.015 pow=1.64 pilot_r=1.00 | ent=178.8 c_loss=0.009 | 9.0 fps | 29s
+iter   10/390 | BER=0.098 P(jam)=0.990 β_eff=0.015 rew=-0.081 pow=1.63 pilot_r=1.01 | ent=178.8 c_loss=0.088 | 9.8 fps | 289s
+iter   20/390 | BER=0.097 P(jam)=0.991 β_eff=0.030 rew=-0.181 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=0.380 | 9.8 fps | 549s
+iter   30/390 | BER=0.098 P(jam)=0.995 β_eff=0.045 rew=-0.279 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=0.853 | 9.8 fps | 811s
+iter   40/390 | BER=0.097 P(jam)=0.988 β_eff=0.060 rew=-0.369 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=1.518 | 9.8 fps | 1071s
+iter   50/390 | BER=0.097 P(jam)=0.989 β_eff=0.075 rew=-0.478 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=2.691 | 9.8 fps | 1331s
+iter   60/390 | BER=0.097 P(jam)=0.992 β_eff=0.090 rew=-0.561 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=3.887 | 9.8 fps | 1594s
+iter   70/390 | BER=0.097 P(jam)=0.991 β_eff=0.105 rew=-0.688 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=5.347 | 9.8 fps | 1854s
+iter   80/390 | BER=0.098 P(jam)=0.994 β_eff=0.120 rew=-0.780 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=6.768 | 9.8 fps | 2116s
+iter   90/390 | BER=0.097 P(jam)=0.991 β_eff=0.135 rew=-0.865 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=8.795 | 9.8 fps | 2376s
+iter  100/390 | BER=0.098 P(jam)=0.996 β_eff=0.150 rew=-0.996 pow=1.63 pilot_r=1.01 | ent=178.8 c_loss=10.968 | 9.8 fps | 2636s
+iter  110/390 | BER=0.098 P(jam)=0.994 β_eff=0.165 rew=-1.063 pow=1.63 pilot_r=0.99 | ent=178.8 c_loss=12.986 | 9.8 fps | 2898s
+iter  120/390 | BER=0.098 P(jam)=0.992 β_eff=0.180 rew=-1.176 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=16.669 | 9.8 fps | 3159s
+iter  130/390 | BER=0.097 P(jam)=0.996 β_eff=0.195 rew=-1.297 pow=1.63 pilot_r=0.99 | ent=178.8 c_loss=18.426 | 9.8 fps | 3421s
+iter  140/390 | BER=0.099 P(jam)=0.996 β_eff=0.210 rew=-1.360 pow=1.62 pilot_r=0.99 | ent=178.8 c_loss=20.506 | 9.8 fps | 3681s
+iter  150/390 | BER=0.098 P(jam)=0.994 β_eff=0.225 rew=-1.512 pow=1.64 pilot_r=1.01 | ent=178.8 c_loss=25.731 | 9.8 fps | 3942s
+iter  160/390 | BER=0.098 P(jam)=0.990 β_eff=0.240 rew=-1.527 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=28.431 | 9.8 fps | 4204s
+iter  170/390 | BER=0.098 P(jam)=0.992 β_eff=0.255 rew=-1.672 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=32.809 | 9.8 fps | 4464s
+iter  180/390 | BER=0.097 P(jam)=0.993 β_eff=0.270 rew=-1.769 pow=1.63 pilot_r=1.00 | ent=178.8 c_loss=36.376 | 9.8 fps | 4726s
+iter  190/390 | BER=0.097 P(jam)=0.989 β_eff=0.285 rew=-1.793 pow=1.63 pilot_r=0.99 | ent=178.8 c_loss=39.629 | 9.8 fps | 4986s
