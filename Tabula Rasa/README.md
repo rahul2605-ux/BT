@@ -8,64 +8,299 @@ Fresh restart of baseline experiments. Goal: build intuition step by step before
 
 ---
 
-## Current status (2026-07-02)
+## Current status (updated 2026-07-08)
 
-**Active:** sim07 (job 101817, run005) — blind causal MAPPO jammer, black-box threat model,
-top-K=1 subcarrier sparsity masking + temporally-stable held-frame action (frequency-hopping fix).
+> **READ THIS FIRST.** Single entry point — a major pivot plus the full 2026-07-02→08
+> result arc. Read it top to bottom; it supersedes the older sim01–sim07 sections (kept
+> for history). **The arc has a mid-course CORRECTION (the "Recheck" below): early Phase-0
+> "stealth" numbers are superseded — read through to the sim08 milestone-2 FULL-SUITE result
+> for the current bottom line.** Detailed writeups in the Phase 0 / Phase 0.5 / Simulation 08
+> (milestones 1 and 2) sections further down.
 
-**System as implemented:** 1 TX → 1 RX (64-SC OFDM, QPSK, 802.11a-like) on a lossless
-channel. 2 cooperative NSF jammer agents trained with MAPPO (CTDE). Frozen EfficientNet-B0
-CNN detector (99.79% accuracy) provides P(jammed) as a black-box scalar score — no
-gradients through the detector, ever. Jammer observes tx[t-1] (causal delay), making it
-effectively blind for data symbols. Reward: `BER - β·log(1-P(jam)+ε) - γ·power`. Each
-agent's output is now forced sparse (only the highest-magnitude subcarrier survives, the
-other 63 are zeroed) before a hard per-agent power cap — see sim07 run history below for
-why this was necessary.
+### TL;DR — where we are
 
-**What's been established:**
-- sim00–04: progressive complexity from lossless to 2-jammer NSF (direct-gradient found
-  QPSK-like structure, BER=0.33+, kurtosis evasion)
-- sim05: CNN detector needs OFDM structure (flat QPSK failed, 78.9% accuracy)
-- sim06 Phase 1: CNN detector on OFDM = 99.79% accuracy ✓
-- sim06 Phase 2: MAPPO failed on 128-dim omniscient setting (3 runs: broadband NSF output
-  always detected P(jam)≈0.999, no reward gradient). Probe showed CNN fooled by 1-SC
-  jamming at moderate power but catches ANY broadband noise even at power=0.01.
-- sim06b: MAPPO failed on 2-dim omniscient setting too (stealth OK at P(jam)≈0.003, but
-  BER=0.35 vs optimal 1.0 — Gaussian blobs, no input correlation). Confirms scalar reward
-  cannot teach input-correlated waveforms at ANY dimensionality.
-- sim06 audit: omniscient observation makes the problem trivially solvable (jam=-2*tx).
-  De-trivialized by switching to causal observation in sim07.
-- sim07 run001–003: causal observation alone does NOT fix the broadband-detection wall.
-  Power capping and removing the entropy bonus only reduce P(jam) marginally (0.999→0.99);
-  the real fix is forcing structural sparsity (top-K subcarrier masking). See sim07 section
-  below for full diagnosis, including a direct spectrogram probe of the detector showing a
-  hard cliff at exactly 4 simultaneously-active subcarriers.
+The original goal (a cooperative MARL jammer that fools the CNN, pure black-box) hit a
+**confirmed dead end** at sim07. We pivoted to characterizing the detector and the
+effectiveness–detectability frontier. The arc (every experiment ≤1 min on GPU):
+- **Phase 0:** the SOTA spectrogram CNN is an *out-of-band-emission detector* — near-blind to
+  spectrally-compliant in-band interference.
+- **Phase 0.5:** retraining it to catch in-band jamming costs false-alarm rate/accuracy.
+- **Recheck (CORRECTION):** the CNN-only "stealthy BER 0.42" was misleading — a trivial ENERGY
+  detector catches any effective in-band jammer on the *lossless* channel. The out-of-band CNN
+  finding is real (survives a spectrogram bug-fix); the stealth claim is not, on the lossless channel.
+- **sim08 m1 (the payoff):** on a *realistic* fading+noise channel the stealth region REAPPEARS — a
+  low-power jammer hides under the noise floor from the energy detector while causing **BER ≈ 0.20**.
+  This is the paper's positive result, and it exists only on realistic channels.
+- **sim08 m2 (the full suite):** a *channel-valid* CNN (retrained on faded signals, acc 94.3%) does
+  cover the energy detector's blind spot — the CNN+energy **suite ≡ the CNN alone** (the energy
+  detector catches *nothing* the CNN misses on the faded channel), pulling stealthy BER from ~0.22
+  (energy-only) down to **0.065–0.11**. But the region does **not** close: a residual sparse
+  ~16-subcarrier jammer stays stealthy-AND-effective (BER 0.065 at 30 dB, ~160× the 0.0004 floor),
+  and the CNN pays a false-alarm cost (~20% FAR at 5 dB). The stealthy-effective region survives the
+  full suite on realistic channels.
 
-**Key open question:** with sparsity now enforced (K=1 active subcarrier per agent, ≤2
-active in the frame), can MAPPO learn a non-trivial blind waveform/SC-selection policy
-that's both stealthy (P(jam)≈0, validated achievable by direct probe) and produces
-meaningful BER? Or is BER from only 1–2 active subcarriers per frame too low to matter,
-in which case the next pivot is to drop the "fool the CNN outright" framing in favor of
-reporting jammer effectiveness/evasion across the full detector suite (power threshold,
-kurtosis, GLRT, pilot variance, CNN) rather than a single binary pass/fail against the
-hardest detector.
+**Bottom line:** the paper's core is *the realistic channel vs the full detector suite*, and it now
+holds against the complete suite: even a channel-valid CNN + energy detector leaves a residual
+stealthy-effective region (BER ~0.065–0.11 at P(det)≤0.5). **Next: a *learned* channel-aware /
+cooperative jammer (milestone 3) to WIDEN that residual region against the full suite** — the
+matched-P_energy comparison is the metric that proves it.
 
-**Paper status:** related works section in progress in a separate session — see
-`paper/README.md` for full reference triage, structure decisions, and open questions
-(Hameed/Ziemann inclusion, PyJama dropped). System model and methodology sections are
-stubs. No experimental results from lossless channels will appear in the paper — sim08
-(realistic channel) is where paper claims begin.
+### The pivot — why sim07 (blind MAPPO) was abandoned
 
-**Cluster/compute notes (2026-06-30):** confirmed via `sacct` that sim07 jobs land on
-`studgpu-node01`, a 5060ti node — already the fastest standard GPU on this cluster (other
-options: 1080ti ×24 nodes, 2080ti ×4 nodes, gb10 [DGX Spark-style] ×6 nodes/1 GPU each).
-No GPU-hour budget is enforced on the `projects` account (only a concurrency cap of 1 GPU
-job at a time via `MaxJobsPU=1`); usage this month was 41 GPU-hours. The `projects_4gpus`
-account exists but has `GrpTRESMins=gres/gpu=0` (provisioned, unfunded — confirmed via a
-rejected dry-run submission) — likely what the supervisor's "100 exceptional GPU hours"
-request targets. Note even if funded, `projects_4gpus`' `MaxJobsPU=1` means it enables one
-job using up to 4 GPUs at once (multi-GPU data-parallel), NOT multiple parallel single-GPU
-sweep jobs — for that, `MaxJobsPU` on the regular `projects` QOS would need to be raised.
+sim07 (blind causal MAPPO, black-box) was confirmed a dead end through **run005 (job 101817)**
+— all five runs failed identically: BER≈0.013, P(jam)≈0.3 (pure sampling noise), policy
+entropy bit-for-bit flat (~178.4 = the policy never moved), reward falling as the β warmup
+ramps a constant detection penalty. Two **structural** causes (not tuning):
+1. Reward variance across the batch ≈ 0 → normalized advantages are pure noise → PPO has no
+   gradient. Same wall as sim06/06b: a scalar frame-level reward carries no per-dimension info.
+2. The K=1 sparsity that sim07 needed (to get under the detector's apparent "cliff") caps BER
+   at ~2/52 ≈ 0.04 — too low to matter. The RL-over-raw-IQ negative result (sim06/06b/07)
+   still stands as a publishable ablation, but it is no longer the plan.
+
+### Today's findings (2026-07-02) — the new spine
+
+**Phase 0 — effectiveness–detectability frontier, no RL (job 101860).**
+Pure-inference sweep (`frontier/frontier_sweep.py`) over (# active subcarriers × power ×
+structure) through the frozen sim06 detector, recording BOTH P(det) and BER. Result:
+**the "99.79% SOTA detector" is essentially an OUT-OF-BAND-EMISSION detector, not a jamming
+detector.** Decisive control (same power, same BER, differ only in whether the 12 guard/DC
+null bins are hit): in-band broadband n=52 pwr=8 → P(det)=**0.011**, BER=0.36; the same
+signal spread over all 64 bins (out-of-band) → P(det)=**0.999**; out-of-band at pwr=0.03
+causing BER=0 → P(det)=**0.9999** (flags a harmless signal). A blind, in-band, temporally-held
+jammer reaches **BER 0.25 @ P(det)≤0.05, 0.33 @ ≤0.10, 0.42 @ ≤0.50**; omniscient jam=−2·tx
+reaches BER 1.0 @ P(det)=0.0016. This **reconciles** the old sim06 "broadband→0.999" wall (that
+probe injected into guard/DC bins) and sim07's "4-subcarrier cliff" (its top-K over the full
+64-bin grid was selecting guard/DC bins). The earlier "stealth–effectiveness tension is
+fundamental / BER capped at 0.04" conclusion was WRONG — it was an out-of-band-leakage artifact.
+Outputs: `artifacts/frontier/{frontier,cliff,ber_vs_nactive,coherence}.png`, `results.json`.
+
+**Phase 0.5 — retrain the detector with in-band jammers (job 101866).**
+`frontier/retrain_detector_inband.py` trains a fresh EfficientNet on clean + 4 classical +
+in-band jammers, then re-sweeps. Outcome = "blind spot closes, but only at a real cost →
+genuine tradeoff": in-band broadband P(det) 0.011→**0.995**, BUT overall accuracy
+99.79%→**90.5%**, FAR 0%→**3.8%** (up to ~50% on near-zero-power in-band perturbations),
+in-band detection only reaches **68%** (a third still evade), and a residual **sparse** blind
+spot remains (n=3 evades at P(det)≤0.5, BER 0.02). Stealthy BER collapses 0.42→0.02; even the
+omniscient jam=−2·tx (statistically clean rx=−tx) is now flagged at ≈0.15. **A spectrogram-CNN
+cannot catch spectrally-compliant in-band interference without sacrificing false-alarm rate and
+clean accuracy — an intrinsic tradeoff, not just a data gap.** Caveat: this is a quick 50-epoch
+naive retrain; in-band samples were labeled "jammed" even when BER≈0, which inflates FAR — a
+careful version (BER-thresholded labels, threshold calibration) would sharpen the exact numbers.
+Detector saved: `artifacts/frontier/detector/run001_best.pt`. Re-swept frontier:
+`artifacts/frontier_inband/`.
+
+**sim08 milestone 1 — realistic channel + channel-aware frontier (job 101870).**
+`simulation08/channel.py` (`MultiLinkChannel`: per-link frequency-selective TDL fading + AWGN
+at target Eb/N0 + perfect-CSI ZF equalization) and `simulation08/frontier_channel.py`. Results:
+(1) channel is physically correct (clean BER floor 0.088 @ 5 dB → 0.0003 @ 30 dB); (2) **a
+sparse in-band jammer imposes an SNR-INDEPENDENT BER floor** (~0.05–0.07 @ n=8 across all SNR;
+broadband ~0.34) — the jammer wins in the high-SNR regime because the impairment is
+interference, not noise; (3) **channel-aware beats blind subcarrier selection** by up to **+70%
+BER at equal power** (largest when jammer power is constrained, i.e. the stealthy regime; the
+genie is not optimal so this is a lower bound) → direct motivation for a *learned* channel-aware
+jammer. Caveat: the sim06 detector is lossless-trained and **invalid on the faded channel**
+(clean FAR≈13%, no clean/jammed separation), so its P(det) here is indicative only → fixed in
+milestone 2. Outputs: `artifacts/sim08/frontier/{ber_vs_snr,channelaware_vs_blind}.png`.
+
+### Recheck (2026-07-03, job 102115) — IMPORTANT CORRECTION to Phase 0
+
+Prompted by scrutiny of the Li et al. replication (their repo confirms EfficientNet-B0 is one
+of their 4 CNNs, but they use REAL over-the-air SDR data + train from scratch; spectrogram
+generation is undocumented). Two faithfulness fixes:
+1. The detector spectrogram was **real-part-only** (a bug) → corrected to the standard **complex
+   two-sided STFT** (`detector.py`); detector retrained → `artifacts/sim06/detector/run003_best.pt`
+   (val acc 99.8%, FAR 0%).
+2. Added an **energy detector** (mean received power vs a clean-calibrated 1% FAR threshold) so
+   the frontier is evaluated against the **detector SUITE**, not the CNN alone. Code:
+   `frontier/recheck_suite.py`, `submit_recheck.sh`; outputs `artifacts/frontier_recheck/`.
+
+**(A) The out-of-band finding SURVIVES the complex-STFT fix — it was real.** Same power/BER
+(0.362): in-band P(CNN)=**0.086** vs out-of-band P(CNN)=**1.000** (out-of-band = 1.000 at every
+power). The spectrogram CNN genuinely is a band-edge/out-of-band detector.
+
+**(B) The energy detector DEMOLISHES the "stealthy BER 0.42" claim.** Against the suite
+(CNN OR energy), max stealthy BER: P(det)≤0.05 → **none**; ≤0.10 → **0.000**; ≤0.50 → **0.005**.
+In-band jamming that flips bits necessarily raises power → a trivial power meter catches it. The
+original "in-band jammer reaches BER 0.42 at P<0.05" was an artifact of evaluating against the
+CNN **alone**. **The "SOTA CNN is blind → jammer wins" story is dead as stated.**
+
+**Crucial caveat (keeps sim08 alive):** this is the **noiseless lossless** channel — clean power
+is a razor-sharp constant, so the energy threshold catches any added power. On a **realistic
+channel** (finite SNR + fading) the threshold is looser and a low-power jammer can hide **under the
+noise floor** — confirmed next.
+
+### sim08 + energy detector (2026-07-03, job 102305) — STEALTH REVIVED on the realistic channel
+
+Answers the recheck's open question. Folded the energy detector (calibrated per-SNR on FADED clean
+frames, 1% FAR) into `frontier_channel.py`. Result: on the fading+noise channel a jammer stays
+stealthy (P_energy≤0.5) while causing **BER ≈ 0.20–0.24 across ALL SNRs** (5–30 dB; clean floor
+0.093→0.0003) — vs the lossless channel where the energy detector caught everything (max stealthy
+BER 0.005). At 30 dB this drives a near-error-free link to BER 0.20 while hiding under the energy
+detector. **The noise floor + fading provide cover the lossless channel could not → the
+stealthy-AND-effective region is real, but only on realistic channels.** Caveats: (i) channel-aware
+vs blind washed out in this max-over-configs metric (both ~0.2) — a matched-P_energy comparison is
+needed to prove the channel-aware/learned-jammer advantage; (ii) this is energy detector + the
+lossless-trained CNN (invalid on faded), so the FULL-suite claim (evades energy AND a channel-valid
+CNN) needs milestone 2. Plot: `artifacts/sim08/frontier/stealth_vs_energy.png`.
+
+### sim08 milestone 2 (2026-07-08, jobs 102316 + 102319) — the FULL SUITE on the realistic channel
+
+Completes the suite: a **channel-valid CNN** + the energy detector, evaluated per-sample against the
+frontier. Two steps.
+
+**(1) Channel-valid detector (`retrain_detector_channel.py`, job 102316).** Retrained EfficientNet-B0
+on the complex-STFT spectrogram of signals passed through `MultiLinkChannel` (TDL fading + AWGN),
+Eb/N0 drawn uniformly in [5,30] dB per mini-batch. Classes: faded clean (0), faded + classical
+time-domain jammer (1), faded + in-band freq-domain jammer through its own `h_jam` (sparse blind /
+channel-aware / broadband, 1). Result: **held-out faded-mix acc 94.3%, DR 91.2%, FAR 2.3%, F1 0.94**
+— a genuine clean/jammed boundary on the faded channel (the lossless-trained detector had ~13% FAR
+and no separation here). Per-SNR on fresh faded samples: clean FAR 10%@5 dB → 1%@30 dB; in-band DR
+88%@5 dB → 76%@30 dB (i.e. it still misses ~24% of in-band jammers at high SNR — a residual blind
+spot). Saved: `artifacts/sim08/detector/run001_best.pt`.
+
+**(2) Full-suite frontier (`frontier_channel.py` + per-sample `p_suite`, job 102319).** Folded the
+CNN and energy detector into a per-sample SUITE (CNN hit OR energy hit) and swept the frontier.
+Headline — max BER a jammer can cause while staying stealthy (P(det)≤0.5), realistic channel:
+
+| Eb/N0 | clean floor | energy-only | CNN-only | **SUITE** |
+|---|---|---|---|---|
+| 5 dB  | 0.0795 | 0.244 | 0.114 | **0.114** |
+| 10 dB | 0.0354 | 0.232 | 0.097 | **0.097** |
+| 15 dB | 0.0091 | 0.223 | 0.073 | **0.073** |
+| 20 dB | 0.0035 | 0.214 | 0.074 | **0.074** |
+| 30 dB | 0.0004 | 0.224 | 0.065 | **0.065** |
+
+Two findings:
+- **The suite ≡ the CNN on the realistic channel.** SUITE = CNN-only at *every* SNR; across the whole
+  sweep the energy detector catches **0** configs the CNN misses. Any jammer that evades the CNN
+  (sparse, thin) also evades the power meter, so the OR adds nothing. The channel-valid CNN fully
+  subsumes the energy detector here — the mirror image of the *lossless* recheck, where the energy
+  detector subsumed the CNN. (So the expensive CNN earns its keep specifically on realistic channels.)
+- **The stealthy-effective region shrinks but survives.** The CNN cuts stealthy BER from ~0.22
+  (energy-only) to 0.065–0.11, but never to the floor: a residual **sparse ~16-subcarrier, power≈1**
+  jammer stays under both detectors (p_cnn≈0.40–0.47, p_energy≈0.02) while causing BER 0.065–0.11.
+  Most striking at high SNR: at 30 dB it drives a near-error-free link (floor 0.0004) to BER 0.065 —
+  a ~160× degradation while stealthy, because the impairment is interference, not noise. Cost: the
+  CNN's clean FAR is high at low SNR (~20% @ 5 dB), modest (1–3%) above.
+
+**Bottom line:** on the realistic channel the full CNN+energy suite is much stronger than either
+detector on the lossless channel, yet a stealthy-AND-effective region **still survives** it. That
+residual region — and whether a *learned* channel-aware/cooperative jammer can widen it — is exactly
+the milestone-3 question. Plot: `artifacts/sim08/frontier/stealth_suite_vs_snr.png` (CNN-only curve
+sits exactly under the suite curve). Caveat: the in-band training labels are not BER-thresholded
+(inflates FAR, as in Phase 0.5); a calibrated-threshold version would sharpen the exact FAR numbers.
+
+### Revised paper framing (post-recheck)
+
+From *"a cooperative MARL jammer that fools a CNN"* → to a two-sided, honest contribution:
+1. **Detector characterization / complementarity:** a SOTA CNN OFDM jamming detector detects
+   out-of-band emissions, not jamming — near-blind to in-band interference. But on its own that's
+   not a stealth win: a trivial energy detector covers the in-band-power blind spot on idealized
+   channels, so the expensive CNN mainly earns its keep against out-of-band/structured jammers.
+   (Consistent with why Li et al. fuse feature+spectrogram models.) Closing the CNN's in-band blind
+   spot by retraining also costs FAR/accuracy (Phase 0.5).
+2. **The paper's core lives on the realistic channel vs the FULL SUITE — now demonstrated
+   (milestone 2, jobs 102316+102319).** The full CNN+energy suite (with a *channel-valid* CNN)
+   leaves a residual stealthy-effective region: BER 0.065–0.11 at P(det)≤0.5, ~160× the clean floor
+   at 30 dB. On the faded channel the suite ≡ the channel-valid CNN (energy detector redundant),
+   the mirror image of the lossless recheck (where energy subsumed the CNN) — so the expensive CNN
+   earns its keep specifically on realistic channels. Remaining: show a channel-aware/cooperative
+   *learned* jammer *widens* that residual region (matched-P(suite) comparison → the learned-jammer
+   contribution). Target claim: *cooperative learned > single-agent > blind > classical*. The
+   RL-over-raw-IQ negative result (sim06/06b/07) is an ablation, not the headline.
+
+### Next steps (in order)
+
+0. **DONE — sim08 milestone 2 (channel-valid detector + full suite).** `retrain_detector_channel.py`
+   (job 102316) + full-suite `frontier_channel.py` (job 102319). Result above: the suite ≡ the CNN on
+   the realistic channel, and a residual stealthy-effective region (BER 0.065–0.11 @ P(det)≤0.5)
+   survives it. This is the paper's core detector figure. Detector: `artifacts/sim08/detector/run001_best.pt`.
+1. **Matched-P(suite) comparison — proves the learned-jammer contribution.** In the residual stealthy
+   region, compare channel-aware vs blind BER at *matched* SUITE-detection probability (not the
+   max-over-configs metric, which washed the advantage out). The genie channel-aware ≈ blind in the
+   current metric; the matched-detectability curve is what should separate them and justify "a
+   channel-aware jammer widens the stealthy region." Extend the m2 frontier data (already has p_suite).
+2. **sim08 milestone 3 — learned / cooperative channel-aware jammer (widen the residual region).**
+   The residual sparse ~16-SC region is the target a learned jammer should push into against the full
+   suite. Multiple agents + per-link channel diversity make "who jams which subcarrier at what power"
+   a genuine coordination problem. Strongly favor the **surrogate-gradient transfer-attack** threat
+   model (train a differentiable surrogate detector, backprop the jammer through it à la sim03b/sim04,
+   evaluate transfer to the frozen CNN+energy suite) — it yields a training gradient, unlike the
+   abandoned pure-black-box PPO. Frame the action as low-dim power/subcarrier allocation, not raw-IQ
+   waveform synthesis (the regime where MARL failed in sim06/07).
+3. **Refinements:** BER-thresholded in-band labels + threshold calibration for the m2 detector
+   (current labels inflate FAR, esp. the ~20% @ 5 dB); regenerate the channel-aware-vs-blind plot at
+   power=1 (gain ~70% vs ~24% at power=4); extend the suite with more classical detectors
+   (kurtosis/GLRT/pilot-variance); optionally add TX/jammer **distance → path-loss gain** geometry
+   (`MultiLinkChannel` already exposes `tx_gain_db`/`jammer_gains_db`) so position heterogeneity makes
+   the m3 cooperation problem non-trivial.
+
+### System as implemented now
+
+1 TX → 1 RX, 64-SC OFDM (QPSK, 802.11a-like, Sionna). Two channels: the **lossless** grid
+(`simulation06/ofdm.py`) and the **realistic** frequency-selective TDL fading + AWGN channel
+(`simulation08/channel.py`). **NOTE: `detector.py`'s spectrogram is now the CORRECTED complex
+two-sided STFT (was real-part-only) — detectors must be trained on this representation.** Detectors
+on disk: `simulation06/artifacts/.../run002_best.pt` (original real-part STFT, superseded),
+**`artifacts/sim06/detector/run003_best.pt` (complex-STFT, LOSSLESS-trained — the corrected lossless
+CNN)**, the Phase 0.5 in-band-augmented `artifacts/frontier/detector/run001_best.pt` (real-part era),
+and **`artifacts/sim08/detector/run001_best.pt` (complex-STFT, FADED-channel-trained — the
+channel-valid CNN, milestone 2; the one to use on the realistic channel)**. The **energy detector**
+(mean received power vs a clean-calibrated threshold = Li et al.'s power feature) is implemented in
+`frontier/recheck_suite.py` and (per-SNR calibrated, folded into a per-sample CNN∨energy suite) in
+`simulation08/frontier_channel.py`. Jammer families: sparse (blind / channel-aware), broadband
+(in-band / out-of-band), omniscient (jam=−2·tx), plus the 4 classical jammers in
+`simulation06/train_detector.py`.
+
+### Key files
+
+- `frontier/frontier_sweep.py` + `submit.sh` — Phase 0 frontier (lossless). Has `build_jam` (jammer
+  families) + `detect_chunked`, reused everywhere.
+- `frontier/retrain_detector_inband.py` + `submit_phase05.sh` — Phase 0.5 detector retrain + re-sweep.
+- `frontier/recheck_suite.py` + `submit_recheck.sh` — RECHECK: retrain on complex STFT + energy-detector
+  suite (job 102115). Energy detector = `frame_power()` vs clean-calibrated threshold.
+- `frontier/spectrogram_figure.py` + `submit_fig.sh` — in-band vs out-of-band illustrative figure
+  (`artifacts/frontier/inband_vs_outofband.png`).
+- `simulation08/channel.py`, `simulation08/frontier_channel.py` (per-SNR energy detector + per-sample
+  CNN∨energy SUITE), `simulation08/submit.sh` (retrain m2 detector + suite frontier),
+  `simulation08/submit_frontier.sh` (suite frontier only, reuses saved detector) — sim08 realistic channel.
+- `simulation08/retrain_detector_channel.py` — milestone 2: channel-valid CNN retrain (faded
+  clean+classical+in-band, Eb/N0 5–30 dB) → `artifacts/sim08/detector/run001_best.pt`.
+- `simulation06/{ofdm,detector,jammer,train_detector}.py` — OFDM chain, detector (complex STFT now),
+  classical jammers. `train_detector.py` retrains the CNN via the (now-corrected) spectrogram.
+- Artifacts: `artifacts/frontier/` (Phase 0 + Phase 0.5 detector), `artifacts/frontier_inband/`,
+  `artifacts/frontier_recheck/` (suite), `artifacts/sim08/frontier/` (incl. `stealth_vs_energy.png`,
+  `stealth_suite_vs_snr.png` = m2 full-suite figure), `artifacts/sim08/detector/` (run001 =
+  channel-valid CNN), `artifacts/sim06/detector/` (run003 = corrected lossless CNN). Run log: `artifacts/RUNS.md`.
+
+### Historical ladder (sim00–07, condensed — full sections below)
+
+sim00–04 progressive complexity, lossless → 2-jammer NSF direct-gradient (found QPSK-like
+structure, BER 0.33+, kurtosis evasion). sim05 CNN needs OFDM (flat QPSK failed, 78.9%). sim06
+CNN-on-OFDM = 99.79% ✓; MAPPO jammer failed (broadband always detected, no reward gradient).
+sim06b confirmed scalar reward can't teach input-correlated waveforms even in 2D. sim07 blind
+causal MAPPO = dead end (see the pivot above). **Note:** the sim06/07 "broadband always
+detected" and "4-subcarrier cliff" claims in those sections are now explained by Phase 0 as
+out-of-band-leakage artifacts — read Phase 0 for the correction.
+
+### Paper status
+
+Related-works section in progress in a separate session — see `paper/README.md` for reference
+triage, structure decisions, and open questions (Hameed/Ziemann inclusion, PyJama dropped).
+System model and methodology sections are stubs. No lossless-channel results go in the paper;
+Phase 0/0.5 are mechanism studies, and sim08 (realistic channel) is where the paper's channel
+claims begin.
+
+### Cluster/compute notes
+
+Jobs land on `studgpu-node01`, a 5060ti node — the fastest standard GPU here (others: 1080ti
+×24, 2080ti ×4, gb10 [DGX Spark-style] ×6 nodes/1 GPU each). No GPU-hour budget on the
+`projects` account, only a concurrency cap of **1 GPU job at a time** (`MaxJobsPU=1`). The
+`projects_4gpus` account is provisioned but unfunded (`GrpTRESMins=gres/gpu=0`); even if funded
+its `MaxJobsPU=1` allows one ≤4-GPU job, NOT parallel single-GPU sweeps. Env:
+`/work/scratch/rrahman/bt_env` (Sionna 2.0.1, PyTorch, torchvision). Submit with `sbatch
+submit.sh` from each sim dir; do NOT run compute on the login node. Today's jobs all finished in
+<1 min once scheduled.
 
 ---
 
@@ -974,35 +1209,214 @@ sbatch submit.sh
 
 ---
 
+## Frontier analysis (Phase 0) — effectiveness vs detectability (no RL)
+
+> **⚠ CORRECTED — read the "Recheck (2026-07-03)" note in Current status first.** The "in-band
+> jammer reaches BER 0.42 at P(det)<0.05" numbers below are **CNN-only** and misleading: an energy
+> detector catches that jamming (it raises power). The out-of-band mechanism is real (survives the
+> complex-STFT fix); the "stealth" claim is not, on the lossless channel.
+
+**Files:** `frontier/frontier_sweep.py`, `frontier/submit.sh`
+
+**What it is:** a pure-inference sweep (no training) that characterizes the frozen
+sim06 CNN detector against controlled interference. For a grid of (number of active
+subcarriers × per-SC power × structure) it injects a waveform into clean OFDM frames
+and records BOTH P(detect) and BER, producing the achievable BER-vs-P(detect) frontier.
+Reuses `simulation06/{ofdm,detector}.py` unchanged. Runs in ~40s on GPU (B=128).
+
+**Motivation:** sim07 (blind MAPPO) was confirmed a dead end through run005 — same flat
+failure as sim06/06b (BER≈0.013, P(jam)≈0.3 noise, policy entropy bit-for-bit flat).
+Before spending more compute on RL, bound analytically what any jammer could achieve at
+each stealth level, and find out whether learning can beat a random sparse strategy.
+
+**Headline result (run job 101860, B=128, CONFIRMED) — the detector is an
+OUT-OF-BAND-EMISSION detector, not a jamming detector.** The single decisive comparison,
+same power and same BER, differing only in whether the interference touches the 12
+guard/DC null bins:
+
+| Strategy | n_active | power | P(detect) | BER |
+|---|---|---|---|---|
+| broadband **in-band** (52 eff SCs) | 52 | 8 | **0.011** | 0.360 |
+| broadband **out-of-band** (all 64 bins) | 52 | 8 | **0.999** | 0.363 |
+| broadband **out-of-band** | 52 | 0.03 | **0.9999** | 0.000 |
+
+The detector fires at ~1.0 on *any* out-of-band energy (even power 0.03 causing zero BER)
+and is near-blind (P(det)≈0.01) to in-band interference causing BER=0.36. This reconciles
+the sim06 "broadband → P(jam)=0.999 even at power 0.01" wall: that probe added noise across
+all 64 FFT bins **including guard/DC nulls** (an out-of-band spectral-mask violation). It
+also likely explains sim07's "4-subcarrier cliff" — the jammer's top-K selection over the
+full 64-bin grid was selecting guard/DC bins as it activated more subcarriers.
+
+**Achievable stealthy operating points (blind, in-band, temporally-held):**
+
+| Detection ceiling | Max BER | Config |
+|---|---|---|
+| P(det) ≤ 0.05 | **0.252** | all 52 SCs, power 1 |
+| P(det) ≤ 0.10 | **0.335** | all 52 SCs, power 2 |
+| P(det) ≤ 0.50 | **0.419** | all 52 SCs, power 8 |
+| omniscient (jam=−2·tx) | **1.000** | all 52 SCs, P(det)=0.0016 |
+
+So a large stealthy-AND-effective region exists — the earlier "BER capped at ~0.04 by the
+sparsity needed for stealth" conclusion was an artifact of out-of-band leakage, not a
+fundamental tradeoff. Temporal coherence (held vs hopping) turned out to be a minor axis;
+**in-band vs out-of-band is the dominant one.**
+
+**Outputs:** `artifacts/frontier/{frontier,cliff,ber_vs_nactive,coherence}.png`,
+`artifacts/frontier/results.json`.
+
+**How to run:**
+```bash
+cd "Tabula Rasa/frontier"
+sbatch submit.sh          # full GPU sweep (~40s + queue)
+# or: python frontier_sweep.py --smoke --device cpu   # quick sanity
+```
+
+**Implications for the plan:**
+- The paper now has a positive, defensible finding: a 99.79%-accurate SOTA CNN jamming
+  detector is essentially a spectral-mask detector, near-blind to spectrally-compliant
+  in-band interference at any power.
+- Next (Phase 0.5): retrain/augment the detector with in-band jammer samples (held/hopping/
+  matched) — does the blind spot close and force a genuine stealth/effectiveness tradeoff?
+- Then a direct-gradient or surrogate-transfer jammer to reach the frontier-optimal in-band
+  waveform, and **sim08 (realistic channel)** where cooperative channel-aware allocation is
+  where learning genuinely helps and where paper claims begin.
+
+### Phase 0.5 — retrain the detector with in-band jammers
+
+**Files:** `frontier/retrain_detector_inband.py`, `frontier/submit_phase05.sh`
+
+**What it is:** trains a fresh EfficientNet on clean + the 4 classical jammers + **in-band
+jammers** (sparse/broadband/held/hopping/matched, injected in the frequency domain on the
+52 effective SCs — the spectrally-compliant family the original detector never saw), then
+re-runs the frontier sweep against it. Tests whether the out-of-band blind spot can be
+closed. Detector → `artifacts/frontier/detector/run001_best.pt`; re-swept frontier →
+`artifacts/frontier_inband/`.
+
+**Result (job 101866) — the blind spot closes, but only at a real cost → genuine tradeoff:**
+
+| | Original detector | Retrained (+ in-band) |
+|---|---|---|
+| Overall accuracy | 99.79% | **90.5%** |
+| FAR | 0.00% | **3.81%** |
+| in-band broadband n=52 pwr=8 → P(det) | 0.011 | **0.995** |
+| in-band DR (fresh in-band jammers) | ~0% | **68%** (a third still evade) |
+| max stealthy BER at P(det) ≤ 0.05 | 0.252 | **none stays this stealthy** |
+| max stealthy BER at P(det) ≤ 0.50 | 0.419 | **0.020** (sparse, n=3) |
+
+Teaching the CNN to catch in-band interference works for high-occupancy jammers but drops
+clean-signal accuracy 99.8→90.5%, raises FAR 0→3.8% (up to ~50% on near-zero-power in-band
+perturbations), still misses ~32% of in-band jammers, and leaves a residual **sparse** blind
+spot (n=3 evades at P(det)≤0.5). The re-swept frontier collapses: stealthy BER drops from
+0.42 to 0.02, and every high-BER point is pushed to P(det)≈1.0. Even the omniscient
+`jam=−2·tx` (statistically clean `rx=−tx`) is now flagged at P(det)≈0.15. **Conclusion: a
+spectrogram-CNN detector cannot catch spectrally-compliant in-band interference without
+sacrificing false-alarm rate and clean accuracy — an intrinsic effectiveness–detectability
+tradeoff, not just a training-data gap.**
+
+**Caveats:** this retrain is a quick 50-epoch naive augmentation, and in-band samples were
+labeled "jammed" even when they cause BER≈0 (which inflates FAR). A careful detector-design
+study (BER-thresholded labels, threshold calibration, more data) would sharpen the exact
+tradeoff — but the qualitative result (closing the blind spot costs FAR) is robust.
+
+---
+
+## Simulation 08 — realistic channel (milestone 1: channel-aware frontier)
+
+**Files:** `simulation08/channel.py`, `simulation08/frontier_channel.py`, `simulation08/submit.sh`
+
+**What it is:** the realistic-channel phase where paper claims begin. Adds finite SNR and
+per-link frequency-selective fading to the frontier. `channel.py` (`MultiLinkChannel`) uses
+Sionna `tr38901.TDL` (model C, 100 ns delay spread, 5.2 GHz) via `GenerateOFDMChannel` to give
+an independent per-subcarrier frequency response for each link (TX→RX and each jammer→RX),
+plus per-link average path gain (geometry) and AWGN at a target Eb/N0. The jammer transmits
+through its OWN channel `h_jam` (a blind jammer doesn't know it); the RX does perfect-CSI ZF
+equalization of the TX link. After equalization the effective interference on subcarrier n is
+`(h_jam[n]/h_tx[n])·jam[n]` — so hitting subcarriers where the jammer is strong relative to
+the TX matters, which is exactly the structure a learned, channel-aware jammer can exploit.
+
+**Milestone 1 result (job 101870, B=128, 54s):**
+1. **Channel is physically correct** — clean BER floor waterfalls 0.088 (5 dB) → 0.0003 (30 dB)
+   for QPSK over fading with ZF equalization.
+2. **A sparse in-band jammer imposes an SNR-independent BER floor.** Under an 8-subcarrier
+   jammer BER stays pinned at ~0.05–0.07 across 5–30 dB, while the clean link would be
+   essentially error-free at high SNR. Broadband in-band pins BER ~0.34 at all SNR. This is the
+   clean "the jammer wins in the high-SNR regime" result — the impairment is interference, not
+   noise, so more transmit power can't fix it.
+3. **Channel-aware beats blind subcarrier selection.** A genie that picks the top-n subcarriers
+   by `|h_jam/h_tx|` gets up to **~70% more BER than blind at equal power** (blind n=8=0.038 vs
+   channel-aware n=8=0.064 @ 20 dB, power=1), and the gain grows with SNR and is largest when
+   jammer power is constrained (the stealthy regime). Since the genie isn't optimal, this is a
+   *lower bound* on the channel-aware benefit → direct motivation for a learned jammer.
+
+**Energy detector on the realistic channel (job 102305) — REVIVES the stealth premise.** After
+the Phase 0 recheck showed a power-threshold energy detector demolishes stealth on the *lossless*
+channel (it catches any added power), we folded the same energy detector (calibrated per-SNR on
+FADED clean frames to 1% FAR) into `frontier_channel.py`. On the **fading + noise** channel a
+jammer stays stealthy (P_energy ≤ 0.5) while causing **BER ≈ 0.20–0.24 across all SNRs** (clean
+floor 0.093 at 5 dB → 0.0003 at 30 dB). At 30 dB that's a near-error-free link driven to BER 0.20
+*while hiding under the energy detector* — impossible on the lossless channel (max stealthy BER
+0.005 there). The noise floor + fading make clean power fluctuate, loosening the threshold and
+giving a low-power jammer room to hide. **So the stealthy-and-effective region is real, but only
+on realistic channels** — which is where the paper's claims live anyway. Caveat: the channel-aware
+vs blind advantage washes out in this max-over-configs metric (both ~0.2; needs a matched-P_energy
+comparison); and this is energy detector + lossless-trained CNN, so the *full-suite* claim needs
+the channel-valid CNN (milestone 2). Plot: `artifacts/sim08/frontier/stealth_vs_energy.png`.
+
+**Detector caveat (→ milestone 2):** the CNN here is the sim06 detector, trained on a lossless
+channel and **invalid on the faded channel** (clean false-alarm ≈13%, no clean/jammed separation),
+so its P(det) numbers are indicative only. A channel-valid detector, retrained on faded clean +
+classical + in-band signals, is milestone 2 — after which the frontier gets real *full-suite*
+detectability numbers (CNN + energy).
+
+> **UPDATE (2026-07-08): milestone 2 is DONE** (`retrain_detector_channel.py`, jobs 102316+102319).
+> Channel-valid CNN acc 94.3%; the full CNN+energy suite ≡ the CNN on the faded channel; a residual
+> stealthy-effective region (BER 0.065–0.11 @ P(det)≤0.5) survives it. See the **"sim08 milestone 2"
+> subsection in Current status** (top of file) for the full writeup — it supersedes this caveat.
+
+**Outputs:** `artifacts/sim08/frontier/{ber_vs_snr,channelaware_vs_blind,stealth_vs_energy,stealth_suite_vs_snr}.png`,
+`results.json`; detector `artifacts/sim08/detector/run001_best.pt`.
+
+**How to run:**
+```bash
+cd "Tabula Rasa/simulation08"
+sbatch submit.sh
+# or: python frontier_channel.py --smoke --device cpu   # quick sanity
+```
+
+**sim08 roadmap:** (1 ✓) channel + channel-aware frontier. (2) retrain a channel-valid
+detector on faded signals; re-sweep for real detectability. (3) cooperative MARL jammer —
+multiple agents with per-link channel diversity make "who jams which subcarrier at what power"
+a genuine coordination problem; target claim: cooperative learned > single-agent > blind >
+classical, all against the same channel-valid detector.
+
+---
+
 ## Staging / roadmap
 
 **Principle: one axis per step.** If results misbehave, the cause is unambiguous.
 
 ```
-sim06   plumbing milestone — lossless + omniscient
-        detector: 99.79% accuracy ✓
-        MAPPO: failed (broadband noise always detected; scalar reward
-          cannot teach input-correlated waveforms even in 2D — sim06b)
-        probe: CNN fooled by 1-SC jamming at moderate power ✓
-        NO scientific claims from sim06 — the lossless omniscient setup
-          has a trivial analytical optimum (jam=-2*tx)
-
-sim07   observation fixed (current step)
-        causal tx[t-1] → blind jammer, de-trivializes the problem
-        black-box threat model locked in (score-based, no detector gradients)
-        same lossless channel — isolates observation change only
-
-sim08   realistic channel + noise + SINR (deferred)
-        rx = h_tx·tx + Σ h_jam·jam + noise
-        per-link path loss, phase, fading via Sionna channel models
-        spatial cooperation: who jams whom, accounting for channel gains
+sim06   plumbing milestone — lossless + omniscient — DONE
+        detector: 99.79% accuracy ✓ ; MAPPO jammer failed (scalar reward)
+sim07   blind causal MAPPO — DEAD END (see Current status → the pivot)
+Phase 0 frontier (no RL) — DONE ✓ detector = out-of-band detector;
+        in-band jammer reaches BER 0.42 @ P(det)<0.05
+Phase 0.5 retrain detector w/ in-band — DONE ✓ blind spot closes but
+        costs FAR/accuracy → intrinsic effectiveness–detectability tradeoff
+sim08   realistic channel — IN PROGRESS
+  m1 ✓  freq-selective TDL fading + channel-aware frontier
+        (sparse jammer = SNR-independent BER floor; channel-aware > blind)
+  m2 →  retrain a CHANNEL-VALID detector on faded signals; re-sweep
+  m3 →  cooperative MARL jammer (per-link channel diversity = real
+        coordination); target: cooperative learned > single > blind > classical
 ```
 
 ### Explicitly deferred (with reasons)
 
-- **Realistic channel/SINR (sim08):** deliberately separated from the observation
-  change so each axis is testable in isolation. Adding both at once would make
-  failure diagnosis ambiguous.
+- **Realistic channel/SINR (sim08):** ~~deferred~~ — milestone 1 DONE (see Current
+  status and the "Simulation 08" section). Channel model is
+  `simulation08/channel.py`. Milestones 2 (channel-valid detector) and 3
+  (cooperative MARL) are next.
 - **Permutation-invariant encoder + N≥4 scaling:** only earns its keep at N≈6–8
   (see analysis). At N=2, fixed-order concatenation MLP is strictly simpler with
   no measurable downside. Separate reduced-setting experiment if pursued.

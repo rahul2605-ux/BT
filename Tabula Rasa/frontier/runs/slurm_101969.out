@@ -1,0 +1,6 @@
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Clean                    P(det)=0.002 BER=0.000
+Sparse in-band           P(det)=0.101 BER=0.032
+Broadband in-band        P(det)=0.015 BER=0.362
+Broadband OUT-of-band    P(det)=0.999 BER=0.366
+saved /home/rrahman/StudentClusterBT/Tabula Rasa/frontier/../artifacts/frontier/inband_vs_outofband.png

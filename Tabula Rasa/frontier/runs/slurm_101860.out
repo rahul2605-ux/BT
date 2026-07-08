@@ -1,0 +1,182 @@
+device=cuda
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+effective subcarriers: 52
+sparse_blind   n=  1 pwr= 0.03 | P(det)=0.0034 BER=0.0000
+sparse_blind   n=  1 pwr=  0.1 | P(det)=0.0014 BER=0.0000
+sparse_blind   n=  1 pwr=  0.3 | P(det)=0.0026 BER=0.0000
+sparse_blind   n=  1 pwr=    1 | P(det)=0.0018 BER=0.0048
+sparse_blind   n=  1 pwr=    2 | P(det)=0.0020 BER=0.0061
+sparse_blind   n=  1 pwr=    4 | P(det)=0.0029 BER=0.0079
+sparse_blind   n=  1 pwr=    8 | P(det)=0.0138 BER=0.0079
+sparse_blind   n=  2 pwr= 0.03 | P(det)=0.0016 BER=0.0000
+sparse_blind   n=  2 pwr=  0.1 | P(det)=0.0036 BER=0.0000
+sparse_blind   n=  2 pwr=  0.3 | P(det)=0.0052 BER=0.0000
+sparse_blind   n=  2 pwr=    1 | P(det)=0.0017 BER=0.0096
+sparse_blind   n=  2 pwr=    2 | P(det)=0.0051 BER=0.0124
+sparse_blind   n=  2 pwr=    4 | P(det)=0.0072 BER=0.0142
+sparse_blind   n=  2 pwr=    8 | P(det)=0.0523 BER=0.0155
+sparse_blind   n=  3 pwr= 0.03 | P(det)=0.0028 BER=0.0000
+sparse_blind   n=  3 pwr=  0.1 | P(det)=0.0021 BER=0.0000
+sparse_blind   n=  3 pwr=  0.3 | P(det)=0.0016 BER=0.0000
+sparse_blind   n=  3 pwr=    1 | P(det)=0.0026 BER=0.0143
+sparse_blind   n=  3 pwr=    2 | P(det)=0.0069 BER=0.0194
+sparse_blind   n=  3 pwr=    4 | P(det)=0.0145 BER=0.0226
+sparse_blind   n=  3 pwr=    8 | P(det)=0.0937 BER=0.0244
+sparse_blind   n=  4 pwr= 0.03 | P(det)=0.0028 BER=0.0000
+sparse_blind   n=  4 pwr=  0.1 | P(det)=0.0025 BER=0.0000
+sparse_blind   n=  4 pwr=  0.3 | P(det)=0.0054 BER=0.0000
+sparse_blind   n=  4 pwr=    1 | P(det)=0.0033 BER=0.0191
+sparse_blind   n=  4 pwr=    2 | P(det)=0.0074 BER=0.0259
+sparse_blind   n=  4 pwr=    4 | P(det)=0.0240 BER=0.0291
+sparse_blind   n=  4 pwr=    8 | P(det)=0.1014 BER=0.0328
+sparse_blind   n=  5 pwr= 0.03 | P(det)=0.0067 BER=0.0000
+sparse_blind   n=  5 pwr=  0.1 | P(det)=0.0024 BER=0.0000
+sparse_blind   n=  5 pwr=  0.3 | P(det)=0.0021 BER=0.0000
+sparse_blind   n=  5 pwr=    1 | P(det)=0.0015 BER=0.0246
+sparse_blind   n=  5 pwr=    2 | P(det)=0.0044 BER=0.0317
+sparse_blind   n=  5 pwr=    4 | P(det)=0.0290 BER=0.0367
+sparse_blind   n=  5 pwr=    8 | P(det)=0.1442 BER=0.0408
+sparse_blind   n=  6 pwr= 0.03 | P(det)=0.0025 BER=0.0000
+sparse_blind   n=  6 pwr=  0.1 | P(det)=0.0025 BER=0.0000
+sparse_blind   n=  6 pwr=  0.3 | P(det)=0.0017 BER=0.0000
+sparse_blind   n=  6 pwr=    1 | P(det)=0.0103 BER=0.0283
+sparse_blind   n=  6 pwr=    2 | P(det)=0.0114 BER=0.0386
+sparse_blind   n=  6 pwr=    4 | P(det)=0.0372 BER=0.0449
+sparse_blind   n=  6 pwr=    8 | P(det)=0.1695 BER=0.0482
+sparse_blind   n=  8 pwr= 0.03 | P(det)=0.0022 BER=0.0000
+sparse_blind   n=  8 pwr=  0.1 | P(det)=0.0025 BER=0.0000
+sparse_blind   n=  8 pwr=  0.3 | P(det)=0.0017 BER=0.0000
+sparse_blind   n=  8 pwr=    1 | P(det)=0.0023 BER=0.0383
+sparse_blind   n=  8 pwr=    2 | P(det)=0.0100 BER=0.0510
+sparse_blind   n=  8 pwr=    4 | P(det)=0.0755 BER=0.0581
+sparse_blind   n=  8 pwr=    8 | P(det)=0.1964 BER=0.0637
+sparse_blind   n= 12 pwr= 0.03 | P(det)=0.0014 BER=0.0000
+sparse_blind   n= 12 pwr=  0.1 | P(det)=0.0018 BER=0.0000
+sparse_blind   n= 12 pwr=  0.3 | P(det)=0.0020 BER=0.0000
+sparse_blind   n= 12 pwr=    1 | P(det)=0.0065 BER=0.0577
+sparse_blind   n= 12 pwr=    2 | P(det)=0.0078 BER=0.0778
+sparse_blind   n= 12 pwr=    4 | P(det)=0.0769 BER=0.0886
+sparse_blind   n= 12 pwr=    8 | P(det)=0.1737 BER=0.0972
+sparse_blind   n= 16 pwr= 0.03 | P(det)=0.0017 BER=0.0000
+sparse_blind   n= 16 pwr=  0.1 | P(det)=0.0153 BER=0.0000
+sparse_blind   n= 16 pwr=  0.3 | P(det)=0.0048 BER=0.0000
+sparse_blind   n= 16 pwr=    1 | P(det)=0.0094 BER=0.0772
+sparse_blind   n= 16 pwr=    2 | P(det)=0.0137 BER=0.1022
+sparse_blind   n= 16 pwr=    4 | P(det)=0.0529 BER=0.1186
+sparse_blind   n= 16 pwr=    8 | P(det)=0.2072 BER=0.1280
+sparse_blind   n= 26 pwr= 0.03 | P(det)=0.0083 BER=0.0000
+sparse_blind   n= 26 pwr=  0.1 | P(det)=0.0019 BER=0.0000
+sparse_blind   n= 26 pwr=  0.3 | P(det)=0.0028 BER=0.0000
+sparse_blind   n= 26 pwr=    1 | P(det)=0.0064 BER=0.1250
+sparse_blind   n= 26 pwr=    2 | P(det)=0.0411 BER=0.1694
+sparse_blind   n= 26 pwr=    4 | P(det)=0.0688 BER=0.1935
+sparse_blind   n= 26 pwr=    8 | P(det)=0.1906 BER=0.2113
+sparse_blind   n= 52 pwr= 0.03 | P(det)=0.0052 BER=0.0000
+sparse_blind   n= 52 pwr=  0.1 | P(det)=0.0016 BER=0.0000
+sparse_blind   n= 52 pwr=  0.3 | P(det)=0.0129 BER=0.0000
+sparse_blind   n= 52 pwr=    1 | P(det)=0.0279 BER=0.2520
+sparse_blind   n= 52 pwr=    2 | P(det)=0.0739 BER=0.3349
+sparse_blind   n= 52 pwr=    4 | P(det)=0.1113 BER=0.3836
+sparse_blind   n= 52 pwr=    8 | P(det)=0.2033 BER=0.4191
+sparse_hopping n=  1 pwr= 0.03 | P(det)=0.0062 BER=0.0000
+sparse_hopping n=  1 pwr=  0.1 | P(det)=0.0016 BER=0.0000
+sparse_hopping n=  1 pwr=  0.3 | P(det)=0.0015 BER=0.0000
+sparse_hopping n=  1 pwr=    1 | P(det)=0.0023 BER=0.0048
+sparse_hopping n=  1 pwr=    2 | P(det)=0.0028 BER=0.0064
+sparse_hopping n=  1 pwr=    4 | P(det)=0.0038 BER=0.0075
+sparse_hopping n=  1 pwr=    8 | P(det)=0.0075 BER=0.0081
+sparse_hopping n=  2 pwr= 0.03 | P(det)=0.0015 BER=0.0000
+sparse_hopping n=  2 pwr=  0.1 | P(det)=0.0020 BER=0.0000
+sparse_hopping n=  2 pwr=  0.3 | P(det)=0.0017 BER=0.0000
+sparse_hopping n=  2 pwr=    1 | P(det)=0.0010 BER=0.0094
+sparse_hopping n=  2 pwr=    2 | P(det)=0.0029 BER=0.0133
+sparse_hopping n=  2 pwr=    4 | P(det)=0.0079 BER=0.0147
+sparse_hopping n=  2 pwr=    8 | P(det)=0.0111 BER=0.0163
+sparse_hopping n=  3 pwr= 0.03 | P(det)=0.0016 BER=0.0000
+sparse_hopping n=  3 pwr=  0.1 | P(det)=0.0044 BER=0.0000
+sparse_hopping n=  3 pwr=  0.3 | P(det)=0.0027 BER=0.0000
+sparse_hopping n=  3 pwr=    1 | P(det)=0.0013 BER=0.0141
+sparse_hopping n=  3 pwr=    2 | P(det)=0.0027 BER=0.0197
+sparse_hopping n=  3 pwr=    4 | P(det)=0.0098 BER=0.0220
+sparse_hopping n=  3 pwr=    8 | P(det)=0.0291 BER=0.0245
+sparse_hopping n=  4 pwr= 0.03 | P(det)=0.0068 BER=0.0000
+sparse_hopping n=  4 pwr=  0.1 | P(det)=0.0018 BER=0.0000
+sparse_hopping n=  4 pwr=  0.3 | P(det)=0.0041 BER=0.0000
+sparse_hopping n=  4 pwr=    1 | P(det)=0.0023 BER=0.0197
+sparse_hopping n=  4 pwr=    2 | P(det)=0.0038 BER=0.0257
+sparse_hopping n=  4 pwr=    4 | P(det)=0.0105 BER=0.0293
+sparse_hopping n=  4 pwr=    8 | P(det)=0.0300 BER=0.0321
+sparse_hopping n=  5 pwr= 0.03 | P(det)=0.0040 BER=0.0000
+sparse_hopping n=  5 pwr=  0.1 | P(det)=0.0033 BER=0.0000
+sparse_hopping n=  5 pwr=  0.3 | P(det)=0.0014 BER=0.0000
+sparse_hopping n=  5 pwr=    1 | P(det)=0.0023 BER=0.0245
+sparse_hopping n=  5 pwr=    2 | P(det)=0.0125 BER=0.0318
+sparse_hopping n=  5 pwr=    4 | P(det)=0.0059 BER=0.0367
+sparse_hopping n=  5 pwr=    8 | P(det)=0.0276 BER=0.0408
+sparse_hopping n=  6 pwr= 0.03 | P(det)=0.0027 BER=0.0000
+sparse_hopping n=  6 pwr=  0.1 | P(det)=0.0029 BER=0.0000
+sparse_hopping n=  6 pwr=  0.3 | P(det)=0.0052 BER=0.0000
+sparse_hopping n=  6 pwr=    1 | P(det)=0.0016 BER=0.0288
+sparse_hopping n=  6 pwr=    2 | P(det)=0.0054 BER=0.0387
+sparse_hopping n=  6 pwr=    4 | P(det)=0.0076 BER=0.0451
+sparse_hopping n=  6 pwr=    8 | P(det)=0.0451 BER=0.0481
+sparse_hopping n=  8 pwr= 0.03 | P(det)=0.0026 BER=0.0000
+sparse_hopping n=  8 pwr=  0.1 | P(det)=0.0023 BER=0.0000
+sparse_hopping n=  8 pwr=  0.3 | P(det)=0.0015 BER=0.0000
+sparse_hopping n=  8 pwr=    1 | P(det)=0.0032 BER=0.0381
+sparse_hopping n=  8 pwr=    2 | P(det)=0.0095 BER=0.0514
+sparse_hopping n=  8 pwr=    4 | P(det)=0.0112 BER=0.0597
+sparse_hopping n=  8 pwr=    8 | P(det)=0.0260 BER=0.0646
+sparse_hopping n= 12 pwr= 0.03 | P(det)=0.0013 BER=0.0000
+sparse_hopping n= 12 pwr=  0.1 | P(det)=0.0034 BER=0.0000
+sparse_hopping n= 12 pwr=  0.3 | P(det)=0.0031 BER=0.0000
+sparse_hopping n= 12 pwr=    1 | P(det)=0.0034 BER=0.0573
+sparse_hopping n= 12 pwr=    2 | P(det)=0.0079 BER=0.0771
+sparse_hopping n= 12 pwr=    4 | P(det)=0.0156 BER=0.0883
+sparse_hopping n= 12 pwr=    8 | P(det)=0.0319 BER=0.0967
+sparse_hopping n= 16 pwr= 0.03 | P(det)=0.0015 BER=0.0000
+sparse_hopping n= 16 pwr=  0.1 | P(det)=0.0060 BER=0.0000
+sparse_hopping n= 16 pwr=  0.3 | P(det)=0.0024 BER=0.0000
+sparse_hopping n= 16 pwr=    1 | P(det)=0.0032 BER=0.0761
+sparse_hopping n= 16 pwr=    2 | P(det)=0.0072 BER=0.1031
+sparse_hopping n= 16 pwr=    4 | P(det)=0.0163 BER=0.1169
+sparse_hopping n= 16 pwr=    8 | P(det)=0.0142 BER=0.1286
+sparse_hopping n= 26 pwr= 0.03 | P(det)=0.0034 BER=0.0000
+sparse_hopping n= 26 pwr=  0.1 | P(det)=0.0022 BER=0.0000
+sparse_hopping n= 26 pwr=  0.3 | P(det)=0.0051 BER=0.0000
+sparse_hopping n= 26 pwr=    1 | P(det)=0.0067 BER=0.1246
+sparse_hopping n= 26 pwr=    2 | P(det)=0.0060 BER=0.1672
+sparse_hopping n= 26 pwr=    4 | P(det)=0.0057 BER=0.1919
+sparse_hopping n= 26 pwr=    8 | P(det)=0.0062 BER=0.2103
+sparse_hopping n= 52 pwr= 0.03 | P(det)=0.0014 BER=0.0000
+sparse_hopping n= 52 pwr=  0.1 | P(det)=0.0018 BER=0.0000
+sparse_hopping n= 52 pwr=  0.3 | P(det)=0.0033 BER=0.0000
+sparse_hopping n= 52 pwr=    1 | P(det)=0.0032 BER=0.2509
+sparse_hopping n= 52 pwr=    2 | P(det)=0.0045 BER=0.3333
+sparse_hopping n= 52 pwr=    4 | P(det)=0.0026 BER=0.3852
+sparse_hopping n= 52 pwr=    8 | P(det)=0.0023 BER=0.4177
+matched  n=  1            | P(det)=0.0023 BER=0.0192
+matched  n=  2            | P(det)=0.0022 BER=0.0385
+matched  n=  3            | P(det)=0.0023 BER=0.0577
+matched  n=  4            | P(det)=0.0014 BER=0.0769
+matched  n=  5            | P(det)=0.0010 BER=0.0962
+matched  n=  6            | P(det)=0.0018 BER=0.1154
+matched  n=  8            | P(det)=0.0047 BER=0.1538
+matched  n= 12            | P(det)=0.0015 BER=0.2308
+matched  n= 16            | P(det)=0.0015 BER=0.3077
+matched  n= 26            | P(det)=0.0023 BER=0.5000
+matched  n= 52            | P(det)=0.0016 BER=1.0000
+broadband      n= 52 pwr= 0.03 | P(det)=0.0032 BER=0.0000   ||  OOB P(det)=0.9999 BER=0.0000
+broadband      n= 52 pwr=  0.1 | P(det)=0.0046 BER=0.0008   ||  OOB P(det)=1.0000 BER=0.0008
+broadband      n= 52 pwr=  0.3 | P(det)=0.0027 BER=0.0345   ||  OOB P(det)=0.9999 BER=0.0344
+broadband      n= 52 pwr=    1 | P(det)=0.0076 BER=0.1581   ||  OOB P(det)=0.9997 BER=0.1609
+broadband      n= 52 pwr=    2 | P(det)=0.0117 BER=0.2405   ||  OOB P(det)=0.9992 BER=0.2391
+broadband      n= 52 pwr=    4 | P(det)=0.0114 BER=0.3071   ||  OOB P(det)=0.9992 BER=0.3064
+broadband      n= 52 pwr=    8 | P(det)=0.0113 BER=0.3602   ||  OOB P(det)=0.9990 BER=0.3631
+
+=== HEADLINE: best stealthy operating point (sparse blind) ===
+  P(det) <= 0.05: max BER = 0.2520 (n_active=52, per-SC power=1)
+  P(det) <= 0.10: max BER = 0.3349 (n_active=52, per-SC power=2)
+  P(det) <= 0.50: max BER = 0.4191 (n_active=52, per-SC power=8)
+
+Done in 36.8s. Outputs in /home/rrahman/StudentClusterBT/Tabula Rasa/frontier/../artifacts/frontier

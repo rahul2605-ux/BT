@@ -75,14 +75,19 @@ def time_signal_to_spectrogram(iq_signal, n_fft=SPEC_N_FFT, hop=SPEC_HOP):
     if squeezed:
         iq_signal = iq_signal.unsqueeze(0)
 
-    signal_real = iq_signal.real.float()
+    # Full complex baseband -> two-sided STFT (standard RF spectrogram).
+    # Using the complex signal (not just the real part) keeps +f/-f distinct
+    # and maps the OFDM band structure (occupied SCs vs guard bands) correctly.
+    # NOTE: this corrects an earlier real-part-only version; detectors must be
+    # (re)trained on this representation.
+    signal_c = iq_signal.to(torch.complex64)
     window = torch.hann_window(n_fft, device=iq_signal.device)
 
     specs = []
-    for i in range(signal_real.shape[0]):
+    for i in range(signal_c.shape[0]):
         spec = torch.stft(
-            signal_real[i], n_fft=n_fft, hop_length=hop, win_length=n_fft,
-            window=window, return_complex=True, center=False,
+            signal_c[i], n_fft=n_fft, hop_length=hop, win_length=n_fft,
+            window=window, return_complex=True, center=False, onesided=False,
         )
         specs.append(spec.abs().pow(2))
 

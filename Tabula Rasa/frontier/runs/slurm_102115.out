@@ -1,0 +1,189 @@
+=== retrain detector on CORRECTED complex-STFT spectrogram ===
+CUDA: True
+Run 003
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+Generating dataset: 762 clean + 816 jammed = 1578 total
+  Generating 762 clean OFDM samples...
+    clean: 100/762
+    clean: 200/762
+    clean: 300/762
+    clean: 400/762
+    clean: 500/762
+    clean: 600/762
+    clean: 700/762
+  Generating 816 jammed OFDM samples...
+    jammed: 100/816
+    jammed: 200/816
+    jammed: 300/816
+    jammed: 400/816
+    jammed: 500/816
+    jammed: 600/816
+    jammed: 700/816
+    jammed: 800/816
+Dataset generated in 5.4s
+Train: 1104, Test: 474
+EfficientNet-B0: 4,010,110 params
+
+Training 100 epochs...
+
+Epoch   1/100 | train_loss=0.5654 train_acc=73.3% | val_loss=0.6770 val_acc=50.8% DR=99.2% FAR=98.30% | 4.4s
+Epoch   2/100 | train_loss=0.3244 train_acc=89.9% | val_loss=0.2189 val_acc=94.3% DR=88.7% FAR=0.00% | 3.6s
+Epoch   3/100 | train_loss=0.1780 train_acc=96.2% | val_loss=0.0974 val_acc=98.3% DR=96.7% FAR=0.00% | 2.8s
+Epoch   4/100 | train_loss=0.0931 train_acc=98.6% | val_loss=0.0473 val_acc=99.4% DR=98.7% FAR=0.00% | 3.0s
+Epoch   5/100 | train_loss=0.0697 train_acc=99.0% | val_loss=0.0321 val_acc=99.2% DR=98.3% FAR=0.00% | 3.2s
+Epoch   6/100 | train_loss=0.0572 train_acc=98.6% | val_loss=0.0229 val_acc=99.8% DR=99.6% FAR=0.00% | 3.2s
+Epoch   7/100 | train_loss=0.0371 train_acc=99.3% | val_loss=0.0197 val_acc=99.8% DR=99.6% FAR=0.00% | 3.5s
+Epoch   8/100 | train_loss=0.0362 train_acc=99.5% | val_loss=0.0183 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch   9/100 | train_loss=0.0306 train_acc=99.6% | val_loss=0.0169 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  10/100 | train_loss=0.0192 train_acc=99.7% | val_loss=0.0138 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  11/100 | train_loss=0.0155 train_acc=99.7% | val_loss=0.0120 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  12/100 | train_loss=0.0133 train_acc=99.9% | val_loss=0.0158 val_acc=99.6% DR=99.2% FAR=0.00% | 3.1s
+Epoch  13/100 | train_loss=0.0118 train_acc=99.8% | val_loss=0.0149 val_acc=99.6% DR=99.2% FAR=0.00% | 3.1s
+Epoch  14/100 | train_loss=0.0156 train_acc=99.8% | val_loss=0.0098 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  15/100 | train_loss=0.0232 train_acc=99.5% | val_loss=0.0082 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  16/100 | train_loss=0.0123 train_acc=100.0% | val_loss=0.0092 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  17/100 | train_loss=0.0109 train_acc=99.9% | val_loss=0.0088 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  18/100 | train_loss=0.0064 train_acc=100.0% | val_loss=0.0094 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  19/100 | train_loss=0.0105 train_acc=99.8% | val_loss=0.0129 val_acc=99.6% DR=99.2% FAR=0.00% | 3.3s
+Epoch  20/100 | train_loss=0.0084 train_acc=99.9% | val_loss=0.0051 val_acc=99.8% DR=99.6% FAR=0.00% | 3.9s
+Epoch  21/100 | train_loss=0.0180 train_acc=99.6% | val_loss=0.0868 val_acc=96.2% DR=100.0% FAR=7.66% | 3.3s
+Epoch  22/100 | train_loss=0.0077 train_acc=99.9% | val_loss=0.0109 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  23/100 | train_loss=0.0074 train_acc=100.0% | val_loss=0.0078 val_acc=99.8% DR=99.6% FAR=0.00% | 3.2s
+Epoch  24/100 | train_loss=0.0066 train_acc=99.9% | val_loss=0.0063 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  25/100 | train_loss=0.0064 train_acc=100.0% | val_loss=0.0105 val_acc=99.8% DR=99.6% FAR=0.00% | 2.9s
+Epoch  26/100 | train_loss=0.0068 train_acc=99.9% | val_loss=0.0111 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  27/100 | train_loss=0.0145 train_acc=99.7% | val_loss=0.0071 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  28/100 | train_loss=0.0041 train_acc=100.0% | val_loss=0.0068 val_acc=99.8% DR=99.6% FAR=0.00% | 3.2s
+Epoch  29/100 | train_loss=0.0111 train_acc=99.6% | val_loss=0.0112 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  30/100 | train_loss=0.0094 train_acc=99.8% | val_loss=0.0053 val_acc=99.8% DR=99.6% FAR=0.00% | 3.2s
+Epoch  31/100 | train_loss=0.0077 train_acc=99.8% | val_loss=0.0069 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  32/100 | train_loss=0.0141 train_acc=99.5% | val_loss=0.0029 val_acc=100.0% DR=100.0% FAR=0.00% | 3.6s
+Epoch  33/100 | train_loss=0.0058 train_acc=100.0% | val_loss=0.0033 val_acc=99.8% DR=99.6% FAR=0.00% | 3.4s
+Epoch  34/100 | train_loss=0.0093 train_acc=99.7% | val_loss=0.0049 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  35/100 | train_loss=0.0030 train_acc=100.0% | val_loss=0.0049 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  36/100 | train_loss=0.0033 train_acc=100.0% | val_loss=0.0053 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  37/100 | train_loss=0.0038 train_acc=100.0% | val_loss=0.0041 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  38/100 | train_loss=0.0104 train_acc=99.7% | val_loss=0.0027 val_acc=100.0% DR=100.0% FAR=0.00% | 3.4s
+Epoch  39/100 | train_loss=0.0067 train_acc=99.9% | val_loss=0.0045 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  40/100 | train_loss=0.0064 train_acc=99.9% | val_loss=0.0042 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  41/100 | train_loss=0.0032 train_acc=100.0% | val_loss=0.0045 val_acc=99.8% DR=99.6% FAR=0.00% | 3.5s
+Epoch  42/100 | train_loss=0.0065 train_acc=99.8% | val_loss=0.0039 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  43/100 | train_loss=0.0119 train_acc=99.6% | val_loss=0.0068 val_acc=99.6% DR=99.2% FAR=0.00% | 3.2s
+Epoch  44/100 | train_loss=0.0034 train_acc=100.0% | val_loss=0.0034 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  45/100 | train_loss=0.0055 train_acc=99.9% | val_loss=0.0056 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  46/100 | train_loss=0.0068 train_acc=99.8% | val_loss=0.0026 val_acc=100.0% DR=100.0% FAR=0.00% | 3.1s
+Epoch  47/100 | train_loss=0.0031 train_acc=100.0% | val_loss=0.0034 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  48/100 | train_loss=0.0055 train_acc=99.9% | val_loss=0.0049 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  49/100 | train_loss=0.0035 train_acc=99.9% | val_loss=0.0025 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  50/100 | train_loss=0.0040 train_acc=100.0% | val_loss=0.0025 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  51/100 | train_loss=0.0042 train_acc=100.0% | val_loss=0.0040 val_acc=99.8% DR=99.6% FAR=0.00% | 3.2s
+Epoch  52/100 | train_loss=0.0087 train_acc=99.8% | val_loss=0.0032 val_acc=99.8% DR=99.6% FAR=0.00% | 3.5s
+Epoch  53/100 | train_loss=0.0058 train_acc=99.9% | val_loss=0.0019 val_acc=100.0% DR=100.0% FAR=0.00% | 3.2s
+Epoch  54/100 | train_loss=0.0024 train_acc=100.0% | val_loss=0.0028 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  55/100 | train_loss=0.0032 train_acc=100.0% | val_loss=0.0021 val_acc=100.0% DR=100.0% FAR=0.00% | 3.1s
+Epoch  56/100 | train_loss=0.0051 train_acc=99.9% | val_loss=0.0021 val_acc=100.0% DR=100.0% FAR=0.00% | 3.0s
+Epoch  57/100 | train_loss=0.0046 train_acc=100.0% | val_loss=0.0019 val_acc=100.0% DR=100.0% FAR=0.00% | 3.0s
+Epoch  58/100 | train_loss=0.0018 train_acc=100.0% | val_loss=0.0046 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  59/100 | train_loss=0.0073 train_acc=99.8% | val_loss=0.0019 val_acc=100.0% DR=100.0% FAR=0.00% | 3.1s
+Epoch  60/100 | train_loss=0.0058 train_acc=99.9% | val_loss=0.0037 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  61/100 | train_loss=0.0032 train_acc=100.0% | val_loss=0.0033 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  62/100 | train_loss=0.0044 train_acc=100.0% | val_loss=0.0026 val_acc=100.0% DR=100.0% FAR=0.00% | 2.9s
+Epoch  63/100 | train_loss=0.0043 train_acc=99.9% | val_loss=0.0045 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  64/100 | train_loss=0.0025 train_acc=100.0% | val_loss=0.0047 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  65/100 | train_loss=0.0021 train_acc=100.0% | val_loss=0.0027 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  66/100 | train_loss=0.0067 train_acc=99.8% | val_loss=0.0022 val_acc=100.0% DR=100.0% FAR=0.00% | 3.0s
+Epoch  67/100 | train_loss=0.0044 train_acc=99.9% | val_loss=0.0017 val_acc=100.0% DR=100.0% FAR=0.00% | 3.2s
+Epoch  68/100 | train_loss=0.0036 train_acc=100.0% | val_loss=0.0062 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  69/100 | train_loss=0.0028 train_acc=100.0% | val_loss=0.0054 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  70/100 | train_loss=0.0015 train_acc=100.0% | val_loss=0.0026 val_acc=99.8% DR=99.6% FAR=0.00% | 2.9s
+Epoch  71/100 | train_loss=0.0037 train_acc=100.0% | val_loss=0.0047 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  72/100 | train_loss=0.0027 train_acc=99.9% | val_loss=0.0032 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  73/100 | train_loss=0.0069 train_acc=99.8% | val_loss=0.0030 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  74/100 | train_loss=0.0016 train_acc=100.0% | val_loss=0.0032 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  75/100 | train_loss=0.0024 train_acc=100.0% | val_loss=0.0026 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  76/100 | train_loss=0.0046 train_acc=99.9% | val_loss=0.0075 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  77/100 | train_loss=0.0035 train_acc=100.0% | val_loss=0.0017 val_acc=100.0% DR=100.0% FAR=0.00% | 3.7s
+Epoch  78/100 | train_loss=0.0034 train_acc=99.9% | val_loss=0.0032 val_acc=99.8% DR=99.6% FAR=0.00% | 3.6s
+Epoch  79/100 | train_loss=0.0108 train_acc=99.7% | val_loss=0.0019 val_acc=100.0% DR=100.0% FAR=0.00% | 3.4s
+Epoch  80/100 | train_loss=0.0022 train_acc=100.0% | val_loss=0.0032 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  81/100 | train_loss=0.0011 train_acc=100.0% | val_loss=0.0021 val_acc=100.0% DR=100.0% FAR=0.00% | 3.6s
+Epoch  82/100 | train_loss=0.0035 train_acc=100.0% | val_loss=0.0027 val_acc=99.8% DR=99.6% FAR=0.00% | 3.8s
+Epoch  83/100 | train_loss=0.0020 train_acc=100.0% | val_loss=0.0034 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  84/100 | train_loss=0.0021 train_acc=100.0% | val_loss=0.0028 val_acc=99.8% DR=99.6% FAR=0.00% | 3.1s
+Epoch  85/100 | train_loss=0.0018 train_acc=100.0% | val_loss=0.0022 val_acc=99.8% DR=99.6% FAR=0.00% | 3.3s
+Epoch  86/100 | train_loss=0.0034 train_acc=99.9% | val_loss=0.0036 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  87/100 | train_loss=0.0024 train_acc=100.0% | val_loss=0.0022 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  88/100 | train_loss=0.0019 train_acc=100.0% | val_loss=0.0033 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  89/100 | train_loss=0.0048 train_acc=99.9% | val_loss=0.0039 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  90/100 | train_loss=0.0025 train_acc=100.0% | val_loss=0.0063 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  91/100 | train_loss=0.0030 train_acc=100.0% | val_loss=0.0022 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  92/100 | train_loss=0.0042 train_acc=99.9% | val_loss=0.0019 val_acc=100.0% DR=100.0% FAR=0.00% | 3.0s
+Epoch  93/100 | train_loss=0.0014 train_acc=100.0% | val_loss=0.0023 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  94/100 | train_loss=0.0044 train_acc=99.8% | val_loss=0.0028 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  95/100 | train_loss=0.0036 train_acc=99.9% | val_loss=0.0035 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  96/100 | train_loss=0.0056 train_acc=99.9% | val_loss=0.0031 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  97/100 | train_loss=0.0025 train_acc=100.0% | val_loss=0.0019 val_acc=100.0% DR=100.0% FAR=0.00% | 3.0s
+Epoch  98/100 | train_loss=0.0035 train_acc=99.9% | val_loss=0.0022 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch  99/100 | train_loss=0.0021 train_acc=100.0% | val_loss=0.0051 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+Epoch 100/100 | train_loss=0.0016 train_acc=100.0% | val_loss=0.0043 val_acc=99.8% DR=99.6% FAR=0.00% | 3.0s
+
+Done in 316.2s
+
+Final: acc=100.00% DR=100.00% FAR=0.00% F1=1.0000
+Artifacts → /home/rrahman/StudentClusterBT/Tabula Rasa/simulation06/../artifacts/sim06/detector/run003_*
+new detector checkpoint: /home/rrahman/StudentClusterBT/Tabula Rasa/artifacts/sim06/detector/run003_best.pt
+=== recheck Phase 0: complex-STFT CNN + energy detector suite ===
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+energy threshold (clean FAR=0.01): 0.8323
+CLEAN | P_cnn=0.000 (score 0.001) P_energy=0.023 BER=0.0000
+sparse_blind   n=  1 pw= 0.3 | P_cnn=0.000 P_energy=0.055 P_suite=0.055 BER=0.000
+sparse_blind   n=  1 pw=   1 | P_cnn=0.000 P_energy=0.281 P_suite=0.281 BER=0.005
+sparse_blind   n=  1 pw=   2 | P_cnn=0.000 P_energy=0.773 P_suite=0.773 BER=0.007
+sparse_blind   n=  1 pw=   4 | P_cnn=0.008 P_energy=0.992 P_suite=0.992 BER=0.008
+sparse_blind   n=  1 pw=   8 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.008
+sparse_blind   n=  2 pw= 0.3 | P_cnn=0.000 P_energy=0.141 P_suite=0.141 BER=0.000
+sparse_blind   n=  2 pw=   1 | P_cnn=0.000 P_energy=0.734 P_suite=0.734 BER=0.010
+sparse_blind   n=  2 pw=   2 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.012
+sparse_blind   n=  2 pw=   4 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.014
+sparse_blind   n=  2 pw=   8 | P_cnn=0.320 P_energy=1.000 P_suite=1.000 BER=0.016
+sparse_blind   n=  4 pw= 0.3 | P_cnn=0.000 P_energy=0.414 P_suite=0.414 BER=0.000
+sparse_blind   n=  4 pw=   1 | P_cnn=0.000 P_energy=0.977 P_suite=0.977 BER=0.020
+sparse_blind   n=  4 pw=   2 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.026
+sparse_blind   n=  4 pw=   4 | P_cnn=0.086 P_energy=1.000 P_suite=1.000 BER=0.030
+sparse_blind   n=  4 pw=   8 | P_cnn=0.906 P_energy=1.000 P_suite=1.000 BER=0.032
+sparse_blind   n=  8 pw= 0.3 | P_cnn=0.000 P_energy=0.883 P_suite=0.883 BER=0.000
+sparse_blind   n=  8 pw=   1 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.038
+sparse_blind   n=  8 pw=   2 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.051
+sparse_blind   n=  8 pw=   4 | P_cnn=0.406 P_energy=1.000 P_suite=1.000 BER=0.060
+sparse_blind   n=  8 pw=   8 | P_cnn=0.891 P_energy=1.000 P_suite=1.000 BER=0.063
+sparse_blind   n= 16 pw= 0.3 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.000
+sparse_blind   n= 16 pw=   1 | P_cnn=0.008 P_energy=1.000 P_suite=1.000 BER=0.077
+sparse_blind   n= 16 pw=   2 | P_cnn=0.094 P_energy=1.000 P_suite=1.000 BER=0.102
+sparse_blind   n= 16 pw=   4 | P_cnn=0.383 P_energy=1.000 P_suite=1.000 BER=0.118
+sparse_blind   n= 16 pw=   8 | P_cnn=0.664 P_energy=1.000 P_suite=1.000 BER=0.130
+sparse_blind   n= 52 pw= 0.3 | P_cnn=0.008 P_energy=1.000 P_suite=1.000 BER=0.000
+sparse_blind   n= 52 pw=   1 | P_cnn=0.055 P_energy=1.000 P_suite=1.000 BER=0.249
+sparse_blind   n= 52 pw=   2 | P_cnn=0.055 P_energy=1.000 P_suite=1.000 BER=0.337
+sparse_blind   n= 52 pw=   4 | P_cnn=0.102 P_energy=1.000 P_suite=1.000 BER=0.383
+sparse_blind   n= 52 pw=   8 | P_cnn=0.070 P_energy=1.000 P_suite=1.000 BER=0.418
+broadband      n= 52 pw= 0.3 | P_cnn=0.000 P_energy=1.000 P_suite=1.000 BER=0.035
+broadband      n= 52 pw=   1 | P_cnn=0.039 P_energy=1.000 P_suite=1.000 BER=0.157
+broadband      n= 52 pw=   2 | P_cnn=0.102 P_energy=1.000 P_suite=1.000 BER=0.240
+broadband      n= 52 pw=   4 | P_cnn=0.070 P_energy=1.000 P_suite=1.000 BER=0.308
+broadband      n= 52 pw=   8 | P_cnn=0.086 P_energy=1.000 P_suite=1.000 BER=0.362
+broadband_oob  n= 64 pw= 0.3 | P_cnn=1.000 P_energy=1.000 P_suite=1.000 BER=0.035
+broadband_oob  n= 64 pw=   1 | P_cnn=1.000 P_energy=1.000 P_suite=1.000 BER=0.158
+broadband_oob  n= 64 pw=   2 | P_cnn=1.000 P_energy=1.000 P_suite=1.000 BER=0.239
+broadband_oob  n= 64 pw=   4 | P_cnn=1.000 P_energy=1.000 P_suite=1.000 BER=0.308
+broadband_oob  n= 64 pw=   8 | P_cnn=1.000 P_energy=1.000 P_suite=1.000 BER=0.362
+
+=== HEADLINE: max stealthy BER (corrected detector) ===
+  P(det) <= 0.05 | CNN-only max BER=0.157  |  SUITE max BER=nan
+  P(det) <= 0.10 | CNN-only max BER=0.418  |  SUITE max BER=0.000
+  P(det) <= 0.50 | CNN-only max BER=0.418  |  SUITE max BER=0.005
+
+=== out-of-band check @ power=8 (does the finding survive complex STFT?) ===
+  in-band      P_cnn=0.086  BER=0.362
+  out-of-band  P_cnn=1.000  BER=0.362
+
+Done. Outputs in /home/rrahman/StudentClusterBT/Tabula Rasa/frontier/../artifacts/frontier_recheck

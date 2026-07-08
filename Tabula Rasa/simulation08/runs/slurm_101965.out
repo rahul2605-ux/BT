@@ -1,0 +1,146 @@
+device=cuda
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+clean            EbN0=  5 | BER floor=0.0820 P(det)=0.0386
+sparse_blind        EbN0=  5 n=  1 pwr=1 | BER=0.1007 P(det)=0.0608
+sparse_blind        EbN0=  5 n=  2 pwr=1 | BER=0.0921 P(det)=0.0710
+sparse_blind        EbN0=  5 n=  4 pwr=1 | BER=0.0952 P(det)=0.0605
+sparse_blind        EbN0=  5 n=  8 pwr=1 | BER=0.1088 P(det)=0.0544
+sparse_blind        EbN0=  5 n= 16 pwr=1 | BER=0.1371 P(det)=0.0515
+sparse_blind        EbN0=  5 n= 52 pwr=1 | BER=0.2388 P(det)=0.0793
+sparse_channelaware EbN0=  5 n=  1 pwr=1 | BER=0.0860 P(det)=0.0553
+sparse_channelaware EbN0=  5 n=  2 pwr=1 | BER=0.0863 P(det)=0.0423
+sparse_channelaware EbN0=  5 n=  4 pwr=1 | BER=0.1011 P(det)=0.0195
+sparse_channelaware EbN0=  5 n=  8 pwr=1 | BER=0.1211 P(det)=0.0753
+sparse_channelaware EbN0=  5 n= 16 pwr=1 | BER=0.1405 P(det)=0.0692
+sparse_channelaware EbN0=  5 n= 52 pwr=1 | BER=0.2452 P(det)=0.0858
+broadband_inband  EbN0=  5       pwr=1 | BER=0.2224 P(det)=0.0512
+sparse_blind        EbN0=  5 n=  1 pwr=4 | BER=0.0875 P(det)=0.0641
+sparse_blind        EbN0=  5 n=  2 pwr=4 | BER=0.0926 P(det)=0.1116
+sparse_blind        EbN0=  5 n=  4 pwr=4 | BER=0.1089 P(det)=0.1361
+sparse_blind        EbN0=  5 n=  8 pwr=4 | BER=0.1213 P(det)=0.1697
+sparse_blind        EbN0=  5 n= 16 pwr=4 | BER=0.1570 P(det)=0.2154
+sparse_blind        EbN0=  5 n= 52 pwr=4 | BER=0.3419 P(det)=0.2400
+sparse_channelaware EbN0=  5 n=  1 pwr=4 | BER=0.0858 P(det)=0.0871
+sparse_channelaware EbN0=  5 n=  2 pwr=4 | BER=0.0903 P(det)=0.1426
+sparse_channelaware EbN0=  5 n=  4 pwr=4 | BER=0.1004 P(det)=0.2122
+sparse_channelaware EbN0=  5 n=  8 pwr=4 | BER=0.1145 P(det)=0.2093
+sparse_channelaware EbN0=  5 n= 16 pwr=4 | BER=0.1651 P(det)=0.2942
+sparse_channelaware EbN0=  5 n= 52 pwr=4 | BER=0.3425 P(det)=0.2216
+broadband_inband  EbN0=  5       pwr=4 | BER=0.3391 P(det)=0.2449
+clean            EbN0= 10 | BER floor=0.0292 P(det)=0.0602
+sparse_blind        EbN0= 10 n=  1 pwr=1 | BER=0.0368 P(det)=0.0555
+sparse_blind        EbN0= 10 n=  2 pwr=1 | BER=0.0387 P(det)=0.0907
+sparse_blind        EbN0= 10 n=  4 pwr=1 | BER=0.0465 P(det)=0.0936
+sparse_blind        EbN0= 10 n=  8 pwr=1 | BER=0.0628 P(det)=0.0910
+sparse_blind        EbN0= 10 n= 16 pwr=1 | BER=0.0877 P(det)=0.0886
+sparse_blind        EbN0= 10 n= 52 pwr=1 | BER=0.2130 P(det)=0.1066
+sparse_channelaware EbN0= 10 n=  1 pwr=1 | BER=0.0381 P(det)=0.1020
+sparse_channelaware EbN0= 10 n=  2 pwr=1 | BER=0.0457 P(det)=0.0752
+sparse_channelaware EbN0= 10 n=  4 pwr=1 | BER=0.0518 P(det)=0.0649
+sparse_channelaware EbN0= 10 n=  8 pwr=1 | BER=0.0709 P(det)=0.0682
+sparse_channelaware EbN0= 10 n= 16 pwr=1 | BER=0.1205 P(det)=0.0880
+sparse_channelaware EbN0= 10 n= 52 pwr=1 | BER=0.2132 P(det)=0.0854
+broadband_inband  EbN0= 10       pwr=1 | BER=0.2124 P(det)=0.1244
+sparse_blind        EbN0= 10 n=  1 pwr=4 | BER=0.0397 P(det)=0.1088
+sparse_blind        EbN0= 10 n=  2 pwr=4 | BER=0.0469 P(det)=0.1750
+sparse_blind        EbN0= 10 n=  4 pwr=4 | BER=0.0560 P(det)=0.2673
+sparse_blind        EbN0= 10 n=  8 pwr=4 | BER=0.0775 P(det)=0.2515
+sparse_blind        EbN0= 10 n= 16 pwr=4 | BER=0.1315 P(det)=0.2588
+sparse_blind        EbN0= 10 n= 52 pwr=4 | BER=0.3314 P(det)=0.2809
+sparse_channelaware EbN0= 10 n=  1 pwr=4 | BER=0.0371 P(det)=0.1498
+sparse_channelaware EbN0= 10 n=  2 pwr=4 | BER=0.0424 P(det)=0.2085
+sparse_channelaware EbN0= 10 n=  4 pwr=4 | BER=0.0495 P(det)=0.2644
+sparse_channelaware EbN0= 10 n=  8 pwr=4 | BER=0.0823 P(det)=0.3699
+sparse_channelaware EbN0= 10 n= 16 pwr=4 | BER=0.1470 P(det)=0.4204
+sparse_channelaware EbN0= 10 n= 52 pwr=4 | BER=0.3358 P(det)=0.2673
+broadband_inband  EbN0= 10       pwr=4 | BER=0.3349 P(det)=0.2383
+clean            EbN0= 15 | BER floor=0.0120 P(det)=0.1263
+sparse_blind        EbN0= 15 n=  1 pwr=1 | BER=0.0171 P(det)=0.1215
+sparse_blind        EbN0= 15 n=  2 pwr=1 | BER=0.0198 P(det)=0.1015
+sparse_blind        EbN0= 15 n=  4 pwr=1 | BER=0.0267 P(det)=0.1139
+sparse_blind        EbN0= 15 n=  8 pwr=1 | BER=0.0403 P(det)=0.0598
+sparse_blind        EbN0= 15 n= 16 pwr=1 | BER=0.0708 P(det)=0.1067
+sparse_blind        EbN0= 15 n= 52 pwr=1 | BER=0.2173 P(det)=0.1208
+sparse_channelaware EbN0= 15 n=  1 pwr=1 | BER=0.0156 P(det)=0.0935
+sparse_channelaware EbN0= 15 n=  2 pwr=1 | BER=0.0234 P(det)=0.0778
+sparse_channelaware EbN0= 15 n=  4 pwr=1 | BER=0.0378 P(det)=0.0770
+sparse_channelaware EbN0= 15 n=  8 pwr=1 | BER=0.0657 P(det)=0.0657
+sparse_channelaware EbN0= 15 n= 16 pwr=1 | BER=0.1161 P(det)=0.1202
+sparse_channelaware EbN0= 15 n= 52 pwr=1 | BER=0.2059 P(det)=0.0905
+broadband_inband  EbN0= 15       pwr=1 | BER=0.2061 P(det)=0.1390
+sparse_blind        EbN0= 15 n=  1 pwr=4 | BER=0.0178 P(det)=0.1622
+sparse_blind        EbN0= 15 n=  2 pwr=4 | BER=0.0231 P(det)=0.2020
+sparse_blind        EbN0= 15 n=  4 pwr=4 | BER=0.0354 P(det)=0.2501
+sparse_blind        EbN0= 15 n=  8 pwr=4 | BER=0.0562 P(det)=0.2090
+sparse_blind        EbN0= 15 n= 16 pwr=4 | BER=0.1137 P(det)=0.2851
+sparse_blind        EbN0= 15 n= 52 pwr=4 | BER=0.3368 P(det)=0.2768
+sparse_channelaware EbN0= 15 n=  1 pwr=4 | BER=0.0180 P(det)=0.1647
+sparse_channelaware EbN0= 15 n=  2 pwr=4 | BER=0.0239 P(det)=0.2259
+sparse_channelaware EbN0= 15 n=  4 pwr=4 | BER=0.0394 P(det)=0.2987
+sparse_channelaware EbN0= 15 n=  8 pwr=4 | BER=0.0729 P(det)=0.3699
+sparse_channelaware EbN0= 15 n= 16 pwr=4 | BER=0.1356 P(det)=0.3687
+sparse_channelaware EbN0= 15 n= 52 pwr=4 | BER=0.3352 P(det)=0.3027
+broadband_inband  EbN0= 15       pwr=4 | BER=0.3386 P(det)=0.2833
+clean            EbN0= 20 | BER floor=0.0031 P(det)=0.1157
+sparse_blind        EbN0= 20 n=  1 pwr=1 | BER=0.0080 P(det)=0.0967
+sparse_blind        EbN0= 20 n=  2 pwr=1 | BER=0.0131 P(det)=0.1745
+sparse_blind        EbN0= 20 n=  4 pwr=1 | BER=0.0191 P(det)=0.1049
+sparse_blind        EbN0= 20 n=  8 pwr=1 | BER=0.0354 P(det)=0.1374
+sparse_blind        EbN0= 20 n= 16 pwr=1 | BER=0.0673 P(det)=0.1573
+sparse_blind        EbN0= 20 n= 52 pwr=1 | BER=0.1959 P(det)=0.1060
+sparse_channelaware EbN0= 20 n=  1 pwr=1 | BER=0.0107 P(det)=0.1016
+sparse_channelaware EbN0= 20 n=  2 pwr=1 | BER=0.0173 P(det)=0.1088
+sparse_channelaware EbN0= 20 n=  4 pwr=1 | BER=0.0326 P(det)=0.1088
+sparse_channelaware EbN0= 20 n=  8 pwr=1 | BER=0.0608 P(det)=0.1014
+sparse_channelaware EbN0= 20 n= 16 pwr=1 | BER=0.1163 P(det)=0.1126
+sparse_channelaware EbN0= 20 n= 52 pwr=1 | BER=0.2181 P(det)=0.1038
+broadband_inband  EbN0= 20       pwr=1 | BER=0.2023 P(det)=0.1320
+sparse_blind        EbN0= 20 n=  1 pwr=4 | BER=0.0109 P(det)=0.2045
+sparse_blind        EbN0= 20 n=  2 pwr=4 | BER=0.0159 P(det)=0.1795
+sparse_blind        EbN0= 20 n=  4 pwr=4 | BER=0.0293 P(det)=0.2645
+sparse_blind        EbN0= 20 n=  8 pwr=4 | BER=0.0526 P(det)=0.2782
+sparse_blind        EbN0= 20 n= 16 pwr=4 | BER=0.1073 P(det)=0.3112
+sparse_blind        EbN0= 20 n= 52 pwr=4 | BER=0.3387 P(det)=0.2852
+sparse_channelaware EbN0= 20 n=  1 pwr=4 | BER=0.0112 P(det)=0.1792
+sparse_channelaware EbN0= 20 n=  2 pwr=4 | BER=0.0191 P(det)=0.1710
+sparse_channelaware EbN0= 20 n=  4 pwr=4 | BER=0.0357 P(det)=0.2958
+sparse_channelaware EbN0= 20 n=  8 pwr=4 | BER=0.0681 P(det)=0.3096
+sparse_channelaware EbN0= 20 n= 16 pwr=4 | BER=0.1332 P(det)=0.3986
+sparse_channelaware EbN0= 20 n= 52 pwr=4 | BER=0.3476 P(det)=0.3227
+broadband_inband  EbN0= 20       pwr=4 | BER=0.3244 P(det)=0.2689
+clean            EbN0= 30 | BER floor=0.0004 P(det)=0.1287
+sparse_blind        EbN0= 30 n=  1 pwr=1 | BER=0.0046 P(det)=0.0726
+sparse_blind        EbN0= 30 n=  2 pwr=1 | BER=0.0084 P(det)=0.1198
+sparse_blind        EbN0= 30 n=  4 pwr=1 | BER=0.0167 P(det)=0.1269
+sparse_blind        EbN0= 30 n=  8 pwr=1 | BER=0.0307 P(det)=0.1549
+sparse_blind        EbN0= 30 n= 16 pwr=1 | BER=0.0656 P(det)=0.1037
+sparse_blind        EbN0= 30 n= 52 pwr=1 | BER=0.2074 P(det)=0.1142
+sparse_channelaware EbN0= 30 n=  1 pwr=1 | BER=0.0084 P(det)=0.0740
+sparse_channelaware EbN0= 30 n=  2 pwr=1 | BER=0.0164 P(det)=0.0691
+sparse_channelaware EbN0= 30 n=  4 pwr=1 | BER=0.0328 P(det)=0.0904
+sparse_channelaware EbN0= 30 n=  8 pwr=1 | BER=0.0613 P(det)=0.0935
+sparse_channelaware EbN0= 30 n= 16 pwr=1 | BER=0.1105 P(det)=0.1183
+sparse_channelaware EbN0= 30 n= 52 pwr=1 | BER=0.2178 P(det)=0.0911
+broadband_inband  EbN0= 30       pwr=1 | BER=0.2108 P(det)=0.1125
+sparse_blind        EbN0= 30 n=  1 pwr=4 | BER=0.0068 P(det)=0.1380
+sparse_blind        EbN0= 30 n=  2 pwr=4 | BER=0.0135 P(det)=0.1668
+sparse_blind        EbN0= 30 n=  4 pwr=4 | BER=0.0254 P(det)=0.2742
+sparse_blind        EbN0= 30 n=  8 pwr=4 | BER=0.0515 P(det)=0.3204
+sparse_blind        EbN0= 30 n= 16 pwr=4 | BER=0.1002 P(det)=0.2745
+sparse_blind        EbN0= 30 n= 52 pwr=4 | BER=0.3395 P(det)=0.2697
+sparse_channelaware EbN0= 30 n=  1 pwr=4 | BER=0.0089 P(det)=0.1850
+sparse_channelaware EbN0= 30 n=  2 pwr=4 | BER=0.0178 P(det)=0.2185
+sparse_channelaware EbN0= 30 n=  4 pwr=4 | BER=0.0350 P(det)=0.3411
+sparse_channelaware EbN0= 30 n=  8 pwr=4 | BER=0.0686 P(det)=0.4035
+sparse_channelaware EbN0= 30 n= 16 pwr=4 | BER=0.1354 P(det)=0.4076
+sparse_channelaware EbN0= 30 n= 52 pwr=4 | BER=0.3439 P(det)=0.2929
+broadband_inband  EbN0= 30       pwr=4 | BER=0.3392 P(det)=0.2770
+
+=== HEADLINE: channel-aware vs blind BER (n=8, power=4) ===
+  EbN0=  5 dB | clean floor=0.0820 | blind=0.1213 | channel-aware=0.1145
+  EbN0= 10 dB | clean floor=0.0292 | blind=0.0775 | channel-aware=0.0823
+  EbN0= 15 dB | clean floor=0.0120 | blind=0.0562 | channel-aware=0.0729
+  EbN0= 20 dB | clean floor=0.0031 | blind=0.0526 | channel-aware=0.0681
+  EbN0= 30 dB | clean floor=0.0004 | blind=0.0515 | channel-aware=0.0686
+
+Done in 28.7s. Outputs in /home/rrahman/StudentClusterBT/Tabula Rasa/simulation08/../artifacts/sim08/frontier

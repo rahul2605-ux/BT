@@ -1,0 +1,160 @@
+device=cuda
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+clean            EbN0=  5 | BER floor=0.0795 P_energy=0.008 (e_thresh=2.581)
+sparse_blind        EbN0=  5 n=  1 pwr=1 | BER=0.0815 P_energy=0.000
+sparse_blind        EbN0=  5 n=  2 pwr=1 | BER=0.0885 P_energy=0.000
+sparse_blind        EbN0=  5 n=  4 pwr=1 | BER=0.0936 P_energy=0.016
+sparse_blind        EbN0=  5 n=  8 pwr=1 | BER=0.1082 P_energy=0.016
+sparse_blind        EbN0=  5 n= 16 pwr=1 | BER=0.1361 P_energy=0.016
+sparse_blind        EbN0=  5 n= 52 pwr=1 | BER=0.2397 P_energy=0.141
+sparse_channelaware EbN0=  5 n=  1 pwr=1 | BER=0.0968 P_energy=0.000
+sparse_channelaware EbN0=  5 n=  2 pwr=1 | BER=0.0930 P_energy=0.016
+sparse_channelaware EbN0=  5 n=  4 pwr=1 | BER=0.0982 P_energy=0.000
+sparse_channelaware EbN0=  5 n=  8 pwr=1 | BER=0.1138 P_energy=0.016
+sparse_channelaware EbN0=  5 n= 16 pwr=1 | BER=0.1441 P_energy=0.016
+sparse_channelaware EbN0=  5 n= 52 pwr=1 | BER=0.2443 P_energy=0.164
+broadband_inband  EbN0=  5       pwr=1 | BER=0.2309 P_energy=0.141
+sparse_blind        EbN0=  5 n=  1 pwr=4 | BER=0.0932 P_energy=0.008
+sparse_blind        EbN0=  5 n=  2 pwr=4 | BER=0.1026 P_energy=0.016
+sparse_blind        EbN0=  5 n=  4 pwr=4 | BER=0.1088 P_energy=0.031
+sparse_blind        EbN0=  5 n=  8 pwr=4 | BER=0.1258 P_energy=0.055
+sparse_blind        EbN0=  5 n= 16 pwr=4 | BER=0.1555 P_energy=0.211
+sparse_blind        EbN0=  5 n= 52 pwr=4 | BER=0.3329 P_energy=0.805
+sparse_channelaware EbN0=  5 n=  1 pwr=4 | BER=0.0942 P_energy=0.047
+sparse_channelaware EbN0=  5 n=  2 pwr=4 | BER=0.0891 P_energy=0.008
+sparse_channelaware EbN0=  5 n=  4 pwr=4 | BER=0.1068 P_energy=0.039
+sparse_channelaware EbN0=  5 n=  8 pwr=4 | BER=0.1211 P_energy=0.094
+sparse_channelaware EbN0=  5 n= 16 pwr=4 | BER=0.1711 P_energy=0.406
+sparse_channelaware EbN0=  5 n= 52 pwr=4 | BER=0.3378 P_energy=0.781
+broadband_inband  EbN0=  5       pwr=4 | BER=0.3377 P_energy=0.805
+clean            EbN0= 10 | BER floor=0.0354 P_energy=0.016 (e_thresh=2.597)
+sparse_blind        EbN0= 10 n=  1 pwr=1 | BER=0.0393 P_energy=0.023
+sparse_blind        EbN0= 10 n=  2 pwr=1 | BER=0.0398 P_energy=0.023
+sparse_blind        EbN0= 10 n=  4 pwr=1 | BER=0.0491 P_energy=0.000
+sparse_blind        EbN0= 10 n=  8 pwr=1 | BER=0.0648 P_energy=0.023
+sparse_blind        EbN0= 10 n= 16 pwr=1 | BER=0.0965 P_energy=0.008
+sparse_blind        EbN0= 10 n= 52 pwr=1 | BER=0.2316 P_energy=0.133
+sparse_channelaware EbN0= 10 n=  1 pwr=1 | BER=0.0339 P_energy=0.023
+sparse_channelaware EbN0= 10 n=  2 pwr=1 | BER=0.0387 P_energy=0.008
+sparse_channelaware EbN0= 10 n=  4 pwr=1 | BER=0.0511 P_energy=0.008
+sparse_channelaware EbN0= 10 n=  8 pwr=1 | BER=0.0730 P_energy=0.016
+sparse_channelaware EbN0= 10 n= 16 pwr=1 | BER=0.1150 P_energy=0.016
+sparse_channelaware EbN0= 10 n= 52 pwr=1 | BER=0.2263 P_energy=0.125
+broadband_inband  EbN0= 10       pwr=1 | BER=0.2298 P_energy=0.109
+sparse_blind        EbN0= 10 n=  1 pwr=4 | BER=0.0383 P_energy=0.016
+sparse_blind        EbN0= 10 n=  2 pwr=4 | BER=0.0425 P_energy=0.016
+sparse_blind        EbN0= 10 n=  4 pwr=4 | BER=0.0557 P_energy=0.016
+sparse_blind        EbN0= 10 n=  8 pwr=4 | BER=0.0827 P_energy=0.031
+sparse_blind        EbN0= 10 n= 16 pwr=4 | BER=0.1243 P_energy=0.141
+sparse_blind        EbN0= 10 n= 52 pwr=4 | BER=0.3343 P_energy=0.789
+sparse_channelaware EbN0= 10 n=  1 pwr=4 | BER=0.0400 P_energy=0.016
+sparse_channelaware EbN0= 10 n=  2 pwr=4 | BER=0.0473 P_energy=0.008
+sparse_channelaware EbN0= 10 n=  4 pwr=4 | BER=0.0568 P_energy=0.031
+sparse_channelaware EbN0= 10 n=  8 pwr=4 | BER=0.0831 P_energy=0.078
+sparse_channelaware EbN0= 10 n= 16 pwr=4 | BER=0.1435 P_energy=0.297
+sparse_channelaware EbN0= 10 n= 52 pwr=4 | BER=0.3317 P_energy=0.789
+broadband_inband  EbN0= 10       pwr=4 | BER=0.3362 P_energy=0.789
+clean            EbN0= 15 | BER floor=0.0091 P_energy=0.016 (e_thresh=2.537)
+sparse_blind        EbN0= 15 n=  1 pwr=1 | BER=0.0151 P_energy=0.008
+sparse_blind        EbN0= 15 n=  2 pwr=1 | BER=0.0179 P_energy=0.008
+sparse_blind        EbN0= 15 n=  4 pwr=1 | BER=0.0239 P_energy=0.008
+sparse_blind        EbN0= 15 n=  8 pwr=1 | BER=0.0444 P_energy=0.008
+sparse_blind        EbN0= 15 n= 16 pwr=1 | BER=0.0729 P_energy=0.031
+sparse_blind        EbN0= 15 n= 52 pwr=1 | BER=0.2074 P_energy=0.055
+sparse_channelaware EbN0= 15 n=  1 pwr=1 | BER=0.0167 P_energy=0.008
+sparse_channelaware EbN0= 15 n=  2 pwr=1 | BER=0.0222 P_energy=0.000
+sparse_channelaware EbN0= 15 n=  4 pwr=1 | BER=0.0362 P_energy=0.000
+sparse_channelaware EbN0= 15 n=  8 pwr=1 | BER=0.0627 P_energy=0.031
+sparse_channelaware EbN0= 15 n= 16 pwr=1 | BER=0.1136 P_energy=0.023
+sparse_channelaware EbN0= 15 n= 52 pwr=1 | BER=0.2226 P_energy=0.078
+broadband_inband  EbN0= 15       pwr=1 | BER=0.2183 P_energy=0.172
+sparse_blind        EbN0= 15 n=  1 pwr=4 | BER=0.0187 P_energy=0.000
+sparse_blind        EbN0= 15 n=  2 pwr=4 | BER=0.0245 P_energy=0.047
+sparse_blind        EbN0= 15 n=  4 pwr=4 | BER=0.0361 P_energy=0.000
+sparse_blind        EbN0= 15 n=  8 pwr=4 | BER=0.0584 P_energy=0.055
+sparse_blind        EbN0= 15 n= 16 pwr=4 | BER=0.1087 P_energy=0.102
+sparse_blind        EbN0= 15 n= 52 pwr=4 | BER=0.3331 P_energy=0.734
+sparse_channelaware EbN0= 15 n=  1 pwr=4 | BER=0.0175 P_energy=0.016
+sparse_channelaware EbN0= 15 n=  2 pwr=4 | BER=0.0248 P_energy=0.016
+sparse_channelaware EbN0= 15 n=  4 pwr=4 | BER=0.0401 P_energy=0.023
+sparse_channelaware EbN0= 15 n=  8 pwr=4 | BER=0.0715 P_energy=0.086
+sparse_channelaware EbN0= 15 n= 16 pwr=4 | BER=0.1366 P_energy=0.266
+sparse_channelaware EbN0= 15 n= 52 pwr=4 | BER=0.3293 P_energy=0.742
+broadband_inband  EbN0= 15       pwr=4 | BER=0.3258 P_energy=0.758
+clean            EbN0= 20 | BER floor=0.0035 P_energy=0.023 (e_thresh=2.268)
+sparse_blind        EbN0= 20 n=  1 pwr=1 | BER=0.0081 P_energy=0.031
+sparse_blind        EbN0= 20 n=  2 pwr=1 | BER=0.0113 P_energy=0.016
+sparse_blind        EbN0= 20 n=  4 pwr=1 | BER=0.0211 P_energy=0.008
+sparse_blind        EbN0= 20 n=  8 pwr=1 | BER=0.0365 P_energy=0.016
+sparse_blind        EbN0= 20 n= 16 pwr=1 | BER=0.0738 P_energy=0.023
+sparse_blind        EbN0= 20 n= 52 pwr=1 | BER=0.2141 P_energy=0.156
+sparse_channelaware EbN0= 20 n=  1 pwr=1 | BER=0.0103 P_energy=0.016
+sparse_channelaware EbN0= 20 n=  2 pwr=1 | BER=0.0171 P_energy=0.023
+sparse_channelaware EbN0= 20 n=  4 pwr=1 | BER=0.0317 P_energy=0.023
+sparse_channelaware EbN0= 20 n=  8 pwr=1 | BER=0.0631 P_energy=0.039
+sparse_channelaware EbN0= 20 n= 16 pwr=1 | BER=0.1122 P_energy=0.078
+sparse_channelaware EbN0= 20 n= 52 pwr=1 | BER=0.2102 P_energy=0.203
+broadband_inband  EbN0= 20       pwr=1 | BER=0.2021 P_energy=0.203
+sparse_blind        EbN0= 20 n=  1 pwr=4 | BER=0.0098 P_energy=0.023
+sparse_blind        EbN0= 20 n=  2 pwr=4 | BER=0.0172 P_energy=0.008
+sparse_blind        EbN0= 20 n=  4 pwr=4 | BER=0.0286 P_energy=0.031
+sparse_blind        EbN0= 20 n=  8 pwr=4 | BER=0.0528 P_energy=0.070
+sparse_blind        EbN0= 20 n= 16 pwr=4 | BER=0.1054 P_energy=0.258
+sparse_blind        EbN0= 20 n= 52 pwr=4 | BER=0.3317 P_energy=0.844
+sparse_channelaware EbN0= 20 n=  1 pwr=4 | BER=0.0107 P_energy=0.008
+sparse_channelaware EbN0= 20 n=  2 pwr=4 | BER=0.0188 P_energy=0.031
+sparse_channelaware EbN0= 20 n=  4 pwr=4 | BER=0.0374 P_energy=0.023
+sparse_channelaware EbN0= 20 n=  8 pwr=4 | BER=0.0690 P_energy=0.156
+sparse_channelaware EbN0= 20 n= 16 pwr=4 | BER=0.1362 P_energy=0.469
+sparse_channelaware EbN0= 20 n= 52 pwr=4 | BER=0.3187 P_energy=0.789
+broadband_inband  EbN0= 20       pwr=4 | BER=0.3315 P_energy=0.805
+clean            EbN0= 30 | BER floor=0.0004 P_energy=0.008 (e_thresh=2.346)
+sparse_blind        EbN0= 30 n=  1 pwr=1 | BER=0.0044 P_energy=0.008
+sparse_blind        EbN0= 30 n=  2 pwr=1 | BER=0.0083 P_energy=0.000
+sparse_blind        EbN0= 30 n=  4 pwr=1 | BER=0.0161 P_energy=0.023
+sparse_blind        EbN0= 30 n=  8 pwr=1 | BER=0.0345 P_energy=0.031
+sparse_blind        EbN0= 30 n= 16 pwr=1 | BER=0.0648 P_energy=0.031
+sparse_blind        EbN0= 30 n= 52 pwr=1 | BER=0.2224 P_energy=0.148
+sparse_channelaware EbN0= 30 n=  1 pwr=1 | BER=0.0082 P_energy=0.000
+sparse_channelaware EbN0= 30 n=  2 pwr=1 | BER=0.0173 P_energy=0.008
+sparse_channelaware EbN0= 30 n=  4 pwr=1 | BER=0.0332 P_energy=0.039
+sparse_channelaware EbN0= 30 n=  8 pwr=1 | BER=0.0611 P_energy=0.016
+sparse_channelaware EbN0= 30 n= 16 pwr=1 | BER=0.1107 P_energy=0.055
+sparse_channelaware EbN0= 30 n= 52 pwr=1 | BER=0.1791 P_energy=0.109
+broadband_inband  EbN0= 30       pwr=1 | BER=0.2240 P_energy=0.133
+sparse_blind        EbN0= 30 n=  1 pwr=4 | BER=0.0066 P_energy=0.023
+sparse_blind        EbN0= 30 n=  2 pwr=4 | BER=0.0132 P_energy=0.023
+sparse_blind        EbN0= 30 n=  4 pwr=4 | BER=0.0261 P_energy=0.031
+sparse_blind        EbN0= 30 n=  8 pwr=4 | BER=0.0528 P_energy=0.086
+sparse_blind        EbN0= 30 n= 16 pwr=4 | BER=0.1012 P_energy=0.227
+sparse_blind        EbN0= 30 n= 52 pwr=4 | BER=0.3401 P_energy=0.852
+sparse_channelaware EbN0= 30 n=  1 pwr=4 | BER=0.0091 P_energy=0.008
+sparse_channelaware EbN0= 30 n=  2 pwr=4 | BER=0.0182 P_energy=0.000
+sparse_channelaware EbN0= 30 n=  4 pwr=4 | BER=0.0353 P_energy=0.070
+sparse_channelaware EbN0= 30 n=  8 pwr=4 | BER=0.0699 P_energy=0.109
+sparse_channelaware EbN0= 30 n= 16 pwr=4 | BER=0.1345 P_energy=0.438
+sparse_channelaware EbN0= 30 n= 52 pwr=4 | BER=0.3203 P_energy=0.773
+broadband_inband  EbN0= 30       pwr=4 | BER=0.3332 P_energy=0.742
+
+=== HEADLINE: channel-aware vs blind BER (n=8, power=4) ===
+  EbN0=  5 dB | clean floor=0.0795 | blind=0.1258 | channel-aware=0.1211
+  EbN0= 10 dB | clean floor=0.0354 | blind=0.0827 | channel-aware=0.0831
+  EbN0= 15 dB | clean floor=0.0091 | blind=0.0584 | channel-aware=0.0715
+  EbN0= 20 dB | clean floor=0.0035 | blind=0.0528 | channel-aware=0.0690
+  EbN0= 30 dB | clean floor=0.0004 | blind=0.0528 | channel-aware=0.0699
+
+=== ENERGY DETECTOR: max BER achievable while staying stealthy (P_energy<=0.5) ===
+  EbN0=  5 dB | clean floor=0.0795 | stealthy blind=0.2397 | stealthy channel-aware=0.2443
+  EbN0= 10 dB | clean floor=0.0354 | stealthy blind=0.2316 | stealthy channel-aware=0.2263
+  EbN0= 15 dB | clean floor=0.0091 | stealthy blind=0.2074 | stealthy channel-aware=0.2226
+  EbN0= 20 dB | clean floor=0.0035 | stealthy blind=0.2141 | stealthy channel-aware=0.2102
+  EbN0= 30 dB | clean floor=0.0004 | stealthy blind=0.2224 | stealthy channel-aware=0.1791
+
+=== FULL SUITE vs single detectors: max stealthy BER (P(det)<=0.5) over all jammers ===
+  EbN0=  5 dB | floor=0.0795 | energy-only=0.2443 | CNN-only=0.1138 | SUITE=0.1138
+  EbN0= 10 dB | floor=0.0354 | energy-only=0.2316 | CNN-only=0.0965 | SUITE=0.0965
+  EbN0= 15 dB | floor=0.0091 | energy-only=0.2226 | CNN-only=0.0729 | SUITE=0.0729
+  EbN0= 20 dB | floor=0.0035 | energy-only=0.2141 | CNN-only=0.0738 | SUITE=0.0738
+  EbN0= 30 dB | floor=0.0004 | energy-only=0.2240 | CNN-only=0.0648 | SUITE=0.0648
+
+Done in 27.3s. Outputs in /home/rrahman/StudentClusterBT/Tabula Rasa/simulation08/../artifacts/sim08/frontier
