@@ -20,7 +20,7 @@
 \maketitle
 
 \begin{abstract}
-Physical layer (PHY) security has evolved from stochastic interference management to adversarial data-driven warfare. The threat landscape has shifted from static jamming to intelligent, cooperative agents capable of executing protocol-aware attacks and spatial entrapment. This paper reviews the current state of the art in PHY security, with an emphasis on learning based models and multi-agent settings. The discussion proceeds from cooperative reinforcement learning frameworks to blind and model free approaches, and finally to emerging directions that incorporate large language models and generative methods.
+\rar{Write last.}
 \end{abstract}
 
 
@@ -69,7 +69,7 @@ Finally it addresses emerging directions that incorporate large language models 
 %\adm{this is good, however keep in mind that this document will be the whole report and the paper that we will aim to publish, therefore the intro should not say that the contrib is the survey but rather focus only on the problem/challenge you address, and leave the }
 %summarizing general cases as sections, and going to more complex ones for overview
 %\section{Adversarial Learning in Point-to-Point Links, 1tx, 1rx, 1jammer, no-ML, stationary (Working Title)}
-\section{New Related Works}
+\section{Related Works}
 \subsection{Jamming}
 \subsection{Anti-Jamming}
 \subsection{Detection}
@@ -90,7 +90,165 @@ Zhang \emph{et al.} \cite{article} & HDRL & Yes & Yes & No \\ %to correct
 \end{tabular}
 \end{table*}
 
-\section{Related Works}
+
+\section{System Model}
+We consider a discrete-time OFDM scenario in which a legitimate network defends a point-to-point link against a cooperative team of jamming agents. 
+The legitimate network comprises a transmitter and a receiver communicating over a frequency-selective fading channel, together with a detector that inspects each received frame and decides whether it has been jammed.
+Opposing the network, a team of cooperative jammers injects crafted interference with the joint objective of maximizing the receiver bit error rate (BER) while evading the detector.
+This constitutes a two-sided adversarial setting: the legitimate network senses and flags interference, while the jammer team shapes its waveform to be simultaneously disruptive and statistically indistinguishable from a jammer-free frame. We formalize each component below.
+
+\subsection{Legitimate OFDM Link}
+The transmitter communicates with the receiver over an OFDM waveform with a set of subcarriers $\mathcal{K} = \{0, \ldots, K-1\}$ of spacing $\Delta f$ around a carrier frequency $f_c$.
+Each transmitted frame spans $L$ consecutive OFDM symbols.
+The subcarriers are partitioned into a data set $\mathcal{K}_d$, a pilot set $\mathcal{K}_p$, and a guard/null set $\mathcal{K}_g$, with $\mathcal{K} = \mathcal{K}_d \cup \mathcal{K}_p \cup \mathcal{K}_g$.
+
+Let $X[k, \ell] \in \mathbb{C}$ denote the frequency-domain symbol on subcarrier $k \in \mathcal{K}$ during OFDM symbol $\ell \in \{1,\ldots,L\}$.
+Data subcarriers carry QPSK symbols drawn from the constellation
+$\mathcal{Q} = \{\tfrac{1}{\sqrt{2}}(\pm 1 \pm j)\}$, pilot subcarriers carry
+known reference symbols \rar{Kronecker pilot pattern, symbols 2 and 11 of each
+frame; values fixed by the simulation library, not drawn from $\mathcal{Q}$},
+and guard subcarriers are null.
+Applying the inverse
+DFT and prepending a cyclic prefix of length $L_{cp}$ yields the time-domain
+transmit waveform $x[n]$, radiated at fixed power $P_{tx}$. \rar{maybe redundant info}
+
+\subsection{Cooperative Jammer Team}
+A team $\mathcal{J} = \{1, \ldots, N_J\}$ of cooperative jamming agents shares the objective of degrading the legitimate link while evading the detector (Sec.~\ref{sec:detector}).
+At each OFDM symbol $\ell$, agent $j$ synthesizes a complex, per-subcarrier interference vector $\mathbf{s}_j[\ell] = (S_j[0,\ell],\ldots,S_j[K-1,\ell]) \in
+\mathbb{C}^K$, injected in the frequency domain prior to OFDM modulation.
+Unlike channel- or power-selection jammers, an agent controls the full complex
+amplitude $S_j[k,\ell]$ independently on every subcarrier and OFDM symbol,
+i.e.\ it synthesises a raw IQ waveform rather than choosing from a discrete
+action set.
+Each agent is subject to a transmit-power budget
+\begin{equation}
+\frac{1}{KL}\sum_{\ell=1}^{L}\sum_{k \in \mathcal{K}} \big|S_j[k,\ell]\big|^2
+\;\leq\; P_{\max}, \qquad \forall j \in \mathcal{J}.
+\label{eq:power}
+\end{equation}
+As Eq.~\eqref{eq:rx} shows, the agents' signals combine at the receiver
+through their individual channels $G_j[k]$, so effective joint disruption
+requires coordinating which subcarriers each agent targets and at what
+power.
+
+\subsection{Channel Model and Received Signal}
+Propagation between any transmitter or jammer and the receiver is modeled as a frequency-selective, block-fading channel, constant over one frame and drawn independently for each link.
+The frequency response of the receiver-transmitter link on subcarrier $k$ is
+\begin{equation}
+H_0[k] = \gamma_0 \cdot h_0[k],
+\label{eq:channel-tx}
+\end{equation}
+and, for each jammer $j \in \mathcal{J}$, the response of its link to the
+receiver is
+\begin{equation}
+G_j[k] = \gamma_j \cdot h_j[k].
+\label{eq:channel-jam}
+\end{equation}
+Here $h_0[k], h_j[k] \in \mathbb{C}$ are normalized frequency-selective fading
+realizations obtained from a tapped-delay-line multi-path profile (drawn
+independently per link), and $\gamma_0, \gamma_j \in \mathbb{R}_{+}$ are the
+corresponding link-level average gains.
+\rar{$\gamma_0,\gamma_j$ are currently free per-link parameters (a stand-in
+for geometry); deriving them from transmitter/jammer/receiver positions via a
+path-loss law is a natural extension once (and if) node positions are
+introduced.}
+\rar{TDL profile, delay spread, and carrier frequency deferred to Experiment
+Setup.}
+
+\subsection{Detector Model} \label{sec:detector}
+\subsection{Threat Model}
+\subsection{Performance Metrics} \rar{maybe move into experimental setup}
+\rar{TODO, first draft until July 20th}
+
+\section{Methodology}
+\rar{TODO}
+
+\section{Experiment Setup}
+\subsection{Baseline Experiments}
+We implement one simple and one sophisticated attacker baseline to establish reference performance numbers against a fixed defender. 
+The simple baseline is a barrage jammer transmitting uniform noise. 
+The sophisticated baseline is a PPO team with Centralized Training with Decentralized Execution (CTDE) \cite{NIPS2017_68a97503}, where a centralized critic consumes the full joint state during training while each agent acts on local observations at inference time, with the jammer waveform modelled as structured noise. These baselines force concrete assumptions about the scenario and surface the weaknesses that motivate the novel method.
+
+\section{Results \& Evaluation}
+\section{Conclusion \& Future Work}
+
+\section{Literature Review}
+
+Zhang et al.~\cite{zhang2023detection} use machine learning to automatically detect and classify three stealthy Wi-Fi jamming attacks: preamble, pilot, and interleaving jamming.
+While it achieves high classification accuracy using wavelet-based feature extraction, this approach relies on hand-crafted engineering that may fail to generalize against %\adm{what does non-standard mean? ood? ml can learn signals. i see what you want to say but to be expressed more precisely} 
+dynamically synthesized interference patterns. 
+Because advanced adversaries can actively adapt their spectral signatures and deviate from predefined, periodic pulse shapes, traditional manual feature extraction becomes insufficient, driving the recent trend toward end-to-end learning architectures that process raw I/Q samples directly.
+More recent trends in PHY security move toward end-to-end learning architectures that extract features directly from raw I/Q samples, thereby reducing the inductive bias inherent in manual feature selection. 
+Furthermore, while the current framework successfully identifies attacks, it ultimately treats the defender as a merely passive observer.
+To bridge the gap between detection and active mitigation, future research must explore an adversarial protocol-jammer interaction.
+By integrating dynamic algorithms, such as Reinforcement Learning (RL), the legitimate network could move beyond passive classification to autonomously adapt and actively outmaneuver intelligent jammers in real-time.
+%\adm{jamming classification is useful but how do we use it for concrete countermeasures after detection? A scenario with adversarial protocol-jammer interaction, e.g., with RL is more challenging and could be a research question even by itself. Another negative of this paper is hand-crafted feature engineering, i.e., wavelet. nowadays manual feature extraction is not common anymore, and we let models learn relevant features independently, at most adding suitable inductive bias}
+\rar{more of jamming detection, we want to focus on jamming attacks}
+
+\subsubsection{Uncoordinated Frequency Hopping}
+To counter targeted physical-layer attacks in scenarios where devices do not yet share cryptographic secrets, traditional spread-spectrum techniques fail because they inherently rely on pre-shared hopping sequences.
+To break this circular dependency,~\cite{strasser2009novel} proposes Uncoordinated Frequency Hopping (UFH), a mechanism where the sender and receiver randomly and independently hop across a set of available frequency channels.
+This way they exchange packets only when their frequencies probabilistically align.
+
+While UFH successfully establishes a baseline of jamming resistance without prior coordination, it operates as a fundamentally "blind" and purely stochastic defense.
+Because the legitimate nodes randomly guess channels rather than actively analyzing or learning the jammer’s behavior, the scheme suffers from severe throughput degradation and remains incapable of intelligent protocol mutation.
+This highlights a critical limitation in static or randomized countermeasures: they are highly inefficient against modern, adaptive adversaries, thereby necessitating a shift toward intelligent, learning-based physical-layer defenses.
+\rar{More of anti-jamming, maybe interesting as baseline but not relevant to proposed method}
+
+\subsection{Centralized Training Decentralized Execution } \rar{probably get rid of}
+In Centralized Training with Decentralized Execution (CTDE), a central critic $V_{\phi}$ has access to the global state $s_t$ during offline training. 
+It uses it to compute the global state-value function $V_{\phi}(s_t)$. 
+Conversely, each agent possesses a decentralized actor network (a Q-Network parameterized by $\theta_i$) that maps local observations $o_{i,t}$ to action values $Q_{\theta_i}(o_{i,t},\cdot)$. 
+This structure allows the team to explore complex cooperative strategies using global information during training without needing high-bandwidth inter-agent communication during deployment. 
+
+\subsection{Mobility-Driven Evasion and Relocation}
+While the previous section addressed the non-stationarity caused by spectral and power policy adaptation, introducing physical mobility adds an entirely new dimension of complexity.
+When agents actively change their spatial coordinates to physically evade a jammer, the underlying channel gains and distance-based interference profiles shift dynamically.
+In scenarios where stationary signal adaptation fails, networks must employ mobility-driven evasion strategies to re-establish connectivity and escape heavily jammed regions.
+\adm{can look at https://ieeexplore.ieee.org/abstract/document/11302544/. it is related because it's cooperative marl for countering jamming, but it's not that related because they're not looking into PHY regulation from either attacker or defenders. the final length of RW section should be around 1 or 1.5 columns (plus a RW table) so we should select those works that are closely relevant to what you propose. This one https://ieeexplore.ieee.org/document/10547296 tries to consider both aspects: what are limitations that can be fixed? In both scenarios it is assumes that mobile nodes's trajectories can be controlled, but it is often not the case (e.g., network of smartphones)}
+%\adm{update: i saw you cite them below}
+
+\subsubsection{Discrete Trajectory and Power Co-Optimization}
+% Applying this paradigm, 
+Nguyen et al.~\cite{Nguyen2025_MARL_UAVRelay} utilize a CTDE architecture to co-optimize the deployment of a UAV relay swarm under adversarial jamming.
+A key aspect of this approach is the integration of multiple objectives such as throughput maximization, collision avoidance and jamming resilience for the reward calculation.
+This formulation offers a more explicit treatment of operational constraints compared to the work of Leuenberger et al.~\cite{11302544}, which focuses primarily on geographical relocation under the assumption of full-spectrum constant jamming.
+This assumption bypasses explicit collision modeling in favor of movement strategy.
+%\adm{that work does not assume any collision because it's full spectrum constant jamming. the assumption is strong because focus was on the geographical relocation. it has strong assumptions than valianti (no phy tx power adaptation) but uses a more sophisticated rl model}, 
+%\adm{in general, citations should be such that text is also equally readable if removed}
+Nguyen et al.~\cite{Nguyen2025_MARL_UAVRelay} explicitly penalize collision risks while simultaneously regulating the agents' transmission power alongside their mobility.
+
+However, despite these multi-objective improvements, their methodology still inherits the fundamental limitations identified in earlier mentioned methods. 
+Most significantly, their reliance on value-based Double Q-learning forces an unnatural discretization of continuous flight and power actions.
+
+\subsubsection{Proactive Continuous Relocation}
+To overcome the limitations of discretized action spaces,~\cite{11302544} proposes Proactive Data-driven Relocation (PADRE), a decentralized MARL scheme for Mobile Ad Hoc Networks (MANETs).
+Operating within a Centralized Training with Decentralized Execution (CTDE) architecture, PADRE utilizes actor-critic policy gradients to learn continuous 2D movement policies.
+By treating physical displacement as a continuous variable rather than a rigid grid choice, agents proactively adapt their network topology to maximize global throughput, avoiding the need for central coordination or prior attack detection.
+
+However, while continuous spatial evasion frameworks like PADRE are highly effective against stationary jammers, they rely on a critical and often unrealistic assumption: the freedom to physically relocate in space.
+In highly contested environments where legitimate nodes are physically trapped, required to hold a specific formation, or face a mobile swarm of attackers, purely spatial evasion becomes insufficient.
+This necessitates a shift toward defenses that operate directly on the physical-layer protocol itself.
+\adm{yes, but we can also focus on phy-methods RW to keep it more relevant to your novel method's scope: it does not consider relocation but cooperative/synchronized PHY signal construction for max attack and max resiliency}
+\rar{"it has strong assumptions than valianti (no phy tx power adaptation) but uses a more sophisticated rl model" -> maybe add this here somewhere}
+
+\subsection{R-SFLLM: Jamming Resilient Split Federated Learning}
+\rar{Before tackling these comments, decide whether its relevant for paper}
+As wireless networks increasingly host distributed AI workloads, the communication links carrying the AI model updates become prime targets for jamming.
+\adm{this is quite application-specific. we do not really mind what is carried by the application but rather focus on using AI-based methods to enhance system resiliency or attack impact}
+A novel framework introduced in~\cite{djuhera2025r}, termed Resilient Split Federated Learning with Large Language Models (R-SFLLM), addresses the vulerability of Split Federated Learning (SFL) to physical layer attacks. 
+
+The authors establish a mathematical link between the training loss divergence of an LLM and the Mean Squared Error (MSE) of the wireless channel caused by jamming.
+\adm{the use case is a bit forced: app-layer problems and phy-layer problems can be disentangled and tackled separately}
+To mitigate this, R-SFLLM integrates an adversarial training component directly into the LLM's learning process. 
+This is done by exposing the model to controlled noise, which simulates jamming, during training and freezing sensitive embedding parameters. 
+As a result the framework ensures that the global LLM converges \adm{i guess they are trying to train an LLM in a federated style? it is out of scope for this work} even when the physical links between edge devices and the server are under heavy jamming attacks.
+\adm{this method focuses on an application. we want a method to mitigate jamming, not to propose a jamming-resilient application. it might be an interesting RQ but out of scope because we focus on jamming mitigation}
+This framework actively mitigates jamming by optimizing beamforming and resource allocation. \adm{we can also use such guiding principles, but application-agnostic. i.e., LLM can be used as system optimizers and not as application (can be anything)}
+However, a major limitation is its reliance on a central server to process the model, which creates a single point of failure for fully decentralized swarms.
+%\adm{limitation: needs a central server. good: optimize beamforming}
+
+\section{Old Related Works}
 \subsection{Adversarial Protocol-Jammer Interactions in Single Links}
 Conventional jamming strategies, typically categorized into constant, random, and reactive modes, rely on fixed heuristics to degrade the Signal-to-Interference-plus-Noise Ratio (SINR). 
 While effective against static communications, these elementary jammers are energy-inefficient and easily circumvented by frequency hopping or power control. 
@@ -298,140 +456,6 @@ GANs offer a highly promising approach to enhance MARL frameworks.
 Specifically, GANs could be used to synthesize realistic jamming patterns and unknown channel states to build a robust training simulator, allowing RL agents to safely optimize their joint policies for completely blind environments.
 %\adm{this principle could be reused to aid the RL agent teams}
 
-\section{System Model}
-We consider a discrete-time OFDM scenario in which a legitimate network defends a point-to-point link against a cooperative team of jamming agents. 
-The legitimate network comprises a transmitter and a receiver communicating over a frequency-selective fading channel, together with a detector that inspects each received frame and decides whether it has been jammed.
-Opposing the network, a team of cooperative jammers injects crafted interference with the joint objective of maximizing the receiver bit error rate (BER) while evading the detector.
-This constitutes a two-sided adversarial setting: the legitimate network senses and flags interference, while the jammer team shapes its waveform to be simultaneously disruptive and statistically indistinguishable from a jammer-free frame. We formalize each component below.
-
-\subsection{Legitimate OFDM Link}
-The transmitter communicates with the receiver over an OFDM waveform with a set of subcarriers $\mathcal{K} = \{0, \ldots, K-1\}$ of spacing $\Delta f$ around a carrier frequency $f_c$.
-Each transmitted frame spans $L$ consecutive OFDM symbols.
-The subcarriers are partitioned into a data set $\mathcal{K}_d$, a pilot set $\mathcal{K}_p$, and a guard/null set $\mathcal{K}_g$, with $\mathcal{K} = \mathcal{K}_d \cup \mathcal{K}_p \cup \mathcal{K}_g$.
-
-Let $X[k, \ell] \in \mathbb{C}$ denote the frequency-domain symbol on subcarrier $k \in \mathcal{K}$ during OFDM symbol $\ell \in \{1,\ldots,L\}$.
-Data subcarriers carry QPSK symbols drawn from the constellation
-$\mathcal{Q} = \{\tfrac{1}{\sqrt{2}}(\pm 1 \pm j)\}$, pilot subcarriers carry
-known reference symbols \rar{Kronecker pilot pattern, symbols 2 and 11 of each
-frame; values fixed by the simulation library, not drawn from $\mathcal{Q}$},
-and guard subcarriers are null.
-Applying the inverse
-DFT and prepending a cyclic prefix of length $L_{cp}$ yields the time-domain
-transmit waveform $x[n]$, radiated at fixed power $P_{tx}$. \rar{maybe redundant info}
-
-\subsection{Channel Model and Received Signal}
-Propagation between any source $a$ and the receiver is modeled as a
-frequency-selective, block-fading channel, constant over one frame and drawn independently for each link.
-The frequency response on subcarrier $k$ is
-\begin{equation}
-H_{a}[k] = \gamma_a \cdot h_a[k],
-\label{eq:channel}
-\end{equation}
-where $h_a[k] \in \mathbb{C}$ is a normalized frequency-selective fading
-realization obtained from a tapped-delay-line multi-path profile, and
-$\gamma_a \in \mathbb{R}_{+}$ is a link-level average gain.
-\rar{$\gamma_a$ is currently a free per-link parameter (a stand-in for
-geometry); deriving it from source/receiver positions via a path-loss law is
-a natural extension once (and if) node positions are introduced.}
-We denote the legitimate link response by $H_0[k] \triangleq H_{s}[k]$ and the
-response of jammer $j$'s link to the receiver by $G_j[k] \triangleq H_{j}[k]$;
-$H_0[k]$ and each $G_j[k]$ are drawn independently, since the transmitter and
-each jammer occupy distinct physical links to the receiver.
-\rar{TDL profile, delay spread, and carrier frequency deferred to Experiment
-Setup.}
-
-\subsection{Detector Model}
-\subsection{Threat Model}
-\subsection{Performance Metrics} \rar{maybe move into experimental setup}
-\rar{TODO, first draft until July 20th}
-
-\section{Methodology}
-\rar{TODO}
-
-\section{Experiment Setup}
-\subsection{Baseline Experiments}
-We implement one simple and one sophisticated attacker baseline to establish reference performance numbers against a fixed defender. 
-The simple baseline is a barrage jammer transmitting uniform noise. 
-The sophisticated baseline is a PPO team with Centralized Training with Decentralized Execution (CTDE) \cite{NIPS2017_68a97503}, where a centralized critic consumes the full joint state during training while each agent acts on local observations at inference time, with the jammer waveform modelled as structured noise. These baselines force concrete assumptions about the scenario and surface the weaknesses that motivate the novel method.
-
-\section{Results \& Evaluation}
-\section{Conclusion \& Future Work}
-
-\section{Literature Review}
-
-Zhang et al.~\cite{zhang2023detection} use machine learning to automatically detect and classify three stealthy Wi-Fi jamming attacks: preamble, pilot, and interleaving jamming.
-While it achieves high classification accuracy using wavelet-based feature extraction, this approach relies on hand-crafted engineering that may fail to generalize against %\adm{what does non-standard mean? ood? ml can learn signals. i see what you want to say but to be expressed more precisely} 
-dynamically synthesized interference patterns. 
-Because advanced adversaries can actively adapt their spectral signatures and deviate from predefined, periodic pulse shapes, traditional manual feature extraction becomes insufficient, driving the recent trend toward end-to-end learning architectures that process raw I/Q samples directly.
-More recent trends in PHY security move toward end-to-end learning architectures that extract features directly from raw I/Q samples, thereby reducing the inductive bias inherent in manual feature selection. 
-Furthermore, while the current framework successfully identifies attacks, it ultimately treats the defender as a merely passive observer.
-To bridge the gap between detection and active mitigation, future research must explore an adversarial protocol-jammer interaction.
-By integrating dynamic algorithms, such as Reinforcement Learning (RL), the legitimate network could move beyond passive classification to autonomously adapt and actively outmaneuver intelligent jammers in real-time.
-%\adm{jamming classification is useful but how do we use it for concrete countermeasures after detection? A scenario with adversarial protocol-jammer interaction, e.g., with RL is more challenging and could be a research question even by itself. Another negative of this paper is hand-crafted feature engineering, i.e., wavelet. nowadays manual feature extraction is not common anymore, and we let models learn relevant features independently, at most adding suitable inductive bias}
-\rar{more of jamming detection, we want to focus on jamming attacks}
-
-\subsubsection{Uncoordinated Frequency Hopping}
-To counter targeted physical-layer attacks in scenarios where devices do not yet share cryptographic secrets, traditional spread-spectrum techniques fail because they inherently rely on pre-shared hopping sequences.
-To break this circular dependency,~\cite{strasser2009novel} proposes Uncoordinated Frequency Hopping (UFH), a mechanism where the sender and receiver randomly and independently hop across a set of available frequency channels.
-This way they exchange packets only when their frequencies probabilistically align.
-
-While UFH successfully establishes a baseline of jamming resistance without prior coordination, it operates as a fundamentally "blind" and purely stochastic defense.
-Because the legitimate nodes randomly guess channels rather than actively analyzing or learning the jammer’s behavior, the scheme suffers from severe throughput degradation and remains incapable of intelligent protocol mutation.
-This highlights a critical limitation in static or randomized countermeasures: they are highly inefficient against modern, adaptive adversaries, thereby necessitating a shift toward intelligent, learning-based physical-layer defenses.
-\rar{More of anti-jamming, maybe interesting as baseline but not relevant to proposed method}
-
-\subsection{Centralized Training Decentralized Execution } \rar{probably get rid of}
-In Centralized Training with Decentralized Execution (CTDE), a central critic $V_{\phi}$ has access to the global state $s_t$ during offline training. 
-It uses it to compute the global state-value function $V_{\phi}(s_t)$. 
-Conversely, each agent possesses a decentralized actor network (a Q-Network parameterized by $\theta_i$) that maps local observations $o_{i,t}$ to action values $Q_{\theta_i}(o_{i,t},\cdot)$. 
-This structure allows the team to explore complex cooperative strategies using global information during training without needing high-bandwidth inter-agent communication during deployment. 
-
-\subsection{Mobility-Driven Evasion and Relocation}
-While the previous section addressed the non-stationarity caused by spectral and power policy adaptation, introducing physical mobility adds an entirely new dimension of complexity.
-When agents actively change their spatial coordinates to physically evade a jammer, the underlying channel gains and distance-based interference profiles shift dynamically.
-In scenarios where stationary signal adaptation fails, networks must employ mobility-driven evasion strategies to re-establish connectivity and escape heavily jammed regions.
-\adm{can look at https://ieeexplore.ieee.org/abstract/document/11302544/. it is related because it's cooperative marl for countering jamming, but it's not that related because they're not looking into PHY regulation from either attacker or defenders. the final length of RW section should be around 1 or 1.5 columns (plus a RW table) so we should select those works that are closely relevant to what you propose. This one https://ieeexplore.ieee.org/document/10547296 tries to consider both aspects: what are limitations that can be fixed? In both scenarios it is assumes that mobile nodes's trajectories can be controlled, but it is often not the case (e.g., network of smartphones)}
-%\adm{update: i saw you cite them below}
-
-\subsubsection{Discrete Trajectory and Power Co-Optimization}
-% Applying this paradigm, 
-Nguyen et al.~\cite{Nguyen2025_MARL_UAVRelay} utilize a CTDE architecture to co-optimize the deployment of a UAV relay swarm under adversarial jamming.
-A key aspect of this approach is the integration of multiple objectives such as throughput maximization, collision avoidance and jamming resilience for the reward calculation.
-This formulation offers a more explicit treatment of operational constraints compared to the work of Leuenberger et al.~\cite{11302544}, which focuses primarily on geographical relocation under the assumption of full-spectrum constant jamming.
-This assumption bypasses explicit collision modeling in favor of movement strategy.
-%\adm{that work does not assume any collision because it's full spectrum constant jamming. the assumption is strong because focus was on the geographical relocation. it has strong assumptions than valianti (no phy tx power adaptation) but uses a more sophisticated rl model}, 
-%\adm{in general, citations should be such that text is also equally readable if removed}
-Nguyen et al.~\cite{Nguyen2025_MARL_UAVRelay} explicitly penalize collision risks while simultaneously regulating the agents' transmission power alongside their mobility.
-
-However, despite these multi-objective improvements, their methodology still inherits the fundamental limitations identified in earlier mentioned methods. 
-Most significantly, their reliance on value-based Double Q-learning forces an unnatural discretization of continuous flight and power actions.
-
-\subsubsection{Proactive Continuous Relocation}
-To overcome the limitations of discretized action spaces,~\cite{11302544} proposes Proactive Data-driven Relocation (PADRE), a decentralized MARL scheme for Mobile Ad Hoc Networks (MANETs).
-Operating within a Centralized Training with Decentralized Execution (CTDE) architecture, PADRE utilizes actor-critic policy gradients to learn continuous 2D movement policies.
-By treating physical displacement as a continuous variable rather than a rigid grid choice, agents proactively adapt their network topology to maximize global throughput, avoiding the need for central coordination or prior attack detection.
-
-However, while continuous spatial evasion frameworks like PADRE are highly effective against stationary jammers, they rely on a critical and often unrealistic assumption: the freedom to physically relocate in space.
-In highly contested environments where legitimate nodes are physically trapped, required to hold a specific formation, or face a mobile swarm of attackers, purely spatial evasion becomes insufficient.
-This necessitates a shift toward defenses that operate directly on the physical-layer protocol itself.
-\adm{yes, but we can also focus on phy-methods RW to keep it more relevant to your novel method's scope: it does not consider relocation but cooperative/synchronized PHY signal construction for max attack and max resiliency}
-\rar{"it has strong assumptions than valianti (no phy tx power adaptation) but uses a more sophisticated rl model" -> maybe add this here somewhere}
-
-\subsection{R-SFLLM: Jamming Resilient Split Federated Learning}
-\rar{Before tackling these comments, decide whether its relevant for paper}
-As wireless networks increasingly host distributed AI workloads, the communication links carrying the AI model updates become prime targets for jamming.
-\adm{this is quite application-specific. we do not really mind what is carried by the application but rather focus on using AI-based methods to enhance system resiliency or attack impact}
-A novel framework introduced in~\cite{djuhera2025r}, termed Resilient Split Federated Learning with Large Language Models (R-SFLLM), addresses the vulerability of Split Federated Learning (SFL) to physical layer attacks. 
-
-The authors establish a mathematical link between the training loss divergence of an LLM and the Mean Squared Error (MSE) of the wireless channel caused by jamming.
-\adm{the use case is a bit forced: app-layer problems and phy-layer problems can be disentangled and tackled separately}
-To mitigate this, R-SFLLM integrates an adversarial training component directly into the LLM's learning process. 
-This is done by exposing the model to controlled noise, which simulates jamming, during training and freezing sensitive embedding parameters. 
-As a result the framework ensures that the global LLM converges \adm{i guess they are trying to train an LLM in a federated style? it is out of scope for this work} even when the physical links between edge devices and the server are under heavy jamming attacks.
-\adm{this method focuses on an application. we want a method to mitigate jamming, not to propose a jamming-resilient application. it might be an interesting RQ but out of scope because we focus on jamming mitigation}
-This framework actively mitigates jamming by optimizing beamforming and resource allocation. \adm{we can also use such guiding principles, but application-agnostic. i.e., LLM can be used as system optimizers and not as application (can be anything)}
-However, a major limitation is its reliance on a central server to process the model, which creates a single point of failure for fully decentralized swarms.
-%\adm{limitation: needs a central server. good: optimize beamforming}
 
 \subsection{Conclusion} \rar{a whole section is not really needed for related works rather a final paragraph.}
 This review highlights a fundamental paradigm shift in physical layer security: the transition from stochastic interference management to adversarial data-driven warfare. 
