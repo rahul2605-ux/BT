@@ -126,10 +126,10 @@ Each agent is subject to a transmit-power budget
 \;\leq\; P_{\max}, \qquad \forall j \in \mathcal{J}.
 \label{eq:power}
 \end{equation}
-As Eq.~\eqref{eq:rx} shows, the agents' signals combine at the receiver
-through their individual channels $G_j[k]$, so effective joint disruption
-requires coordinating which subcarriers each agent targets and at what
-power.
+Each jammer's transmitted signal reaches the receiver through its own channel
+gain $G_j[k]$, so the agents' contributions superpose there rather than
+acting in isolation; effective disruption therefore requires coordinating
+which subcarriers each agent targets and at what power.
 
 \subsection{Channel Model and Received Signal}
 Propagation between any transmitter or jammer and the receiver is modeled as a frequency-selective, block-fading channel, constant over one frame and drawn independently for each link.
