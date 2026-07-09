@@ -3,6 +3,7 @@
 \usepackage{xcolor}
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \newcommand{\adm}[1]{{\color{orange}{[#1]}}}
 \newcommand{\rar}[1]{{\color{blue}{[#1]}}}
 
@@ -69,7 +70,9 @@ Finally it addresses emerging directions that incorporate large language models 
 %summarizing general cases as sections, and going to more complex ones for overview
 %\section{Adversarial Learning in Point-to-Point Links, 1tx, 1rx, 1jammer, no-ML, stationary (Working Title)}
 \section{New Related Works}
-
+\subsection{Jamming}
+\subsection{Anti-Jamming}
+\subsection{Detection}
 As summarized in Table~\ref{tab:related_works}, \rar{and so on...}
 % Related Works table
 \begin{table*}[!t]
@@ -296,31 +299,51 @@ Specifically, GANs could be used to synthesize realistic jamming patterns and un
 %\adm{this principle could be reused to aid the RL agent teams}
 
 \section{System Model}
-We consider a discrete-time wireless scenario.
-The environment consists of the following components. 
+We consider a discrete-time OFDM scenario in which a legitimate network defends a point-to-point link against a cooperative team of jamming agents. 
+The legitimate network comprises a transmitter and a receiver communicating over a frequency-selective fading channel, together with a detector that inspects each received frame and decides whether it has been jammed.
+Opposing the network, a team of cooperative jammers injects crafted interference with the joint objective of maximizing the receiver bit error rate (BER) while evading the detector.
+This constitutes a two-sided adversarial setting: the legitimate network senses and flags interference, while the jammer team shapes its waveform to be simultaneously disruptive and statistically indistinguishable from a jammer-free frame. We formalize each component below.
 
-\subsection{Legitimate Network}
-A set of $\mathcal{L} = {l_1, \ldots, l_{N_l}}$ UAV nodes communicate over OFDM waveforms with $K$ subcarriers spaced by $\Delta f$ around carrier frequency $f_c$.
-Each node operates as a transceiver — it both transmits and receives — at fixed power $P_{tx}$.
-The received signal quality at node $l_i$ on subcarrier $k$ is characterised by the Signal-to-Interference-plus-Noise Ratio $SINR^k_i$, which serves as the primary metric.
+\subsection{Legitimate OFDM Link}
+The transmitter communicates with the receiver over an OFDM waveform with a set of subcarriers $\mathcal{K} = \{0, \ldots, K-1\}$ of spacing $\Delta f$ around a carrier frequency $f_c$.
+Each transmitted frame spans $L$ consecutive OFDM symbols.
+The subcarriers are partitioned into a data set $\mathcal{K}_d$, a pilot set $\mathcal{K}_p$, and a guard/null set $\mathcal{K}_g$, with $\mathcal{K} = \mathcal{K}_d \cup \mathcal{K}_p \cup \mathcal{K}_g$.
 
-\subsection{Jammer Team}
-A team of $\mathcal{J} = {j_1, \ldots, j_{N_j}}$ cooperative agents is deployed within the same arena.
-Each jammer $j_i$ occupies a position $\mathbf{p}(j_i) \in \Omega$ and is subject to a maximum transmit power constraint $P_{\max}$ per subcarrier.
-At each timestep, jammer $j_i$ transmits a complex signal $s^k_i \in \mathbb{C}$ on subcarrier $k$, where the amplitude $|s^k_i|$ determines the interference power and the phase $\phi^k_i$ determines how signals from multiple jammers combine at the receiver.
-\subsection{Channel Model}
-The complex channel coefficient between any source $a$ and destination $b$ on subcarrier $k$ is 
-$$h^k_{ab} = 10^{-\text{PL}(d_{ab})/20} \cdot H^k_{\text{fad}}$$
-where $d_{ab} = |\mathbf{p}(a) - \mathbf{p}(b)|2$ and $\text{PL}(d) = \text{PL}0 + 10\alpha\log{10}(d/d_0)$ is the log-distance path loss.
+Let $X[k, \ell] \in \mathbb{C}$ denote the frequency-domain symbol on subcarrier $k \in \mathcal{K}$ during OFDM symbol $\ell \in \{1,\ldots,L\}$.
+Data subcarriers carry QPSK symbols drawn from the constellation
+$\mathcal{Q} = \{\tfrac{1}{\sqrt{2}}(\pm 1 \pm j)\}$, pilot subcarriers carry
+known reference symbols \rar{Kronecker pilot pattern, symbols 2 and 11 of each
+frame; values fixed by the simulation library, not drawn from $\mathcal{Q}$},
+and guard subcarriers are null.
+Applying the inverse
+DFT and prepending a cyclic prefix of length $L_{cp}$ yields the time-domain
+transmit waveform $x[n]$, radiated at fixed power $P_{tx}$. \rar{maybe redundant info}
 
+\subsection{Channel Model and Received Signal}
+Propagation between any source $a$ and the receiver is modeled as a
+frequency-selective, block-fading channel, constant over one frame and drawn independently for each link.
+The frequency response on subcarrier $k$ is
+\begin{equation}
+H_{a}[k] = \gamma_a \cdot h_a[k],
+\label{eq:channel}
+\end{equation}
+where $h_a[k] \in \mathbb{C}$ is a normalized frequency-selective fading
+realization obtained from a tapped-delay-line multi-path profile, and
+$\gamma_a \in \mathbb{R}_{+}$ is a link-level average gain.
+\rar{$\gamma_a$ is currently a free per-link parameter (a stand-in for
+geometry); deriving it from source/receiver positions via a path-loss law is
+a natural extension once (and if) node positions are introduced.}
+We denote the legitimate link response by $H_0[k] \triangleq H_{s}[k]$ and the
+response of jammer $j$'s link to the receiver by $G_j[k] \triangleq H_{j}[k]$;
+$H_0[k]$ and each $G_j[k]$ are drawn independently, since the transmitter and
+each jammer occupy distinct physical links to the receiver.
+\rar{TDL profile, delay spread, and carrier frequency deferred to Experiment
+Setup.}
 
-\subsection{Channel and Interference Model}
-The received SINR at legitimate node $i$ on sub-carrier $k$ is:
-\[SINR_i^k = P_i^k G_i^k / (\sigma^2 + \sum_j |S_j^k|^2 J_{j,i}^k)\]
-Where $P_i^k$ is the legitimate transmit power, $G_i^k$ is the channel gain, $\sigma^2$ is the thermal noise, $S_j^k$ is the complex amplitude of jammer $j$'s generated signal on sub-carrier $k$ and $J_{j,i}^k$ is the jammer-to-legitimate-node channel gain.
-Sionna renders the full OFDM resource grid and computes per-subcarrier SINR from the complex baseband samples.
-
-\rar{TODO: Look at this section again}
+\subsection{Detector Model}
+\subsection{Threat Model}
+\subsection{Performance Metrics} \rar{maybe move into experimental setup}
+\rar{TODO, first draft until July 20th}
 
 \section{Methodology}
 \rar{TODO}
@@ -331,7 +354,8 @@ We implement one simple and one sophisticated attacker baseline to establish ref
 The simple baseline is a barrage jammer transmitting uniform noise. 
 The sophisticated baseline is a PPO team with Centralized Training with Decentralized Execution (CTDE) \cite{NIPS2017_68a97503}, where a centralized critic consumes the full joint state during training while each agent acts on local observations at inference time, with the jammer waveform modelled as structured noise. These baselines force concrete assumptions about the scenario and surface the weaknesses that motivate the novel method.
 
-\section{Results}
+\section{Results \& Evaluation}
+\section{Conclusion \& Future Work}
 
 \section{Literature Review}
 
