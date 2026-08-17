@@ -12,20 +12,32 @@ Written 2026-08-03. Companion to the "Supervisor steer (2026-08-03)" section in 
 
 ## 1 · Meeting & communication — P0, blocks everything
 
-- [ ] **Reply to the email.** 17 days elapsed. Draft ready.
-- [ ] **Hold the meeting — Thu 13 Aug, 15:00–16:00.**
+- [x] **Reply to the email.** Sent 2026-08-17 (delayed by the first exam block — acknowledged in the
+      reply). Proposed meeting week of 17–21 Aug, stated availability through submission, gave short
+      answers to each point (MAPPO explanation, reward agreement, boundary-attack interest, adaptation-
+      cost interest), and asked about his September availability for short/frequent feedback rounds.
+- [x] **Hold the meeting — confirmed Fri 21 Aug** (time TBD). *(Supersedes the "Thu 13 Aug" placeholder
+      below, which was this file's own draft proposal, not an agreed slot.)*
   > "I would need to understand better what you have done so far, e.g., during a meeting"
-  - [ ] Prepare a short summary of work to date (the ladder sim00→sim08, what each falsified).
-- [ ] **Explain why the MAPPO jammer could not be trained against the CNN.**
+  - [ ] Prepare a short summary of work to date (the ladder sim00→sim08, what each falsified). See the
+        "Meeting agenda (21 Aug)" section in `README.md` and the synced Artifact.
+- [x] **Explain why the MAPPO jammer could not be trained against the CNN.** — answer drafted and sent:
   > "I did not fully get why the MAPPO jammer can't be trained against the CNN detector"
-  - Answer: reward variance ≈ 0 across the batch → normalized advantages are noise → no gradient.
-    Confirmed structural (not tuning) by reproducing it in a reduced 2D setup (sim06b).
+  - Answer given: reward barely varies across a training batch → normalized advantages are ≈noise → no
+    consistent gradient direction. Confirmed structural (not tuning) by reproducing the same failure in
+    a reduced 2D setup (sim06b). **Refined conclusion (2026-08-17 reply): the root cause is the *action
+    parameterization* — raw IQ, very high-dimensional — not the reward formula itself.** This is the
+    stronger, more precise framing to lead with at the meeting; it also directly motivates why the
+    boundary attack / signature-shaping (low-dimensional action space) is the right next move, not a
+    reward-engineering fix.
   - [ ] **Write it up as a result, not an excuse** — he explicitly accepts it:
     > "showing in what cases it is hard to beat is already a small result"
     - [ ] Characterize *in which cases* it is hard to beat (which detectors / regimes), not just "it failed".
-- [ ] **[?] Who is the supervisor of record for the ETH registration?** Needed for the myStudies form.
+- [ ] **[?] Who is the supervisor of record for the ETH registration?** Needed for the myStudies form —
+      raise at the 21 Aug meeting; registration was targeted for the week of 17 Aug in the reply.
 - [ ] **[?] Agree title, start date, end date, and task description** at the meeting → gates registration.
-- [ ] **[?] Ask about his September availability** (1–14 Sep is the paper crunch).
+- [ ] **[?] His September availability** — asked directly in the 2026-08-17 reply (short, frequent
+      feedback rounds vs. one large review); answer pending.
 
 ---
 
@@ -106,6 +118,12 @@ Written 2026-08-03. Companion to the "Supervisor steer (2026-08-03)" section in 
 > "The core contribution is to show that this adaptation is very expensive for an attacker or
 > defender to conduct."
 
+- [ ] **Schedule risk (2026-08-17): the cluster is down for maintenance the week of 7 Sept**, cutting
+      the compute window from Sep 1–8 to **Sep 1–6** and moving "core locked" two days earlier. R0/R1
+      are largely already banked (see below); the genuinely new compute is the R2 round using the
+      boundary-attack (§6) results as input, plus the boundary attack itself — schedule that
+      immediately after the boundary attack and before the desync sweep, so it isn't the last thing
+      attempted before the blackout. See `README.md` → "Cluster maintenance, week of 7 Sept".
 - [ ] **Make adaptation cost the headline claim** (not "the jammer evades the CNN").
 - [ ] **Design the cost measurement.** What counts as "expensive"? Candidates: change in accuracy,
       change in false-alarm rate, training samples required, GPU-hours, how much performance the other
@@ -213,10 +231,10 @@ Written 2026-08-03. Companion to the "Supervisor steer (2026-08-03)" section in 
 
 | When | Items |
 |---|---|
-| **Now (studying)** | section 1 — the reply, nothing else |
-| **13 Aug, meeting** | section 1 all · section 2 scope split · section 3 open questions · section 10 hardware question |
-| **15–18 Aug** | section 3 entire (becomes the System Model section and the registration task description) · section 4 write-up |
-| **19–20 Aug** | section 6 boundary attack + SER + IQ re-plot |
-| **1–8 Sep** | section 7 desync · section 5 adaptation-cost rounds · section 8 baselines |
-| **9–14 Sep** | section 2 triage into main/appendix · writing · revision |
+| ~~Now (studying)~~ | ~~section 1 — the reply, nothing else~~ — done 2026-08-17 |
+| **17–19 Aug** | section 2 research review (Related Works) — reprioritized ahead of §III, no cluster access this week |
+| **19–21 Aug** | section 3 entire (System Model — Detector/Threat Model drafted 17 Aug, coordination assumption + goal paragraph open) |
+| **Fri 21 Aug, meeting** | section 1 all · section 2 scope split · section 3 open questions · section 10 hardware question · September cadence answer |
+| **1–6 Sep (cluster, 6 days only — down for maintenance from the 7th)** | section 4 write-up (no cluster needed, can slot anywhere) · section 6 boundary attack + SER (do first, cheap) · section 5 adaptation-cost R2 round (do second — highest-risk, must not be last) · section 8 baselines · section 7 desync (lowest priority, first to cut if the week runs short) — **core locked Sep 6** |
+| **7–14 Sep (no cluster — maintenance week)** | writing · revision · figures · polish · buffer — no new experiments possible |
 | **After Sep 15** | section 9 multi-agent + mobility · section 10 |
