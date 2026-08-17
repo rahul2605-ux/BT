@@ -242,6 +242,10 @@ def main():
     ap.add_argument("--batch", type=int, default=128)
     ap.add_argument("--device", default=None)
     ap.add_argument("--out", default="../artifacts/sim08/frontier")
+    ap.add_argument("--powers", default=None,
+                    help="comma-separated jammer powers (overrides default grid)")
+    ap.add_argument("--n-active", dest="n_active", default=None,
+                    help="comma-separated # active subcarriers (overrides default grid)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
 
@@ -274,6 +278,12 @@ def main():
         n_active_list = [1, 2, 4, 8, 16, 52]
         power_list = [1.0, 4.0]
         B = args.batch
+        if args.powers:
+            power_list = [float(x) for x in args.powers.split(",")]
+        if args.n_active:
+            n_active_list = [int(x) for x in args.n_active.split(",")]
+    print(f"grid: EbN0={ebno_list} n_active={n_active_list} powers={power_list} B={B}",
+          flush=True)
 
     rows = []
     t0 = time.time()
@@ -298,6 +308,12 @@ def main():
             rows.append(rb)
             print(f"broadband_inband  EbN0={ebno:>3}       pwr={power:g} | "
                   f"BER={rb['ber_mean']:.4f} P_energy={rb['p_energy_mean']:.3f}", flush=True)
+        # Incremental checkpoint after each SNR so a wall-time kill still leaves
+        # usable data (results.json is otherwise only written at the very end).
+        with open(os.path.join(out_dir, "results.json"), "w") as f:
+            json.dump({"rows": rows}, f, indent=2)
+        print(f"  [checkpoint] {len(rows)} rows written after EbN0={ebno} "
+              f"({time.time()-t0:.0f}s elapsed)", flush=True)
 
     with open(os.path.join(out_dir, "results.json"), "w") as f:
         json.dump({"rows": rows}, f, indent=2)
