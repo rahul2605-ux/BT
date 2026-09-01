@@ -155,10 +155,152 @@ introduced.}
 \rar{TDL profile, delay spread, and carrier frequency deferred to Experiment
 Setup.}
 
+Combining both links, the frequency-domain signal at the receiver on
+subcarrier $k$ during OFDM symbol $\ell$ is
+\begin{equation}
+Y[k,\ell] = H_0[k]\,X[k,\ell] + \sum_{j\in\mathcal{J}} G_j[k]\,S_j[k,\ell] + N[k,\ell],
+\label{eq:received}
+\end{equation}
+with $N[k,\ell]\sim\mathcal{CN}(0,\sigma^2)$ i.i.d.\ additive noise.
+The receiver has perfect knowledge of $H_0[k]$ (channel estimation is out of
+scope) and recovers data symbols by zero-forcing equalization,
+$\hat X[k,\ell] = Y[k,\ell]/H_0[k]$, followed by hard-decision demapping.
+Prior to this equalization stage, the corresponding time-domain composite
+frame $y[n]$ — the inverse DFT of $Y[k,\ell]$ across the frame together with
+its cyclic prefix — is the raw signal the detector (Sec.~\ref{sec:detector})
+observes: detection happens \emph{before} the receiver separates out the
+jammers' contribution, on a signal that already mixes $X$, every $S_j$, and
+$N$ together.
+
 \subsection{Detector Model} \label{sec:detector}
+The legitimate network's decision to flag a frame as jammed is made at the
+receiver, on the composite time-domain frame $y[n]$ of
+Eq.~\eqref{eq:received}, \emph{before} channel equalization — the detector
+never observes the disentangled per-link contributions $X$, $\{S_j\}$, or the
+channel responses $H_0,\{G_j\}$, only their sum.
+
+We evaluate against a \emph{suite} of two complementary detectors that
+together represent the information available to the defender:
+\begin{itemize}
+    \item \textbf{Spectral detector} $D_{\mathrm{cnn}}$: a convolutional
+    classifier operating on the complex two-sided short-time Fourier
+    transform (spectrogram) of $y[n]$, trained offline on labelled
+    clean/jammed frames drawn from the same channel distribution used at
+    evaluation.
+    \item \textbf{Energy detector} $D_{\mathrm{en}}$: a threshold test on the
+    mean received frame power $\frac{1}{|y|}\sum_n |y[n]|^2$, calibrated
+    per-SNR to a target false-alarm rate on clean frames.
+\end{itemize}
+A frame is flagged if either detector fires,
+$p_{\mathrm{suite}} = D_{\mathrm{cnn}}(y) \vee D_{\mathrm{en}}(y)$; unless a
+single detector is named explicitly, this OR-combination is what we mean by
+``the detector'' throughout.
+
+Both detectors are \emph{frozen} at evaluation time: each is trained once,
+offline, on a fixed distribution of clean and jammed frames, and receives no
+further ground-truth labels once deployed, so neither can adapt to a new
+jammer strategy at execution time. Improving detection against a new
+strategy therefore requires an explicit, offline \emph{retraining round}
+between rounds of jammer optimization, never a within-episode update — the
+basis for treating the attacker--defender interaction as a round-based, not
+continuously online, arms race \rar{cross-ref the adaptation-cost round
+protocol once it has a section}. Neither detector has access to channel
+state information $H_0,\{G_j\}$ or to the transmitted symbols $X$; both act
+purely on the received waveform, matching what a real receiver-side monitor
+could observe without cooperation from the jammers.
+
 \subsection{Threat Model}
-\subsection{Performance Metrics} \rar{maybe move into experimental setup}
-\rar{TODO, first draft until July 20th}
+The attacker--defender interaction is a round-based, offline arms race
+(Sec.~\ref{sec:detector}): the jammer team optimizes against a frozen
+detector suite, and the defender may retrain only \emph{between} rounds,
+never during one. Within a round, the jammer team's objective is to maximize
+disruption while keeping its detection probability under an explicit budget,
+formalized as a constrained, zero-sum game against the detector suite:
+\begin{equation}
+\max_{\{S_j\}_{j\in\mathcal J}} \;\; \mathrm{BER}\big(\{S_j\}\big)
+\quad \text{s.t.} \quad p_{\mathrm{suite}}\big(\{S_j\}\big) \le \beta,
+\;\; \text{Eq.~\eqref{eq:power}} \;\; \forall j \in \mathcal{J},
+\label{eq:objective}
+\end{equation}
+i.e., for a detectability budget $\beta$ the jammers trace out the best BER
+reachable without exceeding it, subject to each agent's individual power
+constraint. \rar{state the defender's symmetric objective once the
+retraining-round protocol (R0/R1/R2) has a home section.}
+
+Jammer information is organized into three tiers, applied consistently to
+every jamming strategy we evaluate:
+\begin{itemize}
+    \item \textbf{Genie:} full, non-causal knowledge of the victim's
+    transmitted symbols $X[k,\ell]$, both channel responses $H_0[k]$ and
+    $G_j[k]$, and perfect preamble synchronization (phase- and time-locked to
+    the victim frame). This is an upper bound on attacker capability, not a
+    claimed deployment assumption; it calibrates how much headroom a
+    realistic or learned attacker could in principle recover.
+    \item \textbf{Realistic:} each jammer knows only its own link's channel
+    response $G_j[k]$ (e.g., estimated from overheard preamble
+    transmissions) and achieves preamble synchronization subject to residual
+    carrier-frequency offset, timing offset, and phase error \rar{parameterize
+    as a single "cheap hardware" quality knob}; it has no knowledge of
+    $H_0[k]$ and no knowledge of $X[k,\ell]$ beyond the modulation format.
+    \item \textbf{Blind:} no channel or symbol knowledge and no explicit
+    synchronization guarantee; the jammer acts on its own causal
+    observations only.
+\end{itemize}
+Symmetrically, the legitimate link has perfect CSI $H_0[k]$ for equalization
+but no knowledge of the jammers' presence, count, or strategy at the
+physical layer — only the detector suite (Sec.~\ref{sec:detector}) reasons
+about jamming, and only from the received waveform $y[n]$, never from
+ground-truth labels at runtime.
+
+Coordination among the $N_J$ jammers is bounded by an explicit assumption
+rather than left implicit, since it determines what the ``cooperative'' in
+cooperative jamming is allowed to cost in hardware terms:
+\rar{pick and defend one at the meeting — (a) a shared low-rate backhaul
+control channel, sufficient to exchange policy parameters or per-round power
+allocations but not raw IQ; (b) a shared clock/local-oscillator reference for
+phase alignment only, no data exchange; or (c) fully independent agents with
+no inter-agent communication at execution time, coordination emerging only
+through centralized training (CTDE) and unavailable once deployed. The
+current MAPPO/CTDE implementation matches (c) at execution time by
+construction — state it as the default tier unless a stronger assumption is
+explicitly invoked and justified.}
+
+Finally, we assume the defender does not attempt jammer localization
+(bearing or position estimation to enable physical neutralization of the
+jammers); this is a distinct detection modality that we name here as an
+out-of-scope defender capability and leave to future work rather than model.
+
+\subsection{Performance Metrics}
+We report jamming effectiveness as bit error rate
+$\mathrm{BER} = \Pr[\hat b \neq b]$ over data-bearing subcarriers, and
+alongside it symbol error rate
+$\mathrm{SER} = \Pr[\hat X[k,\ell] \neq X[k,\ell]]$, since a single flipped
+bit and a fully corrupted symbol are not equally costly to the link.
+
+Stealth is reported as the detector suite's flag probability
+$p_{\mathrm{suite}}$ on jammed frames, always alongside its \emph{clean}
+false-alarm rate at the same operating point: a jammer is only meaningfully
+``stealthy'' relative to a detector that is not already noisy on clean
+traffic, so the two numbers are never reported in isolation.
+
+Because BER and $p_{\mathrm{suite}}$ trade off against each other and
+against each jammer's power budget, we do not summarize a strategy at a
+single operating point. We report the achievable frontier
+\begin{equation}
+\mathrm{BER}^*(\beta) = \max_{\{S_j\} \,:\, p_{\mathrm{suite}}(\{S_j\}) \le \beta,\, \text{Eq.~\eqref{eq:power}}} \mathrm{BER}\big(\{S_j\}\big),
+\label{eq:frontier}
+\end{equation}
+a monotone function of the detectability budget $\beta \in [0,1]$, and
+compare strategies (blind, channel-aware, learned) by their frontiers rather
+than at one threshold. In particular a single loose threshold such as
+$\beta=0.5$ is not operational stealth — a jammer flagged on half of all
+frames is caught within a handful of frames — so any headline number is
+always read off the frontier at the defender's own clean false-alarm rate,
+not at a fixed convention.
+\rar{Add adaptation-cost metrics here once the round-based protocol (R0/R1/R2)
+has a section: $\Delta$accuracy, $\Delta$FAR, and training cost
+(samples / GPU-hours) per retraining round, mirrored by the attacker's
+re-optimization cost.}
 
 \section{Methodology}
 \rar{TODO}

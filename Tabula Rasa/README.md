@@ -30,6 +30,17 @@ Fresh restart of baseline experiments. Goal: build intuition step by step before
 > his questions are live threats to the framing (does a learner have anything to *find* if
 > symbols are iid-uniform and scrambled; and the jammer is *deaf to its own reward* at
 > decentralized execution). Everything between here and there is background that feeds it.
+> characterization arc below is now *appendix* material (done, don't extend it). Jump to
+> **"Supervisor steer (2026-08-03)"** and the rewritten **"Next steps"** for the current plan;
+> everything between here and there is background that feeds it.
+>
+> **2026-08-17: no cluster access — front-loading the two writing-only deliverables, and the
+> meeting is confirmed for Friday 21 Aug.** Jump to **"Correspondence log + revised near-term plan
+> (2026-08-17)"** for the full email thread, **"Cluster maintenance, week of 7 Sept"** for a second,
+> separate scheduling hit (the September compute window shrinks from 8 days to 6 — "core locked"
+> moves to Sep 6), and **"Meeting agenda (21 Aug)"** right after it for the meeting prep. Immediate
+> plan: finish the research review, then the System Model. `paper/main.tex`'s `Detector Model`,
+> `Threat Model`, and `Performance Metrics` subsections were drafted today.
 
 ### TL;DR — where we are
 
@@ -414,6 +425,143 @@ degraded and genie. That arc — **genie ceiling → realistic degradation → l
 thesis spine.
 
 ### Supervisor meeting (2026-08-21, A. Di Maio) — simplify hard, and the two questions that threaten the RL framing
+### Correspondence log + revised near-term plan (2026-08-17)
+
+**No cluster access for the next stretch** — replanning to front-load the two compute-free writing
+deliverables: (1) finish the **research review** (Related Works, tracked in `paper/README.md`) first,
+(2) then finish the **System Model** (Sec. III of `paper/main.tex`). This supersedes the item-1/item-2
+ordering in "Next steps" below for the immediate window only — the rest of that plan (items 3+) still
+holds once cluster access returns.
+
+**Meeting confirmed: Friday 2026-08-21** (time TBD) — this is now an actual scheduled meeting, not just
+a self-imposed target. *(Correction: an earlier draft of this file speculated a "Thu 13 Aug" meeting
+from `SUPERVISOR_TODO.md`'s own proposed date — that never happened; 21 Aug is the real, agreed slot,
+which happens to land on the date this file had already picked as the "show him something" target.)*
+
+**Correspondence on record** (all three messages, for completeness — the table in "Supervisor steer"
+above summarizes only the first reply):
+- **Rahul's update email** (sent ~mid-July, prompting the 2026-08-03 reply): reported the sim06/06b/07
+  negative result (MAPPO structurally untrainable — reward variance ≈ 0, no PPO gradient), the three
+  characterization findings (out-of-band CNN / lossless energy-detector kill / realistic-channel
+  stealth region survives the suite / channel-aware is a spent lever), and asked two open questions:
+  (a) is a single-round evasion attack on a frozen detector an acceptable contribution, or does he want
+  a co-adaptive (detector-retrains) setting; (b) is he comfortable leading with detector
+  characterization as the solid core and the cooperative learned jammer as the high-upside extension.
+  Also flagged 3+ weeks without a reply before that one, and candidly asked whether the drift from the
+  original cooperative-jammer framing toward detector characterization is still publishable.
+- **Di Maio's reply (2026-08-03):** answers question (a) implicitly — "one can always fine-tune a
+  defender on an attacker and vice versa … this adaptation is very expensive" — i.e. he wants the
+  **round-based / offline co-adaptive framing**, not a single frozen-detector round, with cost-of-
+  adaptation as the headline. Question (b) is not answered directly. Full point-by-point breakdown
+  already in the "Supervisor steer" table above; actionable checklist in `SUPERVISOR_TODO.md`.
+- **Rahul's reply (sent 2026-08-17,** delayed by the first exam block, acknowledged as such):
+  - Proposed meeting the week of 17–21 Aug, before finishing the System Model/Methodology drafts, and
+    proposed registering the thesis that same week → **landed on Fri 21 Aug**.
+  - Stated availability: **15–20 Aug** full time on the thesis (a few work days mixed in); **22–27 Aug**
+    second exam block, no thesis work; **1–14 Sep** 100% on the paper (took the first two September
+    weeks off work), submission 15 Sep.
+  - Asked directly how available Di Maio is **1–14 Sep**, requesting short/frequent feedback rounds
+    over one large end-of-block review — **answer still pending, follow up at/after the meeting.**
+  - Gave short answers to each of his feedback points (full answers owed at the meeting):
+    - MAPPO failure: reward barely varies across a training batch → normalized advantages ≈ noise → no
+      consistent gradient direction; confirmed structural (not tuning) via a 2D reproduction (sim06b).
+      **Refined conclusion: the root cause is the *action parameterization* (raw IQ, very
+      high-dimensional), not the reward formula** — see the callout in "Next steps" below on why this
+      matters for the write-up.
+    - Agreed with reward = `BER − β·detections` and moving the power budget into the environment as a
+      hard constraint, not a reward term.
+    - Named the IQ-plot / energy-optimal-boundary observation as the point he most wants to discuss —
+      flagged that the minimum-energy version looks closed-form and cheap to evaluate.
+    - Wants to discuss making adaptation cost the central contribution, noting several existing results
+      already measure exactly that.
+
+### Cluster maintenance, week of 7 Sept — schedule consequences (2026-08-17)
+
+**The cluster is down for maintenance the week of 7 September** (assumed Mon 7 – Sun 13; confirm the
+exact window). This lands squarely inside what was the primary compute block (Sep 1–8) and removes
+almost half of it — only **Sep 1–6 (6 days)** have cluster access before an **8-day compute blackout**
+running right up to the 15 Sept paper deadline. Consequences:
+
+- **The "core locked" gate moves from Sep 8 → Sep 6.** After that, nothing that needs a GPU can be
+  fixed, extended, or re-run before submission — the entire Sep 7–14 stretch has to be writing,
+  revision, and polish only, on whatever is on disk by the evening of Sep 6.
+- **Every compute-side item has to fit in 6 days instead of 8.** Rough capacity check: ~6 days ×
+  ~8 h/day ≈ 48 h available against the ~52 h currently budgeted for boundary attack (10 h) + desync
+  (8 h) + adaptation-cost loop (22 h) + baselines (12 h) — tight, and that's before any debugging slack.
+  **Desync is the item to cut or timebox first** if the week runs long: it's already the
+  lowest-priority realism knob ("Next steps" item 4, "only meaningful after" the boundary attack), not
+  the headline contribution, so losing it costs a nice-to-have, not the thesis core.
+- **Reorder within the compute window so the highest-risk item lands first, not last.** The
+  adaptation-cost loop ("Next steps" item 5) is genuinely novel compute — a fresh detector retrain
+  round using the boundary attack as input — and the one thing that must not be left for the last
+  cluster day. Do it right after the boundary attack (item 3), before desync, so there are 1–2 spare
+  cluster-days inside the window itself to fix anything that breaks, rather than zero.
+- **Silver lining:** this forces the "core locked" discipline earlier than the original plan did anyway,
+  and it turns Sep 7–14 into one uninterrupted 8-day writing block instead of a split block — good for
+  the writing itself, *provided* everything needed is pulled off the cluster before the maintenance
+  window starts.
+- **New task: a lockout checklist for Sep 6.** Before the maintenance window starts, confirm every
+  artifact/checkpoint/result file needed for the Results section is saved locally (not only on cluster
+  scratch storage) — there's no way back in to grab something forgotten.
+- **Worth raising with Di Maio at the meeting** (folded into agenda item 8 below): his September
+  feedback cadence should probably concentrate around Sep 6–7, right when results lock, rather than
+  spread evenly — that's the natural moment to get eyes on results before eight days of pure writing.
+
+### Meeting agenda (21 Aug) — prep for explaining progress and converting his inputs
+
+Ordered by what blocks something else first. Goal: leave the meeting with registration unblocked, the
+System Model signed off (or a clear list of what to fix), and both outstanding questions answered.
+
+1. **Registration essentials (5 min, blocking).** Who is the supervisor of record (D-INFK professor
+   requirement — may need Di Maio as co-supervisor)? Confirm title, start date, end date → register in
+   myStudies this week per the reply's proposal.
+2. **What's been done since 3 Aug (2–3 min recap, don't over-explain — he already has the written
+   version).** One line per stage: Phase 0 (CNN = out-of-band detector) → Phase 0.5 (closing it costs
+   FAR/accuracy) → sim08 m1/m2 (realistic channel, stealthy region survives the full suite) →
+   matched-detectability (channel-aware ≈ blind at equal detectability — a spent lever) → today, the
+   System Model drafted.
+3. **The MAPPO explanation, properly this time.** Lead with the refined conclusion — action
+   parameterization (raw IQ, high-dim), not the reward — then the reward-variance/no-gradient mechanism
+   and the 2D reproduction as evidence it's structural. This directly motivates why the next experiment
+   (item 6) uses a low-dimensional, closed-form action instead of another RL-over-raw-IQ attempt.
+4. **Walk through the System Model draft (§III) and resolve its one open item live.** Detector Model
+   (where detection happens, what the suite observes, the no-online-adaptation constraint) and Threat
+   Model (three information tiers: genie / realistic / blind) are drafted — use this as the concrete
+   answer to "formulate the system, defender and threat models," asked twice. The **inter-jammer
+   coordination assumption is still open** (shared backhaul channel / shared clock only / fully
+   independent, CTDE-only-at-training-time) — good candidate to decide together rather than guess.
+5. **Confirm the two questions his 3 Aug reply left open:**
+   - Single-round evasion on a frozen detector, or the fully co-adaptive (detector retrains) setting?
+     His phrasing leans co-adaptive but wasn't a direct answer.
+   - Comfortable leading the paper with detector characterization as the solid core and the cooperative
+     learned jammer as the high-upside extension?
+6. **Confirm alignment, don't re-litigate:** reward = `BER − β·detections`, power as a hard environment
+   constraint — already agreed, just needs a one-line confirmation.
+7. **Pitch the energy-optimal boundary attack as the next experiment** (closed-form, no training,
+   directly converts his IQ-plot observation) and get sign-off before spending September hours on it —
+   it's already the plan, but worth hearing objections now rather than after building it.
+8. **September cadence, and flag the cluster maintenance week.** Repeat the question from the email if
+   he didn't answer in writing: short, frequent feedback rounds during 1–14 Sep vs. one larger review;
+   his availability in that window. Also flag that **the cluster is down for maintenance the week of
+   7 Sept** — the compute window is really Sep 1–6, "core locked" moves two days earlier to Sep 6, and
+   his feedback would be most useful concentrated right around Sep 6–7, before an 8-day writing-only
+   stretch with no ability to re-run anything.
+9. **If time: the parked items** — jammer localization as an out-of-scope defender capability (already
+   named as future work in the System Model), and his offer of real hardware for later validation.
+
+**Immediate plan, in order (unchanged by the meeting date landing on the target — still the right
+sequencing beforehand):**
+1. **Research review** — finalize `related_works_draft.tex` triage (tier-1 missing refs, resolve the
+   Hameed/Ziemann open questions), replace the three overlapping draft sections in `main.tex` with one
+   clean `\section{Related Work}`. See `paper/README.md` for full state.
+2. **System Model** — `Detector Model`, `Threat Model`, `Performance Metrics` subsections drafted
+   2026-08-17 (Eq. received/objective/frontier added to `main.tex`). Remaining before the meeting:
+   resolve the inter-jammer coordination assumption (flagged `\rar{}` in the text — shared backhaul /
+   shared clock / none, or bring it to the meeting as agenda item 3 above), and write a one-paragraph
+   goal statement tying the System Model to the adaptation-cost headline.
+3. **Friday 2026-08-21, the meeting** — walk through the agenda above.
+
+### Next steps (in order) — rewritten 2026-08-03 for the supervisor steer
 
 Live notes from the 2026-08-21 meeting requested in the 2026-07-17 email (`SUPERVISOR_TODO.md` §1 — that
 item is now **done**; notes transcribed here 2026-09-01). Where this conflicts with the 2026-08-03 email
@@ -425,6 +573,65 @@ as possible"*, and the reasoning is blunt — **the simple simulations already d
 complicated ones certainly will not.** Every layer the ladder added (64-SC OFDM grid, TDL fading,
 spectrogram CNN, multi-SNR sweeps) is now a liability for *understanding*, not an asset. This is not a
 new direction so much as an insistence on the one we claimed to be following.
+1. **Reply to the supervisor and book the meeting. (≈1 h, no compute — DO THIS FIRST.)** He explicitly
+   asked ("I would need to understand better what you have done so far, e.g., during a meeting"), and
+   thesis **registration in the week between exams is gated on an agreed title/scope**, so the meeting
+   has to happen before that week. The reply must contain: (a) the one-paragraph answer to the MAPPO
+   question — reward variance ≈ 0 across the batch ⇒ normalized advantages are noise ⇒ no policy
+   gradient; sim06b proved it persists even in 2D, so it is structural, not tuning; (b) confirmation
+   that we adopt reward = BER − β·detections with power as an environment constraint; (c) the proposed
+   headline (adaptation cost) and the assumption table below, so the meeting is a decision meeting
+   rather than a status meeting.
+2. **Write the System & Threat Model. (≈3–4 h, no compute — the top deliverable.)** He asked for it
+   twice and it is *triple-duty*: thesis registration text, paper Section III, and meeting agenda.
+   Must pin down, as an explicit table: **where detection happens** (at the victim RX, on the composite
+   pre-equalization time-domain frame — that is what `frontier_channel.py` already feeds the CNN and
+   the power meter); **what the detector observes** (complex two-sided STFT spectrogram + mean frame
+   power; no CSI, no ground-truth labels at execution time); **what each jammer knows** in each of the
+   three assumption tiers (genie: victim symbols + both channels + perfect sync / realistic: own
+   channel estimate + preamble sync with CFO & timing error / blind: neither); **what jammers know
+   about each other** (the coordination assumption — shared clock? backhaul? nothing?); and the
+   **power budget** as a hard constraint. Name jammer localization as an out-of-scope defender
+   capability. This document is what makes every later experiment interpretable.
+3. **Energy-optimal (boundary) jammer + SER. (≈4 h + one <1 min GPU job — the one experiment.)** Add a
+   `boundary_mincost` strategy to `build_jam()` in `simulation08/frontier_channel.py`: it already
+   receives `tx_grid`, `h_tx` and `h_jam`, so the perturbation is closed-form — push each symbol just
+   across its nearest decision boundary in the equalized domain (`d = −Re(s)·(1+ε)` or the Q-axis
+   counterpart), pre-compensated as `jam = d·h_tx/h_jam`, with a per-subcarrier magnitude knob to sweep
+   the frontier. **No training.** Add SER next to BER in the returned dict (he asked). Then re-run
+   `submit_frontier_dense.sh` and `matched_detectability.py` unchanged and compare the boundary
+   attack against blind/channel-aware **at matched P(suite)** — the axis we already built. Two possible
+   outcomes, both publishable: it dominates (the positive "smarter jamming widens the region" result the
+   thesis currently lacks, obtained without any RL), or the CNN catches its structure despite the lower
+   energy (a sharp, quotable statement about *what the detector actually keys on*).
+4. **Realism / desync axis. (post-exams; first thing cut if the Sep 1–6 compute window runs short —
+   see "Cluster maintenance" above.)** Per-jammer CFO, timing offset and residual phase error in
+   `MultiLinkChannel`, parameterized as a "cheap hardware" quality level. Sweep the item-3 frontier vs
+   desync level. This is the "make the attacker realistic and weaker" result he explicitly wants, and
+   per the note above it is only meaningful *after* item 3. Lowest priority of the four Sep compute
+   items — losing it costs a nice-to-have, not the thesis core.
+5. **The adaptation-cost loop — the new headline. (post-exams, the thesis core. Schedule this
+   immediately after item 3, before item 4 — see "Cluster maintenance" above: it's the highest-risk,
+   most novel compute and must not land on the last cluster day before the Sep 7 maintenance
+   blackout.)** Round-based, all tooling already exists: **R0** frozen m2 detector vs the best
+   item-3/4 attacker; **R1** retrain the detector with those attacks in the training mix
+   (`retrain_detector_channel.py`) and measure what it costs — Δaccuracy, ΔFAR, samples and GPU-hours
+   needed; **R2** re-optimize the attacker against the R1 detector and measure whether it recovers, and
+   at what cost. The deliverable is a **cost curve per round**, not a win/loss. This is Di Maio's "show
+   that adaptation is very expensive", it is a GAN-like loop without needing an actual GAN, and it
+   converts our characterization results into round-0/round-1 points we have *already paid for*
+   (Phase 0.5 and m2 are existing R1-equivalent defender-cost data — the genuinely *new* compute here is
+   narrower than it looks: a fresh retrain round using the item-3 boundary attack as input, then R2's
+   re-optimization against it).
+6. **Multi-agent (the destination). (post-exams.)** Wrap the environment in **PettingZoo** (parallel
+   API), reward = BER − β·detections, power as a hard constraint, action = low-dimensional per-jammer
+   perturbation parameters (**not** raw IQ — that is what killed sim06/07). Keep the surrogate-gradient
+   path as the primary method and treat MARL (BenchMARL) as the comparison, not the default. The
+   coordination question is: can K jammers each stay under the per-frame detector threshold that one
+   concentrated source trips, while their perturbations add coherently at the victim? Add path-loss
+   geometry (`MultiLinkChannel` already exposes `tx_gain_db`/`jammer_gains_db`) so cooperation is
+   non-trivial.
+7. **Victim mobility. (stretch.)** His "most interesting investigation". Only after 6 works.
 
 | His point (as noted) | Consequence here |
 |---|---|
