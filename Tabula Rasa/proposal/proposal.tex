@@ -2,32 +2,30 @@
 %  Bachelor's Thesis Project Proposal — ETH Zurich registration
 %  Single file, self-contained: compiles with pdflatex, no external .bib.
 %
-%  TITLE OPTIONS (the chosen one is in \title; the rest are kept here so the
-%  decision stays open until registration). Multi-agent coordination remains
-%  the goal, so options are ordered by how much they commit to it.
+%  TITLE OPTIONS (chosen one is in \title; the rest kept so the decision stays
+%  open until registration).
 %
-%  A. Effectiveness versus Detectability: Learned Physical-Layer Jamming
-%     against Learned Detectors
-%       -> Broadest. Names the trade-off, not the method. Covers a
-%          multi-agent outcome without promising one. Recommended.
+%  A. Cooperative Multi-Agent Generative Jamming of UAV Networks under
+%     Detection Constraints
+%       -> Descriptive and safe: names the method (MARL + generative), the
+%          target (UAV networks) and the constraint (detection). Recommended
+%          for the registration form.
 %
-%  B. Learned and Coordinated Physical-Layer Jamming under Detection
-%     Constraints
-%       -> Keeps coordination visible while staying non-committal on how far
-%          the multi-agent part gets. Good second choice.
+%  B. Stealthy Cooperative Jamming of UAV Networks: A Multi-Agent Generative
+%     Approach
+%       -> Same content, foregrounds stealth. Slightly punchier.
 %
-%  C. Cooperative Multi-Agent Jamming under Detection Constraints
-%       -> Names MARL outright. Best if coordination is certain to be
-%          reached; risky for a bachelor-scale timeline.
+%  C. Breaking the Detection Assumption: Learned Cooperative Jamming against
+%     Reactive UAV Anti-Jamming Systems
+%       -> Names the actual contribution. Strongest for a paper title, but
+%          commits to a result that has not been measured yet.
 %
-%  D. The Price of Adaptation: Learned Jamming and Learned Detection at the
-%     Physical Layer
-%       -> Matches the supervisor's framing, but commits to a result that has
-%          not been measured yet.
+%  D. When Detection Fails: Limits of Reactive Anti-Jamming in UAV Networks
+%       -> Defender-side framing. Useful if the emphasis shifts from attack
+%          design toward evaluating existing countermeasures.
 %
-%  E. When Does Learning Pay? Structure, Stealth and Effectiveness in
-%     Physical-Layer Jamming
-%       -> Foregrounds the open question. Memorable, slightly informal.
+%  E. Effectiveness versus Detectability in Cooperative UAV Jamming
+%       -> Broadest and most method-agnostic. Use if MARL might be dropped.
 %==============================================================================
 
 \documentclass[10pt,a4paper]{article}
@@ -35,13 +33,13 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[margin=2.2cm]{geometry}
+\usepackage[margin=2.1cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{multicol}
 % hyperref is optional: guarded so the file also compiles on minimal TeX installs.
 \IfFileExists{etoolbox.sty}{\usepackage[hidelinks]{hyperref}}{}
 
-\setlength{\parskip}{0.3em}
+\setlength{\parskip}{0.22em}
 \setlength{\parindent}{0pt}
 
 % compact section headings (no titlesec dependency)
@@ -51,8 +49,8 @@
   {\normalfont\large\bfseries}}
 \makeatother
 
-\title{\vspace{-1.5em}\textbf{Effectiveness versus Detectability:\\
-Learned Physical-Layer Jamming against Learned Detectors}\\[0.3em]
+\title{\vspace{-1.5em}\textbf{Cooperative Multi-Agent Generative Jamming\\
+of UAV Networks under Detection Constraints}\\[0.3em]
 \normalsize Bachelor's Thesis Project Proposal}
 
 \author{\normalsize Rahul Rahman \\[-0.2em]
@@ -68,125 +66,132 @@ Learned Physical-Layer Jamming against Learned Detectors}\\[0.3em]
 \section{Introduction}
 %==============================================================================
 
-Machine learning is now standard in physical-layer security. Convolutional classifiers on
-time--frequency representations of the received signal report jamming detection accuracies above
-99\,\% on realistic data~\cite{li2022jamming} and are increasingly treated as a solved building
-block, while the attacker side shifts from fixed heuristic jammers toward adversaries that learn
-their strategy from interaction~\cite{pirayesh2022survey}.
+Unmanned aerial vehicle (UAV) networks are increasingly deployed as relays, sensor swarms and
+mobile ad-hoc infrastructure, and jamming remains their dominant physical-layer
+threat~\cite{pirayesh2022survey}. The countermeasure literature has converged on learned,
+frequently multi-agent responses: repositioning relay UAVs away from an interferer, coordinated
+spectrum access and frequency hopping, and joint trajectory and power
+adaptation~\cite{nguyen2025marl,abolhassani2025coordinated}. These methods are effective, and
+share a structural property that is rarely examined: they are \emph{reactive}. Each is triggered
+by, or conditioned on, an observation that jamming is present --- a detector output, a classified
+jammer type, or an observed collapse in link quality serving the same purpose.
 
-A learned detector is, however, a model, and models can be attacked. Classifiers admit small
-targeted perturbations that flip their decisions~\cite{goodfellow2015explaining} and transfer
-between models, so white-box access is not required~\cite{papernot2017practical}, including for
-radio signal classifiers~\cite{sadeghi2019adversarial}. A jamming attack designed against a
-learned detector is exactly such an evasion attack, under two constraints the adversarial machine
-learning literature does not impose: the perturbation must be \emph{physically realizable}
-through the attacker's own channel, and it must be \emph{effective}, i.e.\ actually raise the
-error rate rather than merely change a label. The object of study is therefore a trade-off ---
-how much degradation is achievable at a given detection probability. It is partly physical, since
-interference that flips bits necessarily perturbs the received constellation, but loose enough to
-leave design margin: interference that displaces symbols \emph{across} their decision boundaries
-rather than along them causes the same errors at lower energy, and lower energy is harder to
-detect.
+That trigger is treated as reliable because the detection literature reports it as solved:
+convolutional classifiers on spectrograms of the received signal achieve jamming detection
+accuracies above 99\,\% in exactly the OFDM/UAV setting these defenses
+assume~\cite{li2022jamming}. The resulting pipeline --- detect, classify, then relocate, hop or
+re-power --- inherits a single point of failure. If an attacker degrades the link while remaining
+statistically indistinguishable from the un-jammed condition, the countermeasure is never
+invoked: the defense does not degrade gracefully, it simply never activates, and the network
+experiences the degradation as ordinary channel impairment. The exceptions are \emph{proactive}
+schemes that do not condition on detection at all --- uncoordinated frequency
+hopping~\cite{strasser2009novel} and proactive data-driven
+relocation~\cite{leuenberger2025proactive} being the clearest --- which makes them the most
+informative comparison points, since they should retain performance where reactive schemes lose
+it entirely.
 
-Two questions follow. First, learning only pays where there is structure to find. If the
-payload is independent and uniformly distributed --- which scrambling is designed to ensure ---
-the minimum-energy attack is available in closed form and a learner can at best rediscover it;
-any real advantage must come from structure that survives scrambling: deterministic protocol
-fields, the detector's decision surface, the channel, or the coordination problem arising when
-several attackers combine their transmissions. Second, both sides can adapt, and the interaction
-resembles a generative adversarial game~\cite{goodfellow2014gan} --- but only offline, since a
-deployed detector has no ground-truth labels at run time and a deployed attacker cannot measure
-the error rate it induces. The practical question is then not who wins an unbounded arms race but
-what each round of adaptation \emph{costs} --- which existing work, including multi-agent formulations~\cite{leuenberger2025proactive}, has largely not quantified.
+Whether such an attack is constructible is an open question, and this thesis treats it as one.
+Effectiveness and detectability are coupled by physics --- interference that flips bits
+necessarily perturbs the received constellation --- but loosely enough to leave design margin,
+since interference displacing symbols \emph{across} their decision boundaries rather than along
+them causes the same errors at lower energy, and lower energy is harder to detect. Two choices
+exploit that margin. \emph{Generative} policies parameterize the distribution of the transmitted
+interference directly~\cite{goodfellow2014gan,durkan2019nsf} instead of selecting from a discrete
+action set, which is what allows a signature to be shaped rather than a channel merely chosen ---
+the mechanism underlying generative covert communication~\cite{wen2025generative}.
+\emph{Multi-agent} coordination is used because splitting power and phase across several jammers
+so their contributions add at the victim while each stays individually below threshold has no
+closed-form solution, and because cooperative reinforcement learning already works for the
+jamming task itself~\cite{valianti2024cooperative}. The result is an evasion attack against a
+deployed classifier under constraints the adversarial machine learning literature does not
+impose~\cite{sadeghi2019adversarial}: the perturbation must be physically realizable through the
+attacker's own channel, and must raise the error rate rather than merely flip a label.
 
 %==============================================================================
 \section{Research Questions}
 %==============================================================================
 
-\textbf{RQ1.} What is the achievable trade-off between link degradation and detectability for
-physically realizable interference, and how does it depend on the noise level, the attacker's
-power budget, and the information it holds about the victim and the channel? The trade-off is
-characterized against a detector suite rather than one classifier, so that results describe the
-problem and not one trained model.
+\textbf{RQ1.} Can a cooperative multi-agent, generative jamming policy degrade a UAV link while
+remaining below the detection threshold of a state-of-the-art learned detector, and what
+effectiveness--detectability trade-off does it achieve relative to baselines? The baselines span
+the full range of attacker capability: barrage interference, a closed-form minimum-energy
+attack, a single-agent learned attacker, and an omniscient cancellation attacker as an upper
+bound.
 
-\textbf{RQ2.} Under which conditions does a learned attack strategy improve on a closed-form,
-energy-optimal one? This asks what must be present --- deterministic protocol structure,
-exploitable channel information, a shapeable detector decision surface, or a coordination problem
-among several attackers --- before learning separates from the closed form, and how large that
-separation is. A bounded or negative answer is admissible and informative.
+\textbf{RQ2.} How much of the reactive anti-jamming stack still functions under such an attack?
+This is measured at the level of the \emph{countermeasure} rather than the detector --- whether
+the trigger fires, how long it takes, and what network-level performance results --- against
+proactive, detection-free defenses as the comparison.
 
-\textbf{RQ3.} What does it cost either side to adapt once the other has moved? Treating the
-interaction as a round-based offline game --- frozen detector, attacker optimized against it,
-detector retrained, attacker re-optimized --- this asks how that cost is measured and how it
-behaves as the scenario becomes more realistic and the number of coordinating attackers grows.
+\textbf{RQ3.} What does adaptation cost either side? Treating the interaction as a round-based
+offline game --- frozen detector, attacker optimized against it, detector retrained on those
+attacks, attacker re-optimized --- this asks what re-closing the gap costs the defender in
+accuracy and false-alarm rate, and how much of the loss the attacker subsequently recovers.
 
 %==============================================================================
 \section{Methodology}
 %==============================================================================
 
-\textbf{Minimal model first.} The work starts from the smallest model in which the research
-questions remain meaningful and adds one layer at a time, each addition justified by a question
-the previous layer could not answer. The reason is not simplicity for its own sake: in a small
-model the defender's optimal decision rule is analytically available~\cite{kay1998detection},
-which upgrades ``this trained detector fails to see the attack'' into the far stronger ``no
-detector can do better than this''. The base model is a single QPSK link over an additive white
-Gaussian noise channel attacked by one interferer under a hard power budget, with detection at
-the receiver from the received signal alone. The noise level is swept starting from the noiseless
-case: without noise the un-jammed constellation is a finite set of exact points and any
-perturbation is certainly detectable, so the stealth region exists only as a consequence of
-noise --- making that explicit is part of the intended result.
+\textbf{Minimal model first.} The work starts from the smallest model in which these questions
+remain meaningful and adds one layer at a time, each addition justified by a question the
+previous layer could not answer --- not for simplicity's sake, but because in a small model the
+defender's optimal decision rule is analytically available, which upgrades ``this trained
+detector fails to see the attack'' into the far stronger ``no detector can do better''. The base
+model is a single QPSK link over an additive white Gaussian noise channel attacked by one
+interferer under a hard power budget, with detection at the receiver from the received signal
+alone. Noise is swept starting from the noiseless case: without noise the un-jammed constellation
+is a finite set of exact points and any perturbation is certainly detectable, so the stealth
+region exists only as a consequence of noise. Extensions follow in order: several coordinating
+jammers with distinct link gains and phases; imperfect attacker synchronization, which weakens
+the attacker and strengthens any surviving result; a multicarrier waveform over a
+frequency-selective fading channel; and finally UAV mobility and network-level evaluation.
 
-\textbf{Attackers and defenders.} Attack strategies form a ladder of increasing knowledge, so
-every learned result is bracketed by closed-form references: no attacker (error floor and
-false-alarm rate); isotropic random-direction interference (no knowledge); minimum-energy
-interference displacing each received symbol just across its nearest decision boundary (closed
-form, no training --- the real bar for any learner); full cancellation (omniscient, an upper
-bound rather than a realistic capability); and the learned attacker, which optimizes the error
-rate penalized by detection probability, with the power budget as a hard environment constraint
-rather than a reward term. The defender is likewise a suite: an energy detector at fixed
-false-alarm rate, a learned classifier following state-of-the-art spectrogram
-detectors~\cite{li2022jamming}, and --- where the model admits it --- the optimal
-likelihood-ratio test as reference.
-
-\textbf{Extensions, in order.} (i)~\emph{Spatial / multi-agent}: several coordinating attackers
-whose transmissions superpose at the receiver, trained under centralized training with
+\textbf{Attacker.} The attack policy is generative and trained under centralized training with
 decentralized execution~\cite{lowe2017maddpg} through a multi-agent-native environment
-interface~\cite{terry2021pettingzoo}. This is the intended destination of the thesis and the
-setting in which no closed-form solution exists; the training/execution asymmetry is a modelling
-constraint, since the error rate is available to a centralized critic during training whereas a
-deployed attacker observes only its own transmission, its own channel estimate and at most an
-acknowledgement from the victim. (ii)~\emph{Hardware realism}: carrier frequency, timing and
-phase offsets, modelling attackers that cannot synchronize perfectly --- weakening the attacker
-and strengthening any result that survives. (iii)~\emph{Waveform realism}: a multicarrier
-waveform over a frequency-selective fading channel. This proposal fixes the progression, not its
-final form; the system model is restated as each extension is introduced.
+interface~\cite{terry2021pettingzoo}. Its objective is the induced error rate penalized by
+detection probability, with the transmit-power budget imposed as a hard environment constraint
+rather than a reward term. The training/execution asymmetry is stated explicitly as a modelling
+assumption: the error rate is available to a centralized critic during training, whereas a
+deployed jammer observes only its own transmission, its own channel estimate, and at most an
+acknowledgement signal from the victim.
 
-\textbf{Evaluation.} Results are reported as bit and symbol error rate against detection
-probability at a fixed false-alarm rate. Two conventions are enforced: strategies are compared at
-\emph{matched detectability} rather than at equal transmit power, since an attack that raises the
-error rate by raising its own signature is not an improvement; and every figure carries the full
-reference envelope from the no-attacker floor to the omniscient ceiling. Parameter studies cover
-noise level, power budget, the exploitable structure in the transmitted sequence (the direct test
-of RQ2), the number of attackers and legitimate users, and synchronization quality. For RQ3,
-adaptation cost is measured per round as the change in detector accuracy and false-alarm rate
-together with the data and training effort required, and the fraction of performance the attacker
-then recovers --- a cost curve rather than a single winner. Experiments use
-Sionna~\cite{hoydis2022sionna} for the physical layer and PyTorch for the learned components.
+\textbf{Defenders and baselines.} The defender is a suite rather than a single model: an energy
+detector at fixed false-alarm rate, a learned spectrogram classifier following the current state
+of the art~\cite{li2022jamming}, and --- where the model admits it --- the optimal
+likelihood-ratio test as reference. Above the detector sits the countermeasure itself, so that
+RQ2 can be answered: a reactive, detection-triggered response (relocation or spectrum
+reallocation~\cite{nguyen2025marl,abolhassani2025coordinated}) and a proactive, detection-free
+one~\cite{leuenberger2025proactive,strasser2009novel}, evaluated side by side under the same
+attack.
+
+\textbf{Evaluation.} Attack performance is reported as bit and symbol error rate against
+detection probability at a fixed false-alarm rate, under two conventions: strategies are compared
+at \emph{matched detectability} rather than at equal transmit power, since an attack that raises
+the error rate by raising its own signature is not an improvement; and every figure carries the
+full reference envelope from the no-attacker floor to the omniscient ceiling. Defense performance
+is reported as trigger rate, time-to-trigger and network throughput. Parameter studies cover
+noise level, power budget, the number of jammers and legitimate nodes, and the exploitable
+structure in the transmitted sequence. Experiments use Sionna~\cite{hoydis2022sionna} for the
+physical layer and PyTorch for the learned components.
 
 \textbf{Risks.} The principal risk is that the learned attacker does not separate from the
-closed-form attack on a single link. This is anticipated rather than avoided: the structure
-ablation is scheduled early, before effort is invested in the learner, and a negative result
-redirects the work toward the coordinated setting, where no closed form exists. A second risk ---
-results that look strong only because the attacker was granted unrealistic knowledge --- is
-answered by the assumption ladder above, in which capabilities are removed in defined steps.
+closed-form minimum-energy attack on a single link --- plausible, since against an independent
+and uniformly distributed payload that perturbation is available analytically and a learner can
+at best rediscover it. This is anticipated rather than avoided: the corresponding ablation is
+scheduled early, and a negative result redirects the work toward the coordinated multi-jammer
+setting, where no closed form exists and which is in any case the more relevant threat model for
+UAV swarms. A second risk --- results that look strong only because the attacker was granted
+unrealistic knowledge --- is answered by the assumption ladder, in which capabilities are removed
+in defined steps.
 
-\textbf{Work plan.} \textbf{(1)}~Model specification. \textbf{(2)}~Minimal model: link, attacker ladder, detector
-suite, optimal-test reference. \textbf{(3)}~Effectiveness--detectability characterization (RQ1).
-\textbf{(4)}~Structure ablation and learned attacker at matched detectability (RQ2) --- the
-decision point for whether the remaining emphasis falls on single-link design or on coordination.
-\textbf{(5)}~Multi-agent extension (RQ2, RQ3). \textbf{(6)}~Adaptation-cost rounds and
-synchronization realism (RQ3). \textbf{(7)}~Multicarrier and fading channels; writing. Phases
-1--3 are prerequisites; 5--7 are ordered by expected value and may be truncated from the end.
+\textbf{Work plan.} \textbf{(1)}~System, defender and threat model specification.
+\textbf{(2)}~Minimal model: link, attacker ladder, detector suite, optimal-test reference.
+\textbf{(3)}~Effectiveness--detectability characterization against the baselines (RQ1).
+\textbf{(4)}~Generative and multi-agent attacker; comparison at matched detectability (RQ1).
+\textbf{(5)}~Countermeasure-level evaluation, reactive versus proactive (RQ2).
+\textbf{(6)}~Adaptation-cost rounds and synchronization realism (RQ3). \textbf{(7)}~Multicarrier,
+fading and mobility; writing. Phases 1--3 are prerequisites; 5--7 are ordered by expected value
+and may be truncated from the end.
 
 %==============================================================================
 {\scriptsize
@@ -196,32 +201,47 @@ synchronization realism (RQ3). \textbf{(7)}~Multicarrier and fading channels; wr
 \setlength{\parsep}{0pt}
 %==============================================================================
 
-\bibitem{li2022jamming}
-Y.~Li \emph{et al.}, ``Jamming detection in OFDM-based UAV networks via spectrogram-tailored
-machine learning,'' \emph{IEEE Access}, 2022.
-
 \bibitem{pirayesh2022survey}
 H.~Pirayesh and H.~Zeng, ``Jamming attacks and anti-jamming strategies in wireless networks: A
 comprehensive survey,'' \emph{IEEE Communications Surveys \& Tutorials}, 2022.
 
-\bibitem{goodfellow2015explaining}
-I.~J. Goodfellow, J.~Shlens, and C.~Szegedy, ``Explaining and harnessing adversarial examples,''
-in \emph{ICLR}, 2015.
+\bibitem{nguyen2025marl}
+T.~D. Nguyen \emph{et al.}, ``Multi-agent deep reinforcement learning for collaborative UAV relay
+networks under jamming attacks,'' 2025.
 
-\bibitem{papernot2017practical}
-N.~Papernot \emph{et al.}, ``Practical black-box attacks against machine learning,'' in
-\emph{ACM ASIA CCS}, 2017.
+\bibitem{abolhassani2025coordinated}
+B.~Abolhassani \emph{et al.}, ``Coordinated anti-jamming resilience in swarm networks via
+multi-agent reinforcement learning,'' \emph{arXiv:2512.16813}, 2025.
 
-\bibitem{sadeghi2019adversarial}
-M.~Sadeghi and E.~G. Larsson, ``Adversarial attacks on deep-learning based radio signal
-classification,'' \emph{IEEE Wireless Communications Letters}, 2019.
+\bibitem{li2022jamming}
+Y.~Li \emph{et al.}, ``Jamming detection in OFDM-based UAV networks via spectrogram-tailored
+machine learning,'' \emph{IEEE Access}, 2022.
+
+\bibitem{strasser2009novel}
+M.~Strasser, \emph{Novel Techniques for Thwarting Communication Jamming in Wireless Networks},
+2009.
+
+\bibitem{leuenberger2025proactive}
+S.~Leuenberger, A.~Di Maio, and T.~Braun, ``Proactive decentralized multi-agent data-driven node
+relocation for jammed mobile networks,'' in \emph{Wireless Days}, 2025.
+
+\bibitem{valianti2024cooperative}
+P.~Valianti \emph{et al.}, ``Cooperative multi-agent jamming of multiple rogue drones using
+reinforcement learning,'' \emph{IEEE Trans. Mobile Computing}, 2024.
 
 \bibitem{goodfellow2014gan}
 I.~J. Goodfellow \emph{et al.}, ``Generative adversarial nets,'' in \emph{NeurIPS}, 2014.
 
-\bibitem{kay1998detection}
-S.~M. Kay, \emph{Fundamentals of Statistical Signal Processing, Volume II: Detection Theory}.
-Prentice Hall, 1998.
+\bibitem{durkan2019nsf}
+C.~Durkan \emph{et al.}, ``Neural spline flows,'' in \emph{NeurIPS}, 2019.
+
+\bibitem{wen2025generative}
+Y.~Wen \emph{et al.}, ``Generative adversarial network-aided covert communication for cooperative
+jammers in CCRNs,'' \emph{IEEE Trans. Information Forensics and Security}, 2025.
+
+\bibitem{sadeghi2019adversarial}
+M.~Sadeghi and E.~G. Larsson, ``Adversarial attacks on deep-learning based radio signal
+classification,'' \emph{IEEE Wireless Communications Letters}, 2019.
 
 \bibitem{lowe2017maddpg}
 R.~Lowe \emph{et al.}, ``Multi-agent actor-critic for mixed cooperative-competitive
@@ -230,10 +250,6 @@ environments,'' in \emph{NeurIPS}, 2017.
 \bibitem{terry2021pettingzoo}
 J.~K. Terry \emph{et al.}, ``PettingZoo: Gym for multi-agent reinforcement learning,'' in
 \emph{NeurIPS}, 2021.
-
-\bibitem{leuenberger2025proactive}
-S.~Leuenberger, A.~Di Maio, and T.~Braun, ``Proactive decentralized multi-agent data-driven node
-relocation for jammed mobile networks,'' in \emph{Wireless Days (WD)}, 2025.
 
 \bibitem{hoydis2022sionna}
 J.~Hoydis \emph{et al.}, ``Sionna: An open-source library for next-generation physical layer
