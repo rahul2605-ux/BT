@@ -22,8 +22,13 @@ Fresh restart of baseline experiments. Goal: build intuition step by step before
 > characterization arc below is now *appendix* material (done, don't extend it). See
 > **"Supervisor steer (2026-08-03)"**.
 >
-> **2026-08-21: the follow-up MEETING then reset the system model — read
-> "Supervisor meeting (2026-08-21)" and the rewritten "Next steps" FIRST.** The
+> **2026-09-01: the thesis is now framed around the UAV DETECTION GAP and registration is the
+> critical path — read "Thesis proposal + settled framing (2026-09-01)" and "Next steps" FIRST.**
+> Bachelor's thesis; two RQs (trade-off vs baselines; adaptation cost); the countermeasure-level RQ
+> was drafted and dropped. Artifact: `proposal/proposal.tex`.
+>
+> **2026-08-21: the MEETING reset the system model — see
+> "Supervisor meeting (2026-08-21)".** The
 > mandate is *simplify as much as possible*: the next simulation is a **single-subcarrier,
 > single-channel minimal model (M0)**, not another layer on sim08. Rationale, in his words —
 > the simple simulations already do not work, so the complicated ones will not either. Two of
@@ -424,7 +429,6 @@ CFO/timing/phase error and partial CSI, and the *learned* jammer's job is to rec
 degraded and genie. That arc — **genie ceiling → realistic degradation → learned recovery** — is the
 thesis spine.
 
-### Supervisor meeting (2026-08-21, A. Di Maio) — simplify hard, and the two questions that threaten the RL framing
 ### Correspondence log + revised near-term plan (2026-08-17)
 
 **No cluster access for the next stretch** — replanning to front-load the two compute-free writing
@@ -561,7 +565,7 @@ sequencing beforehand):**
    goal statement tying the System Model to the adaptation-cost headline.
 3. **Friday 2026-08-21, the meeting** — walk through the agenda above.
 
-### Next steps (in order) — rewritten 2026-08-03 for the supervisor steer
+### Supervisor meeting (2026-08-21, A. Di Maio) — simplify hard, and the two questions that threaten the RL framing
 
 Live notes from the 2026-08-21 meeting requested in the 2026-07-17 email (`SUPERVISOR_TODO.md` §1 — that
 item is now **done**; notes transcribed here 2026-09-01). Where this conflicts with the 2026-08-03 email
@@ -841,12 +845,121 @@ matched-detectability comparisons. Use both, for the same runs.
 `reward = BER − β·detections` with power as a hard environment constraint; SER alongside BER; PettingZoo,
 never RLlib; the desync realism axis; multi-jammer coordination against mobile victims as the destination.
 
-### Next steps (in order) — rewritten after the 2026-08-21 meeting
+### Thesis proposal + settled framing (2026-09-01) — the UAV / detection-gap framing
 
-Supersedes the 2026-08-03 ordering (items 1–2 of which — reply + meeting — are **done**). The
-reordering principle changed: it is no longer "value ÷ hours" over the existing codebase, but
-**"what does the minimal model need"**. Nothing here requires the sim06–08 stack; M0 is small enough
-to run on a laptop CPU, so the 1-GPU-job concurrency cap stops being the bottleneck.
+Written while drafting the ETH **registration proposal** (`proposal/proposal.tex`, self-contained,
+2 pages, compiles with pdflatex). This section records the framing decisions made in the process,
+because they are sharper than anything above and they are now what the paper's Introduction argues.
+
+**It is a BACHELOR's thesis.** Scope decisions below follow from that, not from lack of ambition.
+
+**Working title (option A of five in the .tex header comment):** *Cooperative Multi-Agent Generative
+Jamming of UAV Networks under Detection Constraints*. Chosen for the registration form because it
+names method, target and constraint without committing to a result. The sharper
+*"Breaking the Detection Assumption: …"* is the better eventual **paper** title but promises a
+finding not yet measured.
+
+#### The motivating argument (this is the new spine)
+
+1. UAV / mobile ad-hoc anti-jamming has converged on learned, often multi-agent countermeasures —
+   relay repositioning, coordinated spectrum access, trajectory + power adaptation.
+2. Every one of them is **reactive**: gated on a detector output, a jammer classification, or an
+   observed link collapse serving the same role.
+3. That trigger is trusted because detection is reported as solved (>99% spectrogram CNNs, in exactly
+   the OFDM/UAV setting these defenses assume).
+4. **Therefore the stack has a single point of failure**: a countermeasure triggered by detection
+   cannot be triggered by an attack it never detects. The defense does not degrade gracefully — it
+   never activates, and the degradation is experienced as ordinary channel impairment.
+5. **The gap:** the attack side has not optimized non-detectability as a first-class objective (low
+   power / low duty cycle is pursued as *efficiency*, with stealth a by-product), and the defense side
+   has assumed it would not have to.
+6. **Hence the method.** *Multi-agent* because keeping each jammer below threshold while their
+   contributions add at the victim has no closed form. *Generative* because the signature must be
+   **shaped**, not a channel merely chosen.
+
+Note how much this recycles: the effectiveness–detectability frontier, matched-detectability
+methodology, and the detector-suite work above are all now *instruments* of this argument rather than
+the contribution itself.
+
+**Honesty constraint on the gap claim (§5).** "Nobody studies stealthy jamming" is false and easy to
+attack — covert communication and LPI waveforms exist. The defensible claim is the **conjunction**:
+explicit stealth objective **and** evaluated against a *learned* detector **and** reported as a
+trade-off curve. Related Work must name the nearest neighbours (`wen2025generative` GAN-aided covert
+comms, `valianti2024cooperative` cooperative-RL jamming) and say precisely what they do not do.
+
+#### Research questions as registered
+
+- **RQ1** — can a cooperative multi-agent generative policy degrade the link while staying below a
+  SOTA learned detector's threshold, and what trade-off does it achieve **relative to baselines**
+  (barrage / closed-form minimum-energy / single-agent learned / omniscient cancellation as ceiling)?
+- **RQ2** — **adaptation cost**, round-based and offline: frozen detector → attacker optimized against
+  it → detector retrained → attacker re-optimized. What does re-closing the gap cost the defender in
+  accuracy and FAR, and how much does the attacker recover?
+
+**A third RQ was drafted and DROPPED: countermeasure-level evaluation** ("how much of the reactive
+stack still functions"). Reason: it needs a full detect→react pipeline *plus* a proactive counterpart
+*plus* a network-throughput model to compare them in — a second thesis, and the comparison would
+mostly measure our two countermeasure implementations rather than the attack. The intro argument
+survives as **motivation**; the consequence for reactive defenses is stated as an argument, not a
+measured result. Methodology must carry a scope sentence saying so.
+
+**Cheap replacement if a countermeasure-facing result is ever wanted — NOT adopted, kept on the
+shelf:** measure the **trigger** instead of the reaction. Time-to-first-detection over a sequence of
+frames is computable from the per-frame P(det) we already produce — no countermeasure, no mobility, no
+throughput model. It also fixes a known weakness of our own reporting: the README notes above that
+P(det) ≤ 0.5 "is not operational stealth — a jammer caught half of every frame is caught within a few
+frames". Time-to-detection measures exactly that, turning a hand-written caveat into a reported number.
+
+#### Consequences for the paper (`paper/`, read-only here — user writes Overleaf)
+
+- Introduction rewritten around the gap argument above; the "protocol-aware attack" paragraph is
+  **literature positioning**, not a description of our method.
+- The System Model section still describes the full K-subcarrier / TDL / N_J-jammer setting that no
+  working experiment supports. It must be rebuilt around the minimal model with OFDM/fading as
+  *extensions* — see the 2026-08-21 meeting section §(A).
+- **`refs.bib` is missing the Li et al. IEEE Access 2022 spectrogram detector** — the citation behind
+  "state-of-the-art learned detector" in RQ1, and the paper we replicated. Add it. Also missing and
+  needed if tooling is cited: Sionna (Hoydis et al., arXiv:2203.11854), PettingZoo (Terry et al.,
+  NeurIPS 2021).
+- Citation style (IEEEtran): bracket goes **before** all punctuation, with a `~` tie —
+  `...adaptation~\cite{key}.` Group multiples as `\cite{a,b}`. Keep the number out of the grammar —
+  Di Maio's own note in `main.tex`: *"citations should be such that text is also equally readable if
+  removed."*
+
+#### Tooling named in the proposal (answers his "look into RL libraries")
+
+Sionna (PHY) + PyTorch (detectors, generative policies) + **PettingZoo** (multi-agent env API) +
+**BenchMARL** (reference MARL algorithms where off-the-shelf beats custom) + Stable-Baselines3 for the
+single-agent baselines *over the same environment*, so cooperative and non-cooperative attackers are
+compared under an identical chain. **RLlib is not mentioned in the proposal** — a proposal should not
+carry rejected options; PettingZoo + BenchMARL already signals his advice was taken.
+
+### Next steps (in order) — updated 2026-09-01 (registration first)
+
+Supersedes the 2026-08-03 ordering (reply + meeting are **done**). The reordering principle is
+**"what does the minimal model need"**, with one thing ahead of it: nothing here matters if the thesis
+is not registered. Nothing below requires the sim06–08 stack; M0 is small enough to run on a laptop
+CPU, so the 1-GPU-job concurrency cap stops being the bottleneck.
+
+**0. REGISTRATION — the critical path, blocks everything. (no compute.)**
+   0a. **Finish `proposal/proposal.tex`.** Remaining mechanical items: add `\usepackage{xcolor}` (the
+       `\adm`/`\rar` macros use `\color{orange}` and will error without it); fix the Introduction's
+       closing line, which still promises evaluation "against reactive and proactive countermeasures"
+       — that RQ was dropped, so it must read *"against classical and non-cooperative baselines on the
+       effectiveness–detectability plane"*; paste in the Methodology (system/threat model → incremental
+       model → attacker/defender → evaluation → implementation) and the Implementation/tooling line.
+   0b. **Add ~8–10 citations.** The gap argument is the only place references are load-bearing —
+       "defenses are reactive" and "attackers have not optimized stealth" are claims about the
+       literature and read as assertions unbacked. Map: protocol-aware attacks → `zhang2023detection`
+       (it is literally about preamble/pilot/interleaving jamming); game-theoretic defenses →
+       `article`; RL-based adaptation → `Nguyen2025_MARL_UAVRelay`, `abolhassani2025coordinated`,
+       `qin2025multi`, `xu2020convert` (pick 2–3); proactive exceptions → `11302544` (his own),
+       `strasser2009novel`; nearest neighbours on stealth → `wen2025generative`,
+       `valianti2024cooperative`; CTDE → `NIPS2017_68a97503`; general framing → `jamming_survey_2024`.
+   0c. **Add the missing Li et al. IEEE Access 2022 detector to `refs.bib`** — it backs "state-of-the-art
+       learned detector" in RQ1 and it is the paper we replicated. Currently absent from both documents.
+   0d. **Get title, scope, start/end dates and supervisor-of-record signed off** — all four are needed
+       on the myStudies form (`SUPERVISOR_TODO.md` §1 has these as open `[?]` items).
 
 1. **System & Threat Model — now written around M0. (≈3–4 h, no compute — still the top deliverable.)**
    Carried over from 2026-08-03 and *made easier* by the simplification: the model to describe is now one

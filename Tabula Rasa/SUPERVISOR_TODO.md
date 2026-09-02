@@ -384,20 +384,86 @@ minimum-energy attack is closed form, and **a learner can at best rediscover it.
 
 ---
 
+---
+
+## 14 · Thesis registration & proposal — P0, blocks everything (2026-09-01)
+
+Artifact: `proposal/proposal.tex` (2 pages, self-contained, compiles with pdflatex).
+Reasoning in `README.md` §"Thesis proposal + settled framing (2026-09-01)".
+
+- [~] **It is a BACHELOR's thesis.** Scope decisions follow from that.
+- [~] **Working title:** *Cooperative Multi-Agent Generative Jamming of UAV Networks under Detection
+      Constraints* (option A of five listed in the .tex header comment).
+- [ ] **Finish the proposal.**
+  - [ ] Add `\usepackage{xcolor}` — the `\adm`/`\rar` macros use `\color{orange}` and will error.
+  - [ ] **Fix the Introduction's closing line.** It still promises evaluation "against reactive and
+        proactive countermeasures", but that RQ was dropped (below). Must read *"against classical and
+        non-cooperative baselines on the effectiveness–detectability plane"*.
+  - [ ] Paste in Methodology + Implementation paragraphs.
+  - [ ] Minor: spurious comma in "triggered by detection, cannot be"; "Coordination because…, generative
+        because…" is a sentence fragment — join to the previous sentence with a colon or dash.
+- [ ] **Citations (~8–10).** Only the gap argument genuinely needs them. Mapping in `README.md` Next
+      steps §0b, all from keys already in `refs.bib`.
+  - [ ] **Add Li et al., IEEE Access 2022 (spectrogram detector) to `refs.bib`** — missing from both
+        documents, and it backs "state-of-the-art learned detector" in RQ1.
+  - [ ] Optional if tooling is cited: Sionna, PettingZoo.
+- [ ] **Registration form:** title · start date · end date · task description · **[?] supervisor of
+      record** (see §1 — still open).
+
+### 14.1 · Research questions as registered
+
+- [~] **RQ1** — cooperative multi-agent generative policy vs a SOTA learned detector: effectiveness–
+      detectability trade-off **relative to baselines** (barrage / closed-form minimum-energy /
+      single-agent learned / omniscient cancellation as ceiling).
+- [~] **RQ2** — **adaptation cost**, round-based offline (§5 of this file). Unchanged in substance,
+      promoted to RQ status.
+- [x] **DROPPED: the countermeasure-level RQ** ("how much of the reactive stack still functions").
+      Needs a full detect→react pipeline *plus* a proactive counterpart *plus* a network-throughput
+      model — a second thesis, and it would mostly measure our own countermeasure implementations. The
+      intro argument survives as **motivation**; the consequence is stated as an argument, not measured.
+  - [ ] **Add the scope sentence to Methodology** so nobody expects otherwise: countermeasures are not
+        implemented; the thesis evaluates the *trigger* they depend on.
+- [ ] **On the shelf, not adopted — the cheap countermeasure-facing result.** Measure the trigger, not
+      the reaction: **time-to-first-detection** over a frame sequence, computable from the per-frame
+      P(det) we already produce. Zero new machinery, and it fixes our own known reporting weakness
+      (P(det) ≤ 0.5 is not operational stealth — a jammer caught half of every frame is caught within a
+      few frames). Reconsider if a defense-facing result is ever wanted.
+
+### 14.2 · Paper consequences
+
+- [ ] Introduction rebuilt around the **detection-gap** argument; the protocol-aware-attack paragraph is
+      *literature positioning*, not our method.
+- [ ] **Related Work must name the nearest neighbours on stealth** (`wen2025generative`,
+      `valianti2024cooperative`) and say precisely what they do not do. The defensible gap claim is the
+      conjunction — explicit stealth objective **and** learned detector **and** trade-off curve — not
+      "nobody studies stealthy jamming", which is false and easy to attack.
+- [ ] System Model still describes the full K-subcarrier/TDL/N_J setting no working experiment supports
+      → rebuild around M0 (§11).
+- [~] **Citation style (IEEEtran):** bracket **before** all punctuation with a `~` tie
+      (`...adaptation~\cite{key}.`); group multiples as `\cite{a,b}`; keep the number out of the
+      grammar — his own note in `main.tex`: *"citations should be such that text is also equally
+      readable if removed."*
+
+### 14.3 · RL libraries (closes §9's open item)
+
+- [~] Named in the proposal: Sionna (PHY) + PyTorch + **PettingZoo** (multi-agent env API) +
+      **BenchMARL** (reference MARL algorithms) + **Stable-Baselines3** for single-agent baselines *over
+      the same environment*, so cooperative and non-cooperative attackers share one simulation chain.
+- [~] **RLlib deliberately not mentioned** — a proposal should not carry rejected options; naming
+      PettingZoo + BenchMARL already signals his advice was taken.
+
+---
+
 ## Priority for the time actually available
 
-Rewritten 2026-09-01 after the 2026-08-21 meeting. The ordering principle changed: it is no longer "value ÷ hours over
-the existing codebase" but **"what does the minimal model need"**. M0 runs on CPU, so cluster concurrency is
-no longer the constraint — writing time is.
+Rewritten 2026-09-01. **Registration is now ahead of everything** — the ordering principle is otherwise
+still "what does the minimal model need". M0 runs on CPU, so cluster concurrency is not the constraint.
 
 | When | Items |
 |---|---|
-| **Now** | §11 build M0 (+ the NP-optimal detector) · §3 the System & Threat Model write-up, now around M0 |
-| **Next** | §8 the baseline envelope + §12 the dual-axis figure (**E1**) · §13 the noise ablation (**E2**) |
-| **Then** | §13.1 the structure ablation — *does the learner have a job?* This gates everything downstream |
-| **1–14 Sep (paper crunch)** | §12 pick the 2–3 main experiments and move material into Overleaf · §5 adaptation-cost rounds in M0 · writing |
-| **After** | §11 M1 spatial (**E3**) · §7 desync · §13 scenario-size (needs multi-user first) |
-| **Stretch** | §9 multi-agent + victim mobility · §10 hardware |
-
-**Superseded:** the 2026-08-03 date-keyed table (13 Aug meeting → 19–20 Aug boundary attack → …). The meeting
-happened; the boundary attack now lands inside M0 (§11) rather than inside `simulation08/frontier_channel.py`.
+| **Now** | §14 finish the proposal, citations, `refs.bib` fix, registration form |
+| **Next** | §11 build M0 (+ the NP-optimal detector) · §3 System & Threat Model write-up, around M0 |
+| **Then** | §8 baseline envelope + §12 dual-axis figure · §13 noise ablation |
+| **Gate** | §13.1 structure ablation — *does the learner have a job?* Decides whether the contribution lives in the single link or only in coordination |
+| **After** | §11 M1 spatial / multi-agent · §5 adaptation-cost rounds (= RQ2) · §7 desync |
+| **Stretch** | §9 victim mobility · §10 hardware · §14.1 time-to-first-detection if a defense-facing result is wanted |
