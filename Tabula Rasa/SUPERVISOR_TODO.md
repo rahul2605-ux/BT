@@ -394,7 +394,9 @@ Reasoning in `README.md` §"Thesis proposal + settled framing (2026-09-01)".
 - [~] **It is a BACHELOR's thesis.** Scope decisions follow from that.
 - [~] **Working title:** *Cooperative Multi-Agent Generative Jamming of UAV Networks under Detection
       Constraints* (option A of five listed in the .tex header comment).
-- [ ] **Finish the proposal.**
+- [x] **Proposal handed to A. Di Maio for correction, 2026-09-01 — AWAITING FEEDBACK.** Do not keep
+      editing it meanwhile; the next move on our side is §11 (build M0).
+- [x] **Finish the proposal.**
   - [ ] Add `\usepackage{xcolor}` — the `\adm`/`\rar` macros use `\color{orange}` and will error.
   - [ ] **Fix the Introduction's closing line.** It still promises evaluation "against reactive and
         proactive countermeasures", but that RQ was dropped (below). Must read *"against classical and
@@ -404,8 +406,8 @@ Reasoning in `README.md` §"Thesis proposal + settled framing (2026-09-01)".
         because…" is a sentence fragment — join to the previous sentence with a colon or dash.
 - [ ] **Citations (~8–10).** Only the gap argument genuinely needs them. Mapping in `README.md` Next
       steps §0b, all from keys already in `refs.bib`.
-  - [ ] **Add Li et al., IEEE Access 2022 (spectrogram detector) to `refs.bib`** — missing from both
-        documents, and it backs "state-of-the-art learned detector" in RQ1.
+  - [x] **Li et al., IEEE Access 2022 (spectrogram detector) added to `refs.bib` 2026-09-01** — it backs
+        "state-of-the-art learned detector" in RQ1.
   - [ ] Optional if tooling is cited: Sionna, PettingZoo.
 - [ ] **Registration form:** title · start date · end date · task description · **[?] supervisor of
       record** (see §1 — still open).
@@ -461,8 +463,8 @@ still "what does the minimal model need". M0 runs on CPU, so cluster concurrency
 
 | When | Items |
 |---|---|
-| **Now** | §14 finish the proposal, citations, `refs.bib` fix, registration form |
-| **Next** | §11 build M0 (+ the NP-optimal detector) · §3 System & Threat Model write-up, around M0 |
+| **Now** | §11 build M0 (+ the NP-optimal detector) — the proposal is with the supervisor, so this is the unblocked work · §3 System & Threat Model write-up, around M0 |
+| **On his reply** | §14 apply corrections · §14 registration form (title, dates, supervisor of record) |
 | **Then** | §8 baseline envelope + §12 dual-axis figure · §13 noise ablation |
 | **Gate** | §13.1 structure ablation — *does the learner have a job?* Decides whether the contribution lives in the single link or only in coordination |
 | **After** | §11 M1 spatial / multi-agent · §5 adaptation-cost rounds (= RQ2) · §7 desync |

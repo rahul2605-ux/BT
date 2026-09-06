@@ -847,9 +847,19 @@ never RLlib; the desync realism axis; multi-jammer coordination against mobile v
 
 ### Thesis proposal + settled framing (2026-09-01) — the UAV / detection-gap framing
 
-Written while drafting the ETH **registration proposal** (`proposal/proposal.tex`, self-contained,
-2 pages, compiles with pdflatex). This section records the framing decisions made in the process,
-because they are sharper than anything above and they are now what the paper's Introduction argues.
+Written while drafting the ETH **registration proposal**. This section records the framing decisions
+made in the process, because they are sharper than anything above and they are now what the paper's
+Introduction argues.
+
+> **STATE AS OF 2026-09-01: the proposal has been handed to A. Di Maio for correction — AWAITING HIS
+> FEEDBACK.** Nothing downstream is blocked on us until he replies; the next move on our side is to
+> build M0 (Next steps §1 onward) rather than to keep editing the proposal.
+>
+> **Authority note:** the authoritative proposal lives in **Overleaf** (user writes it there; this repo
+> only reads `paper/` — see the paper-workflow rule). `proposal/proposal.tex` in this repo is the
+> **reference draft** Claude generated — 2 pages, self-contained, compiles with pdflatex, and carries
+> the five title options in its header comment. It will drift from the submitted version; treat
+> Overleaf as truth and this file as the scaffold plus the title-option record.
 
 **It is a BACHELOR's thesis.** Scope decisions below follow from that, not from lack of ambition.
 
@@ -934,6 +944,23 @@ single-agent baselines *over the same environment*, so cooperative and non-coope
 compared under an identical chain. **RLlib is not mentioned in the proposal** — a proposal should not
 carry rejected options; PettingZoo + BenchMARL already signals his advice was taken.
 
+#### When his corrections come back — the things most likely to be challenged
+
+Recorded now so the reasoning does not have to be reconstructed later:
+1. **The gap claim** ("attackers have not optimized non-detectability as a first-class objective"). The
+   load-bearing sentence of the whole Introduction and the first thing a reader tests. Defend it as the
+   *conjunction* (stealth objective AND learned detector AND trade-off curve), and be ready to name the
+   nearest neighbours — see the honesty constraint above.
+2. **The dropped countermeasure RQ.** If he asks why there is no result about the reactive defenses the
+   Introduction is built on: the answer is the cost argument above, and the cheap fallback is
+   time-to-first-detection, already specified and requiring no new machinery.
+3. **RQ2 (adaptation cost) versus the bachelor timeline.** It is last in the plan and depends on a
+   working attacker; if the schedule tightens, this is the item to renegotiate — not the structure
+   ablation, which gates everything else.
+4. **Whether "protocol-aware" over-promises.** The Introduction positions protocol-aware jamming as
+   literature context, but our method is signature-shaped interference. Defensible (protocol-deterministic
+   fields are exactly what survives scrambling) but he may read it as a claim about our method.
+
 ### Next steps (in order) — updated 2026-09-01 (registration first)
 
 Supersedes the 2026-08-03 ordering (reply + meeting are **done**). The reordering principle is
@@ -941,14 +968,16 @@ Supersedes the 2026-08-03 ordering (reply + meeting are **done**). The reorderin
 is not registered. Nothing below requires the sim06–08 stack; M0 is small enough to run on a laptop
 CPU, so the 1-GPU-job concurrency cap stops being the bottleneck.
 
-**0. REGISTRATION — the critical path, blocks everything. (no compute.)**
-   0a. **Finish `proposal/proposal.tex`.** Remaining mechanical items: add `\usepackage{xcolor}` (the
+**0. REGISTRATION — SUBMITTED 2026-09-01, awaiting supervisor correction. (no compute.)**
+   Items 0a–0c are **done** (kept below because they record *what* was fixed and *why*, which matters
+   when his corrections come back and the same decisions get revisited). 0d remains open.
+   0a. **[DONE] Finish `proposal/proposal.tex`.** Remaining mechanical items: add `\usepackage{xcolor}` (the
        `\adm`/`\rar` macros use `\color{orange}` and will error without it); fix the Introduction's
        closing line, which still promises evaluation "against reactive and proactive countermeasures"
        — that RQ was dropped, so it must read *"against classical and non-cooperative baselines on the
        effectiveness–detectability plane"*; paste in the Methodology (system/threat model → incremental
        model → attacker/defender → evaluation → implementation) and the Implementation/tooling line.
-   0b. **Add ~8–10 citations.** The gap argument is the only place references are load-bearing —
+   0b. **[DONE] Add ~8–10 citations.** The gap argument is the only place references are load-bearing —
        "defenses are reactive" and "attackers have not optimized stealth" are claims about the
        literature and read as assertions unbacked. Map: protocol-aware attacks → `zhang2023detection`
        (it is literally about preamble/pilot/interleaving jamming); game-theoretic defenses →
@@ -956,9 +985,9 @@ CPU, so the 1-GPU-job concurrency cap stops being the bottleneck.
        `qin2025multi`, `xu2020convert` (pick 2–3); proactive exceptions → `11302544` (his own),
        `strasser2009novel`; nearest neighbours on stealth → `wen2025generative`,
        `valianti2024cooperative`; CTDE → `NIPS2017_68a97503`; general framing → `jamming_survey_2024`.
-   0c. **Add the missing Li et al. IEEE Access 2022 detector to `refs.bib`** — it backs "state-of-the-art
-       learned detector" in RQ1 and it is the paper we replicated. Currently absent from both documents.
-   0d. **Get title, scope, start/end dates and supervisor-of-record signed off** — all four are needed
+   0c. **[DONE 2026-09-01] Li et al. IEEE Access 2022 detector added to `refs.bib`** — it backs
+       "state-of-the-art learned detector" in RQ1 and it is the paper we replicated.
+   0d. **[OPEN] Get title, scope, start/end dates and supervisor-of-record signed off** — all four are needed
        on the myStudies form (`SUPERVISOR_TODO.md` §1 has these as open `[?]` items).
 
 1. **System & Threat Model — now written around M0. (≈3–4 h, no compute — still the top deliverable.)**

@@ -1,0 +1,129 @@
+% ============================================================================
+%  \section{Related Work} — LONG VERSION (1253 w prose = 2.24 IEEE columns)
+%  For the THESIS chapter. For the 6-page paper use sec_related.tex (~860 w).
+% ----------------------------------------------------------------------------
+%  Replaces ALL THREE legacy blocks in main.tex:
+%      \section{Related Works}      (l. 72)
+%      \section{Literature Review}  (l. 317)
+%      \section{Old Related Works}  (l. 393)
+%  Move the CTDE (l. 340) and mobility-evasion (l. 346) passages to
+%  app_legacy.tex — they are wanted for the thesis, not the paper.
+%
+%  Source: paper/Literature_Review.md, trimmed 1900 -> ~1080 words using that
+%  file's own documented cut order (stealth merged into adversarial-ML;
+%  classical compressed; MARL machinery to one cite group; tooling cites moved
+%  to Methodology; [27] and [30] dropped).
+%
+%  Style follows A. Di Maio's notes: one sentence per line; \cite before all
+%  punctuation with a ~ tie; multiples grouped; text reads correctly with the
+%  bracket removed.
+%
+%  KEY RENAMES assumed (see refs_new.bib + the corrections list):
+%      jamming_survey_2024 -> pirayesh2022jamming
+%      article             -> zhang2025cooperative
+%      11302544            -> leuenberger2025proactive
+%  If you would rather not rename, sed the three keys back before pasting.
+%
+%  IF THE PAGE BUDGET BITES, cut in this order (each is self-contained):
+%      1. the "inversion relative to our problem" paragraph  (-140 w)
+%      2. \cite{flowers2020evaluating,restuccia2022generalized} + their clause
+%      3. \cite{varotto2024detecting,viana2025pca} + their clause
+%      4. Table -> single-column \table, rows 3/5/8 dropped
+%  Never cut: amuru2015optimal, li2022jamming_ofdm, hameed2021offense,
+%  delvecchio2020spectral, bash2013limits, davaslioglu2024continual.
+% ============================================================================
+
+\section{Related Work}
+\label{sec:related}
+
+Jamming research has moved, on both sides of the contest, from fixed heuristics to learned policies~\cite{pirayesh2022jamming,lohan2024survey}, and a parallel literature examines the security of the learning components themselves~\cite{adesina2023adversarial}.
+This shift changes the attacker's problem statement.
+Against a receiver whose only defence is a power threshold, the attacker maximises disruption subject to a power budget.
+Against a receiver monitored by a trained classifier, the binding constraint is no longer power but detectability, and the two are not interchangeable: a jammer can be quiet and conspicuous, or loud and invisible, depending on what the classifier keys on.
+
+\textit{Classical and protocol-aware jamming.}
+The classical treatment pairs a disruption model with a detection statistic, from packet-delivery and signal-strength tests for deciding that jamming occurred~\cite{xu2005feasibility} to surgical attacks on OFDM's deterministic structure --- pilot jamming and nulling, timing and acquisition denial, and channel-estimation attacks in MIMO --- which reach a target error rate at a fraction of barrage power~\cite{shahriar2015phy,clancy2011efficient,lapan2012jamming,zhang2019jam}.
+Closest to our own attacker is the energy-optimal line of work.
+Amuru and Buehrer derive in closed form the jamming signal that maximises error probability against a given amplitude-phase constellation over AWGN, and show the non-obvious result that matching the jammer's signal to the victim's is generally \emph{not} optimal~\cite{amuru2015optimal}.
+That analysis is the direct ancestor of the minimum-energy, decision-boundary-directed perturbation we evaluate.
+The distinction is what the optimum is optimal \emph{for}: these works price an attack in transmit energy against a receiver, with detectability either absent from the model or reduced to a radiometric threshold, and none reports the achievable error rate as a function of a detection-probability budget.
+
+\textit{Learning-based and cooperative jamming.}
+Learning entered the attacker first as online optimisation over a discrete parameter set, with jammer configuration cast as a multi-armed bandit~\cite{amuru2016bandits}, and then as adversarial machine learning, in which a jammer predicts which transmissions will succeed and jams only those~\cite{erpek2019deep}.
+Cooperative variants follow the same template at team scale, coordinating jammers against a frequency-hopping link as a Stackelberg game~\cite{zhang2025cooperative}, jointly optimising mobility and transmit power against rogue drones~\cite{valianti2024cooperative}, or studying heterogeneous adversarial games with per-agent hardware asymmetry~\cite{qin2025multi}.
+Symmetric work exists on the defence side~\cite{xu2020convert,abolhassani2025coordinated,leuenberger2025proactive}, resting on mature multi-agent training machinery~\cite{NIPS2017_68a97503,rashid2018qmix,yu2022mappo}.
+Two properties separate this group from our setting.
+First, the action space is a discrete resource selection --- which channel, which power level, where to fly --- so the learned policy optimises a proxy rather than the waveform that actually causes the errors.
+Second, the reward rarely contains a detection term, and where a defender exists it is a threshold test or another resource-selection agent, not a classifier trained on the received waveform.
+The effectiveness--detectability trade-off that is the subject of this paper therefore does not arise in these formulations.
+
+\textit{Learned jamming detection.}
+The defender we attack comes from a well-developed detection literature.
+Li \emph{et al.} classify barrage, protocol-aware, single-tone and successive-pulse jamming in OFDM from spectrogram images with a convolutional network, reporting 99.79\,\% accuracy at 0.03\,\% false alarm; this is the detector we replicate as our frozen defender~\cite{li2022jamming_ofdm}.
+Related work targets stealthy Wi-Fi attacks using continuous-wavelet features~\cite{zhang2023detection} and varies representation and supervision, from unsupervised autoencoders on 5G spectrograms~\cite{varotto2024detecting} to transformer architectures on UAV links~\cite{viana2025pca}.
+These learned detectors sit on top of, rather than replace, the classical energy detector~\cite{urkowitz1967energy} and model-based defences that null the jammer's spatial subspace~\cite{marti2023mitigating}.
+What this literature does not do is adversarial evaluation.
+Detectors are scored on held-out samples drawn from the same jammer taxonomy used in training, and reported as a single accuracy and false-alarm pair rather than as an operating point on a curve.
+Three quantities central to a security claim are consequently unmeasured: how a detector behaves against interference optimised against it, how much of its blind spot a trivial energy detector already covers, and what extending coverage to a new jammer family costs in false alarms on clean traffic.
+
+\textit{Adversarial evasion at the physical layer.}
+The attack technique we use is adversarial evasion, adapted to a wireless channel.
+Modulation classifiers fall to perturbations far weaker than classical jamming, including universal, input-agnostic ones~\cite{sadeghi2019adversarial}, and the channel must enter the perturbation design or the attack fails over the air~\cite{kim2022channel}.
+Bit error rate rather than perceptual similarity is the appropriate wireless success metric~\cite{flowers2020evaluating}, and the perturbed waveform must remain physically realisable at the transmitter~\cite{restuccia2022generalized}.
+Two works are conceptually closest to our stealth mechanism: perturbing a transmitter's own symbols to defeat an eavesdropping modulation classifier while preserving decodability at the intended receiver~\cite{hameed2021offense}, and adding a spectral-deception loss so that the adversarial signal \emph{looks} spectrally legitimate~\cite{delvecchio2020spectral}.
+Where detector gradients are unavailable, surrogate-model transferability provides the standard black-box route~\cite{papernot2017practical}.
+The formal language for the stealth half is covert communication, where the square-root law frames covertness as a constraint on a warden's detection-error probability rather than as a heuristic power cap~\cite{bash2013limits}; this is the discipline we adopt in reporting detection probability against the defender's own false-alarm rate.
+Generative methods have been applied to the same objective in communications~\cite{sagduyu2021gan,wen2025generative} and, most closely in spirit, to radar waveforms that are simultaneously useful for sensing and statistically indistinguishable from the background~\cite{ziemann2025lpd}.
+
+The inversion relative to our problem is precise and worth stating plainly.
+In that literature the target is a classifier of the \emph{legitimate} signal, success is a label flip, and the perturbation is constrained to be small so that the victim's own message survives: effectiveness and evasion point the same way.
+In our setting the target is a detector's \emph{jammed} label, and the perturbation must destroy the victim's message while holding that label at \emph{clean}, so effectiveness and evasion are in tension by construction --- the same energy that flips bits is the energy the detector can see.
+A small perturbation is therefore not automatically a successful attack, and the attack's value has to be read off a frontier rather than from an attack-success rate.
+The covert-communication literature does not close this gap either, since there the hidden signal is benign and the warden is typically a radiometer with analytic statistics.
+
+\textit{The arms race and the cost of adaptation.}
+Because a deployed detector has no ground-truth labels at run time, attacker and defender can adapt only between rounds and offline, in a GAN-like alternation rather than a continuous game.
+The machine-learning literature has quantified what a round costs the defender: adversarial training raises robustness at measurable expense~\cite{madry2018towards}, robust generalisation demands substantially more data than standard generalisation~\cite{schmidt2018adversarially}, robustness trades against clean accuracy even in simple settings~\cite{tsipras2019robustness}, and detection-based defences are the most fragile class~\cite{carlini2017detected,tramer2020adaptive}.
+On the wireless side the closest cost measurement is continual learning for jamming mitigation, where the defender must absorb shifting jammer patterns without catastrophic forgetting~\cite{davaslioglu2024continual}.
+What is missing is a price in \emph{operational} physical-layer units: false-alarm rate at a given $E_b/N_0$, the bit error rate an attacker recovers once the defender has retrained, and the samples and compute each side spends to get there.
+
+\textit{Research gap.}
+Table~\ref{tab:related} summarises the positioning, and three gaps follow.
+Prior attacks are scored at matched transmit power or matched configuration, and prior detectors at accuracy over a fixed jammer taxonomy, so neither yields the achievable bit error rate at matched detection probability against a full defender suite with the stealth budget pinned to the defender's own clean false-alarm rate.
+No prior work combines physical realisability through the jammer's own channel, minimum-energy placement of the perturbation relative to the victim's decision boundaries, and an explicit detectability constraint against a \emph{learned} detector.
+And the attacker--defender interaction is reported as a win or a loss rather than as a cost curve per adaptation round for both sides.
+This paper addresses all three.
+
+
+% ============================================================================
+%  Positioning table — 8 prior rows + proposed, 6 columns.
+%  Trimmed from the 15-row version in Literature_Review.md: the Multi-agent
+%  column was dropped first (least discriminating), then rows that duplicate a
+%  lineage already represented.
+%  If this still overflows the page budget, drop rows 3, 5 and 8 and re-set as
+%  a single-column {table} with \scriptsize.
+% ============================================================================
+\begin{table*}[!t]
+\renewcommand{\arraystretch}{1.2}
+\caption{Positioning of representative prior work against the axes of this paper.}
+\label{tab:related}
+\centering
+\footnotesize
+\begin{tabular}{@{}llllll@{}}
+\hline\hline
+\textbf{Reference} & \textbf{Attacker action space} & \textbf{Detector in the loop} & \textbf{Stealth in objective} & \textbf{Channel} & \textbf{Adaptation cost} \\
+\hline
+Amuru \& Buehrer~\cite{amuru2015optimal}      & Jamming waveform, closed form   & None (receiver only)          & Energy proxy              & AWGN            & No \\
+Erpek \emph{et al.}~\cite{erpek2019deep}      & Jam / do-not-jam timing         & Transmit-decision classifier  & Implicit (attack budget)  & Fading          & Partial \\
+Zhang \& Wu~\cite{zhang2025cooperative}       & Frequency + power (discrete)    & None (DRL victim)             & No                        & Fading          & No \\
+Li \emph{et al.}~\cite{li2022jamming_ofdm}    & Fixed four-class taxonomy       & Spectrogram CNN               & n/a (defender)            & Over-the-air    & No \\
+Sadeghi \& Larsson~\cite{sadeghi2019adversarial} & Additive IQ perturbation     & Modulation classifier         & Perturbation-power cap    & Partial         & No \\
+Hameed \emph{et al.}~\cite{hameed2021offense} & Own-symbol perturbation         & Modulation classifier         & Yes, with decodability    & Fading          & No \\
+DelVecchio \emph{et al.}~\cite{delvecchio2020spectral} & IQ + spectral loss     & RFML classifier               & Yes, spectral similarity  & Fading          & No \\
+Wen \emph{et al.}~\cite{wen2025generative}    & Jammer power allocation         & Analytic warden test          & Yes, covertness           & Fading          & No \\
+\hline
+\textbf{Proposed} & \textbf{Per-symbol complex interference,} & \textbf{Learned CNN $\vee$ energy} & \textbf{Yes: BER at matched} & \textbf{TDL fading} & \textbf{Yes: $\Delta$FAR,} \\
+                  & \textbf{minimum-energy, boundary-directed} & \textbf{detector, frozen per round} & \textbf{$P(\mathrm{det})$, budget = clean FAR} & \textbf{+ AWGN} & \textbf{$\Delta$acc.\ per round} \\
+\hline\hline
+\end{tabular}
+\end{table*}

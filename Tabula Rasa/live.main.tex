@@ -1,0 +1,123 @@
+undefined
+%  \section{Related Work}  —  PAPER VERSION, IEEEtran conference, 6 pages
+%  MEASURED: 1081 words prose = 1.93 columns, + table ~0.5 = 2.4 columns.
+%  That is 20% of a 6-page paper on Related Work — defensible, since the gap
+%  claim is load-bearing, but on the high side.  To reach ~1.5 columns make
+%  these three cuts, in order (each self-contained, none costs a gap citation):
+%     1. the three "inversion relative to our problem" sentences   (-110 w)
+%     2. the last sentence of the Classical paragraph              ( -60 w)
+%     3. "Two properties separate..." -> one sentence              ( -60 w)
+%  (The 1253-word version is sec_related_long.tex — for the thesis chapter,
+%   where the extra analysis earns its space.)
+% ----------------------------------------------------------------------------
+%  Replaces ALL THREE legacy blocks in main.tex:
+%      \section{Related Works}      (l. 72)
+%      \section{Literature Review}  (l. 317)
+%      \section{Old Related Works}  (l. 393)
+%  Move the CTDE (l. 340) and mobility-evasion (l. 346) passages to
+%  app_legacy.tex — they are wanted for the thesis, not the paper.
+%
+%  Style per A. Di Maio: one sentence per line; \cite before all punctuation
+%  with a ~ tie; multiples grouped; text reads correctly with brackets removed.
+%
+%  KEY RENAMES assumed (see refs_patch.bib):
+%      jamming_survey_2024 -> pirayesh2022jamming
+%      article             -> zhang2025cooperative
+%      11302544            -> leuenberger2025proactive
+%
+%  34 references, ~1.1 columns.  Never cut: amuru2015optimal (the ancestor of
+%  our boundary attack), li2022jamming_ofdm (the replicated defender),
+%  hameed2021offense + delvecchio2020spectral (the evasion lineage),
+%  bash2013limits (the stealth formalism), davaslioglu2024continual +
+%  tsipras2019robustness (the adaptation-cost framing).
+% ============================================================================
+
+\section{Related Work}
+\label{sec:related}
+
+Jamming research has moved, on both sides of the contest, from fixed heuristics to learned policies~\cite{pirayesh2022jamming,lohan2024survey}.
+The shift changes the attacker's problem statement.
+Against a receiver whose only defence is a power threshold, the attacker maximises disruption subject to a power budget; against a receiver monitored by a trained classifier, the binding constraint is no longer power but detectability.
+The two are not interchangeable: a jammer can be quiet and conspicuous, or loud and invisible, depending on what the classifier keys on.
+
+\textit{Classical and protocol-aware jamming.}
+OFDM's deterministic structure invites surgical attacks far cheaper than barrage noise --- pilot jamming and nulling, timing and acquisition denial, and channel-estimation attacks in MIMO all reach a target error rate at a fraction of barrage power~\cite{shahriar2015phy,clancy2011efficient,lapan2012jamming,zhang2019jam}.
+Closest to our own attacker is the energy-optimal line of work: Amuru and Buehrer derive in closed form the jamming signal that maximises error probability against a given constellation over AWGN, and show the non-obvious result that matching the jammer's signal to the victim's is generally \emph{not} optimal~\cite{amuru2015optimal}.
+That analysis is the direct ancestor of the minimum-energy, decision-boundary-directed perturbation we evaluate.
+The distinction is what the optimum is optimal \emph{for}: this work prices an attack in transmit energy against a receiver, with detectability either absent from the model or reduced to a radiometric threshold, and never reports achievable error rate as a function of a detection-probability budget.
+
+\textit{Learning-based and cooperative jamming.}
+Learning entered the attacker first as online optimisation over a discrete parameter set~\cite{amuru2016bandits}, then as adversarial machine learning, in which a jammer predicts which transmissions will succeed and jams only those~\cite{erpek2019deep}.
+Cooperative variants follow the same template at team scale, coordinating jammers against a frequency-hopping link as a Stackelberg game~\cite{zhang2025cooperative} or jointly optimising mobility and transmit power against rogue drones~\cite{valianti2024cooperative}, with symmetric work on the defence side~\cite{xu2020convert,abolhassani2025coordinated,leuenberger2025proactive} resting on mature multi-agent training machinery~\cite{NIPS2017_68a97503,yu2022mappo}.
+Two properties separate this group from our setting.
+The action space is a discrete resource selection --- which channel, which power level, where to fly --- so the policy optimises a proxy rather than the waveform that causes the errors; and the reward rarely contains a detection term, the defender being a threshold test or another resource-selection agent rather than a classifier trained on the received waveform.
+The effectiveness--detectability trade-off that is the subject of this paper therefore does not arise in these formulations.
+
+\textit{Learned jamming detection.}
+The defender we attack comes from a well-developed detection literature.
+Li \emph{et al.} classify barrage, protocol-aware, single-tone and successive-pulse jamming in OFDM from spectrogram images with a convolutional network, reporting 99.79\,\% accuracy at 0.03\,\% false alarm; this is the detector we replicate as our frozen defender~\cite{li2022jamming_ofdm}.
+Related work targets stealthy Wi-Fi attacks with continuous-wavelet features~\cite{zhang2023detection}, and such learned detectors sit on top of, rather than replace, the classical energy detector~\cite{urkowitz1967energy}.
+What this literature does not do is adversarial evaluation: detectors are scored on held-out samples drawn from the same jammer taxonomy used in training, and reported as a single accuracy and false-alarm pair rather than as an operating point on a curve.
+Three quantities central to a security claim are consequently unmeasured --- how a detector behaves against interference optimised against it, how much of its blind spot a trivial energy detector already covers, and what extending coverage to a new jammer family costs in false alarms on clean traffic.
+
+\textit{Adversarial evasion and stealth at the physical layer.}
+The attack technique we use is adversarial evasion, adapted to a wireless channel.
+Modulation classifiers fall to perturbations far weaker than classical jamming~\cite{sadeghi2019adversarial}, and the channel must enter the perturbation design or the attack fails over the air~\cite{kim2022channel}.
+Two works are conceptually closest to our stealth mechanism: perturbing a transmitter's own symbols to defeat an eavesdropping modulation classifier while preserving decodability at the intended receiver~\cite{hameed2021offense}, and adding a spectral-deception loss so that the adversarial signal \emph{looks} spectrally legitimate~\cite{delvecchio2020spectral}; where detector gradients are unavailable, surrogate-model transferability provides the standard black-box route~\cite{papernot2017practical}.
+The formal language for the stealth half is covert communication, where the square-root law frames covertness as a constraint on a warden's detection-error probability rather than a heuristic power cap~\cite{bash2013limits} --- the discipline we adopt in reporting detection probability against the defender's own false-alarm rate --- and generative designs have pursued the same objective for cooperative jammers~\cite{wen2025generative} and for radar waveforms indistinguishable from the background~\cite{ziemann2025lpd}.
+The inversion relative to our problem is precise and worth stating plainly.
+In that literature the target is a classifier of the \emph{legitimate} signal, the perturbation is kept small so the victim's message survives, and effectiveness and evasion point the same way; the hidden signal is benign and the warden is typically a radiometer with analytic statistics.
+Here the perturbation must destroy the victim's message while holding the detector's label at \emph{clean}, so the two objectives are in tension by construction --- the same energy that flips bits is the energy the detector can see --- and the attack's value has to be read off a frontier rather than from an attack-success rate.
+
+\textit{The cost of adaptation.}
+Because a deployed detector has no ground-truth labels at run time, attacker and defender can adapt only between rounds and offline, in a GAN-like alternation rather than a continuous game.
+The machine-learning literature has quantified what a round costs the defender: adversarial training raises robustness at measurable expense~\cite{madry2018towards}, robust generalisation demands substantially more data than standard generalisation~\cite{schmidt2018adversarially}, robustness trades against clean accuracy even in simple settings~\cite{tsipras2019robustness}, and detection-based defences are the most fragile class~\cite{carlini2017detected,tramer2020adaptive}.
+On the wireless side the closest cost measurement is continual learning for jamming mitigation~\cite{davaslioglu2024continual}.
+What is missing is a price in \emph{operational} physical-layer units: false-alarm rate at a given $E_b/N_0$, the bit error rate an attacker recovers once the defender has retrained, and the samples and compute each side spends to get there.
+
+\textit{Research gap.}
+Table~\ref{tab:related} summarises the positioning, and three gaps follow.
+Prior attacks are scored at matched transmit power or matched configuration, and prior detectors at accuracy over a fixed jammer taxonomy, so neither yields the achievable bit error rate at matched detection probability against a full defender suite with the stealth budget pinned to the defender's own clean false-alarm rate.
+No prior work combines physical realisability through the jammer's own channel, minimum-energy placement of the perturbation relative to the victim's decision boundaries, and an explicit detectability constraint against a \emph{learned} detector.
+And the attacker--defender interaction is reported as a win or a loss rather than as a cost curve per adaptation round for both sides.
+This paper addresses all three.
+
+
+% ============================================================================
+%  Positioning table — single column, 8 prior rows + proposed.
+%  Trimmed from the 15-row/7-column version in Literature_Review.md: the
+%  Multi-agent column went first (six rows said "No"), then Channel, then rows
+%  duplicating a lineage already represented.
+%  If you have the space, sec_related_long.tex carries the wider table* form.
+% ============================================================================
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Positioning of representative prior work.}
+\label{tab:related}
+\centering
+\footnotesize
+\begin{tabular}{@{}p{1.8cm}p{2.55cm}cc@{}}
+\hline\hline
+\textbf{Reference} & \textbf{Attacker action} & \textbf{\shortstack{Learned\\det.}} & \textbf{\shortstack{Stealth\\in obj.}} \\
+\hline
+Amuru \& Buehrer~\cite{amuru2015optimal}          & Waveform, closed form      & --  & energy \\
+Erpek \emph{et al.}~\cite{erpek2019deep}          & Jam / no-jam timing        & yes & implicit \\
+Zhang \& Wu~\cite{zhang2025cooperative}           & Frequency + power          & --  & no \\
+Li \emph{et al.}~\cite{li2022jamming_ofdm}        & Fixed taxonomy (defender)  & yes & n/a \\
+Sadeghi \& Larsson~\cite{sadeghi2019adversarial}  & Additive IQ perturbation   & yes & pwr.\ cap \\
+Hameed \emph{et al.}~\cite{hameed2021offense}     & Own-symbol perturbation    & yes & yes \\
+DelVecchio \emph{et al.}~\cite{delvecchio2020spectral} & IQ + spectral loss    & yes & yes \\
+Wen \emph{et al.}~\cite{wen2025generative}        & Jammer power allocation    & --  & yes \\
+\hline
+\textbf{Proposed} & \textbf{Min-energy, boundary-directed interference} & \textbf{yes} & \textbf{yes} \\
+\hline\hline
+\end{tabular}
+
+\vspace{2pt}
+\footnotesize
+Only the proposed work reports bit error rate at \emph{matched} suite detection
+probability, with the stealth budget set to the defender's own clean
+false-alarm rate, and prices one round of adaptation on each side.
+\end{table}
+
+undefined

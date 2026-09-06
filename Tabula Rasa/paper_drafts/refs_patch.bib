@@ -1,0 +1,99 @@
+% ============================================================================
+%  refs.bib — Step 1 surgery.  Three parts: DELETE, REPLACE, ADD.
+%  The ADD block is the separate file refs_new.bib (40 entries, paste whole).
+% ============================================================================
+
+% ----------------------------------------------------------------------------
+%  PART A — DELETE these 7 entries from refs.bib
+% ----------------------------------------------------------------------------
+%   electronics14163307          MDPI; supervisor flagged the venue as weak.
+%                                Content is covered by xu2020convert +
+%                                abolhassani2025coordinated.
+%   tong2025wirelessagent        LLM agents — supervisor said cut as tangential.
+%   djuhera2025r                 R-SFLLM — supervisor said cut, out of scope.
+%   Nguyen2025_MARL_UAVRelay     arXiv preprint; adds nothing over the
+%                                published cooperative/defence cites.
+%   Li_Wu_Cui_Dong_Fang_Russell_2019   M3DDPG; the paper makes no argument
+%                                about MARL robustness.
+%   strasser2009novel            UFH thesis, pre-learning era; the draft's own
+%                                note already says it is not relevant.
+%   3gpp_tr38901                 keep ONLY if the TDL channel model is cited in
+%                                the System Model; otherwise delete.
+%
+%  NOTE: 4 of these are cited in the legacy sections you are moving to
+%  app_legacy.tex.  Delete them from refs.bib only AFTER app_legacy.tex is
+%  gated behind \ifappendix, or comment the appendix out on the first compile.
+
+% ----------------------------------------------------------------------------
+%  PART B — REPLACE these 4 entries verbatim (3 are renames; fix the metadata
+%  at the same time so it is done once)
+% ----------------------------------------------------------------------------
+
+% was: jamming_survey_2024  — year was wrong (2022, not 2024)
+@article{pirayesh2022jamming,
+  title   = {Jamming Attacks and Anti-Jamming Strategies in Wireless Networks: A Comprehensive Survey},
+  author  = {Pirayesh, Hossein and Zeng, Huacheng},
+  journal = {IEEE Communications Surveys \& Tutorials},
+  volume  = {24}, number = {2}, pages = {767--809}, year = {2022},
+  doi     = {10.1109/COMST.2022.3159185}
+}
+
+% was: article  — the key was the literal word "article"; PP/1-1 was early access
+@article{zhang2025cooperative,
+  title   = {Cooperative Jamming Over {DRL}-Based Frequency Hopping Wireless Communications},
+  author  = {Zhang, Jianshu and Wu, Xiaofu},
+  journal = {IEEE Transactions on Information Forensics and Security},
+  volume  = {20}, pages = {9220--9234}, year = {2025}
+}
+
+% was: 11302544  — readable key; entry itself was already correct
+@inproceedings{leuenberger2025proactive,
+  author    = {Leuenberger, Silas and Di Maio, Antonio and Braun, Torsten},
+  booktitle = {Proc. 13th Wireless Days Conf. (WD)},
+  title     = {Proactive Decentralized Multi-Agent Data-Driven Node Relocation for Jammed Mobile Networks},
+  year      = {2025}, pages = {1--8},
+  doi       = {10.1109/WD67713.2025.11302544}
+}
+
+% same key, DOI added
+@inproceedings{zhang2023detection,
+  title     = {Detection and Classification of Smart Jamming in {Wi-Fi} Networks Using Machine Learning},
+  author    = {Zhang, Zhengguang and Krunz, Marwan},
+  booktitle = {Proc. IEEE Military Commun. Conf. (MILCOM)},
+  pages     = {919--924}, year = {2023},
+  doi       = {10.1109/MILCOM58377.2023.10356126}
+}
+
+% ----------------------------------------------------------------------------
+%  PART C — metadata fixes to entries that keep their keys
+% ----------------------------------------------------------------------------
+%   valianti2024cooperative   add doi = {10.1109/TMC.2024.3409050}
+%                             (the 12345--12359 pages LOOK like a placeholder
+%                              but are verified correct — do not "fix" them)
+%   qin2025multi              add vol. 24, no. 9, pp. 8886--8898, Sep. 2025,
+%                             doi = {10.1109/TMC.2025.3559123}
+%   abolhassani2025coordinated  it is a preprint — add note = {preprint},
+%                             arXiv:2512.16813.  Do not cite as published.
+%   wen2025generative         add vol. 20, pp. 1278--1289, 2025,
+%                             doi = {10.1109/TIFS.2025.3526058}
+
+% ----------------------------------------------------------------------------
+%  PART D — ADD:  paste all 40 entries from refs_new.bib
+% ----------------------------------------------------------------------------
+%  The Related Work section as written cites 43 keys: 33 of the 40 new ones,
+%  plus 10 that already exist in refs.bib (NIPS2017_68a97503,
+%  abolhassani2025coordinated, leuenberger2025proactive, pirayesh2022jamming,
+%  qin2025multi, valianti2024cooperative, wen2025generative, xu2020convert,
+%  zhang2023detection, zhang2025cooperative).  All 43 resolve.
+%
+%  The 7 new entries not yet cited, and where they belong:
+%    arcangeloni2024jamming, bouzabia2023deep   dropped by the length trim
+%    terry2021pettingzoo, bettini2024benchmarl  Methodology
+%    hoydis2022sionna                           Experiment Setup
+%    durkan2019nsf, mazoure2020leveraging       only if the NSF policy is kept
+%  Keep them in the file; BibTeX emits only what is cited.
+%
+%  BUDGET WARNING: 43 references is ~1.4 columns in IEEEtran conference, vs
+%  the 1.3 allocated.  If the page limit bites, the cheapest 5 to drop are
+%  flowers2020evaluating, restuccia2022generalized, varotto2024detecting,
+%  viana2025pca, marti2023mitigating — each is one clause, none load-bearing.
