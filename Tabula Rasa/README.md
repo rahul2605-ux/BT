@@ -8,8 +8,15 @@ Fresh restart of baseline experiments. Goal: build intuition step by step before
 
 ---
 
-## Current status (updated 2026-09-01, meeting of 2026-08-21)
+## Current status (updated 2026-09-08, meeting of 2026-08-21)
 
+> **DEADLINE CHANGED 2026-09-08: the target is now ICC, 2026-10-02** (was 15 Sept). That is
+> **24 days instead of 7** — a 3.4× expansion of the remaining budget, and it changes the plan
+> rather than merely relaxing it: the ablations **and** the learned-attacker arc (conditional
+> generator → multi-agent) both fit, where before they were mutually exclusive. Read
+> **"Deadline moved to ICC (2026-10-02) — revised plan"** immediately after the M0/E1 section
+> for the reworked ordering; it supersedes "Next steps" wherever the two disagree.
+>
 > **READ THIS FIRST.** Single entry point — a major pivot plus the full 2026-07-02→08
 > result arc. Read it top to bottom; it supersedes the older sim01–sim07 sections (kept
 > for history). **The arc has a mid-course CORRECTION (the "Recheck" below): early Phase-0
@@ -469,7 +476,9 @@ above summarizes only the first reply):
     proposed registering the thesis that same week → **landed on Fri 21 Aug**.
   - Stated availability: **15–20 Aug** full time on the thesis (a few work days mixed in); **22–27 Aug**
     second exam block, no thesis work; **1–14 Sep** 100% on the paper (took the first two September
-    weeks off work), submission 15 Sep.
+    weeks off work), submission 15 Sep. *(SUPERSEDED 2026-09-08 — the target is now **ICC,
+    2026-10-02**. The stated availability window is unchanged; what changed is that the three weeks
+    after it are now inside the budget rather than after the deadline.)*
   - Asked directly how available Di Maio is **1–14 Sep**, requesting short/frequent feedback rounds
     over one large end-of-block review — **answer still pending, follow up at/after the meeting.**
   - Gave short answers to each of his feedback points (full answers owed at the meeting):
@@ -978,6 +987,11 @@ Recorded now so the reasoning does not have to be reconstructed later:
 
 ### Next steps (in order) — updated 2026-09-01 (registration first)
 
+> **PARTIALLY SUPERSEDED 2026-09-08 by "Deadline moved to ICC (2026-10-02) — revised plan".** Items
+> 2–4 are **done** (M0 built, E1 run). The *ordering* below is superseded by the revised plan's
+> G1–G7; the *content* of items 5–10 is unchanged and still describes what each step is. Read the
+> revised plan for what to do next; read here for what each item means.
+
 Supersedes the 2026-08-03 ordering (reply + meeting are **done**). The reordering principle is
 **"what does the minimal model need"**, with one thing ahead of it: nothing here matters if the thesis
 is not registered. Nothing below requires the sim06–08 stack; M0 is small enough to run on a laptop
@@ -1069,6 +1083,201 @@ detectability, and there are no subcarriers to select in M0).
 **Deferred refinements** (unchanged, not on the critical path): BER-thresholded in-band labels + threshold
 calibration for the m2 detector; extending the sim08 suite with more classical detectors
 (kurtosis/GLRT/pilot-variance).
+
+### M0 built + E1 run (2026-09-08) — and the negative result that now gates M1
+
+> **STATE: M0 exists, is verified, and E1 has been run. The headline is NEGATIVE and it puts M1
+> (the multi-jammer step) in question. Read the "open decision" at the end before planning further.**
+
+Code in `m0/`, artifacts in `artifacts/m0/`. Everything runs in seconds; the sweep is an 8-task
+SLURM array (one σ per task) — possible only after the ITET migration lifted the 1-GPU-job cap.
+
+**What M0 is.** One QPSK symbol at a time, one channel (`h=1`), AWGN with swept σ. No OFDM, no
+fading, no pilots. `y = s + d + w`, decisions by per-axis sign test. That is the entire model.
+The point of shrinking this far is *not* simplicity for its own sake: at this size the
+**Neyman–Pearson optimal detector is computable in closed form**, so results read "no detector can
+do better than X" instead of "our CNN failed to catch it".
+
+| file | what |
+|---|---|
+| `m0/link.py` | constellation, channel, BER/SER, analytic references |
+| `m0/attacks.py` | the attacker ladder (8 tiers) + hard power projection |
+| `m0/detectors.py` | energy (1- and 2-sided), learned CNN on the IQ histogram, NP-optimal LRT |
+| `m0/verify.py` | ~50 checks against analytic predictions — **run this first**, exit 0 = all pass |
+| `m0/train_detector.py`, `submit_train.sh` | trains one CNN per σ (job 2243867, 89 s) |
+| `m0/frontier_m0.py`, `submit_frontier.sh` | the E1 sweep, array job (job 2243879, 8 s/task) |
+| `m0/figures.py`, `figure_geometry.py` | all figures → `artifacts/m0/*.png` |
+
+**Verified, not assumed.** Unjammed BER matches `Q(1/(σ√2))` to Monte-Carlo tolerance; SER matches
+`1−(1−BER)²`; every attack matches its geometric prediction; all detectors calibrate to the target
+false-alarm rate; the ordering `P_NP ≥ P_L ≥ P_E` holds everywhere (an "optimal" detector losing to
+a CNN would mean the maths was wrong).
+
+**Closed-form frontiers (σ = 0).** A QPSK symbol sits at distance `1/√2` from its nearest decision
+boundary, so a push of `ρ > 1/√2` (energy 0.5) flips exactly one bit. Spending budget `P` on a
+fraction `duty` of symbols gives `ρ = √(P/duty)`, which crosses only while `duty < 2P`:
+- **genie** (knows `s`, pushes toward the boundary): `BER*(P) = min(P, 0.5)`
+- **blind** (pushes along a random axis direction, independent of `s`): `BER*(P) = min(P/2, 0.25)`
+- The ratio is **exactly 2.00** at every power — that is the entire value of knowing the symbol,
+  and it is a *sensing* capability, not a learnable one (for an iid scrambled payload a causal
+  jammer can never have it, so no amount of learning closes it).
+
+**THE ACTUAL HEADLINE — a negative result.** Max *excess* BER over the clean floor, while staying
+under the detector's own false-alarm rate (α = 0.05), against the **NP-optimal** detector:
+
+| σ | barrage | gaussian | boundary_blind | boundary_genie | permute (genie) |
+|---|---|---|---|---|---|
+| 0.02–0.10 | — | — | — | 0.500 | 0.500 |
+| 0.30 | — | — | 0.0002 | 0.491 | 0.491 |
+| 0.50 | — | 0.0007 | 0.0003 | 0.211 | 0.421 |
+
+**No realizable (blind) attack achieves meaningful stealthy jamming in M0** — the best is an excess
+BER of 3×10⁻⁴. Only genie attacks work. This is the M0-level, *derivable* version of the sim08
+"honesty correction" (which measured the same thing empirically on the OFDM stack).
+
+**Two detector blind spots (real, but modest and both genie-only in practice).**
+1. *The classical energy detector is one-sided*, because it was designed against barrage jammers
+   that ADD power. Minimum-energy attacks push symbols toward the origin, so received power FALLS
+   (1.020 clean → 0.525) and they are flagged with probability 0.0000, i.e. **below** the detector's
+   own FAR. A two-sided test catches them at 1.0000, at the cost of being weaker against
+   power-adding attacks. Both are implemented; report both.
+2. *Constellation-permuting attacks are exactly undetectable.* Because the payload is iid uniform,
+   any perturbation mapping the QPSK alphabet onto itself leaves the received law invariant, so
+   `p₁ ≡ p₀` and no test has any power. Members: `ρ = √2` along an axis (energy 2, BER 0.5) and
+   `d = −2s` (energy 4, BER 1.0). Frontier `BER*(P) = min(P/4, 0.5)` — invisibility costs exactly
+   4× the power. **Do not oversell this:** it is a direct consequence of the symmetry, the
+   `d = −2s` case was already noted in this README ("statistically clean rx = −tx"), it is
+   knife-edged (at ρ = 1.2 or 1.6, `P_det` = 1.000), and it needs the genie. It is a *bound*, not
+   an attack anyone can mount.
+
+**The adaptation-cost reference point now exists.** At σ = 0.2, α = 0.05, `boundary_blind` at
+P = 0.01: energy 0.129, learned CNN 0.112, **NP-optimal 0.839**. The learned detector catches 11%
+of what an optimal one catches 84% of — that gap is the remaining adaptation budget, as a number.
+
+**OPEN DECISION — does M1 still have a target?** E1 tested a *menu* of eight hand-written attack
+laws and found none of the realizable ones works. It did **not** compute the best possible law:
+`max BER s.t. E|d|² ≤ P and P_det^NP ≤ β` over all conditional distributions `π(d|s)`. That is a
+small convex program on a discretised grid (~1 h, CPU) and it is the thing to run before committing
+to M1, because:
+- if the true optimum is also ≈ 0, then **stealthy effective jamming is impossible in M0 for a
+  realizable attacker**, the thesis is an honest characterization + negative result, and M1 should
+  be dropped rather than pursued;
+- if there is headroom the menu missed, that headroom is exactly what a learned generator (and then
+  coordination) would be chasing, and M1 is justified.
+- Also note the earlier "Gaussianize the sum via CLT" coordination story (see the system-model draft)
+  is **suspect**: a Gaussian perturbation is the *least* effective attack here (excess BER 0.0007 at
+  σ = 0.5), so "coordinate to look like noise" may reduce to "coordinate to be useless". Needs the
+  same computation to settle.
+
+### Deadline moved to ICC (2026-10-02) — revised plan
+
+> **This section supersedes "Next steps" wherever the two disagree.** The 15 Sept target is gone;
+> the paper now goes to **ICC, deadline 2026-10-02**. As of 2026-09-08 that is **24 days, not 7**.
+
+**What the extra time actually buys — and why it is a change of plan, not a relaxation of one.** At
+7 days the ablations and the learned-attacker arc were mutually exclusive, so the honest plan was
+"finish the ablations, report the negative result, drop M1". At 24 days both fit, and the decision
+reverts to the one the project actually wants to answer: **does a learned attacker beat the closed
+form, and does coordination beat a single agent?** The E1 negative result does not forbid this — it
+*sharpens the target*, because it says exactly which region any learner has to find something in.
+
+**The OPEN DECISION above is now a sequencing gate, not a go/no-go.** Run the optimality computation
+first regardless, because it costs ~1 h and it determines what the learner is *for*:
+- headroom exists → the generator is chasing a quantified gap, and we can report how much of it a
+  learned policy recovers. That is a strictly better result than "our GAN got BER X".
+- headroom ≈ 0 → the generator's job changes from *beating the closed form* to *rediscovering it
+  without the genie's information*, and the paper's claim becomes about the **learned vs optimal
+  detector gap** (adaptation cost) rather than about attack effectiveness. Still a paper; different
+  headline. **M1 is then justified on the V>1 mechanism only** (see below), not on CLT-Gaussianization.
+
+#### Methodological corrections settled in discussion (2026-09-08)
+
+Four things were sharpened while re-planning; all four change what gets built.
+
+1. **Formulate the gate as a covertness-constrained program, not a P_det-constrained one.** The
+   README wrote it as `max BER s.t. E|d|² ≤ P, P_det^NP ≤ β`, which is **not convex** — the optimal
+   test itself depends on π, so the constraint moves as the variable moves. Replace the detection
+   constraint with a **divergence** constraint, `D(p₁‖p₀) ≤ δ` (or `TV(p₀,p₁) ≤ δ`): BER is linear
+   in π, the power constraint is linear in π, and the divergence is convex in `p₁` which is linear
+   in π ⇒ a genuine convex program on a discretised `d`-grid. Pinsker's inequality converts δ into a
+   bound on *every* detector's error probability, so the answer is detector-free and therefore a
+   true ceiling. This is exactly the covert-communication formulation (`bash2013limits`), which the
+   paper already cites for the stealth-budget convention — so the method and the citation line up.
+2. **Drop the adversarial half of "cGAN"; keep the conditional generator.** A GAN discriminator is a
+   *density-ratio estimator* — that is the whole reason the machinery exists, and it exists for the
+   **likelihood-free** case (`mohamed2016implicit`, which derives the GAN objective from hypothesis
+   testing; Goodfellow's optimal `D* = p_data/(p_data+p_g)` says the same thing). In M0 the ratio is
+   **closed form** (`m0/detectors.py`), so an adversarially trained discriminator would spend its
+   training budget approximating a function we can already write down. Use a reparameterised
+   conditional generator `G_θ(z; c) → d` + hard power projection, trained by **direct gradient** on
+   the exact objective. That is sim03b's method — the one thing on the whole ladder that *worked* —
+   and it drops GAN instability, mode collapse and discriminator scheduling from the risk list.
+   `zhou2025cgan` stays in Related Work as the nearest neighbour, not as the method.
+   - *Nuance, do not skip it:* `D_NP` depends on the attack law, so if the generator moves, `p₁`
+     moves and the optimal test moves with it. It **is** still a minimax problem. The difference
+     from a GAN is that the inner best response is **analytic** — recompute the LRT rather than
+     learn it — which is both stronger and stable. Under the divergence formulation of (1) the inner
+     problem disappears entirely.
+   - *Implementation trap:* a hard 2-D IQ histogram is **not differentiable**, so if `D_L` is in the
+     loop it needs soft binning or a KDE. `D_NP` is differentiable as written.
+3. **The NP detector's role is a citation-backed inversion, and it should be written as one.** Using
+   an LRT as the optimality benchmark that practical detectors are measured against is textbook
+   spectrum-sensing methodology (Kay, *Detection Theory*, 1998; Axell–Leus–Larsson–Poor, IEEE SPM
+   2012, which sets up exactly our LRT / energy / GLRT tiering). What is new here is the
+   **direction**: that literature uses the bound to certify a *detector*; we use it to certify an
+   *attack* — "this evades the optimal test" ⇒ no detector catches it. Say this explicitly in the
+   Defender Model; it is the argument that justifies the whole retreat to M0.
+4. **The CLT/Gaussianization coordination story is probably dead — fix `sec_system_model.tex`
+   before it goes to Di Maio.** §Cooperative currently argues that independent per-agent generators
+   drive `d = Σ d_k` Gaussian, degenerating `D_NP` toward an energy detector. But E1 measured the
+   Gaussian perturbation as the **least effective attack in the ladder** (excess BER 0.0007 at
+   σ = 0.5), so that mechanism plausibly reduces to "coordinate to be useless". The **second**
+   mechanism in that subsection — `V > 1` receivers, where concavity of error rate in perturbation
+   power makes spreading beat concentration at matched worst-case detectability — survives, and it
+   is where `valianti2024cooperative`'s coupling actually transfers. It needs a multi-user extension
+   that does not exist yet. Either repair the paragraph or cut it to the V>1 argument alone.
+
+#### Revised ordering (24 days)
+
+Two tracks run in parallel, because the writing track needs no compute and the compute track has
+idle time built into it.
+
+**Compute track.**
+
+| # | Item | Cost | Gate |
+|---|---|---|---|
+| G1 | **The covertness-constrained optimality program** (correction 1). Convex, CPU, discretised `d`-grid. Produces the ceiling for *any* attacker at each (σ, P, δ). | ~1 h compute, ~½ day to write | **Do first.** Everything below reads differently depending on its answer. |
+| G2 | **E2 — noise ablation.** Largely already produced by the 8-σ E1 sweep; needs the dual-axis figure (§G) and the matched-P(det) companion. | ~½ day | independent of G1 |
+| G3 | **Power-budget ablation**, log grid (§F, item 3). | ~½ day | independent |
+| G4 | **Structure ablation** (§B / `SUPERVISOR_TODO` §13.1) — iid-uniform → non-uniform priors → correlated → pilots. Decides *where* the learning contribution lives. | ~1 day | independent, but read it together with G1 |
+| G5 | **Conditional generator on M0** (correction 2), direct gradient, vs the closed-form frontier at matched detectability. | ~3–4 days | after G1 + G4 |
+| G6 | **M1 — spatial / multi-jammer.** PettingZoo only if a MARL algorithm is genuinely needed; surrogate gradients stay primary. Justified on the V>1 mechanism (correction 4). | ~4–5 days | after G5 |
+| G7 | **Adaptation-cost rounds R0/R1/R2** (RQ2). Tooling exists; in M0 it gains the distance-from-`D_NP` reference E1 already measured (0.112 learned vs 0.839 NP at σ=0.2). | ~2 days | after G5; can precede G6 if G6 slips |
+
+**Writing track (starts now, no compute).**
+- **Appendix: the sim00–08 experiment record.** Structure agreed 2026-09-08 — the ladder is written
+  as a *falsification history*, grouped by what each cluster of simulations killed, not one
+  subsection per simulation. This is the single largest piece of prose still owed and it depends on
+  nothing.
+- Repair `sec_system_model.tex` per correction 4; fold corrections 1–3 into §Defender Model and
+  §Generative Attack Policy.
+- Related Work is drafted (`paper_drafts/sec_related.tex`).
+
+**Rough calendar.** Sep 8–14: G1–G4 + start the appendix. Sep 15–21: G5 + system-model repair.
+Sep 22–28: G6/G7 + results write-up. Sep 29–Oct 2: lock results, figures, polish. **Results lock
+Sep 28** — leave four days, not one, given how many headlines on this project have died to a
+late-arriving honest metric.
+
+**Still open and not gated by any of this:** registration (§0d — title, dates, supervisor of
+record) and Di Maio's feedback on the proposal, both outstanding since 2026-09-01. Chase both;
+the deadline move does not make registration less blocking.
+
+**Risks, in order.** (i) G5 produces no separation from the closed form — mitigated because G1 tells
+us in advance whether separation is even possible, so this is a known outcome rather than a
+surprise. (ii) M1's motivation is thinner post-E1 than it was when the proposal was written; if G1
+returns ≈0 headroom, M1 rests on V>1 alone and the multi-user extension is new code. (iii) Scope
+creep against Di Maio's explicit "simplify, as much as possible" and 2–3-experiment quota — the
+extra 17 days are permission to do the *planned* work properly, not permission to add layers.
 
 ### System as implemented now
 

@@ -458,6 +458,17 @@ Reasoning in `README.md` §"Thesis proposal + settled framing (2026-09-01)".
 
 ## Priority for the time actually available
 
+> **UPDATED 2026-09-08 — deadline moved to ICC, 2026-10-02** (was 15 Sept): 24 days, not 7. The
+> table below still holds as a *dependency order*, but the "Then / Gate / After" rows are all now
+> **inside** the budget rather than aspirational. Authoritative sequencing (G1–G7, with costs and a
+> calendar) is in `README.md` §"Deadline moved to ICC (2026-10-02) — revised plan". Four
+> methodological corrections settled the same day are recorded there and change what gets built:
+> the optimality gate is a **convex divergence-constrained** program (not `P_det`-constrained); the
+> generative attacker uses a **conditional generator + direct gradient**, not GAN adversarial
+> training; the NP detector is framed as a **citation-backed inversion** of spectrum-sensing
+> methodology; and the **CLT-Gaussianization coordination argument is probably dead** and must be
+> repaired in `paper_drafts/sec_system_model.tex`.
+
 Rewritten 2026-09-01. **Registration is now ahead of everything** — the ordering principle is otherwise
 still "what does the minimal model need". M0 runs on CPU, so cluster concurrency is not the constraint.
 
