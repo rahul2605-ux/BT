@@ -51,7 +51,7 @@ import torch
 from link import INV_SQRT2
 
 ATTACKS = ["none", "barrage", "gaussian", "boundary_blind", "boundary_genie",
-           "counter_null", "counter_flip"]
+           "permute", "counter_null", "counter_flip"]
 
 
 def transmit_power(x):
@@ -167,6 +167,39 @@ def build_attack(name, sym, power, sigma=None, duty=1.0, axis="random",
         di = -rho * torch.sign(sym.imag) * (1.0 - use_i)
         d = torch.complex(dr, di) * mask
 
+    elif name == "permute":
+        # THE INVISIBLE ATTACK. Displace each symbol by exactly the difference
+        # vector to an ADJACENT constellation point: rho = sqrt(2) along one
+        # axis. The symbol does not land near a boundary, it lands ON another
+        # legitimate constellation point, so one bit is flipped with certainty
+        # while the received DISTRIBUTION is unchanged.
+        #
+        # Because the payload is iid uniform, any perturbation that PERMUTES the
+        # constellation leaves the received law exactly invariant, and is
+        # therefore undetectable by every possible test -- p1 == p0, so the
+        # likelihood ratio is identically 1. counter_flip (s -> -s) is the other
+        # member of this family, at energy 4 for BER 1.0.
+        #
+        # Cost: energy |s' - s|^2 = 2 per attacked symbol, against 0.5 for the
+        # cheapest DETECTABLE bit flip. Spending budget P at this fixed
+        # displacement attacks a fraction duty = P/2, giving
+        #       BER = min(P/4, 1/2)
+        # against the minimum-energy min(P, 1/2). Invisibility costs exactly 4x.
+        #
+        # It is knife-edged: rho must be sqrt(2). At rho = 1.2 or 1.6 the points
+        # land BETWEEN constellation points and P(detect) jumps to 1.0. That is
+        # what makes the amplitude/phase-error realism axis decisive rather than
+        # decorative -- and it needs the genie, since choosing the difference
+        # vector requires knowing which point was sent.
+        rho = math.sqrt(2.0)
+        duty_eff = min(1.0, power / 2.0) if power > 0 else 0.0
+        mask = _duty_mask(shape, duty_eff, device, generator)
+        use_i = (torch.rand(shape, device=device, generator=generator) < 0.5
+                 ).to(torch.float32)
+        dr = -rho * torch.sign(sym.real) * use_i
+        di = -rho * torch.sign(sym.imag) * (1.0 - use_i)
+        d = torch.complex(dr, di) * mask
+
     elif name == "counter_null":
         # d = -s: the received point lands on the origin, so both bits are
         # decided by noise alone -> BER 0.5. Per-symbol energy 1.
@@ -183,7 +216,7 @@ def build_attack(name, sym, power, sigma=None, duty=1.0, axis="random",
     # Referred to the transmitter, then constrained. The counter_* tiers are
     # reported as bounds, so they are exempt from the budget by construction.
     x = d * h0 / g
-    if name not in ("none", "counter_null", "counter_flip"):
+    if name not in ("none", "permute", "counter_null", "counter_flip"):
         x = project_power(x, power)
         d = x * g / h0
     return d, x

@@ -151,6 +151,12 @@ def log_p1(y, attack, sigma, power=0.0, duty=1.0, h0=1.0 + 0j):
                 - (u.pow(2) + r ** 2) / v + log_i0)
         return torch.logsumexp(comp, dim=0) - math.log(4.0)
 
+    if attack == "permute":
+        # Permutes the constellation, so the received law is EXACTLY the clean
+        # law: p1 == p0 and the likelihood ratio is identically 1. No test can
+        # separate them -- this is a theorem, not an approximation.
+        return log_p0(y, sigma, h0)
+
     if attack == "counter_null":
         # d = -s: every symbol lands on the origin. y ~ CN(0, v), independent
         # of what was sent -- a single Gaussian blob, trivially distinguishable

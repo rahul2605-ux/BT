@@ -1,0 +1,5 @@
+task 6 -> sigma=0.4 on artongpu02
+device=cuda  sigmas=[0.4]  powers=[0.001, 0.003, 0.01, 0.03, 0.06, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 2.0]
+  sigma=0.4  clean BER=0.03856  realised FAR E1=0.049 E2=0.045 L=0.059
+  -> /home/rrahman/BT/Tabula Rasa/artifacts/m0/frontier/results_sigma0.4.json  (172 rows)
+done in 5.6s
