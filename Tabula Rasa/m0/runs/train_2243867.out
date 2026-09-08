@@ -1,0 +1,60 @@
+node: artongpu02.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+device=cuda  out=/home/rrahman/BT/Tabula Rasa/artifacts/m0/detector
+  training D_L for sigma=0.02 (Eb/N0=28.0 dB)
+    sigma=0.02  epoch   6/30  loss=0.3786
+    sigma=0.02  epoch  12/30  loss=0.3656
+    sigma=0.02  epoch  18/30  loss=0.3175
+    sigma=0.02  epoch  24/30  loss=0.3385
+    sigma=0.02  epoch  30/30  loss=0.2982
+    -> held-out acc=0.7996  thr@alpha=-0.939
+  training D_L for sigma=0.05 (Eb/N0=20.0 dB)
+    sigma=0.05  epoch   6/30  loss=0.4069
+    sigma=0.05  epoch  12/30  loss=0.3851
+    sigma=0.05  epoch  18/30  loss=0.3193
+    sigma=0.05  epoch  24/30  loss=0.3430
+    sigma=0.05  epoch  30/30  loss=0.3278
+    -> held-out acc=0.7998  thr@alpha=-0.843
+  training D_L for sigma=0.1 (Eb/N0=14.0 dB)
+    sigma=0.1   epoch   6/30  loss=0.6190
+    sigma=0.1   epoch  12/30  loss=0.4150
+    sigma=0.1   epoch  18/30  loss=0.3572
+    sigma=0.1   epoch  24/30  loss=0.3854
+    sigma=0.1   epoch  30/30  loss=0.3662
+    -> held-out acc=0.8003  thr@alpha=-0.220
+  training D_L for sigma=0.15 (Eb/N0=10.5 dB)
+    sigma=0.15  epoch   6/30  loss=0.5931
+    sigma=0.15  epoch  12/30  loss=0.5435
+    sigma=0.15  epoch  18/30  loss=0.4946
+    sigma=0.15  epoch  24/30  loss=0.5032
+    sigma=0.15  epoch  30/30  loss=0.4435
+    -> held-out acc=0.7974  thr@alpha=-0.271
+  training D_L for sigma=0.2 (Eb/N0=8.0 dB)
+    sigma=0.2   epoch   6/30  loss=0.6927
+    sigma=0.2   epoch  12/30  loss=0.4968
+    sigma=0.2   epoch  18/30  loss=0.4446
+    sigma=0.2   epoch  24/30  loss=0.4710
+    sigma=0.2   epoch  30/30  loss=0.4434
+    -> held-out acc=0.7722  thr@alpha=-0.001
+  training D_L for sigma=0.3 (Eb/N0=4.4 dB)
+    sigma=0.3   epoch   6/30  loss=0.6931
+    sigma=0.3   epoch  12/30  loss=0.6866
+    sigma=0.3   epoch  18/30  loss=0.5541
+    sigma=0.3   epoch  24/30  loss=0.5183
+    sigma=0.3   epoch  30/30  loss=0.5089
+    -> held-out acc=0.7056  thr@alpha=0.344
+  training D_L for sigma=0.4 (Eb/N0=1.9 dB)
+    sigma=0.4   epoch   6/30  loss=0.6931
+    sigma=0.4   epoch  12/30  loss=0.6893
+    sigma=0.4   epoch  18/30  loss=0.6786
+    sigma=0.4   epoch  24/30  loss=0.6587
+    sigma=0.4   epoch  30/30  loss=0.6400
+    -> held-out acc=0.5999  thr@alpha=-0.239
+  training D_L for sigma=0.5 (Eb/N0=0.0 dB)
+    sigma=0.5   epoch   6/30  loss=0.6707
+    sigma=0.5   epoch  12/30  loss=0.6226
+    sigma=0.5   epoch  18/30  loss=0.5955
+    sigma=0.5   epoch  24/30  loss=0.5909
+    sigma=0.5   epoch  30/30  loss=0.5751
+    -> held-out acc=0.6362  thr@alpha=0.439
+
+done in 89.0s -> /home/rrahman/BT/Tabula Rasa/artifacts/m0/detector/summary.json

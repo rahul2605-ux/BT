@@ -142,12 +142,26 @@ Results are reported as the achievable frontier $\mathrm{BER}^\star(\beta) = \ma
 Five strategies instantiate \eqref{eq:policy}, and all five appear in every results figure so that any curve can be read against both its floor and its ceiling.
 \emph{No attacker} fixes the error-rate floor and the detector's false-alarm rate, the lower reference on both axes.
 \emph{Barrage} draws $d[n]$ isotropically at the power budget, knows nothing, and is the naive floor.
-The \emph{minimum-energy boundary} attack is closed form and requires no training: for unit-energy QPSK it displaces each symbol just across its nearest decision boundary, $d[n] = -\rho\,\Re\{s[n]\}$ or its quadrature counterpart, pre-compensated as $x_k[n] = d[n] h_0 / g_k$, with $\rho$ sweeping the frontier~\cite{amuru2015optimal}.
-The \emph{counter signal} $x_k = -2 h_0 s / g_k$ is the omniscient ceiling requested as an impossible-to-beat reference, and is reported as a bound rather than claimed as an attack.
+The \emph{minimum-energy} attacks exploit the fact that each unit-energy QPSK symbol lies at distance $1/\sqrt{2}$ from its nearest decision boundary, so a displacement of $\rho > 1/\sqrt{2}$ along one axis --- per-symbol energy $\tfrac12$ --- flips exactly one bit, whereas a randomly oriented shove of the same energy mostly slides the symbol \emph{along} a boundary.
+They come in two tiers that differ only in whether the attacker knows $s[n]$.
+The \emph{blind} variant pushes along one of the four axis directions chosen at random and independently of the symbol; the push opposes the symbol's sign on that axis half the time, so an attacked symbol errs with probability $\tfrac12$.
+The \emph{genie} variant reads $s[n]$ and always pushes toward the nearest boundary, so an attacked symbol errs with probability $1$.
+Spending a budget $P$ on a fraction $\delta$ of the symbols gives $\rho = \sqrt{P/\delta}$, which crosses only while $\delta < 2P$, and yields the closed-form frontiers
+\begin{equation}
+  \mathrm{BER}^\star_{\text{blind}}(P) = \min\!\left(\tfrac{P}{2}, \tfrac14\right),
+  \qquad
+  \mathrm{BER}^\star_{\text{genie}}(P) = \min\!\left(P, \tfrac12\right),
+  \label{eq:minenergy}
+\end{equation}
+attained as $\delta \to 2P$ from below. The genie is exactly twice the blind attack at every power: \emph{that factor of two is the entire value of knowing the transmitted symbol.}
+The \emph{counter signal} $x_k = -2 h_0 s / g_k$ negates the received point and flips both bits, giving the omniscient ceiling $\mathrm{BER} = \mathrm{SER} = 1$ requested as an impossible-to-beat reference.
+It is a ceiling on \emph{effect} only: at per-symbol energy $4$ it is the least efficient attack in the ladder, delivering $0.25$ bit errors per unit energy against the genie boundary attack's $0.55$.
 The \emph{generative} attacker, single-agent and then cooperative, is the proposed method.
 
-The boundary attack is the bar that matters.
-Against an independent and uniformly distributed payload the minimum-energy perturbation is available analytically, so on a single link a learner can at best rediscover it; the learned attacker must therefore be motivated by structure that survives scrambling, of which the relevant kinds are the detector's own decision surface, the per-link gains and phases, and the coordination problem itself.
+The blind attack, not the genie, is the bar a learned attacker must clear.
+For an independent and uniformly distributed payload the genie tier is not merely expensive but unrealisable: a causal jammer learns $s[n]$ only after symbol $n$ has passed, and scrambling guarantees that $s[n{+}1]$ is statistically independent of everything it has observed, so no amount of learning recovers the missing factor of two --- that gap is a \emph{sensing} capability, not a learnable one.
+The genie tier is therefore reported as a bound, and is realisable only on the protocol-deterministic fields that scrambling does not randomise, namely preamble and pilots.
+This is what relocates the learning contribution: on a single link with a scrambled payload the achievable frontier is already closed form, so the learner must be motivated by the detector's own decision surface, by the per-link gains and phases, or by the coordination problem --- none of which the payload statistics touch.
 
 \subsection{Generative Attack Policy}
 \label{sec:system:generator}
