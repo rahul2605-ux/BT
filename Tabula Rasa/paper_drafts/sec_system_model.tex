@@ -1,0 +1,198 @@
+% ============================================================================
+%  \section{System Model}  —  PAPER VERSION, IEEEtran conference
+%  Drafted 2026-09-07.  Designed for the 15 Sep paper.
+%
+%  MEASURED: ~1500 words prose + 4 display equations = ~2.7 columns.  With
+%  Related Work at 2.4 columns that is too much for a 6-page paper.  To reach
+%  ~1.8 columns make these cuts, in order (each self-contained):
+%     1. §Parameter Studies -> two sentences; it duplicates §Experiments (-170 w)
+%     2. §Generative, 2nd para (the raw-IQ / mode-collapse motivation) ->
+%        move to Methodology, where it belongs                        (-130 w)
+%     3. §Attacker Ladder, 2nd para (the "boundary is the bar" argument) ->
+%        move to Methodology or Related Work                          (-110 w)
+%  Do NOT cut: the two-views paragraph in §Link (it sets up the whole
+%  effectiveness/detectability split), the D_NP justification in §Defender
+%  (it is why the model was reduced at all), or the first paragraph of
+%  §Cooperative (it is the correction to the coordination hypothesis).
+%
+%  Replaces main.tex §System Model, which still describes the K-subcarrier /
+%  TDL / N_J-jammer setting that no working experiment supports (README
+%  "Thesis proposal + settled framing", 2026-09-01).
+%
+%  Satisfies, by construction:
+%    SUPERVISOR_TODO §3  where detection happens, what the detector observes,
+%                        assumption tiers, coordination assumption, CTDE split,
+%                        counter-signal non-viability, localization out of scope
+%    SUPERVISOR_TODO §4  reward = BER - beta*det, power as HARD constraint
+%    SUPERVISOR_TODO §8  the five-baseline envelope
+%    SUPERVISOR_TODO §11 M0: single subcarrier, one channel, NP-optimal test
+%    SUPERVISOR_TODO §13 sigma as primary swept axis, sigma=0 anchor
+%
+%  Style per A. Di Maio: one sentence per line; \cite before all punctuation
+%  with a ~ tie; text reads correctly with the brackets removed.
+%
+%  NEW KEYS NEEDED IN refs.bib (see end of file for stubs):
+%      zhou2025cgan, valianti2024cooperative (exists), amuru2015optimal (exists)
+% ============================================================================
+
+\section{System Model}
+\label{sec:system}
+
+\subsection{Link and Signal Model}
+\label{sec:system:link}
+
+We model a single-carrier link carrying $N$ QPSK symbols per frame.
+The victim transmits $s[n] \in \mathcal{S} = \{(\pm 1 \pm j)/\sqrt{2}\}$, drawn independently and uniformly, reaching the receiver through a channel coefficient $h_0 \in \mathbb{C}$.
+A team of $K$ jammers indexed by $k \in \mathcal{K}$ transmits $x_k[n]$, reaching the same receiver through $g_k \in \mathbb{C}$.
+The receiver observes
+\begin{equation}
+  y[n] \;=\; h_0\, s[n] \;+\; \sum_{k \in \mathcal{K}} g_k\, x_k[n] \;+\; w[n],
+  \label{eq:rx}
+\end{equation}
+with $w[n] \sim \mathcal{CN}(0, 2\sigma^2)$ and $\sigma$ the noise standard deviation per real dimension, so that $N_0 = 2\sigma^2$.
+Equalising by $h_0$ gives the decision variable
+\begin{equation}
+  \hat{y}[n] \;=\; s[n] \;+\; d[n] \;+\; \sigma_{\mathrm{eff}} \tilde{w}[n],
+  \qquad
+  d[n] \;\triangleq\; \sum_{k \in \mathcal{K}} \underbrace{\frac{g_k}{h_0} x_k[n]}_{\;\triangleq\; d_k[n]},
+  \label{eq:eq}
+\end{equation}
+where $d[n]$ is the aggregate perturbation in the equalised domain and $d_k[n]$ is agent $k$'s effective contribution to it.
+The single-jammer, unit-channel case $K=1$, $h_0 = g_1 = 1$ is the base model; every extension in Sec.~\ref{sec:system:ladder} reintroduces one term of \eqref{eq:rx}.
+
+Two views of the same frame carry the whole tension of the problem.
+The victim decides on $\hat{y}$ and is therefore harmed by $d$ alone, whereas the detector observes the composite $y$ before equalisation, so it sees the interference through $g_k$ rather than through $g_k / h_0$.
+Effectiveness is a property of the equalised perturbation and detectability is a property of the received composite, and the two are related but not identical --- which is the design margin the attacker exploits.
+
+Each jammer is constrained by a hard per-frame power budget
+\begin{equation}
+  \frac{1}{N} \sum_{n=1}^{N} \bigl| x_k[n] \bigr|^2 \;\le\; P_k ,
+  \label{eq:power}
+\end{equation}
+imposed as a projection onto the feasible set at the output of the attacker rather than as a penalty term, so that no attacker in this paper can buy effectiveness by paying a soft power cost.
+
+Performance at the victim is the bit error rate and the symbol error rate under maximum-likelihood QPSK detection.
+Bit-error recovery is out of scope: we assume forward error correction, retransmission and rate adaptation are handled by a higher layer, and report the raw error rate because it is the input any such layer receives, and because pushing it past the code's correcting capability is what becomes outage.
+
+\subsection{Attacker Model}
+\label{sec:system:attacker}
+
+We model every attacker, learned or not, as a conditional law
+\begin{equation}
+  d_k[n] \;\sim\; \pi_k\bigl( \cdot \mid c_k[n] \bigr),
+  \label{eq:policy}
+\end{equation}
+where $c_k$ is the information available to agent $k$ when it forms the perturbation.
+This is the paper's central abstraction, and it is what places the closed-form and the learned attacks on a single axis: the strategies differ only in the contents of $c_k$ and in the family of laws $\pi_k$ ranges over.
+
+Three assumption tiers define $c_k$, and results are reported per tier so that no capability is granted silently.
+At tier~T0 the attacker knows the victim symbol $s[n]$, both channel coefficients $h_0$ and $g_k$, and is sample-synchronous with the preamble; this is a genie and serves only as an upper bound.
+At tier~T1 the attacker holds a channel estimate $\hat{g}_k$ and achieves preamble synchronisation with residual carrier-frequency offset, timing offset and phase error, and does not know $s[n]$.
+At tier~T2 it holds neither.
+The counter-signal attack exists only at T0, and its non-viability at T1 is structural rather than incidental: cancellation is an exact-inverse operation, so residual phase error destroys it, whereas an attack that only has to place the received point in the wrong half-plane degrades gracefully.
+
+Coordination is assumed to be a shared clock and a command codebook agreed offline, with no per-frame backhaul between jammers.
+This assumption is load-bearing and is chosen deliberately: a per-frame backhaul would let the team behave as one jammer with $K$ antennas, which both trivialises the coordination question and is the least realistic hardware assumption available.
+Under centralised training with decentralised execution~\cite{lowe2017maddpg}, the error rate is available to a centralised critic during training and is \emph{not} available to a deployed jammer, whose execution-time observation is its own transmission, its own channel estimate, and at most a delayed acknowledgement from the victim.
+The objective below is therefore a training-time construct, and we label it as such; it is the attacker-side mirror of the defender's inability to obtain ground-truth labels at run time.
+
+\subsection{Defender Model}
+\label{sec:system:defender}
+
+Detection takes place at the victim receiver, on the composite pre-equalisation frame $y$ of \eqref{eq:rx}.
+The detector observes that frame and nothing else: it has no channel state information, no side information about the jammers, and no ground-truth labels at execution time, so it cannot adapt online and any adaptation is round-based and offline.
+We evaluate against a suite of three detectors at a common false-alarm rate $\alpha$, calibrated on clean frames at the operating noise level.
+
+The energy detector $D_{\mathrm{E}}$ thresholds the mean frame power $\frac{1}{N}\sum_n |y[n]|^2$, and is the classical baseline any added-power attack must survive~\cite{urkowitz1967energy}.
+The learned detector $D_{\mathrm{L}}$ is a small convolutional classifier on the two-dimensional in-phase/quadrature histogram of $y$, the single-carrier counterpart of the spectrogram classifiers that define the state of the art in this setting~\cite{li2022jamming_ofdm}.
+The reference detector $D_{\mathrm{NP}}$ is the Neyman--Pearson likelihood-ratio test, which the single-carrier model makes available in closed form: with $\sigma$ known and the perturbation law $\pi$ stated,
+\begin{equation}
+  \Lambda(y) = \sum_{n=1}^{N} \log \frac{p_1\bigl(y[n]\bigr)}{p_0\bigl(y[n]\bigr)},
+  \quad
+  p_0(y) = \tfrac{1}{4}\!\sum_{s \in \mathcal{S}}\! \mathcal{CN}\bigl(y; h_0 s, 2\sigma^2\bigr),
+  \label{eq:np}
+\end{equation}
+and $p_1$ is the same mixture with $h_0 s$ replaced by $h_0(s + d)$ and averaged over $d \sim \pi$.
+
+$D_{\mathrm{NP}}$ is the reason the model is worth reducing to a single carrier.
+It converts every claim of the form ``the trained detector does not see this attack'' into the far stronger ``no detector can do better than this'', and it supplies the reference point that an adaptation-cost measurement otherwise lacks, since the distance between a retrained detector and the optimal one is precisely the adaptation budget that remains.
+
+Jammer localisation --- angle-of-arrival, time-difference-of-arrival, or received-signal-strength anomaly --- is a real defender capability and is explicitly out of scope, since it requires multi-antenna or distributed infrastructure that the baseband model does not represent.
+We note it as future work rather than assume it away.
+
+\subsection{Objective and Reporting Convention}
+\label{sec:system:objective}
+
+The attacker maximises the induced error rate penalised by detection,
+\begin{equation}
+  \max_{\{\pi_k\}} \;\; \mathrm{BER}\bigl(\pi_{1:K}\bigr) \;-\; \beta \, P_{\mathrm{det}}\bigl(\pi_{1:K}; \alpha\bigr)
+  \quad \text{s.t.} \quad \eqref{eq:power},
+  \label{eq:obj}
+\end{equation}
+with no further terms: the power budget is a constraint of the environment and every other consideration is a property of the environment rather than of the reward.
+
+Two reporting conventions are non-negotiable and both correct errors this line of work has already made.
+First, strategies are compared at \emph{matched detectability} rather than at matched transmit power or matched configuration, since an attack that raises the error rate by raising its own signature is not an improvement.
+Second, the stealth budget is set to the defender's own clean false-alarm rate rather than to a conventional threshold such as $P_{\mathrm{det}} \le 0.5$, because an attacker caught in half of every frame is caught within a few frames.
+Results are reported as the achievable frontier $\mathrm{BER}^\star(\beta) = \max\{\mathrm{BER} : P_{\mathrm{det}} \le \beta\}$, together with the dual-axis view of error rate and detection probability against the swept parameter, with the no-attacker floor and the omniscient ceiling drawn in.
+
+\subsection{Attacker Ladder}
+\label{sec:system:ladder}
+
+Five strategies instantiate \eqref{eq:policy}, and all five appear in every results figure so that any curve can be read against both its floor and its ceiling.
+\emph{No attacker} fixes the error-rate floor and the detector's false-alarm rate, the lower reference on both axes.
+\emph{Barrage} draws $d[n]$ isotropically at the power budget, knows nothing, and is the naive floor.
+The \emph{minimum-energy boundary} attack is closed form and requires no training: for unit-energy QPSK it displaces each symbol just across its nearest decision boundary, $d[n] = -\rho\,\Re\{s[n]\}$ or its quadrature counterpart, pre-compensated as $x_k[n] = d[n] h_0 / g_k$, with $\rho$ sweeping the frontier~\cite{amuru2015optimal}.
+The \emph{counter signal} $x_k = -2 h_0 s / g_k$ is the omniscient ceiling requested as an impossible-to-beat reference, and is reported as a bound rather than claimed as an attack.
+The \emph{generative} attacker, single-agent and then cooperative, is the proposed method.
+
+The boundary attack is the bar that matters.
+Against an independent and uniformly distributed payload the minimum-energy perturbation is available analytically, so on a single link a learner can at best rediscover it; the learned attacker must therefore be motivated by structure that survives scrambling, of which the relevant kinds are the detector's own decision surface, the per-link gains and phases, and the coordination problem itself.
+
+\subsection{Generative Attack Policy}
+\label{sec:system:generator}
+
+We parameterise $\pi_k$ by a conditional generator $G_{\theta_k}(z; c_k) \mapsto d_k$ with $z \sim \mathcal{CN}(0,\mathbf{I})$, followed by the projection enforcing \eqref{eq:power}.
+Conditional generation has been applied to jamming waveform synthesis before~\cite{zhou2025cgan}, and two departures from that use are what make it an evasion attack rather than an effectiveness attack.
+The discriminator is the \emph{detector} operating on the received composite $y$, not a similarity model separating the interference from the victim's signal, so the generator is rewarded for making the received frame indistinguishable from an un-jammed one rather than for making its own emission resemble the victim's.
+The objective carries both terms of \eqref{eq:obj}, whereas prior generative jamming optimises effectiveness alone and reports it against a theoretical jamming bound with no detector present.
+
+The generator also resolves a structural obstacle rather than adding capability for its own sake.
+A policy acting directly on the transmitted samples has an action space of $2N$ real dimensions driven by a frame-level scalar reward whose variance across a training batch is close to zero, which leaves a policy-gradient method with no usable gradient; parameterising the perturbation \emph{law} instead reduces the coordinating policy's action to a low-dimensional command $m_k$ that conditions a separately trained generator.
+Conditioning also pins the generated mode, which is the specific answer to the mode-collapse objection that governs the choice between adversarial and flow-based generators in this setting.
+
+\subsection{Cooperative Attack}
+\label{sec:system:coop}
+
+The detector observes the sum $\sum_k g_k x_k$, so any two power allocations producing the same sum are the same observation and splitting power across agents is, by itself, worth nothing at the victim's detector.
+Cooperation must therefore act on the \emph{law} of the aggregate perturbation rather than on its magnitude, and two mechanisms do so.
+
+First, at fixed aggregate received perturbation power, independent per-agent generators make $d = \sum_k d_k$ approach a Gaussian law as $K$ grows.
+A Gaussian perturbation is distinguishable from an increase in the noise floor only through its energy, so the optimal test of \eqref{eq:np} degenerates towards the energy detector and the team converts structure into stealth at constant effect.
+Whether that conversion is free is the question this paper puts: a boundary-directed perturbation is a function of $s[n]$ and is therefore correlated across any agents that share it, so the team must trade the energy efficiency of a directed attack against the stealth of an undirected one, and where that trade settles is not available in closed form.
+
+Second, with $V > 1$ legitimate receivers the team maximises aggregate error subject to $\max_v P_{\mathrm{det}}^{(v)} \le \beta$, and the concavity of the error rate in perturbation power makes spreading strictly preferable to concentration at matched worst-case detectability.
+This is the setting in which the per-link geometry $g_{k,v}$ does work, and it is where the cooperative jamming literature's coordination structure transfers~\cite{valianti2024cooperative}: an inter-agent coupling constraint that renders the team problem non-separable, with the mutual-interference limit of that work replaced here by a joint detectability limit.
+
+\subsection{Parameter Studies}
+\label{sec:system:params}
+
+The noise level is the primary swept axis, on a logarithmic grid over $\sigma \in [10^{-3}, 0.5]$ with $\sigma = 0$ as a separate anchor.
+The anchor is degenerate and is included for that reason: with no noise the un-jammed constellation is four exact points, any perturbation is detected with probability one, and the comparison collapses to error rate at matched power.
+Stealth is thus a consequence of noise, and stating so in a model where it can be derived is the point of the reduction.
+Secondary axes are the power budget, the number of jammers, the number of legitimate receivers, the attacker synchronisation quality, and the exploitable structure in the transmitted sequence.
+
+% ----------------------------------------------------------------------------
+% refs.bib stub for the one new key:
+%
+% @inproceedings{zhou2025cgan,
+%   author    = {Zhou, Liangsi and Tan, Yihan and Xu, Hua},
+%   title     = {Communication Jamming Waveform Generation Technology Based on
+%                Conditional Generative Adversarial Networks},
+%   booktitle = {Proc. 4th Int. Symp. Semiconductor and Electronic Technology (ISSET)},
+%   address   = {Xi'an, China},
+%   pages     = {373--377},
+%   year      = {2025},
+%   doi       = {10.1109/ISSET66828.2025.11184988}
+% }
+% ----------------------------------------------------------------------------
