@@ -22,6 +22,12 @@ Fresh restart of baseline experiments. Goal: build intuition step by step before
 > characterization arc below is now *appendix* material (done, don't extend it). See
 > **"Supervisor steer (2026-08-03)"**.
 >
+> **2026-09-08: MIGRATED to the ITET/TIK cluster** (INFK went into maintenance). The predicted
+> 8-day compute blackout did NOT happen. Environment rebuilt and verified end-to-end; all 19
+> submit scripts migrated. **The 1-GPU-job concurrency cap no longer exists**, so parallel
+> sweeps are now possible. Read **`cluster/README.md`** before submitting anything — there are
+> two CUDA traps that silently break jobs.
+>
 > **2026-09-01: the thesis is now framed around the UAV DETECTION GAP and registration is the
 > critical path — read "Thesis proposal + settled framing (2026-09-01)" and "Next steps" FIRST.**
 > Bachelor's thesis; two RQs (trade-off vs baselines; adaptation cost); the countermeasure-level RQ
@@ -480,6 +486,15 @@ above summarizes only the first reply):
       already measure exactly that.
 
 ### Cluster maintenance, week of 7 Sept — schedule consequences (2026-08-17)
+
+> **SUPERSEDED 2026-09-08 — THE BLACKOUT DID NOT HAPPEN.** The INFK cluster did go into
+> maintenance, but the project **migrated to the ITET/TIK cluster** instead of losing the week.
+> Compute is available for the whole run-up to 15 Sept, so the "core locked on Sep 6" gate, the
+> 6-day compute window, the "cut desync first" triage and the Sep-6 lockout checklist below are
+> all **void**. The new cluster is also strictly better (no concurrency cap, 2-day walltime,
+> 12 GPU nodes) — see "Cluster/compute notes" and `cluster/README.md`. Kept below because the
+> reasoning about *ordering by risk* still applies, and because it records why the September
+> plan was shaped the way it was.
 
 **The cluster is down for maintenance the week of 7 September** (assumed Mon 7 – Sun 13; confirm the
 exact window). This lands squarely inside what was the primary compute block (Sep 1–8) and removes
@@ -966,7 +981,8 @@ Recorded now so the reasoning does not have to be reconstructed later:
 Supersedes the 2026-08-03 ordering (reply + meeting are **done**). The reordering principle is
 **"what does the minimal model need"**, with one thing ahead of it: nothing here matters if the thesis
 is not registered. Nothing below requires the sim06–08 stack; M0 is small enough to run on a laptop
-CPU, so the 1-GPU-job concurrency cap stops being the bottleneck.
+CPU. *(Update 2026-09-08: after the ITET migration the 1-GPU-job concurrency cap no longer exists
+at all — parallel sweeps are available if any step wants them. See "Cluster/compute notes".)*
 
 **0. REGISTRATION — SUBMITTED 2026-09-01, awaiting supervisor correction. (no compute.)**
    Items 0a–0c are **done** (kept below because they record *what* was fixed and *why*, which matters
@@ -1120,16 +1136,37 @@ System model and methodology sections are stubs. No lossless-channel results go 
 Phase 0/0.5 are mechanism studies, and sim08 (realistic channel) is where the paper's channel
 claims begin.
 
-### Cluster/compute notes
+### Cluster/compute notes — MIGRATED to ITET 2026-09-08
 
-Jobs land on `studgpu-node01`, a 5060ti node — the fastest standard GPU here (others: 1080ti
-×24, 2080ti ×4, gb10 [DGX Spark-style] ×6 nodes/1 GPU each). No GPU-hour budget on the
-`projects` account, only a concurrency cap of **1 GPU job at a time** (`MaxJobsPU=1`). The
-`projects_4gpus` account is provisioned but unfunded (`GrpTRESMins=gres/gpu=0`); even if funded
-its `MaxJobsPU=1` allows one ≤4-GPU job, NOT parallel single-GPU sweeps. Env:
-`/work/scratch/rrahman/bt_env` (Sionna 2.0.1, PyTorch, torchvision). Submit with `sbatch
-submit.sh` from each sim dir; do NOT run compute on the login node. Today's jobs all finished in
-<1 min once scheduled.
+> **We are no longer on the INFK student cluster.** It went into maintenance the week of
+> 7 Sept, so the project moved to **ITET/TIK (arton + tikgpu)**. Full details, GPU inventory,
+> storage layout and the two CUDA traps are in **`cluster/README.md`** — read that before
+> submitting anything. This section is the summary.
+
+Submit host `tik42x.ee.ethz.ch`, cluster `itet`, account **`disco-med`**. Workflow is
+**unchanged**: `cd` into a sim dir and `sbatch submit.sh`; never compute on the login node.
+All 19 `*/submit*.sh` were migrated on 2026-09-08 and verified end-to-end (job 2243247 ran
+`frontier_channel.py --smoke` in 2.9 s reproducing the recorded m2 numbers).
+
+What changed, and what it unlocks:
+
+- **The 1-GPU-job concurrency cap is GONE.** No `MaxJobs`, `MaxSubmit` or `GrpTRES` on the
+  account or QOS (another `disco-med` user runs 47 jobs at once). **Parallel sweeps and array
+  jobs are now possible** — the constraint that shaped every previous experiment design no
+  longer applies.
+- **Walltime 1 h → 2 days.** Preemption is off on all our partitions.
+- **12 usable GPU nodes** (2080 Ti / TITAN RTX / V100 / RTX 3090) instead of one.
+- **Do NOT set `--partition`** — a lua submit plugin overrides it from account membership.
+- **`--gpus=1` → `--gres=gpu:1`**, plus a mandatory
+  `--constraint=geforce_rtx_2080_ti|titan_rtx|tesla_v100|geforce_rtx_3090`: `tikgpu02/03` are
+  TITAN Xp (sm_61) and **torch 2.9 dropped Pascal**, so jobs landing there die with
+  `no kernel image is available`.
+- **Env moved:** `/work/scratch/rrahman/bt_env` → **`/itet-stor/rrahman/net_scratch/bt_env`**
+  (torch 2.9.1+**cu128** — the default cu13 wheels do not run on the driver 535 here —
+  sionna 2.0.1, SB3 2.9.0, gymnasium 1.3.0, zuko 1.6.0). The home quota is small and unrelated
+  to what `df` reports; keep bulky things on net_scratch.
+- `SLURM_CONF=/home/sladmitet/slurm/slurm.conf` must be set or every slurm command fails; it is
+  persisted in `~/.bashrc.user`.
 
 ---
 

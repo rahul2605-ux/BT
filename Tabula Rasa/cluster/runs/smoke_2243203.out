@@ -1,0 +1,39 @@
+==============================================================
+ ITET smoke test — job 2243203
+==============================================================
+node            : tikgpu03.ee.ethz.ch
+partition       : disco.med
+account         : disco-med
+cpus            : 4
+mem             : 16384 MB
+SLURM_JOB_GPUS  : 3
+CUDA_VISIBLE_DEV: 0
+submit dir      : /home/rrahman/BT/Tabula Rasa
+started         : 2026-09-08T10:29:51+02:00
+
+--- OS on the compute node (submit host is Debian 12) ---
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+
+--- GPU ---
+index, name, memory.total [MiB], driver_version
+0, NVIDIA TITAN Xp, 12288 MiB, 535.261.03
+
+--- filesystems ---
+ok   /home/rrahman                              6.7T avail
+ok   /scratch                                   244G avail
+ok   /home/rrahman/BT/Tabula Rasa               6.7T avail
+
+--- repo reachable from the node ---
+ok   README.md found (2554 lines)
+
+--- python / torch ---
+Python 3.11.2
+note torch not installed in the system python (expected: the project venv still has to be rebuilt on ITET)
+
+--- slurm client works from inside the job ---
+SLURM_CONF=/etc/slurm/slurm.conf
+     JOBID      PARTITION       NAME    STATE       TIME NODELIST(REASON)
+   2243203      disco.med      smoke  RUNNING       0:01 tikgpu03
+
+finished        : 2026-09-08T10:29:52+02:00
+==============================================================

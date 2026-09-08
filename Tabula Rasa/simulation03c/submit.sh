@@ -1,13 +1,12 @@
 #!/bin/bash
-#SBATCH --account=projects
-#SBATCH --partition=jobs
+#SBATCH --account=disco-med
 #SBATCH --time=03:00:00
 #SBATCH --job-name=gmm_jammer
 #SBATCH --output=runs/slurm_%j.out
 #SBATCH --error=runs/slurm_%j.err
 
-source /work/scratch/rrahman/bt_env/bin/activate
-cd "/home/rrahman/StudentClusterBT/Tabula Rasa/simulation03c"
+source /itet-stor/rrahman/net_scratch/bt_env/bin/activate
+cd "$SLURM_SUBMIT_DIR"
 mkdir -p runs
 
 CUDA_VISIBLE_DEVICES="" python -u train_ppo.py

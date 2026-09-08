@@ -1,0 +1,26 @@
+/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/torch/cuda/__init__.py:283: UserWarning: 
+    Found GPU0 NVIDIA TITAN Xp which is of cuda capability 6.1.
+    Minimum and Maximum cuda capability supported by this version of PyTorch is
+    (7.0) - (12.0)
+    
+  warnings.warn(
+/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/torch/cuda/__init__.py:304: UserWarning: 
+    Please install PyTorch with a following CUDA
+    configurations:  12.6 following instructions at
+    https://pytorch.org/get-started/locally/
+    
+  warnings.warn(matched_cuda_warn.format(matched_arches))
+/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/torch/cuda/__init__.py:326: UserWarning: 
+NVIDIA TITAN Xp with CUDA capability sm_61 is not compatible with the current PyTorch installation.
+The current PyTorch install supports CUDA capabilities sm_70 sm_75 sm_80 sm_86 sm_90 sm_100 sm_120.
+If you want to use the NVIDIA TITAN Xp GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
+
+  warnings.warn(
+Traceback (most recent call last):
+  File "<stdin>", line 19, in <module>
+torch.AcceleratorError: CUDA error: no kernel image is available for execution on the device
+Search for `cudaErrorNoKernelImageForDevice' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+

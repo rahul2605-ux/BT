@@ -1,0 +1,8 @@
+node   : tikgpu03.ee.ethz.ch
+gpu    : NVIDIA TITAN Xp, 535.261.03
+python : /itet-stor/rrahman/net_scratch/bt_env/bin/python
+
+ok   torch                  2.9.1+cu128
+ok   cuda build             12.8
+ok   cuda avail             True
+ok   device                 NVIDIA TITAN Xp
