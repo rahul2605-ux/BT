@@ -1,0 +1,49 @@
+% ---------------------------------------------------------------------------
+% Experiment History -- closing subsection, to follow the
+% "Summary of Hypotheses and Verdicts" table (structure item 9).
+%
+% This is where the instructions for the remaining experiments live IN THE
+% PAPER. Deliberately written as design constraints derived from the history,
+% never as "our supervisor asked us to" -- the rationale has to survive being
+% read by someone who does not know the supervision history, and has to be
+% reusable verbatim in the findings paper.
+%
+% Every constraint below is discharged by an experiment listed in README 3.4
+% (G1-G7); the mandate-to-experiment mapping is README 2.9.
+% ---------------------------------------------------------------------------
+
+\subsection{What the History Determines}
+The preceding steps are, with two exceptions, falsifications of method rather than of hypotheses about
+jamming, and read together they constrain the design of everything that follows more tightly than any
+positive result does.
+We state those constraints here because the remaining experiments are best understood as the smallest
+design that satisfies all of them simultaneously.
+
+A policy distribution must be able to represent the statistics it is asked to produce, which a
+diagonal Gaussian cannot and a finite mixture trained by policy gradient does not.
+A scalar frame-level reward cannot teach an input--output correlation, because the attacker would have
+to sample the correct input-dependent direction by chance before it could be reinforced.
+The binding constraint there is the action parameterisation and not the reward: raw in-phase and
+quadrature samples give a search space in which isotropic exploration is uninformative at any reward
+shaping, so the action must instead be a small set of perturbation parameters, and the learning signal
+must be a gradient wherever one is available.
+Penalty terms that stand in for constraints let an attacker buy a result rather than find one, which
+is why the objective of Section~\ref{sec:system:objective} carries no term for power.
+Finally, a detector's headline accuracy is a statement about its training distribution and not about
+its resistance, so a defender must be characterised before it is attacked, and any claim of the form
+``the attacker evades the detector'' is worth only as much as the characterisation behind it.
+
+Those constraints point at a smaller model rather than a larger one, and they are what the model of
+Section~\ref{sec:system:link} was reduced to satisfy.
+Reducing the link until the Neyman--Pearson test can be computed rather than trained is what lets a
+negative result read ``no detector can do better than this'' instead of ``the detector we happened to
+train did not do better than this''.
+That is a strengthening of the defender rather than a simplification of the threat model, and it is
+the only configuration in which the quantity we actually want -- the distance between what an optimal
+detector achieves and what a learned one achieves, which is the room an adapting attacker has to work
+in -- is measurable rather than estimated.
+
+The reporting conventions of Section~\ref{sec:system:objective} -- comparison at matched
+detectability, a stealth budget set to the defender's own false-alarm rate, and the omniscient
+counter-signal drawn in every results figure -- are each a correction to one of the failures above,
+and are not restated here.

@@ -1,0 +1,52 @@
+% ---------------------------------------------------------------------------
+% Experiment History -- subsection 5: From Statistical to Learned Detection
+% Replaces the one-sentence stub in main.tex; its sentence is kept as line 1.
+%
+% Rewritten 2026-09-10: condensed from ~25 sentences to 13, matched to the
+% register of the user-written subsections 2-4 (short paragraphs, colon then
+% numbers, deviations stated flat and not apologised for). Cross-eval table
+% cut from three columns to two -- the prose now carries the reading.
+%
+% Numbers re-read from: job 101306 (flat), 101314 (cross-eval), 101328 (OFDM).
+% Bib key 9707819 already in refs.bib, not yet cited in main.tex.
+% ---------------------------------------------------------------------------
+
+\subsection{From Statistical to Learned Detection}
+Beating the kurtosis detector established only that a hand-designed statistic could be evaded; the relevant defender is a learned one.
+We replaced it with the spectrogram CNN of Li \emph{et al.} \cite{9707819}, an EfficientNet-B0 over short-time Fourier transforms, trained as a binary clean-versus-jammed classifier on the same flat channel against four classical jammers: barrage, single-tone, successive-pulse and protocol-aware.
+It did not replicate: $78.9\%$ accuracy against the reported $99.79\%$, at $DR = 59.1\%$ and $FAR = 2.07\%$, with training accuracy at $99.7\%$ while validation stalled near $75\%$.
+
+Table~\ref{tab:crosseval} shows where it failed.
+Only the single tone and the pulse train were caught, and everything else scored at the $2.5\%$ the detector assigns to clean frames.
+Barrage noise evading at exactly the false-alarm rate is not stealth but blindness, and the same reading applies to the protocol-aware and two-agent rows: their $1\%$ says nothing about either jammer.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{Detection rate of the flat-channel spectrogram detector, 200 frames per category.}
+\label{tab:crosseval}
+\centering
+\begin{tabular}{l c}
+\hline\hline
+\textbf{Frame content} & \textbf{Detected} \\
+\hline
+Clean & 2.5\% \\
+Barrage & 2.5\% \\
+Single tone & 100.0\% \\
+Successive pulse & 97.0\% \\
+Protocol-aware & 1.0\% \\
+Two-agent generative & 1.0\% \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+The cause is the representation.
+On a flat carrier the received signal is QPSK plus noise, so a jammed spectrogram is a clean spectrogram at a lower SNR: the two differ by a scale factor and by no time-frequency pattern, which leaves the CNN nothing to key on but the spectral line and the periodic impulse.
+
+Moving the legitimate link to an $802.11$a-like OFDM waveform and changing nothing else fixed it immediately: accuracy $99.79\%$, $DR = 99.59\%$, $FAR = 0.00\%$ and $F_1 = 0.998$, against the published $99.79\%$ at $0.03\%$ $FAR$.
+The grid is a 64-point FFT with a 16-sample cyclic prefix, 11 guard bins and a nulled DC bin leaving 52 effective subcarriers, and 14 OFDM symbols per frame with Kronecker pilots on symbols 2 and 11.
+Since the waveform was the only variable, the ceiling was the signal and not the detector: spectrogram detection needs a spectral occupancy that a jammer can violate, and a flat carrier offers none.
+This gives every experiment that follows a defender reproducing the state of the art rather than a statistic chosen for convenience.
+
+Three deviations from the reference remain: a binary head instead of five classes, ImageNet-pretrained weights instead of training from scratch, and synthetic frames instead of SDR recordings.
+The $99.79\%$ also describes the four jammer families in the training set and not resistance to an adaptive attacker, which is characterised below.
+Finally, the spectrogram here was taken over the in-phase component alone; correcting it to the complex two-sided transform and retraining leaves this result unchanged at $99.8\%$ accuracy and $0\%$ $FAR$, but bears on results reported later.

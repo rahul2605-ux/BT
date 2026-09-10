@@ -411,6 +411,31 @@ Full record and open items in [Appendix B](#appendix-b-supervisor-record).
 - **The noise-level sweep is the primary ablation**, on a **log grid** ("change exponentially"), and
   he has predicted its direction (detection falls as noise rises).
 
+**Coverage — which mandate is discharged by what.** Added 2026-09-10 because the mandates, the plan
+(§3.4) and the written deliverables (§B.3) were three separate lists with no way to check that every
+mandate has an owner. Verify this table before claiming a mandate is met. **Note the split:** the two
+reward mandates are recorded in **§2.8** (method decisions), not in the list above — they are his
+instructions but were filed as decisions. They are listed first here so this table covers all of them;
+§2.8 remains where the reasoning lives, and is not restated.
+
+| Mandate | Discharged by | Status |
+|---|---|---|
+| **Reward = `BER − β·detections`, nothing else** (recorded §2.8, verbatim §B.2) | M0 carries no proxy terms; the historical objectives it replaces are tabulated in [A.0](#a0-run-index) | **code clean, not yet exercised** — M0 has no trained attacker, so this first *binds* at G5 |
+| **Power is a hard environment constraint, never a reward term** (recorded §2.8) | `m0/attacks.py:62` `project_power`, applied at `attacks.py:220` — a projection onto the budget, not a normalisation | **done** |
+| Simplify, as much as possible | M0 replaces sim06–08; sim00–08 + `frontier/` frozen (§3.6) | **done** |
+| Adaptation cost is the headline | G7 (R0/R1/R2); the NP−learned gap E1 already measures | **not started** — G7 is last in §3.4 |
+| Only 2–3 experiments in the main paper | triage table (§B.3); candidates E1/E2/E3 | **blocked on him** (§4.1 #4) |
+| Omniscient jammer in **every** results figure | `m0/figures.py` | **PARTIAL — 2 of 4.** `fig_tradeoff` (L92) and `fig_frontier` (L135) carry `counter_flip`; **`fig_detectors` (L162) and `fig_stealth_vs_sigma` (L202) do not** — their attack lists omit `counter_null`/`counter_flip` |
+| Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3) | **not started** |
+| Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
+| Noise sweep = primary ablation, log grid | G2 | **not started** — needs the σ=0 anchor + a proper log grid (§3.2) |
+| Untrainability written up as a *result* | Overleaf appendix A.6 (§3.5) | **next in the writing thread** |
+
+The paper-side home for all of this is the appendix's closing subsection
+(`paper_drafts/sec_exphist_10_determines.tex`), which states each mandate as a design constraint
+derived from the experiment history rather than as an instruction — the rationale has to survive a
+reader who does not know the supervision history, and has to be reusable in the findings paper.
+
 ---
 
 # PART 3 — CURRENT STATE
@@ -430,14 +455,31 @@ blocking. Chase both. See [§4.1](#41-blocking-needs-supervisor-input).
 covertness-constrained optimality program. ~1 h of CPU, and it is the gate: it decides whether a
 learned attacker has any headroom to chase, and therefore what G5/G6 are even *for*. Everything else
 in the compute track (G2–G4) is independent of it and can run alongside. The writing track — the
-Overleaf appendix (§3.5) and the two drafted LaTeX sections still not pasted in (§3.4) — needs no
+Overleaf appendix (§3.5) and the **five** drafted LaTeX sections still not pasted in (§3.4) — needs no
 compute and is not blocked by anything.
 
-> **Where the last working session stopped (2026-09-10).** No new experiments were run. The session
-> read `artifacts/m0/frontier/*.json` back and re-derived the E1 headline, which **sharpened the
-> negative result** (§3.3) and surfaced **two data-quality gaps** (§3.2) — both now recorded. It also
-> consolidated the project documentation into this file (§1.3) and reviewed the user's Overleaf
-> appendix draft (§3.5). Nothing in `m0/` was modified, so `verify.py` is still valid as last run.
+**Next session, in this order.** Nothing here needs the cluster except item 5.
+
+| # | Do | Where | Note |
+|---|---|---|---|
+| 1 | **Paste the A.4 correction into Overleaf** | §3.5 fixes-owed | *Do this first.* A wrong claim ("roughly double the single-agent result") is live in a document he may read. The rest of the owed fixes ride along. |
+| 2 | Rewrite the two A.3 sentences added in `13adaf5` | §3.5 fixes-owed | "it could try to predict it" is **falsified by part 6**. Misnames the assumption too. |
+| 3 | **Write appendix parts 6, 7, 8, 9** | §3.5 | 6 = untrainability, lead with action-parameterisation, and it now has the log-barrier mechanism ([A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)). 7 and 8 must land or part 5's erratum sentence forward-references nothing. 9 is a table. |
+| 4 | Paste `sec_system_model.tex`, **then** parts 1b / 5 / 10 | §B.3, §3.5 | Ordering is load-bearing: 5 and 10 `\ref` into it, so pasting them first leaves dangling refs. |
+| 5 | Add the omniscient reference to `fig_detectors` and `fig_stealth_vs_sigma` | §2.9 coverage, `m0/figures.py:162,202` | Small, CPU-only. Do it **before** regenerating E1 figures — the paper asserts the convention in print (`sec:system:objective`). |
+| 6 | G1 | §3.4 | The compute gate. Independent of 1–5. |
+
+**Do not** re-derive the sim04 numbers from the README alone — §A.3's figures came from the SLURM
+logs on 2026-09-10 and the prose that preceded them was wrong. `simulation04/runs/slurm_99211.out`
+(run001) and `slurm_100041.out` (run007) are the sources.
+
+> **Where the last working session stopped (2026-09-10, second session of the day).** No experiments
+> were run and nothing in `m0/` was modified, so `verify.py` is still valid as last run. The session
+> was entirely Overleaf-appendix writing (§3.5) and produced three drafts in `paper_drafts/`, none yet
+> pasted. Re-reading the SLURM logs to source those drafts **disproved the sim04 two-agent headline**
+> (§A.3) and produced the **per-step objective table** (§A.0), which in turn gave the untrainability
+> result a mechanism. A mandate-coverage audit (§2.9) found the omniscient reference **missing from
+> two of the four M0 figures**.
 
 ## 3.2 What exists and is verified
 
@@ -451,7 +493,9 @@ prediction; all detectors calibrate to the target false-alarm rate; the ordering
 holds everywhere.
 
 **E1** — the sweep, an 8-task SLURM array, one σ per task (job 2243879, 8 s/task; detectors trained
-by job 2243867, 89 s). Grid: **σ ∈ {0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5}** (Eb/N0 28.0 → 0.0
+by job 2243867, 89 s). *(`m0/runs/` also holds **job 2243871**, a superseded first pass with 11 powers
+topping out at 1.0 → 135 rows/σ. The on-disk JSONs are 2243879's — 172 rows, powers extended to 2.0.
+Ignore 2243871; it is kept only as the SLURM log.)* Grid: **σ ∈ {0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5}** (Eb/N0 28.0 → 0.0
 dB), **13 power values** 0.001–2.0, duty-cycle variants, α = 0.05, 4000 frames × 256 symbols.
 Outputs `artifacts/m0/frontier/results_sigma*.json` + `e1_{frontier,tradeoff,detectors,stealth_vs_sigma}.png`.
 
@@ -549,6 +593,7 @@ The writing track needs no compute and the compute track has idle time built int
 
 | # | Item | Cost | Gate |
 |---|---|---|---|
+| **G0** | **Add the omniscient reference (`counter_flip`) to `fig_detectors` and `fig_stealth_vs_sigma`** in `m0/figures.py` (L162, L202 — their attack lists omit it). His mandate is *every* results figure, and `sec:system:objective` states the convention in print. | ~15 min, CPU | **Before any figure regeneration.** |
 | **G1** | **The covertness-constrained optimality program** (§2.8). Convex, CPU, discretised `d`-grid. Produces the ceiling for *any* attacker at each (σ, P, δ). | ~1 h compute, ~½ day to write | **Do first.** Everything below reads differently depending on its answer. |
 | G2 | **E2 — noise ablation.** Largely already produced by the 8-σ E1 sweep; needs the dual-axis figure and the matched-P(det) companion — **and the missing σ = 0 anchor + a proper log grid** (§3.2). | ~½ day | independent of G1 |
 | G3 | **Power-budget ablation**, log grid. | ~½ day | independent |
@@ -559,7 +604,11 @@ The writing track needs no compute and the compute track has idle time built int
 
 **Writing track (starts now, no compute).**
 - **Appendix: the sim00–08 experiment record** — see §3.5. The single largest piece of prose still
-  owed, and it depends on nothing.
+  owed, and it depends on nothing. **Four of the ten parts remain unwritten: 6 (untrainability),
+  7 (detector characterisation + errata), 8 (realistic channel / matched detectability), 9 (the
+  hypotheses-and-verdicts table).** Three more are drafted in `paper_drafts/` and **not yet pasted**:
+  `sec_exphist_1b_objective.tex`, `sec_exphist_5_learned_detection.tex`,
+  `sec_exphist_10_determines.tex`. Parts 1–4 are in Overleaf with fixes owed (§3.5).
 - Repair `paper_drafts/sec_system_model.tex` (§Cooperative — the CLT argument, see §4.2); fold the
   §2.8 decisions into §Defender Model and §Generative Attack Policy.
 - Related Work is drafted (`paper_drafts/sec_related.tex`, 1081 words ≈ 1.93 columns; the
@@ -583,23 +632,31 @@ surprise. (ii) M1's motivation is thinner post-E1 than when the proposal was wri
 
 ## 3.5 The Overleaf appendix — "Experiment History"
 
-**State: structure agreed, figures chosen, §A.2–A.4 drafted by the user in Overleaf, §A.5 started.**
+**State (2026-09-10): 1–4 in Overleaf with fixes owed · 1b, 5, 10 drafted in `paper_drafts/`, not
+pasted · 6, 7, 8, 9 unwritten.** Live ref last read: `overleaf/main` @ `13adaf5` "push latest".
 Reviewed 2026-09-10. It belongs in the thesis (§1.4), and writing it is directly responsive to a
 request he made twice.
 
 > **Numbering warning.** In this subsection, `A.n` means a **subsection of the Overleaf appendix**
-> (the 9-part structure below). It does **not** line up with this README's own
+> (the 10-part structure below, plus the inserted 1b). It does **not** line up with this README's own
 > [Appendix A](#appendix-a-experiment-history), which is numbered independently. The source material
 > is the same; the numbering is not.
 
-Structure — `\section{Experiment History}`, currently at `main.tex` L534:
-1. Scope and Reading Guide · 2. Simulation Chain and Validation (sim00, 04b) · 3. Gradient-Based
+Structure — `\section{Experiment History}`, at `main.tex` L534 as of `13adaf5`:
+1. Scope and Reading Guide · **1b. The Attacker's Objective** (inserted 2026-09-10 between the scope
+paragraph and part 2; drafted, `paper_drafts/sec_exphist_1b_objective.tex` — two equations plus the
+per-step constants table, **ending at the table**) · 2. Simulation Chain and Validation (sim00, 04b) · 3. Gradient-Based
 Attacks against Statistical Detectors (sim01, 02, 03, 03b, 03c) · 4. Two-Agent Cooperative Attack
-(sim04) · 5. From Statistical to Learned Detection (sim05, sim06 detector side) · 6. Untrainability
+(sim04) · 5. From Statistical to Learned Detection (sim05, sim06 detector side) — drafted,
+`paper_drafts/sec_exphist_5_learned_detection.tex`, condensed to 418 words to match the register of
+the user-written parts · 6. Untrainability
 of Policy-Gradient RL over Raw IQ (sim06 jammer, 06b, 07) · 7. Detector Characterisation and Errata
 (Phase 0, 0.5, recheck) · 8. Realistic Channel, Suite, and Matched Detectability (sim08 m1, m2,
 dense) · 9. Summary of Hypotheses and Verdicts (one table: hypothesis · evidence · verdict ·
-superseded-by).
+superseded-by) · 10. **What the History Determines** — the forward-facing close, added 2026-09-10:
+each of his mandates (§2.9) restated as a *design constraint derived from the history*, never as an
+instruction, so the appendix hands off to the remaining experiments instead of stopping at a verdict
+table. Drafted, `paper_drafts/sec_exphist_10_determines.tex`.
 
 **Conventions settled.** (a) **Do not name simulations** ("sim04") in the prose — the reader has no
 access to the code; write it as a continuous narrative, with a *small traceability table at the very
@@ -608,7 +665,20 @@ present tense for what remains true; rationale expressed as *what the previous s
 never as "I decided". (c) Every subsection follows the same four moves: **what the previous step left
 open → what changed → what happened (numbers) → what it established**. Move 1 is the one that gets
 skipped and the one the supervisor is reading for. (d) Negative results are findings with a
-mechanism, never apologies — no "unfortunately", "we tried to", "we hoped".
+mechanism, never apologies — no "unfortunately", "we tried to", "we hoped". (e) **The objective is
+stated once, up front, not per section** — a new opening subsection ("The Attacker's Objective") gives
+the two forms and one table of per-step constants
+([Appendix A.0](#a0-run-index)), and each later subsection then names only its *delta* in a clause.
+Rationale: the supervisor cannot give useful input on a result whose objective is invisible, and the
+table is the reproducibility artefact if this material is reused in the findings paper. **The
+objective subsection ends at the table** — findings go at their point of use, not next to the
+reference table. (f) **The appendix never re-defines what §System Model defines; it references.**
+`sec_system_model.tex` §`sec:system:objective` already owns the final objective, the *matched
+detectability* rule, the false-alarm-rate stealth budget and the omniscient-ceiling-in-every-figure
+rule — two of the appendix drafts restated all four before this was caught on 2026-09-10. §System
+Model is §II and the appendix is last, so the appendix is always the one that defers. It does still
+own what §System Model has no reason to carry: the 64-subcarrier OFDM grid, the spectrogram
+representation and the frozen detectors, none of which exist in the minimal model.
 
 **Figure shortlist — 5 for the whole appendix, deliberately.** ~130 PNGs exist; almost all are
 training dashboards, not findings.
@@ -629,10 +699,25 @@ diagnosis.
 **Fixes owed on the user's draft (reviewed 2026-09-10):**
 - **Factual:** the first experiment had **2 legitimate TX→RX pairs, not 1**, and the jammer was
   silent t=0–4 then max-power t=5–9 (that on/off structure is the point). Overleaf §A.4's numbers are
-  run001's and are superseded by run007 — see [README A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable),
-  and quote the two as **two operating points**, not broken-vs-fixed.
-- **Wording:** "highest possible **inference**" → **interference** (inverts the goal statement);
-  "until we find a meaningful result" → reads as an admission none exists; "we **setup**" → "set up".
+  run001's and are **also wrong**: the draft says "BER ≈ 0.33 at 3–10% detection, per-agent power
+  ≈ 0.45", but job 99211 ends at **BER ≈ 0.24, per-agent power ≈ 0.62** (total 1.25), det 2–8%,
+  kurt ≈ −1.25. The claim "roughly double the single-agent result" must go — at matched total power
+  the two-agent gain is ~15%, not 2× (see
+  [README A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable)).
+  Quote run001 and run007 as **two operating points**, not broken-vs-fixed.
+- **Wording:** "until we find a meaningful result" → reads as an admission none exists; "we
+  **setup**" → "set up". *(The "highest possible **inference**" → "similar interference" fix landed in
+  `13adaf5`.)*
+- **New in `13adaf5`, and wrong as written** — the two sentences added to A.3 ("this approach might
+  not work in a realistic scenario, as a jammer wouldn't have direct access to a detectors channel. At
+  the other hand it could try to predict it"). The instinct is right and the caveat belongs there, but
+  (i) the assumption is misnamed — direct backprop needs a *differentiable white-box model* of the
+  receiver chain and the statistic, plus **genie access to `tx[t]`**, and it is the second one that
+  fails on a real link; (ii) **"it could try to predict it" is falsified two subsections later** — A.6
+  moves the observation to `tx[t−1]`, which for iid QPSK carries **zero** information about `tx[t]`,
+  so prediction is impossible, not merely hard; (iii) register — "might not work" is a hedge where
+  convention (d) wants a mechanism. Rewrite as a forward pointer to the black-box setting. Also
+  `detectors` → `detector's`, `At the other hand` → `On the other hand`.
 - **Structural:** A.2 never says what it *establishes* (that the measurement chain is trustworthy —
   BER, power and detection all move when and only when they should), omits its numbers (BER 0→0.5,
   power 1.0→51, 0→2 users detecting), and omits sim04b. A.4 is missing both caveat sentences: the
@@ -644,12 +729,32 @@ diagnosis.
 - **Sentence fragment** in A.4 ("An identical aggregate effect at …") — the same construction he
   already flagged in the proposal.
 - **LaTeX:** add `\appendix` before L534 or the section numbers as a regular section; **remove
-  `\nocite{*}` (L570) before he reads it** — it emits the whole `refs.bib`.
+  `\nocite{*}` (L572 in `13adaf5`) before he reads it** — it emits the whole `refs.bib`.
 - Still-live `\rar{}` notes above the appendix: L216, L256.
 
-**Next in this thread:** A.5 (only its first sentence exists), then **A.6 — the untrainability
-result**, which is the one he asked about directly, and the one to lead with the
-*action-parameterisation* explanation, not the reward formula.
+**A.1b is drafted** — `paper_drafts/sec_exphist_1b_objective.tex`, 2026-09-10, not yet pasted.
+Inserts after the scope paragraph, before "Simulation Chain and Validation": two equations, the
+definition of κ, and a `table*` of per-step constants. **It ends at the table.** The two findings the
+table makes visible were deliberately moved to their point of use — the log barrier to part 6, γ = 0.02
+to part 4 — and the "power is a constraint" paragraph was cut as a duplicate of
+`sec:system:objective`. A header comment in the file records all three so they are not lost.
+
+**A.5 is drafted** — `paper_drafts/sec_exphist_5_learned_detection.tex`, 2026-09-10, not yet pasted
+into Overleaf. Replaces the one-sentence stub and keeps that sentence as its opening line. **418 words
+of prose** (vs 244 for the user-written part 4) after a rewrite for concision and register; the
+cross-evaluation table is six rows × **two** columns, the third having duplicated the prose. Ends on
+three deviations (binary head, ImageNet-pretrained, synthetic frames) plus the real-part-only STFT
+erratum, which forward-references part 7 — **if part 7 is dropped or renamed that sentence dangles.**
+Needs one `\ref` once the characterisation subsection has a `\label`, and it is the first place
+`\cite{9707819}` (Li et al.) is used in `main.tex`.
+
+**Next in this thread:** **part 6 — the untrainability result**, which is the one he asked about
+directly, and the one to lead with the *action-parameterisation* explanation, not the reward formula.
+It now has a mechanism to lead with as well: the log barrier
+([A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)). Then 7, 8, 9.
+
+**Dependency to respect when pasting:** parts 5 and 10 both `\ref` into `sec_system_model.tex`, which
+is **itself not in Overleaf yet** (§B.3). Paste the System Model section first or those refs dangle.
 
 ## 3.6 Explicitly NOT doing
 
@@ -869,9 +974,9 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 01 | 001–007 | PPO, Gaussian | best at N=16, β=0.5: BER 0.19, det 8–10%, power 2.2. N=512 fails (action space too large) | — |
 | 02 | 001–002 | PPO, Gaussian | det flat 100%, kurtosis stuck ~−0.25 at every setting | — |
 | 03 | 001–004 | PPO, NSF | det flat 85–100%, kurtosis ~−0.25. N=16 too noisy; N=128 fixed the estimator, not the outcome | 93396/93407/93423 |
-| 03b | 001–008 | **direct gradient, NSF** | **best pre-sim04 result: kurt −1.30, BER 0.17, det ~0%** | 98432/98441/98470/98478/98483 |
+| 03b | 001–008 | **direct gradient, NSF** | **best pre-sim04 result: kurt −1.30, BER 0.17, det ~0%** | 98432/98441/98470/98478/98483/98494/98509/98516 (run008 = 98516) |
 | 03c | 001–009 | PPO, GMM | closed. run009 (1M steps): BER 0.05 *declining*, det ~80%, kurt pinned at −1.0 | 98764–98777 |
-| 04 | 001–007 | direct gradient, 2 agents | run001 BER 0.35 @ total power 0.9; run007 BER 0.65 @ total power 4.0 | 99211/99245/100037/100040 |
+| 04 | 001–007 | direct gradient, 2 agents | run001 BER 0.24 @ total power 1.25; run007 BER 0.65 @ total power 4.0 | 99211/99245/99825/99835/100037/100040/100041 |
 | 04b | — | Sionna on GPU | validation only | — |
 | 05 | — | EfficientNet-B0 on flat QPSK | **78.9%** — detector fails without OFDM | — |
 | 06 | det 002; jam 001–003 | CNN + MAPPO | detector **99.79%** ✓; jammer fails, P(jam)≈0.999 flat | — |
@@ -886,6 +991,29 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 08 | m2-suite | CNN ∨ energy per-sample | **suite ≡ CNN**; residual stealthy region BER 0.065–0.11 | 102319 |
 | 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
 | **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
+
+**The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
+appendix states it nowhere and two findings below are properties of the objective, not of the
+attacker. RL form `R = BER − β·D − γ·P − 0.05`; direct-gradient form `L = L_BER + λ·D + γ·P`, where
+`L_BER` is BCE between the demapper LLRs and the *complement* of the tx bits.
+
+| Sim | Detector | Detection term `D` | β/λ | γ | Optimiser | Source |
+|---|---|---|---|---|---|---|
+| 01 | power threshold | `1[flagged]` | 3.0 | — | PPO | `jammer_env.py:10,72` |
+| 02 | kurtosis | `1[flagged]` | 0.5 | — | PPO | `jammer_env.py:10,74` |
+| 03 | kurtosis | `max(0, kurt−τ)` | 2.0 | 0.02 | PPO | `jammer_env.py:9,10,80` |
+| 03c | kurtosis | `max(0, kurt−τ)` | 2.0 | 0.02 | PPO (GMM) | `jammer_env.py:9,10,80` |
+| 03b | kurtosis | `relu(kurt−τ)` | 2.0 | 0.02 | direct gradient | `train.py:31,32,234,249` |
+| 04 | kurtosis | `relu(kurt−τ)` | 2.0 | 0.02 (on **Σ** powers) | direct gradient, joint | `train.py:31,32,288,290` |
+| 06 jam | CNN | `−log(1−p̂+ε)` | 0.3 (linear warmup) | 0.1 | MAPPO | `train_jammer.py:50,51,321` |
+| 07 | CNN | `−log(1−p̂+ε)` | 0.3 (linear warmup) | 0.05 | MAPPO | `simulation07:68,69,437` |
+| **M0** | NP / CNN / energy | flagged frames, β swept | — | **hard budget, not a term** | — | `attacks.py:23` |
+
+**Two findings only visible in this table**, each recorded where it is used: the **log barrier is the
+mechanism of the untrainability result** ([A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)),
+and **γ = 0.02 never binds**, which is why run007's power blew up
+([A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable)). The M0 row is the
+correction: the supervisor's mandate (§2.8) is precisely a verdict on this table.
 
 ## A.1 sim00–01 — the measurement chain, and the limits of a power threshold
 
@@ -986,17 +1114,26 @@ equivalent is `jam₁ = jam₂ = −tx` (power 1 each) — the same `rx = −tx`
 easier for the optimizer to find and avoiding the instability region that plagued sim03b.
 
 **Two valid operating points, not broken-vs-fixed:**
-- **run001** (truncated at 12k steps): **BER ≈ 0.35 at total power ≈ 0.9**, detection 5–10%,
-  kurtosis ≈ −1.2. Already 2× sim03b's best.
+- **run001** (job 99211, killed by the time limit at step 12 400): **BER ≈ 0.24 at total power ≈ 1.25**
+  (p1 ≈ 0.60, p2 ≈ 0.65), detection 2–8%, kurtosis ≈ −1.25.
+  **Corrected 2026-09-10 from the job log** — an earlier version of this line read "BER ≈ 0.35 at
+  total power ≈ 0.9", which pairs a step-50 *untrained* transient (BER 0.357 at det = 1.000) with a
+  step-8000 power reading. **The "2× sim03b's best" claim does not survive.** At *matched total
+  power* ≈ 0.97 run001 sits at BER ≈ 0.195, det ≈ 3%, kurt ≈ −1.24 (step ≈ 8900), against sim03b
+  run008's single-agent BER 0.170 at power 0.965, det 3.1%, kurt −1.31 (job 98516) — a ~15% relative
+  gain, not a doubling. This is the same matched-vs-unmatched comparison error that later cost the
+  "+70% channel-aware" headline (§2.7).
 - **run007** (truncated at 33k/100k steps, BER still rising): **BER ≈ 0.65 at total power ≈ 4.0**,
   detection ≈ 0.00, received kurtosis ≈ −1.65.
 
-**Read run007 honestly: the gain was bought with POWER, not strategy.** 4.4× the total power for 1.9×
-the BER. Total power ≈ 4.0 is exactly the power of the omniscient counter-signal `jam = −2·tx`, and
+**Read run007 honestly: the gain was bought with POWER, not strategy.** 3.2× run001's total power for
+2.7× the BER. Total power ≈ 4.0 is exactly the power of the omniscient counter-signal `jam = −2·tx`, and
 BER climbing past 0.5 toward 1.0 is the signature of *inverting* the constellation, not merely
 disturbing it. The two-agent design argument predicts the same received signal at total power **2** —
 run007 used double that, i.e. **it did not find the efficient split.** Cause: `GAMMA = 0.02` on the
-power term is negligible against BER gains, so nothing constrained power growth. **This is a concrete
+power term is negligible against BER gains, so nothing constrained power growth — the objective
+rewarded a jammer for doubling its power to gain a hundredth of BER, so **this is an
+unconstrained-power result** and must be labelled as one (constants in [A.0](#a0-run-index)). **This is a concrete
 instance of the proxy-reward problem he told us to delete, and a direct argument for the hard power
 budget** — a self-diagnosed flaw turned into a finding.
 
@@ -1050,7 +1187,7 @@ lines and periodic impulses. **Establishes that spectrograms require OFDM for th
 meaningful** — which is why sim05/06/07's original roadmap was merged into one sim06.
 
 **sim06, phase 1** puts the same detector on a 64-subcarrier 802.11a-like OFDM chain (Sionna
-`ResourceGrid`: FFT 64, CP 16, 52 effective SCs = 48 data + 4 pilot, 6+5 guard + DC null, Kronecker
+`ResourceGrid`: FFT 64, CP 16, 52 effective SCs (6+5 guard + DC null), Kronecker
 pilots on symbols 2 and 11, 14 OFDM symbols/frame, 1120 samples/frame), trained on clean + 4 classical
 jammers with Li et al.'s hyperparameters:
 
@@ -1126,7 +1263,12 @@ spectrogram.** run005 fixed it by sampling once per frame and holding.
 **Two structural causes, not tuning:**
 1. **Reward variance across the batch ≈ 0** → normalized advantages are pure noise → **PPO has no
    gradient.** Same wall as sim06/06b: a scalar frame-level reward carries no per-dimension
-   information.
+   information. **The reward shape is why** (added 2026-09-10, from the objective table in
+   [A.0](#a0-run-index)): the detection penalty is the log barrier `−log(1−p̂+ε)`, and at `p̂ ≈ 0.999`
+   that is enormous but very nearly *constant across the batch* — PPO normalises advantages within the
+   batch, so a large constant penalty carries exactly as much information as no penalty at all. Stated
+   this way it is a property of the objective, not a training failure, which is the form to write it
+   up in.
 2. The K=1 sparsity sim07 needed (to get under the detector's apparent cliff) **caps BER at
    ~2/52 ≈ 0.04** — too low to matter.
 

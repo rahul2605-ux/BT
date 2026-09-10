@@ -1,0 +1,81 @@
+% ---------------------------------------------------------------------------
+% Experiment History -- new subsection to insert IMMEDIATELY AFTER the scope
+% paragraph of \section{Experiment History} and BEFORE
+% \subsection{Simulation Chain and Validation}.
+%
+% Purpose: state the objective once, in one place, so that every later
+% subsection can name its delta in one clause instead of restating a formula.
+% The table doubles as the reproducibility artefact for the findings paper.
+%
+% ENDS AT THE TABLE, deliberately. The three paragraphs that used to follow
+% were cut 2026-09-10: their two findings belong at their point of use, not
+% here, and their third paragraph duplicated \ref{sec:system:objective}.
+%   - log barrier -log(1-p_hat+eps) is ~constant across the batch when the
+%     detector flags everything, so normalised advantages are noise
+%     -> goes to subsection 6 (untrainability), where it is the mechanism.
+%   - gamma = 0.02 never binds, so the two-agent result is an
+%     unconstrained-power result
+%     -> goes to subsection 4 (two agents), where the number is read.
+%   - "power is a constraint, not a preference" -> already stated in
+%     System Model, \ref{sec:system:objective}. Do not restate it here.
+%
+% All constants re-read from the code on 2026-09-10:
+%   simulation01/jammer_env.py:10,72     BETA=3,    reward = ber - BETA*flagged - 0.05
+%   simulation02/jammer_env.py:10,74     BETA=0.5,  same shape, kurtosis detector
+%   simulation03/jammer_env.py:9,10,80   BETA=2.0,  GAMMA=0.02, hinge on kurtosis excess
+%   simulation03c/jammer_env.py:9,10,80  identical to sim03
+%   simulation03b/train.py:31,32,234,249 LAMBDA=2.0, GAMMA=0.02, loss form
+%   simulation04/train.py:31,32,288,290  LAMBDA=2.0, GAMMA=0.02, power term on the SUM
+%   simulation06/train_jammer.py:50,51,321-323  BETA=0.3 (warmup), GAMMA=0.1, log barrier
+%   simulation07/*.py:68,69,437-439      BETA=0.3 (warmup), GAMMA=0.05
+% ---------------------------------------------------------------------------
+
+\subsection{The Attacker's Objective}
+Every attacker below optimises the same three quantities -- how many bits it breaks, how often it is
+flagged, and how much power it spends -- and the experiments differ in how those three are combined.
+Stating the combination once makes the rest of this appendix legible, because several of the results
+that follow are properties of the objective rather than of the attacker.
+
+In the reinforcement-learning experiments the per-frame reward is
+\begin{equation}
+R \;=\; \mathrm{BER} \;-\; \beta \, D(\mathbf{y}) \;-\; \gamma \, P \;-\; c ,
+\label{eq:reward}
+\end{equation}
+with $P$ the mean jammer power over the frame, $c = 0.05$ a small constant so that transmitting
+nothing is not free, and $D$ a detection term whose form changed three times.
+Where the defender is the kurtosis test, $D$ is written in terms of $\kappa(\mathbf{y})$, the Fisher
+excess kurtosis of the received frame averaged over its in-phase and quadrature components; it is
+close to $-2$ for a clean QPSK frame and to $0$ for Gaussian noise, and the detector flags a frame
+when it exceeds $\tau = -1.0$.
+In the directly optimised experiments the same three quantities appear as a loss,
+\begin{equation}
+\mathcal{L} \;=\; \mathcal{L}_{\mathrm{BER}} \;+\; \lambda \, D(\mathbf{y}) \;+\; \gamma \, P ,
+\label{eq:loss}
+\end{equation}
+where $\mathcal{L}_{\mathrm{BER}}$ is a differentiable surrogate for the bit error rate: the binary
+cross-entropy between the demapper's log-likelihood ratios and the \emph{complement} of the
+transmitted bits, so that driving the loss down drives the error rate up.
+Table~\ref{tab:objectives} gives the instantiation used at each step.
+
+\begin{table*}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{The attacker's objective at each step. $D$ is the detection term of \eqref{eq:reward} and \eqref{eq:loss}; $\kappa(\mathbf{y})$ is the Fisher excess kurtosis of the received frame, averaged over its in-phase and quadrature components; $\tau=-1.0$ is the detector's threshold on it; and $\hat{p}$ is the learned detector's output probability.}
+\label{tab:objectives}
+\centering
+\begin{tabular}{l l l c c l}
+\hline\hline
+\textbf{Step} & \textbf{Detector} & \textbf{Detection term $D$} & \textbf{$\beta$ / $\lambda$} & \textbf{$\gamma$} & \textbf{Optimised by} \\
+\hline
+Power threshold        & received power      & $\mathbb{1}[\,\text{flagged}\,]$              & 3.0  & --   & PPO \\
+Kurtosis, Gaussian head& kurtosis            & $\mathbb{1}[\,\text{flagged}\,]$              & 0.5  & --   & PPO \\
+Kurtosis, flow head    & kurtosis            & $\max(0,\ \kappa(\mathbf{y}) - \tau)$         & 2.0  & 0.02 & PPO \\
+Kurtosis, mixture head & kurtosis            & $\max(0,\ \kappa(\mathbf{y}) - \tau)$         & 2.0  & 0.02 & PPO \\
+Kurtosis, direct       & kurtosis            & $\max(0,\ \kappa(\mathbf{y}) - \tau)$         & 2.0  & 0.02 & direct gradient \\
+Two agents, direct     & kurtosis            & $\max(0,\ \kappa(\mathbf{y}) - \tau)$         & 2.0  & 0.02 & direct gradient, joint \\
+Learned, white-box     & spectrogram CNN     & $-\log(1 - \hat{p} + \epsilon)$               & 0.3  & 0.1  & MAPPO \\
+Learned, black-box     & spectrogram CNN     & $-\log(1 - \hat{p} + \epsilon)$               & 0.3  & 0.05 & MAPPO \\
+\hline
+Minimal model          & Neyman--Pearson     & flagged frames, $\beta$ swept                 & --   & \multicolumn{2}{l}{power is a hard budget} \\
+\hline\hline
+\end{tabular}
+\end{table*}
