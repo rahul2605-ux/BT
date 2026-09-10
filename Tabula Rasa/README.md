@@ -1,899 +1,195 @@
-# Tabula Rasa — Jamming Simulations
+# Tabula Rasa — learned jamming under detection constraints
 
-Fresh restart of baseline experiments. Goal: build intuition step by step before reintroducing RL agents, fading channels, and multi-antenna setups. Each simulation adds exactly one layer of complexity.
+**Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
+Last consolidated: 2026-09-10.
 
-**Hard rule:** only library code (Sionna, SB3, gymnasium, scipy). No reuse from the old project.
-
-**Stack:** Python, Sionna 2.x (`sionna.phy`, PyTorch backend), stable-baselines3, gymnasium, numpy, matplotlib.
+> **This file is the single entry point.** It is organised as:
+> **[1. The whole picture](#part-1-the-whole-picture)** ·
+> **[2. Goal & approach](#part-2-goal-approach)** ·
+> **[3. Current state](#part-3-current-state)** ·
+> **[4. Open questions & ideas](#part-4-open-questions-ideas)** ·
+> then **[Appendix A: experiment history](#appendix-a-experiment-history)** (what each simulation
+> falsified), **[Appendix B: supervisor record](#appendix-b-supervisor-record)**,
+> **[Appendix C: engineering notes](#appendix-c-engineering-notes)**.
+> Cluster operations live in **[`cluster/README.md`](cluster/README.md)** and are not repeated here.
 
 ---
 
-## Current status (updated 2026-09-08, meeting of 2026-08-21)
+# PART 1 — THE WHOLE PICTURE
 
-> **DEADLINE CHANGED 2026-09-08: the target is now ICC, 2026-10-02** (was 15 Sept). That is
-> **24 days instead of 7** — a 3.4× expansion of the remaining budget, and it changes the plan
-> rather than merely relaxing it: the ablations **and** the learned-attacker arc (conditional
-> generator → multi-agent) both fit, where before they were mutually exclusive. Read
-> **"Deadline moved to ICC (2026-10-02) — revised plan"** immediately after the M0/E1 section
-> for the reworked ordering; it supersedes "Next steps" wherever the two disagree.
->
-> **READ THIS FIRST.** Single entry point — a major pivot plus the full 2026-07-02→08
-> result arc. Read it top to bottom; it supersedes the older sim01–sim07 sections (kept
-> for history). **The arc has a mid-course CORRECTION (the "Recheck" below): early Phase-0
-> "stealth" numbers are superseded — read through to the sim08 milestone-2 FULL-SUITE result
-> for the current bottom line.** Detailed writeups in the Phase 0 / Phase 0.5 / Simulation 08
-> (milestones 1 and 2) sections further down.
->
-> **2026-08-03: supervisor feedback has reframed the thesis** — the headline is no longer
-> "can a learned jammer win" but **"how expensive is it for either side to adapt"**, and the
-> characterization arc below is now *appendix* material (done, don't extend it). See
-> **"Supervisor steer (2026-08-03)"**.
->
-> **2026-09-08: MIGRATED to the ITET/TIK cluster** (INFK went into maintenance). The predicted
-> 8-day compute blackout did NOT happen. Environment rebuilt and verified end-to-end; all 19
-> submit scripts migrated. **The 1-GPU-job concurrency cap no longer exists**, so parallel
-> sweeps are now possible. Read **`cluster/README.md`** before submitting anything — there are
-> two CUDA traps that silently break jobs.
->
-> **2026-09-01: the thesis is now framed around the UAV DETECTION GAP and registration is the
-> critical path — read "Thesis proposal + settled framing (2026-09-01)" and "Next steps" FIRST.**
-> Bachelor's thesis; two RQs (trade-off vs baselines; adaptation cost); the countermeasure-level RQ
-> was drafted and dropped. Artifact: `proposal/proposal.tex`.
->
-> **2026-08-21: the MEETING reset the system model — see
-> "Supervisor meeting (2026-08-21)".** The
-> mandate is *simplify as much as possible*: the next simulation is a **single-subcarrier,
-> single-channel minimal model (M0)**, not another layer on sim08. Rationale, in his words —
-> the simple simulations already do not work, so the complicated ones will not either. Two of
-> his questions are live threats to the framing (does a learner have anything to *find* if
-> symbols are iid-uniform and scrambled; and the jammer is *deaf to its own reward* at
-> decentralized execution). Everything between here and there is background that feeds it.
-> characterization arc below is now *appendix* material (done, don't extend it). Jump to
-> **"Supervisor steer (2026-08-03)"** and the rewritten **"Next steps"** for the current plan;
-> everything between here and there is background that feeds it.
->
-> **2026-08-17: no cluster access — front-loading the two writing-only deliverables, and the
-> meeting is confirmed for Friday 21 Aug.** Jump to **"Correspondence log + revised near-term plan
-> (2026-08-17)"** for the full email thread, **"Cluster maintenance, week of 7 Sept"** for a second,
-> separate scheduling hit (the September compute window shrinks from 8 days to 6 — "core locked"
-> moves to Sep 6), and **"Meeting agenda (21 Aug)"** right after it for the meeting prep. Immediate
-> plan: finish the research review, then the System Model. `paper/main.tex`'s `Detector Model`,
-> `Threat Model`, and `Performance Metrics` subsections were drafted today.
+## 1.1 What this is, in one page
 
-### TL;DR — where we are
+A jamming attacker is built and evaluated against a *learned* jamming detector, and the question is
+not "does the jammer win" but **what does the effectiveness–detectability trade-off actually look
+like, and what does it cost either side to move it.**
 
-The original goal (a cooperative MARL jammer that fools the CNN, pure black-box) hit a
-**confirmed dead end** at sim07. We pivoted to characterizing the detector and the
-effectiveness–detectability frontier. The arc (every experiment ≤1 min on GPU):
-- **Phase 0:** the SOTA spectrogram CNN is an *out-of-band-emission detector* — near-blind to
-  spectrally-compliant in-band interference.
-- **Phase 0.5:** retraining it to catch in-band jamming costs false-alarm rate/accuracy.
-- **Recheck (CORRECTION):** the CNN-only "stealthy BER 0.42" was misleading — a trivial ENERGY
-  detector catches any effective in-band jammer on the *lossless* channel. The out-of-band CNN
-  finding is real (survives a spectrogram bug-fix); the stealth claim is not, on the lossless channel.
-- **sim08 m1 (the payoff):** on a *realistic* fading+noise channel the stealth region REAPPEARS — a
-  low-power jammer hides under the noise floor from the energy detector while causing **BER ≈ 0.20**.
-  This is the paper's positive result, and it exists only on realistic channels.
-- **sim08 m2 (the full suite):** a *channel-valid* CNN (retrained on faded signals, acc 94.3%) covers
-  the energy detector's blind spot — the CNN+energy **suite ≡ the CNN alone** on the faded channel (the
-  energy detector catches *nothing* the CNN misses). Against the loose **P(det)≤0.5** convention a
-  residual sparse jammer holds BER 0.065–0.11 — but **that threshold is not operational stealth** (a
-  jammer caught half of every frame is caught within a few frames), so read the ≤0.5 numbers as one
-  point on a *frontier*, not a headline BER. The honest picture is in the matched-detectability entry
-  below. The CNN also pays a false-alarm cost (~20% FAR at 5 dB).
-- **Matched-detectability (step 1, dense sweep) — REFUTES channel-aware > blind.** The m1 "channel-aware
-  +70%" was measured at matched jammer *config*; concentrating power on high-gain subcarriers raises
-  BER **and** the spectrogram signature together, so it is also more detectable. Comparing BER at
-  matched suite **P(detect)** instead (the honest metric), on a dense grid (9 powers × 11 n_active,
-  B=512), the channel-aware advantage **collapses to ≈0** (gain −4.6% to +6.2% across SNR; the coarse
-  grid's ±50% swings were noise). Genie channel-aware ≈ blind at equal detectability. **HONESTY
-  CORRECTION (the big one):** this same sweep discredits the ≤0.5 "stealthy BER 0.09–0.15" headline.
-  At the honest stealth budget = the suite's own clean false-alarm rate (~0.12 @ 5 dB → 0.03 @ 30 dB),
-  **no stealthy-effective jammer exists at 5–15 dB**, and at 20/30 dB only BER **0.011 / 0.004**
-  (~3× / ~11× floor) — one to two orders of magnitude below the ≤0.5 figure. So the "jammer beats the
-  suite" story is real but MODEST; the strong version was the loose threshold talking.
+The project began as "a cooperative multi-agent RL jammer that fools a CNN detector". That bundled
+three independent bets: (a) multi-agent cooperation, (b) reinforcement learning over raw IQ,
+(c) black-box access to the detector. A ladder of thirteen simulations (sim00 → sim08) **falsified
+(b)+(c) as a method** — RL-over-raw-IQ with black-box access is structurally untrainable here, not
+merely badly tuned. What survives, method-agnostic, is the **scientific question**: *can a learned jammer
+evade a state-of-the-art learned detector while staying effective, on a realistic channel?*
 
-**Bottom line (honest):** the SOLID, publishable core is the **detector characterization** — the CNN
-is an out-of-band detector (Phase 0), closing the in-band blind spot costs FAR/accuracy (Phase 0.5), a
-channel-valid retrain + energy meter close most of it on realistic channels with roles flipping
-(suite ≡ CNN), and a sparse jammer imposes an **SNR-independent BER floor** (m1). That does not depend
-on any stealth threshold. The **stealthy-AND-effective-vs-the-suite** claim is real but **modest** once
-stealth is defined honestly (FAR-matched: nothing at 5–15 dB; BER 0.004–0.011 at 20–30 dB) — the
-0.09–0.15 figure was the ≤0.5 convention. And **channel-aware selection is a spent lever** (matched
-detectability). So a *positive* "learned jammer widens the region" headline now rests entirely on
-milestone 3 = **signature-shaping / multi-agent** (an edge the genie lacks), evaluated on
-matched-P(suite). Without it, the paper is an honest characterization, not a "jammer wins" result.
+After a supervisor mandate to **simplify as hard as possible** (2026-08-21), the working model is no
+longer the 64-subcarrier OFDM stack but **M0**: one QPSK symbol, one channel, AWGN with swept σ.
+The retreat buys something the big stack could never have: at this size the **Neyman–Pearson optimal
+detector is computable in closed form**, so results read *"no detector can do better than X"*
+instead of *"our CNN failed to catch it"*.
 
-### Goal & scope — the enduring question vs. the abandoned method (reassessed 2026-07-09)
+**Hard rule:** only library code (Sionna, SB3, gymnasium, scipy, PyTorch). No reuse from the old
+project.
 
-Stepping back after the matched-detectability refutation, because it's fair to ask whether the
-frontier detour drifted from the point. The *original* goal — "a cooperative **MARL**, pure
-**black-box** jammer that fools the CNN" — bundled three independent bets: (a) multi-agent
-cooperation, (b) reinforcement learning, (c) black-box access. The ladder **falsified (b)+(c) as a
-method**: RL-over-raw-IQ with black-box access is structurally untrainable here (sim06/06b/07 — zero
-reward gradient, not a tuning issue). What survives, method-agnostic, is the **scientific question**:
-*can a learned jammer evade a SOTA learned detector while staying effective, on a realistic channel?*
-MARL/black-box was a **method-hypothesis**, tested and largely rejected — not the goal itself.
-Re-anchoring on the question (not the method) is why signature-shaping is a *return* to the goal, not
-a drift: it pursues the same question with the method the ladder proved works (direct/surrogate
-gradient, sim03b/sim04) instead of the one it proved doesn't (black-box PPO, sim06/07).
+**Stack:** Python 3.11, PyTorch 2.9.1+cu128, Sionna 2.x (`sionna.phy`, PyTorch backend),
+stable-baselines3, gymnasium, zuko, numpy, matplotlib.
 
-**What this actually is: an adversarial-ML evasion attack with wireless-physical constraints.**
-Signature-shaping via surrogate-gradient transfer is, precisely, a transferability-based **evasion
-attack** against a *fixed* classifier (Papernot-style) — a mature, well-situated framing. The novelty
-over vanilla adversarial ML is the constraint set: the perturbation must be a **physically realizable
-OFDM interference** through the jammer's own fading channel, AND it must **cause BER**, not merely
-flip a label. That triple — realizable + effective + stealthy — is the contribution, and it situates
-the work in the adversarial-ML / evasion literature, not just wireless jamming. Scope caveat to state
-plainly: this is a **single-round** attack on a **frozen** detector — an evasion result, not a full
-adaptive arms race (standard for the genre, but not a solved co-adaptation game).
+## 1.2 The arc, in one table
 
-**Why signature-shaping is credible but not a guaranteed landslide.** Concrete mechanism: today's
-jammers are **held** — constant amplitude/phase across the 14 OFDM symbols per subcarrier — which
-paints a *constant-across-time* line in the spectrogram, unlike clean data subcarriers whose
-amplitude varies symbol-to-symbol with the random QPSK payload. That constancy is almost certainly
-the tell the m2 CNN keys on (residual p_cnn≈0.4). A learned jammer that modulates per-OFDM-symbol to
-mimic data-like variation (exactly what sim04's direct-gradient agents discovered against the
-kurtosis detector) attacks that tell directly. BUT the underlying power↔detectability tension is
-**partly physical**: interference that flips bits necessarily perturbs the received
-constellation/spectrogram, so the gap a learner can open over a flat-power genie is an *empirical*
-quantity, not a guaranteed win. The honest thesis question is therefore *how much* a learned jammer
-improves the effectiveness–detectability operating point over classical/genie — and whether any
-residual win survives — not "does the jammer win."
+Each row is a step of the ladder and **what it killed**. Full writeups in
+[Appendix A](#appendix-a-experiment-history).
 
-**Thesis floor + the open scoping fork.** Even if a learned jammer shows *no* matched-detectability
-gain over blind (as the genie didn't), the work is still defensible: a rigorous
-effectiveness–detectability tradeoff characterization + the realistic-channel stealth result + the
-negative RL-over-raw-IQ ablation. So m3 is high-upside, bounded-downside — build it now; *further
-characterization is the drift risk*, since characterization has already done its job (it defined the
-target = the residual region, and the metric = matched-P(suite)). One fork still gates m3's shape:
-is multi-agent cooperation the **destination** (thesis is about *cooperative* jamming, single-agent
-signature-shaping is a stepping stone) or the **garnish** (thesis is about *learned evasion*,
-cooperation is an extension)? That decision — not any further sweep — is what to resolve next.
-
-### The pivot — why sim07 (blind MAPPO) was abandoned
-
-sim07 (blind causal MAPPO, black-box) was confirmed a dead end through **run005 (job 101817)**
-— all five runs failed identically: BER≈0.013, P(jam)≈0.3 (pure sampling noise), policy
-entropy bit-for-bit flat (~178.4 = the policy never moved), reward falling as the β warmup
-ramps a constant detection penalty. Two **structural** causes (not tuning):
-1. Reward variance across the batch ≈ 0 → normalized advantages are pure noise → PPO has no
-   gradient. Same wall as sim06/06b: a scalar frame-level reward carries no per-dimension info.
-2. The K=1 sparsity that sim07 needed (to get under the detector's apparent "cliff") caps BER
-   at ~2/52 ≈ 0.04 — too low to matter. The RL-over-raw-IQ negative result (sim06/06b/07)
-   still stands as a publishable ablation, but it is no longer the plan.
-
-### Today's findings (2026-07-02) — the new spine
-
-**Phase 0 — effectiveness–detectability frontier, no RL (job 101860).**
-Pure-inference sweep (`frontier/frontier_sweep.py`) over (# active subcarriers × power ×
-structure) through the frozen sim06 detector, recording BOTH P(det) and BER. Result:
-**the "99.79% SOTA detector" is essentially an OUT-OF-BAND-EMISSION detector, not a jamming
-detector.** Decisive control (same power, same BER, differ only in whether the 12 guard/DC
-null bins are hit): in-band broadband n=52 pwr=8 → P(det)=**0.011**, BER=0.36; the same
-signal spread over all 64 bins (out-of-band) → P(det)=**0.999**; out-of-band at pwr=0.03
-causing BER=0 → P(det)=**0.9999** (flags a harmless signal). A blind, in-band, temporally-held
-jammer reaches **BER 0.25 @ P(det)≤0.05, 0.33 @ ≤0.10, 0.42 @ ≤0.50**; omniscient jam=−2·tx
-reaches BER 1.0 @ P(det)=0.0016. This **reconciles** the old sim06 "broadband→0.999" wall (that
-probe injected into guard/DC bins) and sim07's "4-subcarrier cliff" (its top-K over the full
-64-bin grid was selecting guard/DC bins). The earlier "stealth–effectiveness tension is
-fundamental / BER capped at 0.04" conclusion was WRONG — it was an out-of-band-leakage artifact.
-Outputs: `artifacts/frontier/{frontier,cliff,ber_vs_nactive,coherence}.png`, `results.json`.
-
-**Phase 0.5 — retrain the detector with in-band jammers (job 101866).**
-`frontier/retrain_detector_inband.py` trains a fresh EfficientNet on clean + 4 classical +
-in-band jammers, then re-sweeps. Outcome = "blind spot closes, but only at a real cost →
-genuine tradeoff": in-band broadband P(det) 0.011→**0.995**, BUT overall accuracy
-99.79%→**90.5%**, FAR 0%→**3.8%** (up to ~50% on near-zero-power in-band perturbations),
-in-band detection only reaches **68%** (a third still evade), and a residual **sparse** blind
-spot remains (n=3 evades at P(det)≤0.5, BER 0.02). Stealthy BER collapses 0.42→0.02; even the
-omniscient jam=−2·tx (statistically clean rx=−tx) is now flagged at ≈0.15. **A spectrogram-CNN
-cannot catch spectrally-compliant in-band interference without sacrificing false-alarm rate and
-clean accuracy — an intrinsic tradeoff, not just a data gap.** Caveat: this is a quick 50-epoch
-naive retrain; in-band samples were labeled "jammed" even when BER≈0, which inflates FAR — a
-careful version (BER-thresholded labels, threshold calibration) would sharpen the exact numbers.
-Detector saved: `artifacts/frontier/detector/run001_best.pt`. Re-swept frontier:
-`artifacts/frontier_inband/`.
-
-**sim08 milestone 1 — realistic channel + channel-aware frontier (job 101870).**
-`simulation08/channel.py` (`MultiLinkChannel`: per-link frequency-selective TDL fading + AWGN
-at target Eb/N0 + perfect-CSI ZF equalization) and `simulation08/frontier_channel.py`. Results:
-(1) channel is physically correct (clean BER floor 0.088 @ 5 dB → 0.0003 @ 30 dB); (2) **a
-sparse in-band jammer imposes an SNR-INDEPENDENT BER floor** (~0.05–0.07 @ n=8 across all SNR;
-broadband ~0.34) — the jammer wins in the high-SNR regime because the impairment is
-interference, not noise; (3) **channel-aware beats blind subcarrier selection** by up to **+70%
-BER at equal power** (largest when jammer power is constrained, i.e. the stealthy regime; the
-genie is not optimal so this is a lower bound) → direct motivation for a *learned* channel-aware
-jammer. Caveat: the sim06 detector is lossless-trained and **invalid on the faded channel**
-(clean FAR≈13%, no clean/jammed separation), so its P(det) here is indicative only → fixed in
-milestone 2. Outputs: `artifacts/sim08/frontier/{ber_vs_snr,channelaware_vs_blind}.png`.
-
-### Recheck (2026-07-03, job 102115) — IMPORTANT CORRECTION to Phase 0
-
-Prompted by scrutiny of the Li et al. replication (their repo confirms EfficientNet-B0 is one
-of their 4 CNNs, but they use REAL over-the-air SDR data + train from scratch; spectrogram
-generation is undocumented). Two faithfulness fixes:
-1. The detector spectrogram was **real-part-only** (a bug) → corrected to the standard **complex
-   two-sided STFT** (`detector.py`); detector retrained → `artifacts/sim06/detector/run003_best.pt`
-   (val acc 99.8%, FAR 0%).
-2. Added an **energy detector** (mean received power vs a clean-calibrated 1% FAR threshold) so
-   the frontier is evaluated against the **detector SUITE**, not the CNN alone. Code:
-   `frontier/recheck_suite.py`, `submit_recheck.sh`; outputs `artifacts/frontier_recheck/`.
-
-**(A) The out-of-band finding SURVIVES the complex-STFT fix — it was real.** Same power/BER
-(0.362): in-band P(CNN)=**0.086** vs out-of-band P(CNN)=**1.000** (out-of-band = 1.000 at every
-power). The spectrogram CNN genuinely is a band-edge/out-of-band detector.
-
-**(B) The energy detector DEMOLISHES the "stealthy BER 0.42" claim.** Against the suite
-(CNN OR energy), max stealthy BER: P(det)≤0.05 → **none**; ≤0.10 → **0.000**; ≤0.50 → **0.005**.
-In-band jamming that flips bits necessarily raises power → a trivial power meter catches it. The
-original "in-band jammer reaches BER 0.42 at P<0.05" was an artifact of evaluating against the
-CNN **alone**. **The "SOTA CNN is blind → jammer wins" story is dead as stated.**
-
-**Crucial caveat (keeps sim08 alive):** this is the **noiseless lossless** channel — clean power
-is a razor-sharp constant, so the energy threshold catches any added power. On a **realistic
-channel** (finite SNR + fading) the threshold is looser and a low-power jammer can hide **under the
-noise floor** — confirmed next.
-
-### sim08 + energy detector (2026-07-03, job 102305) — STEALTH REVIVED on the realistic channel
-
-Answers the recheck's open question. Folded the energy detector (calibrated per-SNR on FADED clean
-frames, 1% FAR) into `frontier_channel.py`. Result: on the fading+noise channel a jammer stays
-stealthy (P_energy≤0.5) while causing **BER ≈ 0.20–0.24 across ALL SNRs** (5–30 dB; clean floor
-0.093→0.0003) — vs the lossless channel where the energy detector caught everything (max stealthy
-BER 0.005). At 30 dB this drives a near-error-free link to BER 0.20 while hiding under the energy
-detector. **The noise floor + fading provide cover the lossless channel could not → the
-stealthy-AND-effective region is real, but only on realistic channels.** Caveats: (i) channel-aware
-vs blind washed out in this max-over-configs metric (both ~0.2) — a matched-P_energy comparison is
-needed to prove the channel-aware/learned-jammer advantage; (ii) this is energy detector + the
-lossless-trained CNN (invalid on faded), so the FULL-suite claim (evades energy AND a channel-valid
-CNN) needs milestone 2. Plot: `artifacts/sim08/frontier/stealth_vs_energy.png`.
-
-### sim08 milestone 2 (2026-07-08, jobs 102316 + 102319) — the FULL SUITE on the realistic channel
-
-Completes the suite: a **channel-valid CNN** + the energy detector, evaluated per-sample against the
-frontier. Two steps.
-
-**(1) Channel-valid detector (`retrain_detector_channel.py`, job 102316).** Retrained EfficientNet-B0
-on the complex-STFT spectrogram of signals passed through `MultiLinkChannel` (TDL fading + AWGN),
-Eb/N0 drawn uniformly in [5,30] dB per mini-batch. Classes: faded clean (0), faded + classical
-time-domain jammer (1), faded + in-band freq-domain jammer through its own `h_jam` (sparse blind /
-channel-aware / broadband, 1). Result: **held-out faded-mix acc 94.3%, DR 91.2%, FAR 2.3%, F1 0.94**
-— a genuine clean/jammed boundary on the faded channel (the lossless-trained detector had ~13% FAR
-and no separation here). Per-SNR on fresh faded samples: clean FAR 10%@5 dB → 1%@30 dB; in-band DR
-88%@5 dB → 76%@30 dB (i.e. it still misses ~24% of in-band jammers at high SNR — a residual blind
-spot). Saved: `artifacts/sim08/detector/run001_best.pt`.
-
-**(2) Full-suite frontier (`frontier_channel.py` + per-sample `p_suite`, job 102319).** Folded the
-CNN and energy detector into a per-sample SUITE (CNN hit OR energy hit) and swept the frontier.
-Headline — max BER a jammer can cause while staying stealthy (P(det)≤0.5), realistic channel:
-
-| Eb/N0 | clean floor | energy-only | CNN-only | **SUITE** |
-|---|---|---|---|---|
-| 5 dB  | 0.0795 | 0.244 | 0.114 | **0.114** |
-| 10 dB | 0.0354 | 0.232 | 0.097 | **0.097** |
-| 15 dB | 0.0091 | 0.223 | 0.073 | **0.073** |
-| 20 dB | 0.0035 | 0.214 | 0.074 | **0.074** |
-| 30 dB | 0.0004 | 0.224 | 0.065 | **0.065** |
-
-Two findings:
-- **The suite ≡ the CNN on the realistic channel.** SUITE = CNN-only at *every* SNR; across the whole
-  sweep the energy detector catches **0** configs the CNN misses. Any jammer that evades the CNN
-  (sparse, thin) also evades the power meter, so the OR adds nothing. The channel-valid CNN fully
-  subsumes the energy detector here — the mirror image of the *lossless* recheck, where the energy
-  detector subsumed the CNN. (So the expensive CNN earns its keep specifically on realistic channels.)
-- **The stealthy-effective region shrinks but survives.** The CNN cuts stealthy BER from ~0.22
-  (energy-only) to 0.065–0.11, but never to the floor: a residual **sparse ~16-subcarrier, power≈1**
-  jammer stays under both detectors (p_cnn≈0.40–0.47, p_energy≈0.02) while causing BER 0.065–0.11.
-  Most striking at high SNR: at 30 dB it drives a near-error-free link (floor 0.0004) to BER 0.065 —
-  a ~160× degradation while stealthy, because the impairment is interference, not noise. Cost: the
-  CNN's clean FAR is high at low SNR (~20% @ 5 dB), modest (1–3%) above.
-
-**Bottom line:** on the realistic channel the full CNN+energy suite is much stronger than either
-detector on the lossless channel, yet a stealthy-AND-effective region **still survives** it. That
-residual region — and whether a *learned* channel-aware/cooperative jammer can widen it — is exactly
-the milestone-3 question. Plot: `artifacts/sim08/frontier/stealth_suite_vs_snr.png` (CNN-only curve
-sits exactly under the suite curve). Caveat: the in-band training labels are not BER-thresholded
-(inflates FAR, as in Phase 0.5); a calibrated-threshold version would sharpen the exact FAR numbers.
-
-> **SUPERSEDED / HONESTY CORRECTION (2026-07-09).** The BER numbers above use the **P(det)≤0.5**
-> convention, which the matched-detectability sweep (below) shows is *not* operational stealth (a
-> jammer caught half of every frame is caught within a few frames — and it contradicts m1's
-> *persistent* SNR-independent floor). At the honest FAR-matched budget there is **no** stealthy-
-> effective jammer at 5–15 dB, and only BER 0.004–0.011 (~3–11× floor) at 20–30 dB. Treat the ≤0.5
-> figures as one slice of a frontier, not a headline; the joint stealthy-AND-effective claim is real
-> but modest. The detector-characterization results (suite ≡ CNN, out-of-band finding, m1 floor) are
-> unaffected — they don't depend on a stealth threshold.
-
-### sim08 matched-detectability (2026-07-09, dense sweep job 102390) — REFUTES channel-aware > blind
-
-Step 1 of the milestone-3 prep, and it overturns the m1 "channel-aware +70%" motivation. The m1 gain
-was measured at matched jammer **config** (same n_active, same power). But concentrating power on
-high-gain subcarriers raises BER **and** the spectrogram/energy signature together — channel-aware is
-*louder* to the detector. The only fair comparison holds what the defender sees (suite P(detect))
-fixed and asks who causes more BER underneath it.
-
-`simulation08/matched_detectability.py` (pure post-processing, no GPU) builds, per strategy per SNR,
-the **achievable frontier** `BER*(β) = max BER over configs with p_suite ≤ β` — a monotone step
-function of the detectability budget β — and compares blind vs channel-aware. On the coarse m2 grid
-(2 powers × 6 n_active, B=128) the channel-aware gain at P(det)≤0.5 swung wildly (+5, −24, −14, −57,
-−6% across SNR) — clearly grid noise. So we **densified**: `submit_frontier_dense.sh` re-ran the
-full-suite frontier on **9 powers (0.25–6, concentrated low) × 11 n_active (1–52), B=512** (2× the m2
-batch, to halve per-frame detection-rate noise), writing to a **separate** dir
-`artifacts/sim08/frontier_dense/` so the canonical m2 results/figures stay intact. (`frontier_channel.py`
-gained `--powers`/`--n-active` CLI overrides + a per-SNR incremental `results.json` checkpoint so a
-wall-kill can't lose the sweep.)
-
-**Result — the channel-aware advantage collapses to ≈0 at matched detectability.** Dense gain at
-P(det)≤0.5: **−4.6, +1.5, −1.8, +6.2, +0.0%** (5→30 dB). The blind and channel-aware achievable
-frontiers sit essentially on top of each other at every SNR (`frontier_dense/matched_detectability.png`).
-Genie channel-aware ≈ blind once detectability is matched — the m1 "+70%" was a matched-config artifact.
-
-Three nuances: (a) a faint channel-aware edge (~+6%) survives only at 20–30 dB in the mid-detectability
-band; (b) the residual stealthy-effective region is confirmed and is slightly *larger* than m2 reported
-— the finer grid finds better stealthy configs, max stealthy SUITE BER **0.145 @ 5 dB → 0.094 @ 30 dB**
-(vs m2's 0.114 → 0.065); (c) "suite ≡ CNN" softens at 30 dB (dense SUITE 0.0945 < CNN-only 0.1138 → the
-energy detector catches one thin-but-loud config the CNN misses; still ≡ at 5–20 dB). Also: the honest
-"stealthy" operating point is the suite's own clean **false-alarm rate** (~0.12 @ 5 dB → 0.03 @ 30 dB),
-not the ≤0.5 convention — at the FAR-matched budget effective-jamming headroom nearly vanishes below
-20 dB (achievable BER ≈ the clean floor). Report the whole frontier curve, not a single threshold.
-
-**Consequence for milestone 3 (threat-model pivot):** channel-aware *subcarrier selection* is a spent
-lever — the genie already extracts no matched-detectability gain from it, so "learn the channel-aware
-genie" is not the plan. A learned jammer must exploit what the genie does **not**: **(1) signature-shaping**
-— modulate power/amplitude to minimize the CNN's spectrogram signature per unit BER (the genie picks
-*where* to jam but jams at flat power; a learner can jam the same subcarriers while looking clean); or
-**(2) multi-agent power splitting** — distribute interference across links/subcarriers to stay under the
-per-frame CNN threshold that a single concentrated source trips. Since suite ≡ CNN on the faded channel,
-the CNN is the one detector that matters. Metric stays matched-P(suite) BER vs blind (the axis just built).
-
-### Revised paper framing (post-recheck)
-
-From *"a cooperative MARL jammer that fools a CNN"* → to a two-sided, honest contribution:
-1. **Detector characterization / complementarity:** a SOTA CNN OFDM jamming detector detects
-   out-of-band emissions, not jamming — near-blind to in-band interference. But on its own that's
-   not a stealth win: a trivial energy detector covers the in-band-power blind spot on idealized
-   channels, so the expensive CNN mainly earns its keep against out-of-band/structured jammers.
-   (Consistent with why Li et al. fuse feature+spectrogram models.) Closing the CNN's in-band blind
-   spot by retraining also costs FAR/accuracy (Phase 0.5).
-2. **The solid core is the detector characterization on the realistic channel vs the FULL SUITE
-   (milestone 2, jobs 102316+102319).** On the faded channel the CNN+energy suite ≡ the *channel-valid*
-   CNN (energy detector redundant), the mirror image of the lossless recheck (where energy subsumed the
-   CNN) — so the expensive CNN earns its keep specifically on realistic channels. The *stealthy-AND-
-   effective* half is real but MODEST once stealth is defined honestly (FAR-matched: nothing at 5–15 dB;
-   BER 0.004–0.011 at 20–30 dB — the ≤0.5 "0.065–0.11" was threshold-inflated, see matched-detectability).
-   Remaining: show a
-   *learned* jammer *widens* that residual region — but NOT via channel-aware subcarrier selection,
-   which the matched-P(suite) comparison (job 102390) shows the genie extracts no gain from once
-   detectability is matched. The learned-jammer contribution must instead come from *signature-shaping*
-   (look clean per unit BER) or *multi-agent power splitting*. Target claim: *learned (signature-aware) >
-   genie channel-aware ≈ blind > classical*. The RL-over-raw-IQ negative result (sim06/06b/07) is an
-   ablation, not the headline.
-
-### Supervisor steer (2026-08-03, A. Di Maio) — from "does the jammer win" to "how expensive is adaptation"
-
-Feedback email received 2026-08-03. It **reframes the thesis** rather than redirecting a detail, so
-this section is the authority over the older framing above. Point-by-point, and what each changes:
-
-> **The actionable checklist lives in `SUPERVISOR_TODO.md`** — every point from the email, including the
-> small ones, as tickable items with his wording quoted. This section carries the *reasoning*; that file
-> carries the *work*. Keep them in sync.
-
-| His point | Consequence here |
-|---|---|
-| "we will probably include a subset of those results … complementary results in the appendix" | The entire characterization arc (Phase 0/0.5, recheck, m1, m2, matched-detectability) is **appendix material and it is DONE**. Further sweeps now have *negative* expected value. |
-| "the most agnostic reward for the attacker is **BER − β·detections**. The other aspects should not be relevant for the reward and be controlled by the environment" | **Delete every proxy reward term** — sim01–04 all carried idle penalties, power penalties, kurtosis penalties. Power budget becomes a **hard environment/action-space constraint**, not a reward term. |
-| "the setup reminds a bit of GANs … one can always fine-tune a defender on an attacker and vice versa. **The core contribution is to show that this adaptation is very expensive**" | **This is the new headline claim.** Not "the jammer evades the CNN", but "re-closing (or re-opening) the gap costs the other side *this much*". |
-| "this can only happen at training time: there are no ground-truth labels at execution time" | The detector cannot adapt online → justifies the frozen-detector evaluation we already use. The arms race is **round-based and offline**, which is exactly what we can afford to run. |
-| "jammers need to synchronize with the victim's preamble … introducing some desynchronization due to cheap hardware will make the attacker more realistic and weaker, **which is good for the paper**, especially if BER is high and detection rate is low" | New **realism axis**: per-jammer carrier-frequency offset, timing offset, phase error. He *wants* the attacker handicapped — a strong result under realistic impairment beats a stronger result under a genie. |
-| "fixing where the detection takes place and what information is available to the detectors is also important" / "clearly formulate the system model and both the defender and thread [threat] models" | Said **twice** → the system/threat-model write-up is the **top deliverable**, above any experiment. |
-| "the shapes do not seem the most energy-optimal … we could expect most of the points under attack to be located around the symbol classification boundary perpendicular to the symbols' prototypes … minimal-energy alteration … (symbol error rate could also be a possible metric)" | **The most actionable technical item in the email** — a closed-form jammer, no training required, that may rescue the positive result matched-detectability killed. Expanded below. Also: **add SER alongside BER**. |
-| "selecting the optimal subcarrier is a proxy problem on the way to the true problem of maximizing BER while minimizing detection probability" | Independently confirms our matched-detectability verdict: **subcarrier selection is a spent lever**. Good — we already stopped. |
-| "a form of detection is to leak information on the position of the jammer(s) so that a defender can physically neutralize them" | A second detector *modality* (localization). Out of scope for the thesis core; name it in the threat model as future work. |
-| "consider PettingZoo and BenchMARL … RLlib is famous for being too complex … I would avoid it" | Multi-agent phase uses **PettingZoo** for the env API (+ BenchMARL only if we need an off-the-shelf MARL algorithm). **No RLlib.** |
-| "I did not fully get why the MAPPO jammer can't be trained against the CNN detector … showing in what cases it is hard to beat is already a small result" | Owed a crisp explanation (drafted in Next-steps item 1): reward variance ≈ 0 across the batch → normalized advantages are pure noise → PPO has no gradient. **Structural, not tuning.** He accepts it as a result. |
-| "train both attacker and defender jointly, then pick one side … if performance becomes too extreme (e.g., always stealth, high BER) then **relax assumptions** … until the performance gap between your method and the baselines increases" | The tuning protocol, handed to us: if the attacker looks too strong, add realism (desync, partial CSI) until *our method vs the baselines* separates. Also: **run the baselines**. |
-| "the most interesting investigation will still be the optimal multi-jammer coordination against one or more mobile victims" | Destination unchanged (**multi-agent**), now with **victim mobility** added. |
-
-**Key reframe: most of what we already have IS adaptation-cost data.** Under the new headline almost
-nothing is wasted, including the failures:
-- **Phase 0.5** — closing the CNN's in-band blind spot costs accuracy 99.8 → 90.5% and FAR 0 → 3.8%.
-  That is a **defender adaptation cost, round 1**, already measured.
-- **m2** — the channel-valid retrain buys a genuine faded-channel decision boundary but pays ~20% FAR
-  at 5 dB. **Defender adaptation cost on the realistic channel.**
-- **Matched-detectability** — the genie extracts ≈0 gain from channel-aware selection at equal
-  detectability. **The attacker's cheap adaptation lever is already exhausted.**
-- **sim06/06b/07** — black-box RL over raw IQ is structurally untrainable. Under the old framing this
-  was an embarrassing dead end filed as an "ablation"; under the new framing it is **direct evidence
-  that attacker adaptation by that route is prohibitively expensive** — i.e. a *contribution*.
-
-**The energy-optimal (boundary) attack — why this is the one experiment worth doing next.** Di Maio's
-IQ-plot observation is correct and its consequence is larger than the observation. Every jammer we have
-built transmits **held, random-phase, flat-power** interference (`_held()` in `frontier_channel.py`) —
-an isotropic shove in a random direction, so most of its energy is spent sliding symbols *along* the
-decision boundary rather than *across* it. For unit-energy QPSK the symbols sit at (±1±1j)/√2, so the
-minimum-energy way to force an I-bit error is a push of magnitude ≈ 1/√2 along −Re(s): **per-symbol
-perturbation energy ≈ 0.5 flips one of two bits on every symbol → BER ≈ 0.5.** A random-phase jammer
-needs several times that power for the same BER. Since the energy detector is literally a power meter
-and the CNN sees the spectrogram of the summed received signal, **less energy at equal BER is strictly
-better on the effectiveness–detectability plane** — unless the CNN keys on the perturbation's
-*structure* instead of its magnitude, which is precisely the open empirical question and a good result
-either way.
-
-Two non-obvious consequences worth carrying into the write-up:
-1. **It changes the optimal subcarrier criterion.** Detection happens at the **RX**, on the composite
-   signal *before* equalization, so what the detector sees is the perturbation at magnitude `|d·h_tx|`
-   (the RX divides by `h_tx`, so landing an equalized-domain perturbation `d` on subcarrier n requires
-   transmitting `jam[n] = d[n]·h_tx[n]/h_jam[n]`). Minimizing what the detector sees therefore favours
-   subcarriers with **small |h_tx|** — a *different* criterion from m1's channel-aware `|h_jam/h_tx|`,
-   which maximized damage per unit *transmit* power. So the matched-detectability refutation killed one
-   specific criterion, not the idea that channel knowledge helps. This is exactly Di Maio's "fix where
-   the detection takes place" point biting.
-2. **It is what makes the desync axis meaningful.** A random-phase held jammer is indifferent to phase
-   error; a boundary-directed attack is *maximally* sensitive to it. So the realism knobs (CFO, timing,
-   phase) only become an interesting experiment once the attack is phase-coherent. Order matters:
-   boundary attack first, desync second.
-
-Assumptions the boundary attack needs — **state them, then relax them**, which is Di Maio's protocol:
-the jammer must know (i) the victim's symbols, (ii) both channel responses, and (iii) be
-phase/time-locked to the preamble. That is a full genie → an **upper bound**, the counterpart of the
-channel-aware genie, not a claimed capability. The realistic attacker is that genie degraded by
-CFO/timing/phase error and partial CSI, and the *learned* jammer's job is to recover the gap between
-degraded and genie. That arc — **genie ceiling → realistic degradation → learned recovery** — is the
-thesis spine.
-
-### Correspondence log + revised near-term plan (2026-08-17)
-
-**No cluster access for the next stretch** — replanning to front-load the two compute-free writing
-deliverables: (1) finish the **research review** (Related Works, tracked in `paper/README.md`) first,
-(2) then finish the **System Model** (Sec. III of `paper/main.tex`). This supersedes the item-1/item-2
-ordering in "Next steps" below for the immediate window only — the rest of that plan (items 3+) still
-holds once cluster access returns.
-
-**Meeting confirmed: Friday 2026-08-21** (time TBD) — this is now an actual scheduled meeting, not just
-a self-imposed target. *(Correction: an earlier draft of this file speculated a "Thu 13 Aug" meeting
-from `SUPERVISOR_TODO.md`'s own proposed date — that never happened; 21 Aug is the real, agreed slot,
-which happens to land on the date this file had already picked as the "show him something" target.)*
-
-**Correspondence on record** (all three messages, for completeness — the table in "Supervisor steer"
-above summarizes only the first reply):
-- **Rahul's update email** (sent ~mid-July, prompting the 2026-08-03 reply): reported the sim06/06b/07
-  negative result (MAPPO structurally untrainable — reward variance ≈ 0, no PPO gradient), the three
-  characterization findings (out-of-band CNN / lossless energy-detector kill / realistic-channel
-  stealth region survives the suite / channel-aware is a spent lever), and asked two open questions:
-  (a) is a single-round evasion attack on a frozen detector an acceptable contribution, or does he want
-  a co-adaptive (detector-retrains) setting; (b) is he comfortable leading with detector
-  characterization as the solid core and the cooperative learned jammer as the high-upside extension.
-  Also flagged 3+ weeks without a reply before that one, and candidly asked whether the drift from the
-  original cooperative-jammer framing toward detector characterization is still publishable.
-- **Di Maio's reply (2026-08-03):** answers question (a) implicitly — "one can always fine-tune a
-  defender on an attacker and vice versa … this adaptation is very expensive" — i.e. he wants the
-  **round-based / offline co-adaptive framing**, not a single frozen-detector round, with cost-of-
-  adaptation as the headline. Question (b) is not answered directly. Full point-by-point breakdown
-  already in the "Supervisor steer" table above; actionable checklist in `SUPERVISOR_TODO.md`.
-- **Rahul's reply (sent 2026-08-17,** delayed by the first exam block, acknowledged as such):
-  - Proposed meeting the week of 17–21 Aug, before finishing the System Model/Methodology drafts, and
-    proposed registering the thesis that same week → **landed on Fri 21 Aug**.
-  - Stated availability: **15–20 Aug** full time on the thesis (a few work days mixed in); **22–27 Aug**
-    second exam block, no thesis work; **1–14 Sep** 100% on the paper (took the first two September
-    weeks off work), submission 15 Sep. *(SUPERSEDED 2026-09-08 — the target is now **ICC,
-    2026-10-02**. The stated availability window is unchanged; what changed is that the three weeks
-    after it are now inside the budget rather than after the deadline.)*
-  - Asked directly how available Di Maio is **1–14 Sep**, requesting short/frequent feedback rounds
-    over one large end-of-block review — **answer still pending, follow up at/after the meeting.**
-  - Gave short answers to each of his feedback points (full answers owed at the meeting):
-    - MAPPO failure: reward barely varies across a training batch → normalized advantages ≈ noise → no
-      consistent gradient direction; confirmed structural (not tuning) via a 2D reproduction (sim06b).
-      **Refined conclusion: the root cause is the *action parameterization* (raw IQ, very
-      high-dimensional), not the reward formula** — see the callout in "Next steps" below on why this
-      matters for the write-up.
-    - Agreed with reward = `BER − β·detections` and moving the power budget into the environment as a
-      hard constraint, not a reward term.
-    - Named the IQ-plot / energy-optimal-boundary observation as the point he most wants to discuss —
-      flagged that the minimum-energy version looks closed-form and cheap to evaluate.
-    - Wants to discuss making adaptation cost the central contribution, noting several existing results
-      already measure exactly that.
-
-### Cluster maintenance, week of 7 Sept — schedule consequences (2026-08-17)
-
-> **SUPERSEDED 2026-09-08 — THE BLACKOUT DID NOT HAPPEN.** The INFK cluster did go into
-> maintenance, but the project **migrated to the ITET/TIK cluster** instead of losing the week.
-> Compute is available for the whole run-up to 15 Sept, so the "core locked on Sep 6" gate, the
-> 6-day compute window, the "cut desync first" triage and the Sep-6 lockout checklist below are
-> all **void**. The new cluster is also strictly better (no concurrency cap, 2-day walltime,
-> 12 GPU nodes) — see "Cluster/compute notes" and `cluster/README.md`. Kept below because the
-> reasoning about *ordering by risk* still applies, and because it records why the September
-> plan was shaped the way it was.
-
-**The cluster is down for maintenance the week of 7 September** (assumed Mon 7 – Sun 13; confirm the
-exact window). This lands squarely inside what was the primary compute block (Sep 1–8) and removes
-almost half of it — only **Sep 1–6 (6 days)** have cluster access before an **8-day compute blackout**
-running right up to the 15 Sept paper deadline. Consequences:
-
-- **The "core locked" gate moves from Sep 8 → Sep 6.** After that, nothing that needs a GPU can be
-  fixed, extended, or re-run before submission — the entire Sep 7–14 stretch has to be writing,
-  revision, and polish only, on whatever is on disk by the evening of Sep 6.
-- **Every compute-side item has to fit in 6 days instead of 8.** Rough capacity check: ~6 days ×
-  ~8 h/day ≈ 48 h available against the ~52 h currently budgeted for boundary attack (10 h) + desync
-  (8 h) + adaptation-cost loop (22 h) + baselines (12 h) — tight, and that's before any debugging slack.
-  **Desync is the item to cut or timebox first** if the week runs long: it's already the
-  lowest-priority realism knob ("Next steps" item 4, "only meaningful after" the boundary attack), not
-  the headline contribution, so losing it costs a nice-to-have, not the thesis core.
-- **Reorder within the compute window so the highest-risk item lands first, not last.** The
-  adaptation-cost loop ("Next steps" item 5) is genuinely novel compute — a fresh detector retrain
-  round using the boundary attack as input — and the one thing that must not be left for the last
-  cluster day. Do it right after the boundary attack (item 3), before desync, so there are 1–2 spare
-  cluster-days inside the window itself to fix anything that breaks, rather than zero.
-- **Silver lining:** this forces the "core locked" discipline earlier than the original plan did anyway,
-  and it turns Sep 7–14 into one uninterrupted 8-day writing block instead of a split block — good for
-  the writing itself, *provided* everything needed is pulled off the cluster before the maintenance
-  window starts.
-- **New task: a lockout checklist for Sep 6.** Before the maintenance window starts, confirm every
-  artifact/checkpoint/result file needed for the Results section is saved locally (not only on cluster
-  scratch storage) — there's no way back in to grab something forgotten.
-- **Worth raising with Di Maio at the meeting** (folded into agenda item 8 below): his September
-  feedback cadence should probably concentrate around Sep 6–7, right when results lock, rather than
-  spread evenly — that's the natural moment to get eyes on results before eight days of pure writing.
-
-### Meeting agenda (21 Aug) — prep for explaining progress and converting his inputs
-
-Ordered by what blocks something else first. Goal: leave the meeting with registration unblocked, the
-System Model signed off (or a clear list of what to fix), and both outstanding questions answered.
-
-1. **Registration essentials (5 min, blocking).** Who is the supervisor of record (D-INFK professor
-   requirement — may need Di Maio as co-supervisor)? Confirm title, start date, end date → register in
-   myStudies this week per the reply's proposal.
-2. **What's been done since 3 Aug (2–3 min recap, don't over-explain — he already has the written
-   version).** One line per stage: Phase 0 (CNN = out-of-band detector) → Phase 0.5 (closing it costs
-   FAR/accuracy) → sim08 m1/m2 (realistic channel, stealthy region survives the full suite) →
-   matched-detectability (channel-aware ≈ blind at equal detectability — a spent lever) → today, the
-   System Model drafted.
-3. **The MAPPO explanation, properly this time.** Lead with the refined conclusion — action
-   parameterization (raw IQ, high-dim), not the reward — then the reward-variance/no-gradient mechanism
-   and the 2D reproduction as evidence it's structural. This directly motivates why the next experiment
-   (item 6) uses a low-dimensional, closed-form action instead of another RL-over-raw-IQ attempt.
-4. **Walk through the System Model draft (§III) and resolve its one open item live.** Detector Model
-   (where detection happens, what the suite observes, the no-online-adaptation constraint) and Threat
-   Model (three information tiers: genie / realistic / blind) are drafted — use this as the concrete
-   answer to "formulate the system, defender and threat models," asked twice. The **inter-jammer
-   coordination assumption is still open** (shared backhaul channel / shared clock only / fully
-   independent, CTDE-only-at-training-time) — good candidate to decide together rather than guess.
-5. **Confirm the two questions his 3 Aug reply left open:**
-   - Single-round evasion on a frozen detector, or the fully co-adaptive (detector retrains) setting?
-     His phrasing leans co-adaptive but wasn't a direct answer.
-   - Comfortable leading the paper with detector characterization as the solid core and the cooperative
-     learned jammer as the high-upside extension?
-6. **Confirm alignment, don't re-litigate:** reward = `BER − β·detections`, power as a hard environment
-   constraint — already agreed, just needs a one-line confirmation.
-7. **Pitch the energy-optimal boundary attack as the next experiment** (closed-form, no training,
-   directly converts his IQ-plot observation) and get sign-off before spending September hours on it —
-   it's already the plan, but worth hearing objections now rather than after building it.
-8. **September cadence, and flag the cluster maintenance week.** Repeat the question from the email if
-   he didn't answer in writing: short, frequent feedback rounds during 1–14 Sep vs. one larger review;
-   his availability in that window. Also flag that **the cluster is down for maintenance the week of
-   7 Sept** — the compute window is really Sep 1–6, "core locked" moves two days earlier to Sep 6, and
-   his feedback would be most useful concentrated right around Sep 6–7, before an 8-day writing-only
-   stretch with no ability to re-run anything.
-9. **If time: the parked items** — jammer localization as an out-of-scope defender capability (already
-   named as future work in the System Model), and his offer of real hardware for later validation.
-
-**Immediate plan, in order (unchanged by the meeting date landing on the target — still the right
-sequencing beforehand):**
-1. **Research review** — finalize `related_works_draft.tex` triage (tier-1 missing refs, resolve the
-   Hameed/Ziemann open questions), replace the three overlapping draft sections in `main.tex` with one
-   clean `\section{Related Work}`. See `paper/README.md` for full state.
-2. **System Model** — `Detector Model`, `Threat Model`, `Performance Metrics` subsections drafted
-   2026-08-17 (Eq. received/objective/frontier added to `main.tex`). Remaining before the meeting:
-   resolve the inter-jammer coordination assumption (flagged `\rar{}` in the text — shared backhaul /
-   shared clock / none, or bring it to the meeting as agenda item 3 above), and write a one-paragraph
-   goal statement tying the System Model to the adaptation-cost headline.
-3. **Friday 2026-08-21, the meeting** — walk through the agenda above.
-
-### Supervisor meeting (2026-08-21, A. Di Maio) — simplify hard, and the two questions that threaten the RL framing
-
-Live notes from the 2026-08-21 meeting requested in the 2026-07-17 email (`SUPERVISOR_TODO.md` §1 — that
-item is now **done**; notes transcribed here 2026-09-01). Where this conflicts with the 2026-08-03 email
-steer above, **this section wins**; where the meeting was silent (the *adaptation-cost* headline, reward = BER − β·det, PettingZoo/no-RLlib, the
-desync axis) the email still stands. Checklist form in `SUPERVISOR_TODO.md` §§11–13.
-
-**One line: stop adding complexity, start subtracting it.** His stated priority was *"simplify, as much
-as possible"*, and the reasoning is blunt — **the simple simulations already do not work, so the
-complicated ones certainly will not.** Every layer the ladder added (64-SC OFDM grid, TDL fading,
-spectrogram CNN, multi-SNR sweeps) is now a liability for *understanding*, not an asset. This is not a
-new direction so much as an insistence on the one we claimed to be following.
-1. **Reply to the supervisor and book the meeting. (≈1 h, no compute — DO THIS FIRST.)** He explicitly
-   asked ("I would need to understand better what you have done so far, e.g., during a meeting"), and
-   thesis **registration in the week between exams is gated on an agreed title/scope**, so the meeting
-   has to happen before that week. The reply must contain: (a) the one-paragraph answer to the MAPPO
-   question — reward variance ≈ 0 across the batch ⇒ normalized advantages are noise ⇒ no policy
-   gradient; sim06b proved it persists even in 2D, so it is structural, not tuning; (b) confirmation
-   that we adopt reward = BER − β·detections with power as an environment constraint; (c) the proposed
-   headline (adaptation cost) and the assumption table below, so the meeting is a decision meeting
-   rather than a status meeting.
-2. **Write the System & Threat Model. (≈3–4 h, no compute — the top deliverable.)** He asked for it
-   twice and it is *triple-duty*: thesis registration text, paper Section III, and meeting agenda.
-   Must pin down, as an explicit table: **where detection happens** (at the victim RX, on the composite
-   pre-equalization time-domain frame — that is what `frontier_channel.py` already feeds the CNN and
-   the power meter); **what the detector observes** (complex two-sided STFT spectrogram + mean frame
-   power; no CSI, no ground-truth labels at execution time); **what each jammer knows** in each of the
-   three assumption tiers (genie: victim symbols + both channels + perfect sync / realistic: own
-   channel estimate + preamble sync with CFO & timing error / blind: neither); **what jammers know
-   about each other** (the coordination assumption — shared clock? backhaul? nothing?); and the
-   **power budget** as a hard constraint. Name jammer localization as an out-of-scope defender
-   capability. This document is what makes every later experiment interpretable.
-3. **Energy-optimal (boundary) jammer + SER. (≈4 h + one <1 min GPU job — the one experiment.)** Add a
-   `boundary_mincost` strategy to `build_jam()` in `simulation08/frontier_channel.py`: it already
-   receives `tx_grid`, `h_tx` and `h_jam`, so the perturbation is closed-form — push each symbol just
-   across its nearest decision boundary in the equalized domain (`d = −Re(s)·(1+ε)` or the Q-axis
-   counterpart), pre-compensated as `jam = d·h_tx/h_jam`, with a per-subcarrier magnitude knob to sweep
-   the frontier. **No training.** Add SER next to BER in the returned dict (he asked). Then re-run
-   `submit_frontier_dense.sh` and `matched_detectability.py` unchanged and compare the boundary
-   attack against blind/channel-aware **at matched P(suite)** — the axis we already built. Two possible
-   outcomes, both publishable: it dominates (the positive "smarter jamming widens the region" result the
-   thesis currently lacks, obtained without any RL), or the CNN catches its structure despite the lower
-   energy (a sharp, quotable statement about *what the detector actually keys on*).
-4. **Realism / desync axis. (post-exams; first thing cut if the Sep 1–6 compute window runs short —
-   see "Cluster maintenance" above.)** Per-jammer CFO, timing offset and residual phase error in
-   `MultiLinkChannel`, parameterized as a "cheap hardware" quality level. Sweep the item-3 frontier vs
-   desync level. This is the "make the attacker realistic and weaker" result he explicitly wants, and
-   per the note above it is only meaningful *after* item 3. Lowest priority of the four Sep compute
-   items — losing it costs a nice-to-have, not the thesis core.
-5. **The adaptation-cost loop — the new headline. (post-exams, the thesis core. Schedule this
-   immediately after item 3, before item 4 — see "Cluster maintenance" above: it's the highest-risk,
-   most novel compute and must not land on the last cluster day before the Sep 7 maintenance
-   blackout.)** Round-based, all tooling already exists: **R0** frozen m2 detector vs the best
-   item-3/4 attacker; **R1** retrain the detector with those attacks in the training mix
-   (`retrain_detector_channel.py`) and measure what it costs — Δaccuracy, ΔFAR, samples and GPU-hours
-   needed; **R2** re-optimize the attacker against the R1 detector and measure whether it recovers, and
-   at what cost. The deliverable is a **cost curve per round**, not a win/loss. This is Di Maio's "show
-   that adaptation is very expensive", it is a GAN-like loop without needing an actual GAN, and it
-   converts our characterization results into round-0/round-1 points we have *already paid for*
-   (Phase 0.5 and m2 are existing R1-equivalent defender-cost data — the genuinely *new* compute here is
-   narrower than it looks: a fresh retrain round using the item-3 boundary attack as input, then R2's
-   re-optimization against it).
-6. **Multi-agent (the destination). (post-exams.)** Wrap the environment in **PettingZoo** (parallel
-   API), reward = BER − β·detections, power as a hard constraint, action = low-dimensional per-jammer
-   perturbation parameters (**not** raw IQ — that is what killed sim06/07). Keep the surrogate-gradient
-   path as the primary method and treat MARL (BenchMARL) as the comparison, not the default. The
-   coordination question is: can K jammers each stay under the per-frame detector threshold that one
-   concentrated source trips, while their perturbations add coherently at the victim? Add path-loss
-   geometry (`MultiLinkChannel` already exposes `tx_gain_db`/`jammer_gains_db`) so cooperation is
-   non-trivial.
-7. **Victim mobility. (stretch.)** His "most interesting investigation". Only after 6 works.
-
-| His point (as noted) | Consequence here |
-|---|---|
-| "Priority: simplify, as much as possible — **single subcarrier**, **one channel**" | The next simulation is a **minimal model (M0)**: one subcarrier, one channel realization, one jammer. Spec in **(A)** below. sim06–08 stop growing. |
-| "First thing to add: **spatial**, after solving single, no noise, no prop" | The *only* sanctioned extension after M0 is the **spatial** one (multiple jammers superposing at the RX). **"No noise, no prop" is literal** (confirmed): the simplest case is σ = 0 and no propagation delay. That case is *degenerate for detection* — so σ = 0 becomes the anchor point of the noise parameter study rather than the setting we evaluate in. See (A) and (F1). |
-| "Intro: bit-error recovery 'out-of-scope' → motivate importance, we assume it's handled by another model" | Intro must say plainly that FEC/ARQ/retransmission is **out of scope, assumed handled by a higher layer**, and then *motivate why raw BER/SER is still the right target*: it is the input any recovery layer receives, and pushing it past the code's correcting capability is what turns into outage. |
-| "Impossible to beat baseline: **omniscient jammer** — show in results" | The omniscient/counter-signal jammer is the **ceiling reference** and must appear in every results figure, not just in prose. See (D)/(E). |
-| "**Is it a valid assumption that all legitimate symbols are equally spread?** → RL shines when it can *find* something" + "**scrambling** makes the transmitted sequence look statistically random" | The sharpest challenge of the meeting: **if the payload is iid-uniform, there is nothing for a learner to find.** This decides whether "learned jammer" is motivated at all. Full treatment in **(B)** — turned into an experiment. |
-| "At **decentralized execution**: jammer is 'deaf' to rewards, maybe ACKs" | Under CTDE, BER is a **training-time-only** signal. The executed policy may observe only what a real jammer can sense — own channel estimate, own signal, at best **ACK/NACK**. See **(C)**. |
-| "How is 'counter signal' not viable: add vector in random direction in I/Q plot" | Two jobs, both required: **motivate away** the counter signal (why it is not a realistic attack) **and run it as a baseline** anyway. See **(D)**. |
-| "Ablation: parameter study, increase noise and see what happens (less detection e.g.)" | A **noise-level sweep is the primary ablation**, and he has predicted its direction. See (F). Noise is not a garnish in M0 — it is what creates a stealth region at all. |
-| "Noise level, ε, change **exponentially**" | Sweep the noise level on a **log grid**, not linearly (confirmed: ε = the noise level). Detection rate is expected to track it closely, because the jammer is precisely trying to look like noise. |
-| "Scenario, e.g. #jammers, #legitimate users" | Second ablation axis: **scenario size**. Note this is the first mention of **multiple legitimate users** — the model so far is 1 TX → 1 RX. |
-| "Possibly **double axes, BER/detection** → show trade-off; *no attackers* / *ground-truth attacker*" | A prescribed **figure format**: one panel, BER/SER on the left axis, P(detect) on the right, with the no-attacker and omniscient-attacker references drawn in. See (G). |
-| "**Experiments 2, 3** strongest add" | A hard quota: **only the 2–3 strongest experiments go in the main paper**; everything else goes to the appendix. Tighter than the July email's "a subset". See (H). |
-| "Put as much info as possible in Overleaf" | The Overleaf document is the working record, not a write-up phase at the end. Assumption table, baseline table and ablation list move into `main.tex` **now**, as stubs if necessary. (This repo only ever *reads* `paper/` — those edits happen in Overleaf directly.) |
-
-#### (A) The minimal model — system model for the next simulation
-
-Naming (mine, for reference; he did not name them): **M0** = the simplified base, **M1** = M0 + spatial.
-
-| | **M0 — build this** | **M1 — the one sanctioned extension** | (existing sim06–08, frozen) |
-|---|---|---|---|
-| Subcarriers | **1** — no OFDM grid, no IDFT, no guard/DC/pilot bins | 1 | 64-SC OFDM |
-| Channel | **one** fixed realization; start at `h = 1` (flat, unit gain) | per-jammer link gain/phase, so contributions superpose at the RX | TDL frequency-selective, per-link, per-frame |
-| Propagation | **none** — no delay, no path loss (confirmed literal) | **none** — geometry enters only as per-link gain/phase, never as delay or a path-loss law | — |
-| Noise | **AWGN, σ swept from 0 upward** — σ = 0 is the simplest case *and* the degenerate anchor of the sweep, not the operating point (F1) | single global σ, same sweep | per-SNR Eb/N0 5–30 dB |
-| Jammers | 1 | **N_J ≥ 2, coordinated** — this is the point of M1 | 1 (frontier) / MAPPO team (dead) |
-| Legit users | 1 TX → 1 RX | 1, then sweep (his "#legitimate users") | 1 |
-| Attacker action | per-symbol complex perturbation, hard power budget | per-jammer perturbation + the split between them | full per-subcarrier IQ (falsified) |
-| Detector | energy meter + learned classifier on the received **IQ scatter** + **the analytically optimal (NP) test** | same | spectrogram CNN (EfficientNet-B0) + energy |
-| Metrics | **BER, SER**, P(detect) at a fixed FAR | + coordination gain over N_J independent jammers | BER, P(suite) |
-
-**Why single-subcarrier is the right cut, specifically.** It deletes exactly the things that have burned
-us: the guard/DC/out-of-band bins that produced *and then invalidated* the Phase-0 headline; the
-equalization/CSI bookkeeping that made the m1 "channel-aware" criterion ambiguous (`|h_jam/h_tx|` vs
-small `|h_tx|`); and the spectrogram representation, which took a real-vs-complex STFT bug to get right.
-What remains is a 2-D constellation — **which is the picture he reasons in every time** ("add vector in
-random direction in I/Q plot", "points located around the symbol classification boundary").
-
-**The payoff that justifies the retreat: M0 has a computable optimal detector.** With a single subcarrier,
-known σ and a stated perturbation model, the Neyman–Pearson likelihood-ratio test is available in closed
-form. For the first time we can report P(detect) against an *optimal* defender instead of "whatever the
-CNN happened to learn". That upgrades every claim of the form *"the CNN is blind to X"* into
-*"**no** detector can do better than Y"* — and it gives the adaptation-cost headline the reference point
-it currently lacks (how far a retrained detector still is from optimal *is* the remaining adaptation
-budget). This is the single strongest argument for doing M0 before anything else.
-
-**Consequence to state explicitly: with σ = 0 there is no stealth problem.** The clean received
-constellation is four exact points, so *any* perturbation is detected with probability 1. Stealth exists
-only because of noise — which is why his noise ablation is the primary one, and it is also the M0-level
-explanation of the sim08-m1 result (the stealth region appeared only once the channel had a noise floor
-to hide under). Getting that mechanism into a model simple enough to derive is a genuine contribution,
-not a retreat.
-
-**Resolved: "no noise, no prop" is literal — and that is exactly why noise becomes a swept parameter.**
-He meant σ = 0 and no propagation delay for the *simplest* case. That case is degenerate on the detection
-axis (four exact constellation points ⇒ an optimal detector flags any perturbation with probability 1), and
-we have already seen this empirically: the 2026-07-03 recheck found the energy detector demolished stealth
-on the noiseless lossless channel precisely because clean power was a razor-sharp constant. So the
-resolution is not to argue with him but to **make σ the sweep and keep σ = 0 as its anchor point** — build
-the simplest case exactly as asked, then walk σ up and show what changes. Design in (F1).
-
-#### (B) "Are all legitimate symbols equally spread?" — the question that decides whether RL has a job
-
-Read his two notes together and they are one argument: payload symbols are modelled as iid uniform over
-the QPSK constellation, **and real systems scramble precisely to guarantee that**. If that holds, the
-payload contains no statistical structure to discover, the minimum-energy attack against it is closed
-form (push perpendicular to the nearest decision boundary — the July email's point), and **a learner can
-at best rediscover the closed form.** "RL shines when it can find something" is the polite version of
-*your learner may have nothing to learn.*
-
-This is not fatal, but it does relocate the learning contribution. The structure that **survives
-scrambling** is:
-1. **Protocol-deterministic structure** — preamble, pilots, guard/DC nulls, control signalling. Scrambling
-   does not randomize these. This is exactly the "protocol-aware attack" the paper's Introduction already
-   claims, so claim and method finally line up (and it is an argument for keeping *pilots* in M0 even
-   though nothing else survives the simplification).
-2. **The detector's decision surface** — signature-shaping searches the *defender's* model, not the
-   payload distribution. Symbol statistics are irrelevant to it.
-3. **Channel and geometry** — per-link gains and phases (the M1 spatial step).
-4. **Coordination** — how N_J jammers split power and phase so their perturbations add at the victim while
-   each stays under threshold. No closed form; this is a genuine joint optimization.
-
-**Turn the objection into an experiment (cheap in M0).** Sweep *the amount of exploitable structure* —
-iid-uniform payload → non-uniform symbol priors → correlated/unscrambled sequence → pilots present — and
-show the learned attacker's advantage over the closed-form boundary attack **appear exactly as structure
-appears**. That answers his question with a curve instead of a paragraph.
-
-**Record the honest risk now:** if the advantage never appears, the correct conclusion is that the
-single-link case is *solved by the closed form* and the entire learning contribution lives in (3)+(4),
-i.e. coordination — which is also the destination he cares most about. Either way this experiment should
-be run before more learner engineering, because it decides where the learner goes.
-
-#### (C) Decentralized execution — the jammer is deaf to its own reward
-
-Under CTDE, BER is available to the centralized critic at **training** time, but a deployed jammer
-**cannot measure the victim's BER**. His note names the only realistic execution-time feedback: **ACK/NACK**
-(and its relatives — retransmissions, rate adaptation, the victim going silent).
-
-Consequences:
-- `reward = BER − β·detections` is a **training-time construct**. That is legitimate under CTDE but must be
-  labelled as such in the threat model — it is the attacker-side mirror of his defender-side constraint
-  ("no ground-truth labels at execution time").
-- The **executed** policy's observation space must contain only what a jammer can sense: its own waveform,
-  its own channel estimate, and *optionally* a 1-bit, delayed, noisy **ACK/NACK** indicator. **Not** BER,
-  **not** P(detect).
-- If we want any execution-time adaptivity at all, ACK/NACK is the channel to model — worth one line in the
-  system model and, if cheap, an observation-space ablation (**blind vs ACK-aware**).
-- This retro-explains part of sim06/07: those agents were handed a frame-level scalar with ≈zero batch
-  variance, and an ACK-style binary signal is **sparser still**. It reinforces the standing decision to keep
-  policies on low-dimensional perturbation *parameters* with surrogate gradients, rather than black-box
-  scalar RL over raw IQ.
-
-#### (D) The counter signal — motivate it away *and* run it as a baseline
-
-Both halves are required (confirmed):
-
-**Motivate away.** The counter signal (`jam = −H₀X` to null the symbol, or `−2H₀X` to flip it) is the
-strongest possible attack, and it is not a realistic one: it needs **per-symbol knowledge of X**, **exact**
-amplitude and phase knowledge of both channel responses, and **sample-level synchronization** — i.e. the
-jammer must already be a perfect receiver *and* be phase-locked to the victim. It also degrades
-**ungracefully**: cancellation is an exact-inverse operation, so residual CFO/timing/phase error destroys
-it. The boundary (min-energy) attack needs the same symbol knowledge but only has to land the received
-point **in the wrong half-plane**, so it tolerates phase error far better. That contrast is a *testable
-claim*, and it is precisely what the desync axis from the July email is for — so the ordering stands:
-boundary attack first, desync second.
-
-**Run it anyway.** As the "impossible to beat" ceiling in every results figure, paired with the naive
-random-direction I/Q vector as the floor. Everything interesting lives between the two.
-
-#### (E) The baseline envelope
-
-Every results figure carries the same set, so the reader always sees where a curve sits between the floor
-and the ceiling:
-
-| Baseline | Attacker knowledge | Role |
+| Step | What it tested | Verdict |
 |---|---|---|
-| **No attacker** | — | Clean BER/SER floor **and** the detector's FAR — the lower reference on *both* axes |
-| **Random-direction I/Q vector** (barrage) | none | Naive floor; the thing the boundary attack must beat |
-| **Boundary / min-energy** | symbol + channel | Closed form, **no training** — the real bar for any learner |
-| **Counter signal** (`−H₀X`, `−2H₀X`) | symbol + channel + perfect sync | "Impossible to beat" **ceiling** (he asked for it by name) |
-| **Learned / coordinated** | per the assumption tier | The proposed method |
+| sim00 | observational baseline, lossless | measurement chain is trustworthy |
+| sim01 | PPO jammer vs power threshold | works, but power tuning is the only available strategy |
+| sim02 | + kurtosis detector | **a diagonal-Gaussian policy structurally cannot produce non-Gaussian output** |
+| sim03 | NSF (normalizing flow) policy + PPO | flow is expressive enough; PPO still does not move it |
+| sim03b | NSF + **direct gradient**, no RL | **the one method on the ladder that worked** — kurt −1.30, BER 0.17 |
+| sim03c | GMM policy + PPO | closed, negative: GMM permutation symmetry absorbs the gradient |
+| sim04 | 2 cooperative jammers, direct gradient | coordinated solution exists and is gradient-reachable (BER 0.35 @ power 0.9) |
+| sim04b | Sionna on GPU | validation only |
+| sim05 | CNN spectrogram detector on flat QPSK | fails (78.9%) — **spectrograms need OFDM** |
+| sim06 | OFDM + CNN detector (99.79%) + MAPPO jammer | detector replicates Li et al.; **MAPPO jammer fails — no reward gradient** |
+| sim06b | same in 2D | **not a dimensionality problem** — a scalar reward cannot teach input-correlated output |
+| sim07 | blind causal MAPPO, black-box | **dead end, confirmed.** The pivot happens here |
+| Phase 0 | frontier sweep, no RL | the "SOTA detector" is an **out-of-band-emission detector** |
+| Phase 0.5 | retrain it on in-band jammers | blind spot closes but costs accuracy 99.8→90.5%, FAR 0→3.8% |
+| Recheck | complex-STFT fix + energy detector | out-of-band finding survives; **energy detector kills stealth on the lossless channel** |
+| sim08 m1 | realistic TDL fading + AWGN | **sparse jammer imposes an SNR-independent BER floor**; stealth region reappears |
+| sim08 m2 | channel-valid CNN + energy suite | **suite ≡ CNN** on the faded channel; residual stealthy region survives |
+| sim08 dense | matched-detectability re-sweep | **refutes "channel-aware > blind"** — the gain was a matched-*config* artifact |
+| **M0 / E1** | minimal model + NP-optimal detector | **no realizable attack achieves stealthy jamming** (§3.3) |
 
-#### (F) Ablations / parameter studies
+## 1.3 Where everything lives
 
-**F1 — noise level σ. The primary study, and the one that carries the paper's central claim.**
+```
+BT/
+├── Tabula Rasa/            <- this repo's working tree
+│   ├── README.md           <- you are here; the only planning document
+│   ├── CLAUDE.md           <- operating rules for Claude Code (commands, contracts, gotchas)
+│   ├── m0/                 <- THE LIVE CODE (minimal model)
+│   ├── cluster/README.md   <- cluster ops; read before submitting anything
+│   ├── artifacts/          <- all outputs, one dir per simulation
+│   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
+│   ├── proposal/           <- registration proposal (reference draft; Overleaf is truth)
+│   ├── frontier/ simulation00..08/   <- FROZEN. Appendix material. Do not extend.
+│   └── live.main.tex, first_results.py   <- scratch
+└── paper/                  <- git subtree of the Overleaf document (see 1.4)
+    ├── main.tex, refs.bib          <- Overleaf's; READ ONLY, never edit here
+    ├── Literature_Review.md        <- Related Work prose, current framing
+    ├── Sources_And_Evaluation.md   <- the reference database + refs.bib surgery plan
+    └── Research_Landscape_2026.md  <- literature currency check, Aug 2026
+```
 
-The design (settled 2026-09-01): start at the simplest case he asked for, **σ = 0**, and walk σ up to
-**≈0.5**, comparing our method against every baseline in (E) at *each* level. The target statement is
-*"across the whole noise range, our attacker achieves higher BER/SER and/or lower detection than the
-baselines"* — a claim that holds along a curve rather than at a hand-picked operating point, which is
-much harder to argue with than a single number.
+> **If you meet a reference to a file that no longer exists**, it was folded into this README on
+> 2026-09-10, when six overlapping documents were consolidated to remove ~2,400 lines of duplication:
+> `SUPERVISOR_TODO.md` → [Appendix B](#appendix-b-supervisor-record) (its §§1–14 map onto B.2/B.3) ·
+> `artifacts/RUNS.md` → [A.0](#a0-run-index) · `simulation03/README.md`, `simulation03c/README.md` →
+> [A.2](#a2-sim0203c-what-a-policy-distribution-can-and-cannot-represent) ·
+> `simulation03/USECLUSTER.md` → [C.4](#c4-cluster-quick-reference) · `paper/README.md` → §4.2 Q6 and
+> `paper/Literature_Review.md`. All are recoverable from git history. Drafts in `paper_drafts/` and
+> the Overleaf document may still cite the old section numbers.
 
-- **Grid:** σ = 0 as a separate anchor point, then a **log grid** (his "change exponentially") over roughly
-  σ ∈ [10⁻³, 0.5]. Log spacing matters because detection tracks σ closely — the jammer is precisely trying
-  to look like noise — so the interesting behaviour is compressed near small σ and linear spacing would
-  miss it.
-- **Range sanity, for unit-energy QPSK with σ per real dimension** (N₀ = 2σ²): σ = 0.5 → Es/N₀ ≈ 3 dB,
-  Eb/N₀ ≈ 0 dB; σ = 0.1 → Eb/N₀ ≈ 14 dB; σ → 0 → Eb/N₀ → ∞. So [0, 0.5] spans the full useful range and
-  **overlaps sim08's 5–30 dB from below**, which keeps the appendix results comparable to the new ones.
-- **What σ = 0 is for.** It is the degenerate anchor, not an operating point: with four exact constellation
-  points an optimal detector flags any perturbation with probability 1, so at σ = 0 the "less detected" half
-  of the claim *cannot* hold for anyone and the comparison collapses to BER/SER at matched power. Say that
-  explicitly — it is the cleanest possible demonstration of *why* stealth is a noise phenomenon, which is the
-  M0-level explanation of the sim08-m1 stealth region. Bonus: any gap between the **learned** detector and
-  the **NP-optimal** one at σ = 0 is pure detector suboptimality, which is a free calibration point for the
-  adaptation-cost measurement (§5 of `SUPERVISOR_TODO.md`).
-- **Compare at matched detectability, not just matched config.** This is the one trap the project has already
-  fallen into: sim08-m1's "+70% channel-aware" evaporated once BER was compared at matched P(detect) instead
-  of matched jammer *configuration*. So report the sweep both ways — dual-axis vs σ at matched power budget
-  (the figure he asked for), **and** BER at matched P(suite) per σ (the honest metric). If the "better at all
-  noise levels" claim survives both, it is solid; if it only survives the first, it is the m1 mistake again.
+**Live code (M0):**
 
-**The rest, in priority order:**
+| file | what |
+|---|---|
+| `m0/link.py` | constellation, channel, BER/SER, analytic references |
+| `m0/attacks.py` | the 8-tier attacker ladder + hard power projection |
+| `m0/detectors.py` | energy (1- and 2-sided), learned CNN on the IQ histogram, NP-optimal LRT |
+| `m0/verify.py` | ~50 checks against analytic predictions — **run this first**, exit 0 = all pass |
+| `m0/train_detector.py` + `submit_train.sh` | one CNN per σ (job 2243867, 89 s) |
+| `m0/frontier_m0.py` + `submit_frontier.sh` | the E1 sweep, 8-task array (job 2243879, 8 s/task) |
+| `m0/figures.py`, `m0/figure_geometry.py` | all figures → `artifacts/m0/*.png` |
 
-2. **Exploitable structure** (from (B)) — the ablation that decides whether the learner is motivated at all.
-3. **Attacker power budget**, log grid.
-4. **Scenario size:** number of jammers, **number of legitimate users** (new — the model is 1 TX → 1 RX today).
-5. **Desync level** (CFO / timing / residual phase), from the July email — after the boundary attack exists.
+**Frozen code** (sim06/07/08 + frontier) is inventoried in [A.9](#a9-frozen-code-inventory).
 
-#### (G) Figure convention
+## 1.4 The paper — Overleaf is authoritative, this repo only reads
 
-The figure he asked for: **one panel, two y-axes** — BER (and SER) on the left, P(detect) on the right,
-against the swept parameter (σ, or power budget) — with the **no-attacker** and **omniscient-attacker**
-references drawn in as horizontal/reference curves. Keep the existing parametric **BER-vs-P(det) frontier**
-plot as the companion: the dual-axis view is what he wants to read, the frontier view is what supports
-matched-detectability comparisons. Use both, for the same runs.
+> **RULE: never write to the paper from this repo. Pull only.** The authoritative document is in
+> **Overleaf**, which syncs to `github.com/rahul2605-ux/BT-Paper`, fetched here as the `overleaf`
+> remote and merged into `paper/` as a git **subtree**. Edits happen in Overleaf, by the user.
 
-#### (H) What this does to the paper
+The current Overleaf document **is the thesis**. Di Maio will open a separate one for the ICC paper
+— his note at `overleaf/main` L463: *"VDN; QMIX are interesting info but not for paper, rather for
+your thesis. To keep nice separation, I will create a new overleaf for paper and we keep this for
+thesis."* Reinforced at L441 (*"do not throw away anything that I suggest not including in the
+paper"*). This is why ICC's ~6-page limit does not constrain the appendix.
 
-- **Hard quota: 2–3 experiments in the main paper, the rest in the appendix.** Current candidates, to confirm
-  with him: **E1** the M0 trade-off frontier with the full baseline envelope (D/E/G); **E2** the noise-level
-  ablation (F1); **E3** the spatial/multi-jammer coordination result (M1). The entire sim06→08
-  characterization arc is **appendix**, as already agreed in July.
-- **The System Model section must be rewritten around M0**, with OFDM, fading and multi-antenna presented as
-  *extensions*. This also repairs a live mismatch: `main.tex` §System Model already describes the full
-  K-subcarrier, TDL, N_J-jammer setting that **no working experiment currently supports**.
-- **Intro** gains the bit-error-recovery scoping paragraph (out of scope, handled elsewhere, but here is why
-  BER/SER is still the right metric).
-- **Threat Model** gains: the CTDE / deaf-at-execution statement (C), the counter-signal non-viability
-  argument (D), and the assumption tiers already owed from July.
-- **Overleaf is the working record** — the assumption table, baseline table and ablation list go in now, as
-  stubs if necessary. (Reminder: `paper/` in this repo is read-only; edit in Overleaf.)
+```bash
+cd /home/rrahman/BT
+git fetch overleaf                                # needs GitHub credentials
+git show overleaf/main:main.tex                   # read straight out of the ref
+git log -1 --format='%h %ad %s' overleaf/main     # what state am I looking at?
+git subtree pull --prefix=paper overleaf main --squash   # only to version a snapshot
+```
 
-**Unchanged by this meeting** (July email still authoritative): adaptation cost as the headline claim;
-`reward = BER − β·detections` with power as a hard environment constraint; SER alongside BER; PettingZoo,
-never RLlib; the desync realism axis; multi-jammer coordination against mobile victims as the destination.
+**Status as of 2026-09-10:** the subtree was pulled today, so `paper/main.tex` is **byte-identical to
+`overleaf/main`** at commit `d662bdc` ("a4 draft done", Sep 10 13:50). *(This supersedes the earlier
+rule that `paper/main.tex` was a stale 2026-08-17 snapshot never to be read — it was true until
+today's pull.)* Re-verify with the `git show ... | diff` one-liner before trusting it, since Overleaf
+moves independently and `paper/` only updates on an explicit pull.
 
-### Thesis proposal + settled framing (2026-09-01) — the UAV / detection-gap framing
+`BT-Paper` holds only `main.tex` + `refs.bib`. The `.md` research files in `paper/` are ours and are
+not synced. **Auth:** `BT-Paper` is private, so `git fetch overleaf` prompts for credentials and
+fails non-interactively. Never embed a token in the remote URL or paste one into a chat session.
 
-Written while drafting the ETH **registration proposal**. This section records the framing decisions
-made in the process, because they are sharper than anything above and they are now what the paper's
-Introduction argues.
+## 1.5 Compute
 
-> **STATE AS OF 2026-09-01: the proposal has been handed to A. Di Maio for correction — AWAITING HIS
-> FEEDBACK.** Nothing downstream is blocked on us until he replies; the next move on our side is to
-> build M0 (Next steps §1 onward) rather than to keep editing the proposal.
->
-> **Authority note:** the authoritative proposal lives in **Overleaf** (user writes it there; this repo
-> only reads `paper/` — see the paper-workflow rule). `proposal/proposal.tex` in this repo is the
-> **reference draft** Claude generated — 2 pages, self-contained, compiles with pdflatex, and carries
-> the five title options in its header comment. It will drift from the submitted version; treat
-> Overleaf as truth and this file as the scaffold plus the title-option record.
+Migrated 2026-09-08 from the INFK student cluster to **ITET/TIK**. **Read
+[`cluster/README.md`](cluster/README.md) before submitting anything** — there are two CUDA traps that
+silently break jobs. The five facts that change how experiments are designed:
 
-**It is a BACHELOR's thesis.** Scope decisions below follow from that, not from lack of ambition.
+- **The 1-GPU-job concurrency cap is gone.** Parallel sweeps and array jobs are now possible; the
+  constraint that shaped every earlier experiment no longer applies.
+- Walltime 1 h → **2 days**; 12 usable GPU nodes instead of 1; no preemption.
+- Submit host `tik42x.ee.ethz.ch`, account **`disco-med`**. **Do not set `--partition`** (a lua
+  plugin overrides it). `--gres=gpu:1`, never `--gpus=1`, plus the mandatory Pascal-exclusion
+  `--constraint`.
+- Env: `/itet-stor/rrahman/net_scratch/bt_env`. The home quota is small and invisible until you hit
+  it; keep bulky things on net_scratch.
+- Workflow unchanged: `cd` into a sim dir and `sbatch submit.sh`. Never compute on the login node.
 
-**Working title (option A of five in the .tex header comment):** *Cooperative Multi-Agent Generative
-Jamming of UAV Networks under Detection Constraints*. Chosen for the registration form because it
-names method, target and constraint without committing to a result. The sharper
-*"Breaking the Detection Assumption: …"* is the better eventual **paper** title but promises a
-finding not yet measured.
+All 19 submit scripts were migrated and verified end-to-end (job 2243247 reproduced the recorded m2
+numbers in 2.9 s). **M0 runs on CPU in seconds**, so compute is not currently a constraint at all.
 
-#### The motivating argument (this is the new spine)
+---
+
+# PART 2 — GOAL & APPROACH
+
+## 2.1 The question, and what has been falsified as *method*
+
+The enduring question: **can a learned jammer evade a SOTA learned detector while staying effective,
+on a realistic channel — and what does it cost either side to adapt?**
+
+MARL + black-box + raw-IQ was a **method-hypothesis**, tested and largely rejected (sim06/06b/07).
+Re-anchoring on the question rather than the method is why signature-shaping is a *return* to the
+goal, not a drift: it pursues the same question with the method the ladder proved works
+(direct/surrogate gradient, sim03b/sim04) instead of the one it proved does not.
+
+**What this actually is, in the literature's terms: an adversarial-ML evasion attack with
+wireless-physical constraints.** Signature-shaping via surrogate-gradient transfer is precisely a
+transferability-based **evasion attack** against a *fixed* classifier (Papernot-style). The novelty
+over vanilla adversarial ML is the constraint set: the perturbation must be a **physically
+realizable** interference through the jammer's own channel, AND it must **cause BER**, not merely
+flip a label. That triple — realizable + effective + stealthy — is the contribution.
+
+**Scope caveat to state plainly:** this is a **single-round** attack on a **frozen** detector — an
+evasion result, not a full adaptive arms race. Standard for the genre, but not a solved
+co-adaptation game. RQ2 (§2.3) is what partially buys this back.
+
+## 2.2 The motivating argument — the UAV detection gap
+
+Settled 2026-09-01 while drafting the registration proposal. This is what the Introduction argues.
 
 1. UAV / mobile ad-hoc anti-jamming has converged on learned, often multi-agent countermeasures —
    relay repositioning, coordinated spectrum access, trajectory + power adaptation.
@@ -905,1035 +201,859 @@ finding not yet measured.
    cannot be triggered by an attack it never detects. The defense does not degrade gracefully — it
    never activates, and the degradation is experienced as ordinary channel impairment.
 5. **The gap:** the attack side has not optimized non-detectability as a first-class objective (low
-   power / low duty cycle is pursued as *efficiency*, with stealth a by-product), and the defense side
-   has assumed it would not have to.
+   power / low duty cycle is pursued as *efficiency*, with stealth a by-product), and the defense
+   side has assumed it would not have to.
 6. **Hence the method.** *Multi-agent* because keeping each jammer below threshold while their
    contributions add at the victim has no closed form. *Generative* because the signature must be
    **shaped**, not a channel merely chosen.
 
-Note how much this recycles: the effectiveness–detectability frontier, matched-detectability
-methodology, and the detector-suite work above are all now *instruments* of this argument rather than
-the contribution itself.
+> **Honesty constraint on claim 5 — load-bearing, and the first thing a reader will test.**
+> "Nobody studies stealthy jamming" is false and easy to attack: covert communication and LPI
+> waveforms exist. The defensible claim is the **conjunction** — explicit stealth objective **and**
+> evaluated against a *learned* detector **and** reported as a trade-off curve. Related Work must
+> name the nearest neighbours (`wen2025generative` GAN-aided covert comms, `valianti2024cooperative`
+> cooperative-RL jamming) and say precisely what they do not do.
 
-**Honesty constraint on the gap claim (§5).** "Nobody studies stealthy jamming" is false and easy to
-attack — covert communication and LPI waveforms exist. The defensible claim is the **conjunction**:
-explicit stealth objective **and** evaluated against a *learned* detector **and** reported as a
-trade-off curve. Related Work must name the nearest neighbours (`wen2025generative` GAN-aided covert
-comms, `valianti2024cooperative` cooperative-RL jamming) and say precisely what they do not do.
+The characterization work (Phase 0/0.5, m1, m2, matched-detectability) is now an *instrument* of this
+argument rather than the contribution itself.
 
-#### Research questions as registered
+## 2.3 Research questions, as registered
 
 - **RQ1** — can a cooperative multi-agent generative policy degrade the link while staying below a
   SOTA learned detector's threshold, and what trade-off does it achieve **relative to baselines**
   (barrage / closed-form minimum-energy / single-agent learned / omniscient cancellation as ceiling)?
-- **RQ2** — **adaptation cost**, round-based and offline: frozen detector → attacker optimized against
-  it → detector retrained → attacker re-optimized. What does re-closing the gap cost the defender in
-  accuracy and FAR, and how much does the attacker recover?
+- **RQ2** — **adaptation cost**, round-based and offline: frozen detector → attacker optimized
+  against it → detector retrained → attacker re-optimized. What does re-closing the gap cost the
+  defender, and how much does the attacker recover?
+  **What counts as "expensive" — still to be pinned down.** Candidates, all measurable with existing
+  tooling: Δaccuracy · ΔFAR · training samples required · GPU-hours · how much performance the other
+  side recovers · and, uniquely available in M0, **distance from the NP-optimal detector**, i.e. how
+  much adaptation budget is even left. The deliverable is a **cost curve per round**, not a win/loss.
 
 **A third RQ was drafted and DROPPED: countermeasure-level evaluation** ("how much of the reactive
-stack still functions"). Reason: it needs a full detect→react pipeline *plus* a proactive counterpart
-*plus* a network-throughput model to compare them in — a second thesis, and the comparison would
-mostly measure our two countermeasure implementations rather than the attack. The intro argument
-survives as **motivation**; the consequence for reactive defenses is stated as an argument, not a
-measured result. Methodology must carry a scope sentence saying so.
+stack still functions"). It needs a full detect→react pipeline *plus* a proactive counterpart *plus*
+a network-throughput model — a second thesis, and the comparison would mostly measure our own two
+countermeasure implementations rather than the attack. The intro argument survives as **motivation**;
+the consequence for reactive defenses is stated as an argument, not a measured result. **Methodology
+must carry a scope sentence saying so.**
 
-**Cheap replacement if a countermeasure-facing result is ever wanted — NOT adopted, kept on the
-shelf:** measure the **trigger** instead of the reaction. Time-to-first-detection over a sequence of
-frames is computable from the per-frame P(det) we already produce — no countermeasure, no mobility, no
-throughput model. It also fixes a known weakness of our own reporting: the README notes above that
-P(det) ≤ 0.5 "is not operational stealth — a jammer caught half of every frame is caught within a few
-frames". Time-to-detection measures exactly that, turning a hand-written caveat into a reported number.
+**Working title** (option A of five in `proposal/proposal.tex`'s header comment): *Cooperative
+Multi-Agent Generative Jamming of UAV Networks under Detection Constraints*. Chosen because it names
+method, target and constraint without committing to a result. The sharper *"Breaking the Detection
+Assumption: …"* is the better eventual **paper** title but promises a finding not yet measured.
 
-#### Consequences for the paper (`paper/`, read-only here — user writes Overleaf)
+## 2.4 The model — M0 and M1
 
-- Introduction rewritten around the gap argument above; the "protocol-aware attack" paragraph is
-  **literature positioning**, not a description of our method.
-- The System Model section still describes the full K-subcarrier / TDL / N_J-jammer setting that no
-  working experiment supports. It must be rebuilt around the minimal model with OFDM/fading as
-  *extensions* — see the 2026-08-21 meeting section §(A).
-- **`refs.bib` is missing the Li et al. IEEE Access 2022 spectrogram detector** — the citation behind
-  "state-of-the-art learned detector" in RQ1, and the paper we replicated. Add it. Also missing and
-  needed if tooling is cited: Sionna (Hoydis et al., arXiv:2203.11854), PettingZoo (Terry et al.,
-  NeurIPS 2021).
-- Citation style (IEEEtran): bracket goes **before** all punctuation, with a `~` tie —
-  `...adaptation~\cite{key}.` Group multiples as `\cite{a,b}`. Keep the number out of the grammar —
-  Di Maio's own note in `main.tex`: *"citations should be such that text is also equally readable if
-  removed."*
+Per the 2026-08-21 mandate. **M0** = the simplified base (built). **M1** = M0 + spatial, the *only*
+sanctioned extension. Naming is ours; he did not name them.
 
-#### Tooling named in the proposal (answers his "look into RL libraries")
+| | **M0 — built** | **M1 — the one sanctioned extension** | *(sim06–08, frozen)* |
+|---|---|---|---|
+| Subcarriers | **1** — no OFDM grid, no IDFT, no guard/DC/pilot bins | 1 | 64-SC OFDM |
+| Channel | **one** fixed realization, `h = 1` | per-jammer link gain/phase, superposing at RX | TDL freq-selective, per-link, per-frame |
+| Propagation | **none** — no delay, no path loss (literal) | none; geometry enters only as per-link gain/phase | — |
+| Noise | **AWGN, σ swept** | single global σ, same sweep | per-SNR Eb/N0 5–30 dB |
+| Jammers | 1 | **N_J ≥ 2, coordinated** — the point of M1 | 1 (frontier) / MAPPO team (dead) |
+| Legit users | 1 TX → 1 RX | 1, then sweep | 1 |
+| Attacker action | per-symbol complex perturbation, hard power budget | + the split between jammers | full per-subcarrier IQ (falsified) |
+| Detector | energy meter + learned CNN on the IQ histogram + **the NP-optimal test** | same | spectrogram CNN + energy |
+| Metrics | **BER, SER**, P(detect) at fixed FAR | + coordination gain over N_J independent jammers | BER, P(suite) |
 
-Sionna (PHY) + PyTorch (detectors, generative policies) + **PettingZoo** (multi-agent env API) +
-**BenchMARL** (reference MARL algorithms where off-the-shelf beats custom) + Stable-Baselines3 for the
-single-agent baselines *over the same environment*, so cooperative and non-cooperative attackers are
-compared under an identical chain. **RLlib is not mentioned in the proposal** — a proposal should not
-carry rejected options; PettingZoo + BenchMARL already signals his advice was taken.
+**Why single-subcarrier is the right cut, specifically.** It deletes exactly the things that burned
+the project: the guard/DC/out-of-band bins that produced *and then invalidated* the Phase-0 headline;
+the equalization/CSI bookkeeping that made m1's "channel-aware" criterion ambiguous
+(`|h_jam/h_tx|` vs small `|h_tx|`); and the spectrogram representation, which took a real-vs-complex
+STFT bug to get right. What remains is a 2-D constellation — **the picture the supervisor reasons in
+every time** ("add vector in random direction in I/Q plot", "points located around the symbol
+classification boundary").
 
-#### When his corrections come back — the things most likely to be challenged
+**Consequence to state explicitly: with σ = 0 there is no stealth problem.** The clean received
+constellation is four exact points, so *any* perturbation is detected with probability 1. **Stealth
+exists only because of noise.** That is why the noise sweep is the primary ablation, and it is the
+M0-level explanation of the sim08-m1 result (the stealth region appeared only once the channel had a
+noise floor to hide under). Getting that mechanism into a model simple enough to *derive* is a
+genuine contribution, not a retreat.
 
-Recorded now so the reasoning does not have to be reconstructed later:
-1. **The gap claim** ("attackers have not optimized non-detectability as a first-class objective"). The
-   load-bearing sentence of the whole Introduction and the first thing a reader tests. Defend it as the
-   *conjunction* (stealth objective AND learned detector AND trade-off curve), and be ready to name the
-   nearest neighbours — see the honesty constraint above.
-2. **The dropped countermeasure RQ.** If he asks why there is no result about the reactive defenses the
-   Introduction is built on: the answer is the cost argument above, and the cheap fallback is
-   time-to-first-detection, already specified and requiring no new machinery.
-3. **RQ2 (adaptation cost) versus the bachelor timeline.** It is last in the plan and depends on a
-   working attacker; if the schedule tightens, this is the item to renegotiate — not the structure
-   ablation, which gates everything else.
-4. **Whether "protocol-aware" over-promises.** The Introduction positions protocol-aware jamming as
-   literature context, but our method is signature-shaped interference. Defensible (protocol-deterministic
-   fields are exactly what survives scrambling) but he may read it as a claim about our method.
+## 2.5 The attacker ladder and the baseline envelope
 
-### Next steps (in order) — updated 2026-09-01 (registration first)
+`m0/attacks.py` implements eight tiers: `none, barrage, gaussian, boundary_blind, boundary_genie,
+permute, counter_null, counter_flip`, all with hard power projection.
 
-> **PARTIALLY SUPERSEDED 2026-09-08 by "Deadline moved to ICC (2026-10-02) — revised plan".** Items
-> 2–4 are **done** (M0 built, E1 run). The *ordering* below is superseded by the revised plan's
-> G1–G7; the *content* of items 5–10 is unchanged and still describes what each step is. Read the
-> revised plan for what to do next; read here for what each item means.
+Every results figure carries the same envelope, so the reader always sees where a curve sits between
+floor and ceiling:
 
-Supersedes the 2026-08-03 ordering (reply + meeting are **done**). The reordering principle is
-**"what does the minimal model need"**, with one thing ahead of it: nothing here matters if the thesis
-is not registered. Nothing below requires the sim06–08 stack; M0 is small enough to run on a laptop
-CPU. *(Update 2026-09-08: after the ITET migration the 1-GPU-job concurrency cap no longer exists
-at all — parallel sweeps are available if any step wants them. See "Cluster/compute notes".)*
+| Baseline | Attacker knowledge | Role |
+|---|---|---|
+| **No attacker** | — | clean BER/SER floor **and** the detector's FAR — the lower reference on *both* axes |
+| **Random-direction I/Q vector** (barrage) | none | naive floor; what the boundary attack must beat |
+| **Boundary / min-energy** | symbol + channel | closed form, **no training** — the real bar for any learner |
+| **Counter signal** (`−H₀X`, `−2H₀X`) | symbol + channel + perfect sync | **"impossible to beat" ceiling** — he asked for it by name |
+| **Learned / coordinated** | per the assumption tier | the proposed method |
 
-**0. REGISTRATION — SUBMITTED 2026-09-01, awaiting supervisor correction. (no compute.)**
-   Items 0a–0c are **done** (kept below because they record *what* was fixed and *why*, which matters
-   when his corrections come back and the same decisions get revisited). 0d remains open.
-   0a. **[DONE] Finish `proposal/proposal.tex`.** Remaining mechanical items: add `\usepackage{xcolor}` (the
-       `\adm`/`\rar` macros use `\color{orange}` and will error without it); fix the Introduction's
-       closing line, which still promises evaluation "against reactive and proactive countermeasures"
-       — that RQ was dropped, so it must read *"against classical and non-cooperative baselines on the
-       effectiveness–detectability plane"*; paste in the Methodology (system/threat model → incremental
-       model → attacker/defender → evaluation → implementation) and the Implementation/tooling line.
-   0b. **[DONE] Add ~8–10 citations.** The gap argument is the only place references are load-bearing —
-       "defenses are reactive" and "attackers have not optimized stealth" are claims about the
-       literature and read as assertions unbacked. Map: protocol-aware attacks → `zhang2023detection`
-       (it is literally about preamble/pilot/interleaving jamming); game-theoretic defenses →
-       `article`; RL-based adaptation → `Nguyen2025_MARL_UAVRelay`, `abolhassani2025coordinated`,
-       `qin2025multi`, `xu2020convert` (pick 2–3); proactive exceptions → `11302544` (his own),
-       `strasser2009novel`; nearest neighbours on stealth → `wen2025generative`,
-       `valianti2024cooperative`; CTDE → `NIPS2017_68a97503`; general framing → `jamming_survey_2024`.
-   0c. **[DONE 2026-09-01] Li et al. IEEE Access 2022 detector added to `refs.bib`** — it backs
-       "state-of-the-art learned detector" in RQ1 and it is the paper we replicated.
-   0d. **[OPEN] Get title, scope, start/end dates and supervisor-of-record signed off** — all four are needed
-       on the myStudies form (`SUPERVISOR_TODO.md` §1 has these as open `[?]` items).
-
-1. **System & Threat Model — now written around M0. (≈3–4 h, no compute — still the top deliverable.)**
-   Carried over from 2026-08-03 and *made easier* by the simplification: the model to describe is now one
-   subcarrier, one channel, one (then N_J) jammers. Must pin down: **where detection happens** and **what
-   the detector observes**; the **assumption tiers** (genie / realistic / blind) for the attacker; the
-   **CTDE split** — BER is training-time only, execution sees at most ACK/NACK (§C); **inter-jammer
-   coordination** and what it costs in hardware; the **power budget** as a hard constraint; and the
-   **counter-signal non-viability** argument (§D). Name jammer localization as out-of-scope defender
-   capability. Goes straight into Overleaf, per "put as much info as possible in Overleaf".
-
-2. **Build M0. (≈half a day, CPU — no cluster job.)** Single subcarrier, one channel, AWGN with sweepable σ,
-   QPSK, one jammer with a hard power budget. Deliverables: BER **and SER**; the three non-learned attacks
-   (random-direction, boundary/min-energy, counter signal) as closed-form functions; the detector trio
-   (energy meter, learned IQ-scatter classifier, **and the Neyman–Pearson optimal test** — the reference
-   that makes M0 worth the retreat, §A). Reuse `build_jam`-style structure from
-   `simulation08/frontier_channel.py` but do **not** import the OFDM/fading machinery.
-
-3. **The baseline envelope + the dual-axis figure. (≈2 h once M0 exists.)** All five baselines from §E on
-   one plot in the format from §G — BER/SER left axis, P(detect) right axis, no-attacker and
-   omniscient-attacker references drawn in. This is the figure he asked for and it is **E1**, the likely
-   lead experiment of the paper.
-
-4. **Noise-level study — σ = 0 anchor + log grid to ≈0.5, all baselines at every level. (≈2 h.)** Design in
-   §F1. This is the study that carries the headline claim (*better/less-detected across the whole noise
-   range*), it starts from exactly the simplest case he asked for, and it reproduces the sim08-m1 stealth
-   region in a model where the mechanism can be **derived** rather than observed. Report it both ways —
-   dual-axis at matched power **and** BER at matched P(detect) — or it repeats the m1 mistake. Candidate
-   **E2**, and plausibly the strongest single figure in the paper.
-
-5. **The structure ablation — does the learner have a job? (§B; ≈half day.)** Sweep exploitable structure
-   (iid-uniform payload → non-uniform priors → correlated/unscrambled → pilots present) and check whether a
-   learned attacker separates from the closed-form boundary attack. **Run this before more learner
-   engineering** — it decides whether the learning contribution lives in the single link at all, or only in
-   coordination.
-
-6. **M1 — the spatial step. (the one sanctioned extension.)** N_J ≥ 2 jammers with per-link gain/phase,
-   superposing at the RX; no delay, no path-loss law. The coordination question, unchanged: can K jammers
-   each stay under the per-frame threshold that one concentrated source trips, while their perturbations add
-   coherently at the victim? Wrap in **PettingZoo** if a MARL algorithm is actually needed; surrogate
-   gradients remain the primary method. Candidate **E3**.
-
-7. **Adaptation-cost rounds, in M0/M1. (the July headline, now cheap.)** R0 frozen detector vs the best
-   attacker; R1 retrain the detector on those attacks and measure the cost (Δaccuracy, ΔFAR, samples,
-   GPU-hours); R2 re-optimize the attacker against R1. Deliverable is a **cost curve per round**. In M0 this
-   gains something it could not have in sim08: distance from the **NP-optimal** detector, i.e. how much
-   adaptation budget is even left.
-
-8. **Desync / realism axis. (post-M0, per the July email.)** Per-jammer CFO, timing and residual phase error
-   as a "cheap hardware" quality level. Only meaningful once the attack is phase-coherent — and it is the
-   experiment that substantiates the counter-signal-vs-boundary robustness claim in §D.
-
-9. **Scenario-size ablation:** #jammers, **#legitimate users** (the model is 1 TX → 1 RX today, so this needs
-   a multi-user extension first).
-
-10. **Victim mobility. (stretch, his "most interesting investigation".)** Only after 6 works.
-
-**Explicitly NOT doing:** extending sim06/07/08 in any direction — no further OFDM/fading/CNN sweeps, no
-matched-detectability follow-ups (appendix material, finished, and the *opposite* of "simplify"); RLlib;
-black-box PPO over raw IQ (falsified); channel-aware *subcarrier selection* as a lever (refuted at matched
-detectability, and there are no subcarriers to select in M0).
-
-**Deferred refinements** (unchanged, not on the critical path): BER-thresholded in-band labels + threshold
-calibration for the m2 detector; extending the sim08 suite with more classical detectors
-(kurtosis/GLRT/pilot-variance).
-
-### M0 built + E1 run (2026-09-08) — and the negative result that now gates M1
-
-> **STATE: M0 exists, is verified, and E1 has been run. The headline is NEGATIVE and it puts M1
-> (the multi-jammer step) in question. Read the "open decision" at the end before planning further.**
-
-Code in `m0/`, artifacts in `artifacts/m0/`. Everything runs in seconds; the sweep is an 8-task
-SLURM array (one σ per task) — possible only after the ITET migration lifted the 1-GPU-job cap.
-
-**What M0 is.** One QPSK symbol at a time, one channel (`h=1`), AWGN with swept σ. No OFDM, no
-fading, no pilots. `y = s + d + w`, decisions by per-axis sign test. That is the entire model.
-The point of shrinking this far is *not* simplicity for its own sake: at this size the
-**Neyman–Pearson optimal detector is computable in closed form**, so results read "no detector can
-do better than X" instead of "our CNN failed to catch it".
-
-| file | what |
-|---|---|
-| `m0/link.py` | constellation, channel, BER/SER, analytic references |
-| `m0/attacks.py` | the attacker ladder (8 tiers) + hard power projection |
-| `m0/detectors.py` | energy (1- and 2-sided), learned CNN on the IQ histogram, NP-optimal LRT |
-| `m0/verify.py` | ~50 checks against analytic predictions — **run this first**, exit 0 = all pass |
-| `m0/train_detector.py`, `submit_train.sh` | trains one CNN per σ (job 2243867, 89 s) |
-| `m0/frontier_m0.py`, `submit_frontier.sh` | the E1 sweep, array job (job 2243879, 8 s/task) |
-| `m0/figures.py`, `figure_geometry.py` | all figures → `artifacts/m0/*.png` |
-
-**Verified, not assumed.** Unjammed BER matches `Q(1/(σ√2))` to Monte-Carlo tolerance; SER matches
-`1−(1−BER)²`; every attack matches its geometric prediction; all detectors calibrate to the target
-false-alarm rate; the ordering `P_NP ≥ P_L ≥ P_E` holds everywhere (an "optimal" detector losing to
-a CNN would mean the maths was wrong).
+> **Do not forget the visual he will look for:** re-plot the **IQ scatter under attack** and check
+> that the perturbed points now cluster *at the decision boundary* rather than scattering
+> isotropically. That picture is what his whole minimum-energy observation was about, and it is the
+> fastest way for him to see that it was implemented.
 
 **Closed-form frontiers (σ = 0).** A QPSK symbol sits at distance `1/√2` from its nearest decision
 boundary, so a push of `ρ > 1/√2` (energy 0.5) flips exactly one bit. Spending budget `P` on a
 fraction `duty` of symbols gives `ρ = √(P/duty)`, which crosses only while `duty < 2P`:
 - **genie** (knows `s`, pushes toward the boundary): `BER*(P) = min(P, 0.5)`
 - **blind** (pushes along a random axis direction, independent of `s`): `BER*(P) = min(P/2, 0.25)`
-- The ratio is **exactly 2.00** at every power — that is the entire value of knowing the symbol,
-  and it is a *sensing* capability, not a learnable one (for an iid scrambled payload a causal
-  jammer can never have it, so no amount of learning closes it).
+- The ratio is **exactly 2.00** at every power — that is the entire value of knowing the symbol, and
+  it is a **sensing** capability, not a learnable one. For an iid scrambled payload a causal jammer
+  can never have it, so no amount of learning closes that factor of two.
 
-**THE ACTUAL HEADLINE — a negative result.** Max *excess* BER over the clean floor, while staying
-under the detector's own false-alarm rate (α = 0.05), against the **NP-optimal** detector:
+**The counter signal must be both motivated away and run.** It needs per-symbol knowledge of X,
+exact amplitude and phase of both channel responses, and sample-level synchronization — the jammer
+must already be a perfect receiver *and* be phase-locked to the victim. It also degrades
+**ungracefully**: cancellation is an exact-inverse operation, so residual CFO/timing/phase error
+destroys it. The boundary attack needs the same symbol knowledge but only has to land the received
+point **in the wrong half-plane**, so it tolerates phase error far better. That contrast is a
+*testable claim* and it is what the desync axis is for — hence the ordering: **boundary attack
+first, desync second.**
 
-| σ | barrage | gaussian | boundary_blind | boundary_genie | permute (genie) |
-|---|---|---|---|---|---|
-| 0.02–0.10 | — | — | — | 0.500 | 0.500 |
-| 0.30 | — | — | 0.0002 | 0.491 | 0.491 |
-| 0.50 | — | 0.0007 | 0.0003 | 0.211 | 0.421 |
+## 2.6 The defender, and why the NP-optimal test is the whole point of M0
+
+Three detectors, all in `m0/detectors.py`, all calibrated to a target false-alarm rate α:
+
+1. **Energy meter** — one-sided and two-sided variants. The classical one-sided test exists because
+   it was designed against barrage jammers that ADD power; minimum-energy attacks push symbols
+   *toward* the origin, so received power FALLS and the one-sided test is blind to them. Both are
+   implemented; **report both.**
+2. **Learned CNN** on the received IQ 2-D histogram — the M0-scale stand-in for the spectrogram CNN.
+3. **The Neyman–Pearson likelihood-ratio test** — available in closed form once σ and a perturbation
+   model are stated.
+
+**Why (3) justifies the entire retreat to M0.** Using an LRT as the optimality benchmark that
+practical detectors are measured against is textbook spectrum-sensing methodology (Kay, *Detection
+Theory*, 1998; Axell–Leus–Larsson–Poor, IEEE SPM 2012, which sets up exactly our LRT / energy / GLRT
+tiering). What is new here is the **direction**: that literature uses the bound to certify a
+*detector*; we use it to certify an *attack* — "this evades the optimal test" ⇒ **no detector catches
+it**. Say this explicitly in the Defender Model. It upgrades every claim of the form *"the CNN is
+blind to X"* into *"**no** detector can do better than Y"*, and it gives the adaptation-cost headline
+the reference point it otherwise lacks: how far a retrained detector still is from optimal **is** the
+remaining adaptation budget.
+
+Sanity ordering that must hold everywhere: `P_NP ≥ P_learned ≥ P_energy`. An "optimal" detector
+losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
+
+## 2.7 Metrics and figure conventions
+
+- **BER and SER** (he asked for SER by name), P(detect) at a fixed FAR.
+- **The stealth budget is the detector's own clean false-alarm rate**, not a loose convention. The
+  project has already been burned once by reporting BER at `P(det) ≤ 0.5`: a jammer caught half of
+  every frame is caught within a few frames. Report the **whole frontier curve**, not a single
+  threshold.
+- **Compare at matched detectability, not matched configuration. Non-negotiable.** This is the one
+  trap the project has already fallen into: sim08-m1's "+70% channel-aware" evaporated entirely once
+  BER was compared at matched P(detect) instead of matched jammer *config*. Report both ways; if a
+  claim survives only the matched-power view, it is the m1 mistake repeated.
+- **Figure format he asked for specifically:** one panel, **two y-axes** — BER (and SER) left,
+  P(detect) right, against the swept parameter (σ, or power budget) — with the **no-attacker** and
+  **omniscient-attacker** references drawn in. Keep the parametric **BER-vs-P(det) frontier** plot as
+  the companion: the dual-axis view is what he wants to read, the frontier view is what supports
+  matched-detectability comparisons. **Produce both, for the same runs.**
+
+## 2.8 Settled method decisions
+
+Do not re-litigate these; they are decided. Reasoning kept because it gets revisited when his
+corrections come back.
+
+| Decision | Why |
+|---|---|
+| **Reward = `BER − β·detections`. Nothing else.** | His "most agnostic reward". Every proxy term (idle penalty, power penalty, kurtosis penalty) from sim01–04 is **deleted**. |
+| **Power budget is a hard environment/action-space constraint**, not a reward term | His instruction, and sim04-run007 is the concrete proof: `GAMMA = 0.02` was negligible against BER gains, so nothing constrained power and it climbed monotonically to 4.0. |
+| **Conditional generator + direct gradient. NOT a GAN.** | A GAN discriminator is a *density-ratio estimator* — it exists for the **likelihood-free** case. In M0 the ratio is **closed form**, so an adversarially trained discriminator would spend its budget approximating a function we can already write down. Use a reparameterised `G_θ(z; c) → d` + hard power projection, trained by direct gradient on the exact objective. That is sim03b's method — the one thing on the ladder that worked — and it drops GAN instability, mode collapse and discriminator scheduling from the risk list. `zhou2025cgan` stays in Related Work as the nearest neighbour, not as the method. |
+| **The optimality gate is a *divergence*-constrained convex program** | `max BER s.t. E|d|² ≤ P, P_det^NP ≤ β` is **not convex** — the optimal test depends on π, so the constraint moves as the variable moves. Replace the detection constraint with `D(p₁‖p₀) ≤ δ` (or TV): BER is linear in π, power is linear in π, and the divergence is convex in `p₁` which is linear in π ⇒ a genuine convex program on a discretised `d`-grid. **Pinsker's inequality converts δ into a bound on *every* detector's error probability**, so the answer is detector-free and therefore a true ceiling. This is exactly the covert-communication formulation (`bash2013limits`), already cited for the stealth-budget convention — method and citation line up. |
+| **CTDE: the jammer is deaf to its own reward at execution** | BER is a **training-time** construct, available to the centralized critic only. A deployed jammer cannot measure the victim's BER. The executed policy observes its own waveform, its own channel estimate, and *at best* a 1-bit delayed noisy **ACK/NACK**. Not BER, not P(detect). This is the attacker-side mirror of his defender-side "no ground-truth labels at execution time", and it must be labelled as such in the threat model. |
+| **PettingZoo for the multi-agent env API; BenchMARL only if an off-the-shelf MARL algorithm is genuinely needed; SB3 for single-agent baselines over the same env. Never RLlib.** | His words: *"RLlib is famous for being too complex for what we need, so I would avoid it."* Confirmed absent from the repo. Surrogate gradients stay the **primary** method; MARL is the comparison, not the default. |
+| **Actions are low-dimensional perturbation *parameters*, never raw IQ** | This is what killed sim06/07. |
+| **The detector is frozen; the arms race is round-based and offline** | His: *"this can only happen at training time: there are no ground-truth labels at execution time"*. |
+
+**Two of his items are closed by the row above, and should be written up as closed rather than left
+hanging.** (i) *"Look at the GAN literature and see whether it transfers"* — it was looked at, and the
+answer is a principled **no** for M0, with the reason (closed-form density ratio) and the citation
+trail (`mohamed2016implicit` derives the GAN objective from hypothesis testing; Goodfellow's optimal
+`D* = p_data/(p_data+p_g)` says the same thing). One sentence in Related Work, not silence.
+(ii) *"Formulate it explicitly as a zero-sum game between detectors and jammers"* — still **owed** in
+the write-up. The divergence formulation is the clean way to do it: the attacker maximizes BER subject
+to `D(p₁‖p₀) ≤ δ`, and Pinsker converts δ into a bound on the defender's best achievable error, so the
+two objectives are explicitly opposed with a stated value function.
+
+**Nuance, do not skip it:** `D_NP` depends on the attack law, so if the generator moves, `p₁` moves
+and the optimal test moves with it. It **is** still a minimax problem. The difference from a GAN is
+that the inner best response is **analytic** — recompute the LRT rather than learn it — which is both
+stronger and stable. Under the divergence formulation the inner problem disappears entirely.
+**Implementation trap:** a hard 2-D IQ histogram is **not differentiable**, so if the learned
+detector is in the loop it needs soft binning or a KDE. `D_NP` is differentiable as written.
+
+## 2.9 Supervisor mandates — settled, not up for discussion
+
+Full record and open items in [Appendix B](#appendix-b-supervisor-record).
+
+- **"Simplify, as much as possible."** His reasoning is blunt: *the simple simulations already do not
+  work, so the complicated ones certainly will not.* sim06–08 are **frozen**. Every layer the ladder
+  added is now a liability for *understanding*, not an asset.
+- **Adaptation cost is the headline claim**, not "the jammer evades the CNN".
+- **Hard quota: only the 2–3 strongest experiments go in the main paper**, everything else to the
+  appendix. Candidates: **E1** the M0 trade-off frontier with the full baseline envelope; **E2** the
+  noise-level ablation; **E3** the spatial/multi-jammer coordination result.
+- **The omniscient jammer is the "impossible to beat" reference and must appear in every results
+  figure**, not just in prose.
+- **Intro must scope out bit-error recovery** — FEC/ARQ/retransmission is out of scope, assumed
+  handled by a higher layer — **and then motivate why raw BER/SER is still the right target**: it is
+  the input any recovery layer receives, and pushing it past the code's correcting capability is what
+  becomes outage.
+- **"Put as much info as possible in Overleaf."** The document is the working record, not a write-up
+  phase at the end. Assumption table, baseline table and ablation list go in *now*, as stubs if
+  necessary.
+- **The noise-level sweep is the primary ablation**, on a **log grid** ("change exponentially"), and
+  he has predicted its direction (detection falls as noise rises).
+
+---
+
+# PART 3 — CURRENT STATE
+
+## 3.1 Status line
+
+**M0 exists, is verified, and E1 has been run. The headline is NEGATIVE.** The deadline moved from
+15 Sept to **ICC, 2026-10-02** — 24 days instead of 7, a 3.4× expansion that changes the *plan* rather
+than merely relaxing it: the ablations **and** the learned-attacker arc both fit, where before they
+were mutually exclusive.
+
+**Blocking and outstanding since 2026-09-01:** thesis **registration** (title, dates, supervisor of
+record) and Di Maio's **feedback on the proposal**. The deadline move does not make registration less
+blocking. Chase both. See [§4.1](#41-blocking-needs-supervisor-input).
+
+**The single next action is [G1](#34-the-plan-24-days-two-parallel-tracks)** — the
+covertness-constrained optimality program. ~1 h of CPU, and it is the gate: it decides whether a
+learned attacker has any headroom to chase, and therefore what G5/G6 are even *for*. Everything else
+in the compute track (G2–G4) is independent of it and can run alongside. The writing track — the
+Overleaf appendix (§3.5) and the two drafted LaTeX sections still not pasted in (§3.4) — needs no
+compute and is not blocked by anything.
+
+> **Where the last working session stopped (2026-09-10).** No new experiments were run. The session
+> read `artifacts/m0/frontier/*.json` back and re-derived the E1 headline, which **sharpened the
+> negative result** (§3.3) and surfaced **two data-quality gaps** (§3.2) — both now recorded. It also
+> consolidated the project documentation into this file (§1.3) and reviewed the user's Overleaf
+> appendix draft (§3.5). Nothing in `m0/` was modified, so `verify.py` is still valid as last run.
+
+## 3.2 What exists and is verified
+
+**M0** (`m0/`, artifacts in `artifacts/m0/`). One QPSK symbol at a time, one channel (`h = 1`), AWGN
+with swept σ. No OFDM, no fading, no pilots. `y = s + d + w`, decisions by per-axis sign test. That
+is the entire model. Everything runs in seconds.
+
+**Verified, not assumed** (`m0/verify.py`, ~50 checks, exit 0 = all pass): unjammed BER matches
+`Q(1/(σ√2))` to Monte-Carlo tolerance; SER matches `1−(1−BER)²`; every attack matches its geometric
+prediction; all detectors calibrate to the target false-alarm rate; the ordering `P_NP ≥ P_L ≥ P_E`
+holds everywhere.
+
+**E1** — the sweep, an 8-task SLURM array, one σ per task (job 2243879, 8 s/task; detectors trained
+by job 2243867, 89 s). Grid: **σ ∈ {0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5}** (Eb/N0 28.0 → 0.0
+dB), **13 power values** 0.001–2.0, duty-cycle variants, α = 0.05, 4000 frames × 256 symbols.
+Outputs `artifacts/m0/frontier/results_sigma*.json` + `e1_{frontier,tradeoff,detectors,stealth_vs_sigma}.png`.
+
+> **Gap vs the stated design: σ = 0 is NOT in the sweep.** The design (§2.4, and his mandate) calls
+> for σ = 0 as an explicit anchor point, and the grid above starts at 0.02. The grid is also only
+> log-spaced at the low end (0.02, 0.05, 0.1) and roughly linear above (0.15, 0.2, 0.3, 0.4, 0.5),
+> where he asked for exponential spacing throughout. Both are cheap to fix and should be, before E1
+> is quoted as answering the noise ablation. **Two things are lost by omitting σ = 0:** the cleanest
+> possible demonstration that *stealth is a noise phenomenon* (at σ = 0 the "less detected" half of
+> the claim cannot hold for **anyone**, so the comparison collapses to BER/SER at matched power —
+> say that explicitly), and a **free calibration point for RQ2**, since any gap between the learned
+> detector and the NP-optimal one at σ = 0 is *pure detector suboptimality*.
+>
+> **Range sanity, for the record** (unit-energy QPSK, σ per real dimension, N₀ = 2σ²): σ = 0.5 →
+> Eb/N₀ ≈ 0 dB, σ = 0.1 → ≈14 dB, σ → 0 → ∞. So [0, 0.5] spans the useful range and **overlaps
+> sim08's 5–30 dB from below**, which keeps the appendix results comparable to the new ones. The
+> Eb/N0 column in §3.3 confirms the implemented grid does this.
+
+## 3.3 E1 result — the negative headline
+
+Max **excess** BER over the clean floor, while staying under the detector's own false-alarm rate
+(α = 0.05), against the **NP-optimal** detector:
+
+| σ | Eb/N0 | clean floor | barrage | gaussian | boundary_blind | boundary_genie† | permute† | counter_flip† |
+|---|---|---|---|---|---|---|---|---|
+| 0.02–0.10 | 28–14 dB | 0.0000 | — | — | — | 0.500 | 0.500 | 1.000 |
+| 0.15 | 10.5 dB | 0.0000 | — | — | — | — | 0.500 | 1.000 |
+| 0.20 | 8.0 dB | 0.0002 | — | — | — | 0.051 | 0.500 | 1.000 |
+| 0.30 | 4.4 dB | 0.0093 | — | — | **0.0002** | 0.491 | 0.491 | 0.982 |
+| 0.40 | 1.9 dB | 0.0386 | — | — | — | 0.462 | 0.462 | — |
+| 0.50 | 0.0 dB | 0.0786 | — | **0.0007** | **0.0003** | 0.211 | 0.421 | 0.843 |
+
+† genie-only: requires per-symbol knowledge of the transmitted symbol.
 
 **No realizable (blind) attack achieves meaningful stealthy jamming in M0** — the best is an excess
 BER of 3×10⁻⁴. Only genie attacks work. This is the M0-level, *derivable* version of the sim08
-"honesty correction" (which measured the same thing empirically on the OFDM stack).
+"honesty correction", which measured the same thing empirically on the OFDM stack.
 
-**Two detector blind spots (real, but modest and both genie-only in practice).**
-1. *The classical energy detector is one-sided*, because it was designed against barrage jammers
-   that ADD power. Minimum-energy attacks push symbols toward the origin, so received power FALLS
-   (1.020 clean → 0.525) and they are flagged with probability 0.0000, i.e. **below** the detector's
-   own FAR. A two-sided test catches them at 1.0000, at the cost of being weaker against
-   power-adding attacks. Both are implemented; report both.
+> **Sharpened by re-analysis of the raw results, 2026-09-10 — the negative result is stronger than
+> the table suggests.** Every stealthy `boundary_genie` point in the entire sweep, at every σ, sits
+> at **exactly ρ = √(P/duty) = √2**. There are no exceptions: at any other ρ, `p_np` is exactly
+> 1.000. But ρ = √2 along an axis is precisely the **constellation-permuting** point — the push maps
+> the QPSK alphabet onto itself. So `boundary_genie`'s apparent success is *not* an independent
+> finding about the boundary attack; it is the same symmetry degeneracy as `permute` and
+> `counter_flip`, and the README's own caveat applies to it ("knife-edged … a *bound*, not an attack
+> anyone can mount"). **The honest reading of E1: every stealthy-and-effective point is a
+> constellation-symmetry artifact requiring the genie. The only non-symmetry stealthy points in the
+> whole sweep are `boundary_blind` at 2–3×10⁻⁴ and `gaussian` at 7×10⁻⁴ — i.e. nothing.** The E1
+> figures and any prose quoting the genie row should carry this. *(Data caveat: the `power` column is
+> not meaningful for the `counter_*` attacks — `counter_flip` reports `power = 0.0` while its actual
+> energy is 4.)*
+
+**Two detector blind spots — real, but modest, and both genie-only in practice.**
+1. *The classical energy detector is one-sided*, because it was designed against barrage jammers that
+   ADD power. Minimum-energy attacks push symbols *toward* the origin, so received power FALLS
+   (**1.020 → 0.525 at σ = 0.1** — exactly the analytic prediction: symbol power 1 → 0.5 when pushed
+   onto the boundary, plus 2σ² = 0.02), and the one-sided test therefore fires **less often than on
+   clean frames**. The sweep shows this about as starkly as it can be shown: at σ = 0.1, duty = 1,
+   `boundary_genie` gives **one-sided energy exactly 0.0000 at every ρ from 0.03 to 1.23** — against
+   its own realised FAR of 0.0428 — including at ρ = 0.707 where it is causing **BER 0.25**. Over
+   that same range the **two-sided** test and the NP test both sit at **1.0000**. So the two-sided
+   variant closes this blind spot completely, at the cost of being weaker against power-adding
+   attacks. Both are implemented; **report both.** *(The one exception is ρ = √2, where all three
+   collapse to ≈FAR — that is the permutation degeneracy of blind spot 2, not an energy-detector
+   property.)*
 2. *Constellation-permuting attacks are exactly undetectable.* Because the payload is iid uniform,
    any perturbation mapping the QPSK alphabet onto itself leaves the received law invariant, so
-   `p₁ ≡ p₀` and no test has any power. Members: `ρ = √2` along an axis (energy 2, BER 0.5) and
-   `d = −2s` (energy 4, BER 1.0). Frontier `BER*(P) = min(P/4, 0.5)` — invisibility costs exactly
-   4× the power. **Do not oversell this:** it is a direct consequence of the symmetry, the
-   `d = −2s` case was already noted in this README ("statistically clean rx = −tx"), it is
-   knife-edged (at ρ = 1.2 or 1.6, `P_det` = 1.000), and it needs the genie. It is a *bound*, not
-   an attack anyone can mount.
+   `p₁ ≡ p₀` and no test has any power (`p_np` is exactly 0.0000, not merely below α). Members:
+   `ρ = √2` along an axis (energy 2, BER 0.5) and `d = −2s` (energy 4, BER 1.0). Frontier
+   `BER*(P) = min(P/4, 0.5)` — invisibility costs exactly 4× the power. **Do not oversell this:** it
+   is a direct consequence of the symmetry, the `d = −2s` case was already known ("statistically
+   clean rx = −tx"), it is knife-edged, and it needs the genie.
 
 **The adaptation-cost reference point now exists.** At σ = 0.2, α = 0.05, `boundary_blind` at
-P = 0.01: energy 0.129, learned CNN 0.112, **NP-optimal 0.839**. The learned detector catches 11%
-of what an optimal one catches 84% of — that gap is the remaining adaptation budget, as a number.
+P = 0.01, **duty = 0.0196**: one-sided energy **0.123**, two-sided energy 0.090, learned CNN
+**0.116**, **NP-optimal 0.847**. The learned detector catches ~12% of what an optimal one catches
+~85% of — **that gap is the remaining adaptation budget, as a number.** *(Re-read off
+`results_sigma0.2.json` on 2026-09-10; earlier notes quoted 0.129 / 0.112 / 0.839, which was
+transcription drift. The JSON row keys are `p_e1`, `p_e2`, `p_l`, `p_np` — **not**
+`p_energy`/`p_learned`, which silently return `None` and make the detectors look unevaluated.)*
 
-**OPEN DECISION — does M1 still have a target?** E1 tested a *menu* of eight hand-written attack
-laws and found none of the realizable ones works. It did **not** compute the best possible law:
-`max BER s.t. E|d|² ≤ P and P_det^NP ≤ β` over all conditional distributions `π(d|s)`. That is a
-small convex program on a discretised grid (~1 h, CPU) and it is the thing to run before committing
-to M1, because:
-- if the true optimum is also ≈ 0, then **stealthy effective jamming is impossible in M0 for a
-  realizable attacker**, the thesis is an honest characterization + negative result, and M1 should
-  be dropped rather than pursued;
-- if there is headroom the menu missed, that headroom is exactly what a learned generator (and then
-  coordination) would be chasing, and M1 is justified.
-- Also note the earlier "Gaussianize the sum via CLT" coordination story (see the system-model draft)
-  is **suspect**: a Gaussian perturbation is the *least* effective attack here (excess BER 0.0007 at
-  σ = 0.5), so "coordinate to look like noise" may reduce to "coordinate to be useless". Needs the
-  same computation to settle.
+> **Quote that number with its duty cycle, or not at all.** The gap is strongly duty-dependent and
+> `duty = 0.0196` is the single most favourable row in the sweep. At the same (σ, P) for
+> duty 0.1 / 0.25 / 0.5 / 1.0 the learned detector gets 0.309 / 0.396 / 0.429 / 0.431 against NP
+> 0.630 / 0.607 / 0.595 / 0.586 — i.e. **the adaptation budget shrinks from 0.73 to 0.16** as the
+> attack spreads out. The honest statement is *"the learned detector's shortfall against the optimal
+> test is largest exactly where the attack is sparsest"*, not a single headline number. Reporting the
+> best row alone would repeat the m1 mistake (§2.7).
 
-### Deadline moved to ICC (2026-10-02) — revised plan
+## 3.4 The plan (24 days) — two parallel tracks
 
-> **This section supersedes "Next steps" wherever the two disagree.** The 15 Sept target is gone;
-> the paper now goes to **ICC, deadline 2026-10-02**. As of 2026-09-08 that is **24 days, not 7**.
-
-**What the extra time actually buys — and why it is a change of plan, not a relaxation of one.** At
-7 days the ablations and the learned-attacker arc were mutually exclusive, so the honest plan was
-"finish the ablations, report the negative result, drop M1". At 24 days both fit, and the decision
-reverts to the one the project actually wants to answer: **does a learned attacker beat the closed
-form, and does coordination beat a single agent?** The E1 negative result does not forbid this — it
-*sharpens the target*, because it says exactly which region any learner has to find something in.
-
-**The OPEN DECISION above is now a sequencing gate, not a go/no-go.** Run the optimality computation
-first regardless, because it costs ~1 h and it determines what the learner is *for*:
-- headroom exists → the generator is chasing a quantified gap, and we can report how much of it a
-  learned policy recovers. That is a strictly better result than "our GAN got BER X".
-- headroom ≈ 0 → the generator's job changes from *beating the closed form* to *rediscovering it
-  without the genie's information*, and the paper's claim becomes about the **learned vs optimal
-  detector gap** (adaptation cost) rather than about attack effectiveness. Still a paper; different
-  headline. **M1 is then justified on the V>1 mechanism only** (see below), not on CLT-Gaussianization.
-
-#### Methodological corrections settled in discussion (2026-09-08)
-
-Four things were sharpened while re-planning; all four change what gets built.
-
-1. **Formulate the gate as a covertness-constrained program, not a P_det-constrained one.** The
-   README wrote it as `max BER s.t. E|d|² ≤ P, P_det^NP ≤ β`, which is **not convex** — the optimal
-   test itself depends on π, so the constraint moves as the variable moves. Replace the detection
-   constraint with a **divergence** constraint, `D(p₁‖p₀) ≤ δ` (or `TV(p₀,p₁) ≤ δ`): BER is linear
-   in π, the power constraint is linear in π, and the divergence is convex in `p₁` which is linear
-   in π ⇒ a genuine convex program on a discretised `d`-grid. Pinsker's inequality converts δ into a
-   bound on *every* detector's error probability, so the answer is detector-free and therefore a
-   true ceiling. This is exactly the covert-communication formulation (`bash2013limits`), which the
-   paper already cites for the stealth-budget convention — so the method and the citation line up.
-2. **Drop the adversarial half of "cGAN"; keep the conditional generator.** A GAN discriminator is a
-   *density-ratio estimator* — that is the whole reason the machinery exists, and it exists for the
-   **likelihood-free** case (`mohamed2016implicit`, which derives the GAN objective from hypothesis
-   testing; Goodfellow's optimal `D* = p_data/(p_data+p_g)` says the same thing). In M0 the ratio is
-   **closed form** (`m0/detectors.py`), so an adversarially trained discriminator would spend its
-   training budget approximating a function we can already write down. Use a reparameterised
-   conditional generator `G_θ(z; c) → d` + hard power projection, trained by **direct gradient** on
-   the exact objective. That is sim03b's method — the one thing on the whole ladder that *worked* —
-   and it drops GAN instability, mode collapse and discriminator scheduling from the risk list.
-   `zhou2025cgan` stays in Related Work as the nearest neighbour, not as the method.
-   - *Nuance, do not skip it:* `D_NP` depends on the attack law, so if the generator moves, `p₁`
-     moves and the optimal test moves with it. It **is** still a minimax problem. The difference
-     from a GAN is that the inner best response is **analytic** — recompute the LRT rather than
-     learn it — which is both stronger and stable. Under the divergence formulation of (1) the inner
-     problem disappears entirely.
-   - *Implementation trap:* a hard 2-D IQ histogram is **not differentiable**, so if `D_L` is in the
-     loop it needs soft binning or a KDE. `D_NP` is differentiable as written.
-3. **The NP detector's role is a citation-backed inversion, and it should be written as one.** Using
-   an LRT as the optimality benchmark that practical detectors are measured against is textbook
-   spectrum-sensing methodology (Kay, *Detection Theory*, 1998; Axell–Leus–Larsson–Poor, IEEE SPM
-   2012, which sets up exactly our LRT / energy / GLRT tiering). What is new here is the
-   **direction**: that literature uses the bound to certify a *detector*; we use it to certify an
-   *attack* — "this evades the optimal test" ⇒ no detector catches it. Say this explicitly in the
-   Defender Model; it is the argument that justifies the whole retreat to M0.
-4. **The CLT/Gaussianization coordination story is probably dead — fix `sec_system_model.tex`
-   before it goes to Di Maio.** §Cooperative currently argues that independent per-agent generators
-   drive `d = Σ d_k` Gaussian, degenerating `D_NP` toward an energy detector. But E1 measured the
-   Gaussian perturbation as the **least effective attack in the ladder** (excess BER 0.0007 at
-   σ = 0.5), so that mechanism plausibly reduces to "coordinate to be useless". The **second**
-   mechanism in that subsection — `V > 1` receivers, where concavity of error rate in perturbation
-   power makes spreading beat concentration at matched worst-case detectability — survives, and it
-   is where `valianti2024cooperative`'s coupling actually transfers. It needs a multi-user extension
-   that does not exist yet. Either repair the paragraph or cut it to the V>1 argument alone.
-
-#### Revised ordering (24 days)
-
-Two tracks run in parallel, because the writing track needs no compute and the compute track has
-idle time built into it.
+The writing track needs no compute and the compute track has idle time built into it.
 
 **Compute track.**
 
 | # | Item | Cost | Gate |
 |---|---|---|---|
-| G1 | **The covertness-constrained optimality program** (correction 1). Convex, CPU, discretised `d`-grid. Produces the ceiling for *any* attacker at each (σ, P, δ). | ~1 h compute, ~½ day to write | **Do first.** Everything below reads differently depending on its answer. |
-| G2 | **E2 — noise ablation.** Largely already produced by the 8-σ E1 sweep; needs the dual-axis figure (§G) and the matched-P(det) companion. | ~½ day | independent of G1 |
-| G3 | **Power-budget ablation**, log grid (§F, item 3). | ~½ day | independent |
-| G4 | **Structure ablation** (§B / `SUPERVISOR_TODO` §13.1) — iid-uniform → non-uniform priors → correlated → pilots. Decides *where* the learning contribution lives. | ~1 day | independent, but read it together with G1 |
-| G5 | **Conditional generator on M0** (correction 2), direct gradient, vs the closed-form frontier at matched detectability. | ~3–4 days | after G1 + G4 |
-| G6 | **M1 — spatial / multi-jammer.** PettingZoo only if a MARL algorithm is genuinely needed; surrogate gradients stay primary. Justified on the V>1 mechanism (correction 4). | ~4–5 days | after G5 |
-| G7 | **Adaptation-cost rounds R0/R1/R2** (RQ2). Tooling exists; in M0 it gains the distance-from-`D_NP` reference E1 already measured (0.112 learned vs 0.839 NP at σ=0.2). | ~2 days | after G5; can precede G6 if G6 slips |
+| **G1** | **The covertness-constrained optimality program** (§2.8). Convex, CPU, discretised `d`-grid. Produces the ceiling for *any* attacker at each (σ, P, δ). | ~1 h compute, ~½ day to write | **Do first.** Everything below reads differently depending on its answer. |
+| G2 | **E2 — noise ablation.** Largely already produced by the 8-σ E1 sweep; needs the dual-axis figure and the matched-P(det) companion — **and the missing σ = 0 anchor + a proper log grid** (§3.2). | ~½ day | independent of G1 |
+| G3 | **Power-budget ablation**, log grid. | ~½ day | independent |
+| G4 | **Structure ablation** (§4.2) — iid-uniform → non-uniform priors → correlated → pilots. Decides *where* the learning contribution lives. | ~1 day | independent, but read with G1 |
+| G5 | **Conditional generator on M0**, direct gradient, vs the closed-form frontier at matched detectability. | ~3–4 days | after G1 + G4 |
+| G6 | **M1 — spatial / multi-jammer.** PettingZoo only if a MARL algorithm is genuinely needed. Justified on the V>1 mechanism (§4.2). | ~4–5 days | after G5 |
+| G7 | **Adaptation-cost rounds R0/R1/R2** (RQ2). Tooling exists; in M0 it gains the distance-from-`D_NP` reference E1 already measured. | ~2 days | after G5; can precede G6 if G6 slips |
 
 **Writing track (starts now, no compute).**
-- **Appendix: the sim00–08 experiment record.** Structure agreed 2026-09-08 — the ladder is written
-  as a *falsification history*, grouped by what each cluster of simulations killed, not one
-  subsection per simulation. This is the single largest piece of prose still owed and it depends on
-  nothing.
-- Repair `sec_system_model.tex` per correction 4; fold corrections 1–3 into §Defender Model and
-  §Generative Attack Policy.
-- Related Work is drafted (`paper_drafts/sec_related.tex`).
+- **Appendix: the sim00–08 experiment record** — see §3.5. The single largest piece of prose still
+  owed, and it depends on nothing.
+- Repair `paper_drafts/sec_system_model.tex` (§Cooperative — the CLT argument, see §4.2); fold the
+  §2.8 decisions into §Defender Model and §Generative Attack Policy.
+- Related Work is drafted (`paper_drafts/sec_related.tex`, 1081 words ≈ 1.93 columns; the
+  1253-word thesis version is `sec_related_long.tex`). **Not yet pasted into Overleaf** — `main.tex`
+  still carries all three legacy blocks (`Related Works` L72, `Literature Review` L233,
+  `Old Related Works` L309).
+- Likewise `sec_system_model.tex` is **not yet in Overleaf**; `main.tex` §System Model (L107) still
+  describes the K-subcarrier / TDL / N_J-jammer setting **that no working experiment supports**.
 
 **Rough calendar.** Sep 8–14: G1–G4 + start the appendix. Sep 15–21: G5 + system-model repair.
-Sep 22–28: G6/G7 + results write-up. Sep 29–Oct 2: lock results, figures, polish. **Results lock
-Sep 28** — leave four days, not one, given how many headlines on this project have died to a
-late-arriving honest metric.
+Sep 22–28: G6/G7 + results write-up. Sep 29–Oct 2: lock results, figures, polish.
+**Results lock Sep 28** — leave four days, not one, given how many headlines on this project have
+died to a late-arriving honest metric.
 
-**Still open and not gated by any of this:** registration (§0d — title, dates, supervisor of
-record) and Di Maio's feedback on the proposal, both outstanding since 2026-09-01. Chase both;
-the deadline move does not make registration less blocking.
+**Risks, in order.** (i) G5 produces no separation from the closed form — mitigated, because G1 tells
+us in advance whether separation is even *possible*, so this is a known outcome rather than a
+surprise. (ii) M1's motivation is thinner post-E1 than when the proposal was written; if G1 returns
+≈0 headroom, M1 rests on the V>1 mechanism alone and the multi-user extension is new code.
+(iii) Scope creep against his explicit "simplify, as much as possible" and the 2–3-experiment quota —
+**the extra 17 days are permission to do the *planned* work properly, not permission to add layers.**
 
-**Risks, in order.** (i) G5 produces no separation from the closed form — mitigated because G1 tells
-us in advance whether separation is even possible, so this is a known outcome rather than a
-surprise. (ii) M1's motivation is thinner post-E1 than it was when the proposal was written; if G1
-returns ≈0 headroom, M1 rests on V>1 alone and the multi-user extension is new code. (iii) Scope
-creep against Di Maio's explicit "simplify, as much as possible" and 2–3-experiment quota — the
-extra 17 days are permission to do the *planned* work properly, not permission to add layers.
+## 3.5 The Overleaf appendix — "Experiment History"
 
-### System as implemented now
+**State: structure agreed, figures chosen, §A.2–A.4 drafted by the user in Overleaf, §A.5 started.**
+Reviewed 2026-09-10. It belongs in the thesis (§1.4), and writing it is directly responsive to a
+request he made twice.
 
-> **This describes what EXISTS, not what to build next.** Per the 2026-08-21 meeting the target
-> system model is now the **minimal model M0** (single subcarrier, single channel, one jammer,
-> swept AWGN) — see "Supervisor meeting" §(A). The stack below is frozen as appendix material.
+> **Numbering warning.** In this subsection, `A.n` means a **subsection of the Overleaf appendix**
+> (the 9-part structure below). It does **not** line up with this README's own
+> [Appendix A](#appendix-a-experiment-history), which is numbered independently. The source material
+> is the same; the numbering is not.
 
-1 TX → 1 RX, 64-SC OFDM (QPSK, 802.11a-like, Sionna). Two channels: the **lossless** grid
-(`simulation06/ofdm.py`) and the **realistic** frequency-selective TDL fading + AWGN channel
-(`simulation08/channel.py`). **NOTE: `detector.py`'s spectrogram is now the CORRECTED complex
-two-sided STFT (was real-part-only) — detectors must be trained on this representation.** Detectors
-on disk: `simulation06/artifacts/.../run002_best.pt` (original real-part STFT, superseded),
-**`artifacts/sim06/detector/run003_best.pt` (complex-STFT, LOSSLESS-trained — the corrected lossless
-CNN)**, the Phase 0.5 in-band-augmented `artifacts/frontier/detector/run001_best.pt` (real-part era),
-and **`artifacts/sim08/detector/run001_best.pt` (complex-STFT, FADED-channel-trained — the
-channel-valid CNN, milestone 2; the one to use on the realistic channel)**. The **energy detector**
-(mean received power vs a clean-calibrated threshold = Li et al.'s power feature) is implemented in
-`frontier/recheck_suite.py` and (per-SNR calibrated, folded into a per-sample CNN∨energy suite) in
-`simulation08/frontier_channel.py`. Jammer families: sparse (blind / channel-aware), broadband
-(in-band / out-of-band), omniscient (jam=−2·tx), plus the 4 classical jammers in
-`simulation06/train_detector.py`.
+Structure — `\section{Experiment History}`, currently at `main.tex` L534:
+1. Scope and Reading Guide · 2. Simulation Chain and Validation (sim00, 04b) · 3. Gradient-Based
+Attacks against Statistical Detectors (sim01, 02, 03, 03b, 03c) · 4. Two-Agent Cooperative Attack
+(sim04) · 5. From Statistical to Learned Detection (sim05, sim06 detector side) · 6. Untrainability
+of Policy-Gradient RL over Raw IQ (sim06 jammer, 06b, 07) · 7. Detector Characterisation and Errata
+(Phase 0, 0.5, recheck) · 8. Realistic Channel, Suite, and Matched Detectability (sim08 m1, m2,
+dense) · 9. Summary of Hypotheses and Verdicts (one table: hypothesis · evidence · verdict ·
+superseded-by).
 
-### Key files
+**Conventions settled.** (a) **Do not name simulations** ("sim04") in the prose — the reader has no
+access to the code; write it as a continuous narrative, with a *small traceability table at the very
+end* mapping narrative step → directory → job ID. (b) Register: **"we"**, past tense for events,
+present tense for what remains true; rationale expressed as *what the previous step established*,
+never as "I decided". (c) Every subsection follows the same four moves: **what the previous step left
+open → what changed → what happened (numbers) → what it established**. Move 1 is the one that gets
+skipped and the one the supervisor is reading for. (d) Negative results are findings with a
+mechanism, never apologies — no "unfortunately", "we tried to", "we hoped".
 
-- `frontier/frontier_sweep.py` + `submit.sh` — Phase 0 frontier (lossless). Has `build_jam` (jammer
-  families) + `detect_chunked`, reused everywhere.
-- `frontier/retrain_detector_inband.py` + `submit_phase05.sh` — Phase 0.5 detector retrain + re-sweep.
-- `frontier/recheck_suite.py` + `submit_recheck.sh` — RECHECK: retrain on complex STFT + energy-detector
-  suite (job 102115). Energy detector = `frame_power()` vs clean-calibrated threshold.
-- `frontier/spectrogram_figure.py` + `submit_fig.sh` — in-band vs out-of-band illustrative figure
-  (`artifacts/frontier/inband_vs_outofband.png`).
-- `simulation08/channel.py`, `simulation08/frontier_channel.py` (per-SNR energy detector + per-sample
-  CNN∨energy SUITE), `simulation08/submit.sh` (retrain m2 detector + suite frontier),
-  `simulation08/submit_frontier.sh` (suite frontier only, reuses saved detector) — sim08 realistic channel.
-- `simulation08/retrain_detector_channel.py` — milestone 2: channel-valid CNN retrain (faded
-  clean+classical+in-band, Eb/N0 5–30 dB) → `artifacts/sim08/detector/run001_best.pt`.
-- `simulation08/matched_detectability.py` — step-1 matched-detectability analysis (pure post-proc, no
-  GPU): achievable-frontier BER-vs-P(suite) per SNR, blind vs channel-aware → `matched_detectability.png`,
-  `matched_summary.json`. `simulation08/submit_frontier_dense.sh` — DENSE full-suite re-sweep
-  (9 powers × 11 n_active, B=512, job 102390) feeding it. `frontier_channel.py` now takes
-  `--powers`/`--n-active` overrides + writes a per-SNR incremental `results.json` checkpoint.
-- `simulation06/{ofdm,detector,jammer,train_detector}.py` — OFDM chain, detector (complex STFT now),
-  classical jammers. `train_detector.py` retrains the CNN via the (now-corrected) spectrogram.
-- Artifacts: `artifacts/frontier/` (Phase 0 + Phase 0.5 detector), `artifacts/frontier_inband/`,
-  `artifacts/frontier_recheck/` (suite), `artifacts/sim08/frontier/` (incl. `stealth_vs_energy.png`,
-  `stealth_suite_vs_snr.png` = m2 full-suite figure), `artifacts/sim08/frontier_dense/` (DENSE re-sweep
-  + `matched_detectability.png` = step-1 figure), `artifacts/sim08/detector/` (run001 =
-  channel-valid CNN), `artifacts/sim06/detector/` (run003 = corrected lossless CNN). Run log: `artifacts/RUNS.md`.
+**Figure shortlist — 5 for the whole appendix, deliberately.** ~130 PNGs exist; almost all are
+training dashboards, not findings.
 
-### Historical ladder (sim00–07, condensed — full sections below)
-
-sim00–04 progressive complexity, lossless → 2-jammer NSF direct-gradient (found QPSK-like
-structure, BER 0.33+, kurtosis evasion). sim05 CNN needs OFDM (flat QPSK failed, 78.9%). sim06
-CNN-on-OFDM = 99.79% ✓; MAPPO jammer failed (broadband always detected, no reward gradient).
-sim06b confirmed scalar reward can't teach input-correlated waveforms even in 2D. sim07 blind
-causal MAPPO = dead end (see the pivot above). **Note:** the sim06/07 "broadband always
-detected" and "4-subcarrier cliff" claims in those sections are now explained by Phase 0 as
-out-of-band-leakage artifacts — read Phase 0 for the correction.
-
-### Paper status
-
-Related-works section in progress in a separate session — see `paper/README.md` for reference
-triage, structure decisions, and open questions (Hameed/Ziemann inclusion, PyJama dropped).
-System model and methodology sections are stubs. No lossless-channel results go in the paper;
-Phase 0/0.5 are mechanism studies, and sim08 (realistic channel) is where the paper's channel
-claims begin.
-
-### Cluster/compute notes — MIGRATED to ITET 2026-09-08
-
-> **We are no longer on the INFK student cluster.** It went into maintenance the week of
-> 7 Sept, so the project moved to **ITET/TIK (arton + tikgpu)**. Full details, GPU inventory,
-> storage layout and the two CUDA traps are in **`cluster/README.md`** — read that before
-> submitting anything. This section is the summary.
-
-Submit host `tik42x.ee.ethz.ch`, cluster `itet`, account **`disco-med`**. Workflow is
-**unchanged**: `cd` into a sim dir and `sbatch submit.sh`; never compute on the login node.
-All 19 `*/submit*.sh` were migrated on 2026-09-08 and verified end-to-end (job 2243247 ran
-`frontier_channel.py --smoke` in 2.9 s reproducing the recorded m2 numbers).
-
-What changed, and what it unlocks:
-
-- **The 1-GPU-job concurrency cap is GONE.** No `MaxJobs`, `MaxSubmit` or `GrpTRES` on the
-  account or QOS (another `disco-med` user runs 47 jobs at once). **Parallel sweeps and array
-  jobs are now possible** — the constraint that shaped every previous experiment design no
-  longer applies.
-- **Walltime 1 h → 2 days.** Preemption is off on all our partitions.
-- **12 usable GPU nodes** (2080 Ti / TITAN RTX / V100 / RTX 3090) instead of one.
-- **Do NOT set `--partition`** — a lua submit plugin overrides it from account membership.
-- **`--gpus=1` → `--gres=gpu:1`**, plus a mandatory
-  `--constraint=geforce_rtx_2080_ti|titan_rtx|tesla_v100|geforce_rtx_3090`: `tikgpu02/03` are
-  TITAN Xp (sm_61) and **torch 2.9 dropped Pascal**, so jobs landing there die with
-  `no kernel image is available`.
-- **Env moved:** `/work/scratch/rrahman/bt_env` → **`/itet-stor/rrahman/net_scratch/bt_env`**
-  (torch 2.9.1+**cu128** — the default cu13 wheels do not run on the driver 535 here —
-  sionna 2.0.1, SB3 2.9.0, gymnasium 1.3.0, zuko 1.6.0). The home quota is small and unrelated
-  to what `df` reports; keep bulky things on net_scratch.
-- `SLURM_CONF=/home/sladmitet/slurm/slurm.conf` must be set or every slurm command fails; it is
-  persisted in `~/.bashrc.user`.
-
----
-
-## Simulation 00 — Lossless channel, no learning
-
-**File:** `simulation00/baseline_lossless.py`
-
-**What it is:** Purely observational. No RL, no training. Measures what happens when a fixed max-power jammer turns on mid-episode.
-
-**Scenario:**
-- 2 legitimate QPSK users, independent TX→RX pairs
-- 1 jammer: silent for t=0..4, max-power Gaussian noise for t=5..9 (10 timesteps total)
-- Channel: lossless — `rx = tx + jam`, no noise, gain = 1
-- Detection: power threshold — flag if `mean|rx|² > 3.0`
-
-**Key parameters:**
-| Parameter | Value |
-|---|---|
-| N_TIMESTEPS | 10 |
-| JAMMER_START | 5 |
-| N_LEGIT | 2 |
-| N_SYMBOLS | 512 |
-| JAMMER_POWER | 50.0 |
-| DET_THRESH | 3.0 |
-
-**Results:**
-- t=0..4: BER=0, power≈1.0, 0 users detect
-- t=5..9: BER≈0.5, power≈51.0, 2 users detect
-
-**Output:** `simulation00/baseline_lossless.png` — 3-panel: BER, received power, # users detected
-
-**How to run:**
-```bash
-cd "tabula rasa/simulation00"
-python baseline_lossless.py
-```
-
----
-
-## Simulation 01 — PPO jammer, power threshold detector
-
-**Files:** `simulation01/jammer_env.py`, `simulation01/train_ppo.py`
-
-**What it is:** First trainable scenario. A PPO agent learns to jam a single TX→RX pair while staying undetected by a power threshold detector.
-
-**Scenario:**
-- 1 TX, 1 RX, 1 PPO-trained jammer
-- Channel: lossless — `rx = tx + jam`
-- Detection: power threshold (`mean|rx|² > DET_THRESH`)
-- Jammer policy: SB3 `MlpPolicy` — diagonal Gaussian over the action space (this IS the generative model for now)
-
-**Key parameters:**
-| Parameter | Value | Notes |
+| Figure | Section | Note |
 |---|---|---|
-| N_SYMBOLS | 16 | symbols per step, action space = 32 dims |
-| DET_THRESH | 3.0 | linear power |
-| BETA | 0.5 | detection penalty weight |
-| idle penalty | 0.05 | per-step cost to prevent all-zeros policy |
-| TOTAL_STEPS | 200,000 | |
-| action space | Box(-10, 10, (32,)) | SB3 requires finite bounds |
+| `artifacts/sim04/run001_iq_rx.png` | A.4 | bottom row of `run001_iq.png` (`rx` early/mid/late). The one place the finding is *visible*. **If A.4 quotes run007 numbers, re-crop from `run007_iq.png` — do not mix runs between text and figure.** |
+| `artifacts/frontier/inband_vs_outofband.png` | A.7 | best figure in the project; four panels, self-explanatory. Use as-is. |
+| `artifacts/sim06b/jammer/run001.png` | A.6 | **crop to the bottom two panels** (mean reward falling, policy entropy *rising*). The rising entropy is the smoking gun — the policy diffuses rather than learns. |
+| `artifacts/sim08/frontier_dense/matched_detectability.png` | A.8 | crop to 2 panels (5 dB, 30 dB); five is overkill. |
+| `artifacts/sim08/frontier/stealth_suite_vs_snr.png` | A.8 | optional; **not yet eyeballed** — check before committing. |
 
-**Reward:**
-```
-r = BER  −  BETA · detected  −  0.05
-```
-- `BER`: jamming effectiveness (want high)
-- `BETA · detected`: stealth penalty (want low)
-- `0.05`: idle cost — forces agent away from zero-power trivial solution
+**Deliberately no figure in A.3 or A.5.** A.3's finding is about *how the gradient reaches the
+policy*, which no single figure shows, and the only candidates are pictures of featureless clouds.
+A.5 uses the six-row **cross-evaluation table** instead of a confusion matrix — it carries the
+diagnosis.
 
-**Observation:** flattened TX symbols overheard by jammer → `[I₀, Q₀, ..., I₁₅, Q₁₅]` shape `(32,)`
+**Fixes owed on the user's draft (reviewed 2026-09-10):**
+- **Factual:** the first experiment had **2 legitimate TX→RX pairs, not 1**, and the jammer was
+  silent t=0–4 then max-power t=5–9 (that on/off structure is the point). Overleaf §A.4's numbers are
+  run001's and are superseded by run007 — see [README A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable),
+  and quote the two as **two operating points**, not broken-vs-fixed.
+- **Wording:** "highest possible **inference**" → **interference** (inverts the goal statement);
+  "until we find a meaningful result" → reads as an admission none exists; "we **setup**" → "set up".
+- **Structural:** A.2 never says what it *establishes* (that the measurement chain is trustworthy —
+  BER, power and detection all move when and only when they should), omits its numbers (BER 0→0.5,
+  power 1.0→51, 0→2 users detecting), and omits sim04b. A.4 is missing both caveat sentences: the
+  one-liner (kurtosis detector, lossless, genie observation ⇒ a *mechanism* result, not a stealth
+  result) and the **centralised-execution** caveat — one optimizer over the union of both agents'
+  parameters means coordination was *maximal*, handed over by the optimizer; what is absent is
+  decentralisation, so it shows a coordinated solution exists and is gradient-reachable, **not** that
+  decentralised agents could find it. That matters because "cooperative multi-agent" is in the title.
+- **Sentence fragment** in A.4 ("An identical aggregate effect at …") — the same construction he
+  already flagged in the proposal.
+- **LaTeX:** add `\appendix` before L534 or the section numbers as a regular section; **remove
+  `\nocite{*}` (L570) before he reads it** — it emits the whole `refs.bib`.
+- Still-live `\rar{}` notes above the appendix: L216, L256.
 
-**Action:** jammer's transmitted signal → `(32,)` → reshaped to complex `(16,)` in step()
+**Next in this thread:** A.5 (only its first sentence exists), then **A.6 — the untrainability
+result**, which is the one he asked about directly, and the one to lead with the
+*action-parameterisation* explanation, not the reward formula.
 
-**Signal chain per step:**
-```
-tx_bits  = BinarySource([N_SYMBOLS, 2])
-tx_syms  = Mapper(tx_bits).squeeze()
-rx_syms  = tx_syms + jam_syms            ← lossless channel
-detected = mean|rx|² > DET_THRESH
-llr      = Demapper(rx_syms.unsqueeze(-1), 1e-10)
-rx_bits  = hard_decisions(llr)
-BER      = mean(tx_bits ≠ rx_bits)
-```
+## 3.6 Explicitly NOT doing
 
-**Results (run004, 200k steps):**
-- BER converged to ~0.19 (started ~0.24)
-- Detection rate dropped from ~45% → ~10%
-- Jammer power settled at ~2.2 (just below threshold)
-- IQ scatter: Gaussian cloud throughout — no structure discovered
+- **Extending sim06/07/08 in any direction** — no further OFDM/fading/CNN sweeps, no
+  matched-detectability follow-ups. Appendix material, finished, and the *opposite* of "simplify".
+- **RLlib.**
+- **Black-box PPO over raw IQ** — falsified.
+- **Channel-aware *subcarrier selection* as a lever** — refuted at matched detectability, and there
+  are no subcarriers to select in M0.
+- **Further characterization sweeps.** Characterization has already done its job: it defined the
+  target (the residual region) and the metric (matched detectability). More of it is the main way
+  left to waste the remaining hours.
 
-**Why BER ~0.19 is near-optimal:**
-- TX signal contributes ~1.0 to received power
-- Detection threshold = 3.0 → jammer budget ≈ 2.0
-- Theoretical max BER at jammer power 2.0 on QPSK ≈ Q(√0.5) ≈ 0.24
-- Agent found the power sweet spot: near-optimal BER with only ~10% detection rate
-
-**Known limitation:** power threshold detection is too simple — only strategy available is power tuning.
-The diagonal Gaussian policy can only produce Gaussian clouds — no structure will emerge.
-
-**Outputs:** `simulation01/runs/run00N.png` (training curves), `run00N_iq.png` (IQ scatter snapshots)
-
-**How to run:**
-```bash
-cd "tabula rasa/simulation01"
-python train_ppo.py
-```
-
----
-
-## Simulation 02 — Kurtosis detector
-
-**Files:** `simulation02/jammer_env.py`, `simulation02/train_ppo.py`
-
-**What it is:** Same lossless TX→RX→jammer setup as sim01, but the power-threshold detector is
-replaced with a kurtosis-based detector (`scipy.stats.kurtosis`). QPSK has excess kurtosis ≈ -2;
-Gaussian noise has excess kurtosis = 0. The detector flags `kurtosis(rx) > KURT_THRESH`.
-
-**Key parameters:** N_SYMBOLS=128, BETA=0.5, KURT_THRESH=-1.0, GAMMA=0.02 (binary detection penalty)
-
-**Policy:** SB3 `MlpPolicy` (diagonal Gaussian) — same as sim01.
-
-**Results (run001, run002):**
-- Detection rate flat at 100% regardless of training
-- Kurtosis stuck around -0.25 (Gaussian-ish), never approaches QPSK's -2
-- A diagonal Gaussian policy can only ever produce Gaussian-shaped IQ clouds — it is
-  *structurally incapable* of producing QPSK-like (sub-Gaussian) statistics, no matter how
-  training proceeds. The agent gives up on stealth (run002: jam power rises 1.0→2.5).
-
-**Conclusion:** the kurtosis detector is unbeatable by a Gaussian policy. This motivates the
-normalizing-flow policy upgrade in sim03 — the action distribution itself needs to be able to
-represent non-Gaussian (e.g. bimodal/QPSK-like) shapes.
-
-**Outputs:** `artifacts/sim02/run00N.png`
+**Deferred refinements, not on the critical path:** BER-thresholded in-band labels + threshold
+calibration for the m2 detector; extending the sim08 suite with more classical detectors
+(kurtosis/GLRT/pilot-variance).
 
 ---
 
-## Simulation 03 — Normalizing flow (NSF) policy
+# PART 4 — OPEN QUESTIONS & IDEAS
 
-**Files:** `simulation03/jammer_env.py`, `simulation03/train_ppo.py`, `simulation03/flow_policy.py`
+## 4.1 Blocking / needs supervisor input
 
-**What it is:** Replaces SB3's diagonal-Gaussian action head with a Neural Spline Flow (NSF, via
-`zuko`) conditioned on the PPO MLP latent (`FlowPolicy` / `FlowDist` in `flow_policy.py`). The MLP
-trunk, value head, and PPO optimizer are otherwise standard SB3. `FlowDist` provides exact
-`log_prob` (change-of-variables) and a Monte-Carlo `entropy()` estimate (8 rsamples), so it's a
-drop-in for everything PPO needs.
+| # | Item | Why it blocks |
+|---|---|---|
+| 1 | **Supervisor of record for the ETH registration** | D-INFK professor requirement; may need Di Maio as co-supervisor. Needed on the myStudies form. |
+| 2 | **Title, start date, end date, task description** | All four gate registration. Open since 2026-09-01. |
+| 3 | **Feedback on the proposal** (handed over 2026-09-01) | Nothing downstream is blocked on *us*, but it is the longest-outstanding item. |
+| 4 | **Which 2–3 experiments go in the main paper** | His call. Candidates E1 / E2 / E3 (§2.9). |
+| 5 | **Single-round evasion on a frozen detector, or fully co-adaptive?** | His 2026-08-03 phrasing leans co-adaptive (*"one can always fine-tune a defender on an attacker and vice versa"*) but was never a direct answer. RQ2 assumes round-based-and-offline. |
+| 6 | **Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension? | Asked in the mid-July email; never answered directly. |
+| 7 | **His September availability / feedback cadence** | Asked twice, still unanswered. Short frequent rounds >> one large end-of-block review. |
+| 8 | **Inter-jammer coordination assumption** — shared backhaul / shared clock only / fully independent? | Needed to finish the Threat Model. Good candidate to decide together rather than guess. |
 
-**Key parameters:** N_SYMBOLS=128, BETA=2.0, GAMMA=0.02, continuous kurtosis penalty,
-KURT_THRESH=-1.0, NSF: 3 transforms, hidden=[64,64], `passes=2`, total_steps=50k.
+**When his corrections come back — the four things most likely to be challenged**, recorded so the
+reasoning does not have to be reconstructed:
+1. **The gap claim** (§2.2 point 5) — the load-bearing sentence of the Introduction. Defend it as the
+   *conjunction*, and name the nearest neighbours.
+2. **The dropped countermeasure RQ** — the answer is the cost argument (§2.3); the cheap fallback is
+   time-to-first-detection (§4.3), already specified and needing no new machinery.
+3. **RQ2 vs the bachelor timeline.** It is last in the plan and depends on a working attacker; if the
+   schedule tightens, **this** is the item to renegotiate — not the structure ablation, which gates
+   everything else.
+4. **Whether "protocol-aware" over-promises.** The Introduction positions protocol-aware jamming as
+   literature context, but our method is signature-shaped interference. Defensible
+   (protocol-deterministic fields are exactly what survives scrambling) but he may read it as a claim
+   about our method.
+5. **"Isn't this just a combination of existing methods?"** (own concern, not his — but it will be
+   asked.) The honest answer is yes, and that is fine **as long as the paper leads with the problem
+   and the findings, not the architecture.** What justifies it: the systematic **ablation trail**
+   showing *why* each simpler alternative structurally fails (Gaussian → GMM → GAN → flow, each with
+   a mechanism, not a preference); the **problem formulation** itself; and whatever the attacker
+   actually discovers. Comparable precedent exists at solid venues. The bar is whether the
+   combination produces insight the parts alone could not — which is exactly why the negative results
+   in [Appendix A](#appendix-a-experiment-history) are load-bearing rather than embarrassing.
 
-**Run history (run001-004):** all four runs used `FlowPolicy`. Detection stayed flat (~85-100%),
-kurtosis stuck near -0.25 (same Gaussian-shaped wall as sim02) — N=16 (run001-003) was also too
-noisy for the kurtosis estimate to give a useful gradient/reward signal; N=128 (run004) fixed the
-estimator noise but kurtosis still didn't move.
+## 4.2 Open technical questions
 
-**Performance bottleneck found and fixed:** `zuko.flows.NSF` defaults to `passes=None`
-(fully autoregressive MAF) — sampling/log_prob requires `action_dim` (=256) sequential
-hypernetwork calls per transform × 3 transforms ≈ 768 sequential calls per step, ~20s/step
-on CPU (~1fps). This made FlowPolicy too slow/costly to train for useful step counts (jobs
-93396/93407 hit the time limit after ~500 steps). **Fix:** added `passes=2` (coupling-style,
-RealNVP-like — 2 sequential passes per transform instead of 256) — ~44x speedup
-(~20s/step → ~0.45s/step), while still an exact-likelihood flow.
+**Q1 — Does M1 still have a target? (the big one; G1 answers it.)**
+E1 tested a *menu* of eight hand-written attack laws and found none of the realizable ones works. It
+did **not** compute the best possible law. G1 does. Two outcomes, and the deadline move turned this
+from a go/no-go into a **sequencing gate** — run it either way, because it determines what the
+learner is *for*:
+- **Headroom exists** → the generator is chasing a quantified gap, and we can report how much of it a
+  learned policy recovers. Strictly better than "our generator got BER X".
+- **Headroom ≈ 0** → the generator's job changes from *beating the closed form* to *rediscovering it
+  without the genie's information*, and the paper's claim becomes about the **learned vs optimal
+  detector gap** (adaptation cost) rather than attack effectiveness. Still a paper; different
+  headline. M1 is then justified on the V>1 mechanism only.
 
-**Current status:** the working tree currently has `train_ppo.py` reverted to plain
-`PPO("MlpPolicy", ...)` as a stopgap (job 93423, produced run004, still Gaussian-shaped IQ —
-not representative of NSF). With `passes=2` now applied to `flow_policy.py`, **re-running sim03
-with `FlowPolicy` is the natural next step** — it should now be cheap enough to actually test
-whether NSF can escape the kurtosis wall that a Gaussian policy can't.
+**Q2 — Does the learner have a job at all? (§13.1 of the old checklist; G4 answers it.)**
+His sharpest challenge: *"Is it a valid assumption that all legitimate symbols are equally spread?
+→ RL shines when it can find something"* + *"scrambling makes the transmitted sequence look
+statistically random"*. Read together: if the payload is iid-uniform — **and real systems scramble
+precisely to guarantee that** — there is no payload structure to discover, the minimum-energy attack
+is closed form, and **a learner can at best rediscover it.** E1 confirms the closed form is already
+at the limit for the single link.
 
-**Outputs:** `artifacts/sim03/run00N.png`, `run00N_iq.png`
+Not fatal, but it *relocates* the contribution. The structure that **survives scrambling** is:
+1. **Protocol-deterministic structure** — preamble, pilots, guard/DC nulls, control signalling.
+   Exactly the "protocol-aware attack" the Introduction claims, so claim and method finally line up
+   — and an argument for keeping *pilots* in M0 even though nothing else survives the simplification.
+2. **The detector's decision surface** — signature-shaping searches the *defender's* model, not the
+   payload distribution. Symbol statistics are irrelevant to it.
+3. **Channel and geometry** — per-link gains and phases (the M1 spatial step).
+4. **Coordination** — how N_J jammers split power and phase so their perturbations add at the victim
+   while each stays under threshold. No closed form; a genuine joint optimization.
+
+**Turn the objection into an experiment (G4, cheap in M0):** sweep *the amount of exploitable
+structure* — iid-uniform → non-uniform symbol priors → correlated/unscrambled → pilots present — and
+show the learned attacker's advantage over the closed-form boundary attack **appear exactly as
+structure appears**. That answers his question with a curve instead of a paragraph. **Record the
+honest risk now:** if the advantage never appears, the single-link case is *solved by the closed
+form* and the entire learning contribution lives in (3)+(4) — which is also the destination he cares
+most about.
+
+**Q3 — The CLT/Gaussianization coordination story is probably dead. Repair `sec_system_model.tex`
+before it goes to him.** §Cooperative currently argues that independent per-agent generators drive
+`d = Σ d_k` Gaussian, degenerating `D_NP` toward an energy detector. But E1 measured the Gaussian
+perturbation as the **least effective attack in the ladder** (excess BER 0.0007 at σ = 0.5), so that
+mechanism plausibly reduces to *"coordinate to be useless"*. The **second** mechanism in that
+subsection — **V > 1 receivers**, where concavity of error rate in perturbation power makes spreading
+beat concentration at matched worst-case detectability — survives, and it is where
+`valianti2024cooperative`'s coupling actually transfers. It needs a multi-user extension that does
+not exist yet. **Either repair the paragraph or cut it to the V>1 argument alone.**
+
+**Q4 — The scoping fork, still unresolved.** Is multi-agent cooperation the **destination** (the
+thesis is about *cooperative* jamming; single-agent signature-shaping is a stepping stone) or the
+**garnish** (the thesis is about *learned evasion*; cooperation is an extension)? That decision — not
+any further sweep — shapes M1. Note the title as registered says "Cooperative Multi-Agent", which
+leans destination.
+
+**Q5 — E1 hygiene, cheap to fix (§3.2, §3.3).** Add the σ = 0 anchor; put the σ grid on a proper log
+spacing; re-caption anything quoting the `boundary_genie` row to say it is the ρ = √2 permutation
+degeneracy; fix the meaningless `power` column for the `counter_*` attacks.
+
+**Q6 — Related Work: the two long-open inclusion calls are RESOLVED. Include both.**
+Settled in `paper/Sources_And_Evaluation.md`; recorded here so they are not reopened.
+- **Hameed, György, Gündüz, "The best defense is a good offense"** (IEEE TIFS, vol. 16,
+  pp. 1074–1087, 2021, DOI `10.1109/TIFS.2020.3025441`, key `hameed2021offense`) — **include.** The
+  cleanest published instance of the *dual* objective we adopt: perturb symbols so a learned
+  classifier fails while the intended receiver still decodes. Structurally identical to "maximize BER
+  subject to a detectability budget", with the two objectives swapped in sign. *Differs:* covert
+  comms, not disruption — the perturbation protects a friendly link rather than destroying a hostile
+  one. `sec_related.tex` already lists it under "never cut", as part of the evasion lineage with
+  `delvecchio2020spectral`.
+- **Ziemann & Metzler, "Adaptive LPD radar waveform design with generative deep learning"** — **include.**
+  ⚠ **Update the citation:** it is no longer arXiv-only. Now *IEEE Transactions on Radar Systems*,
+  vol. 3, pp. 417–429, **2025**, DOI `10.1109/TRS.2025.3542283`. **This kills the original objection**
+  ("arXiv-only, cross-domain, might distract"). It is the strongest existing validation of exactly our
+  paradigm — a generative model producing waveforms simultaneously effective and statistically
+  indistinguishable from the background, trained against a critic. Cite as cross-domain corroboration
+  in one sentence.
+- ⚠ **Also correct while you are in `refs.bib`:** the flow-policy citation `ward2019nf_rl` is a
+  **workshop paper, not peer-reviewed proceedings**, and its third author is **Bose, not "Bhatt"**.
+  The recommended peer-reviewed replacement making the same claim is Mazoure, Doan, Durand, Pineau &
+  Hjelm, "Leveraging exploration in off-policy algorithms via normalizing flows", **CoRL 2020**, PMLR
+  vol. 100.
+
+**Decided, for the record: PyJama is DROPPED** (Ulbricht/Marti et al., SPAWC 2024, arXiv:2407.15473,
+ETH Zurich IIP). A differentiable jamming library on Sionna using SGD for power allocation over an
+OFDM grid. It shares almost none of our axes — no waveform synthesis, no RL, no multi-agent, no
+stealth objective — so it would be a row of "No" across every table column. Its only connection is
+"also uses Sionna", which is tooling, not a contribution. If mentioned at all it belongs in
+Methodology when introducing Sionna, not in Related Work. *(It is also Sionna 0.x + TensorFlow, so it
+was never usable as a dependency; the Clancy-2011 pilot-nulling strategy it builds on is ~20 lines
+from scratch if ever wanted.)*
+
+## 4.3 Ideas on the shelf — specified, not adopted
+
+- **Time-to-first-detection.** The cheap countermeasure-facing result: measure the **trigger**
+  instead of the reaction. Computable from the per-frame P(det) we already produce — no
+  countermeasure, no mobility, no throughput model. It also fixes a known weakness of our own
+  reporting (a threshold like P(det) ≤ 0.5 is not operational stealth), turning a hand-written caveat
+  into a reported number. Reconsider if a defense-facing result is ever wanted.
+- **ACK/NACK as the execution-time observation** (§2.8, CTDE). If any execution-time adaptivity is
+  wanted, this is the channel to model — one line in the system model, and if cheap, an
+  observation-space ablation (blind vs ACK-aware).
+- **Desync / realism axis.** Per-jammer CFO, timing and residual phase error as a "cheap hardware"
+  quality level. He *wants* the attacker handicapped: *"introducing some desynchronization … will
+  make the attacker more realistic and weaker, which is good for the paper, especially if BER is high
+  and detection rate is low."* Only meaningful once the attack is phase-coherent, and it is the
+  experiment that substantiates the counter-signal-vs-boundary robustness claim (§2.5).
+- **Scenario-size ablation:** #jammers, **#legitimate users**. The latter is new — the model is
+  1 TX → 1 RX today, so it needs a multi-user extension first (and it is the same extension the V>1
+  coordination mechanism needs — see Q3).
+- **Victim mobility.** His *"most interesting investigation"*. Stretch; only after M1 works.
+- **Jammer localization as a second detector modality.** *"A form of detection is to leak information
+  on the position of the jammer(s) so that a defender can physically neutralize them."* Out of scope
+  for the thesis core; **name it in the Threat Model as an out-of-scope defender capability and
+  future work.**
+- **Real hardware.** He offered it: *"Real hardware to implement this method is available, if you'd
+  like to experiment later on."* Future work; worth asking what hardware, in case a small validation
+  is cheap.
+- **A boundary attack that is optimal for where detection happens.** Detection happens at the RX on
+  the composite signal *before* equalization, so what the detector sees is the perturbation at
+  magnitude `|d·h_tx|`. Minimizing that favours subcarriers with **small `|h_tx|`** — a *different*
+  criterion from m1's `|h_jam/h_tx|`, which maximized damage per unit *transmit* power. **So the
+  matched-detectability refutation killed one specific criterion, not the idea that channel knowledge
+  helps.** Parked because M0 has no subcarriers; relevant if the OFDM stack is ever revisited. Two
+  further items of his live in the same parked bucket, for the same reason: *"a well-crafted
+  adversarial signal could also disrupt multiple subcarriers simultaneously"* (a joint multi-subcarrier
+  attack) and the simpler per-subcarrier isolated problem he thought could be interesting on its own.
+
+## 4.4 Known limitations to keep visible
+
+- **No results from a lossless channel make scientific claims.** sim06/07's lossless channel is a
+  controlled simplification for isolating observation-model and training-algorithm effects.
+- **Single-round, frozen detector** (§2.1). RQ2 partially buys this back but does not make it an
+  arms race.
+- **The m2 in-band training labels are not BER-thresholded** (in-band samples labelled "jammed" even
+  when BER ≈ 0), which inflates FAR. A calibrated-threshold version would sharpen the exact numbers;
+  the qualitative result is robust.
+- **M0 has no pilots**, which is exactly the structure Q2 says the learner would need. Keeping pilots
+  is the one argued exception to the simplification.
+- **E1's σ grid is incomplete** vs the design (§3.2).
 
 ---
-
-## Simulation 03b — Direct-gradient generative jammer (no RL)
-
-**Files:** `simulation03b/train.py`, `simulation03b/submit.sh`
-
-**What it is:** Same lossless QPSK channel and kurtosis detector as sim03, but trained with
-**direct backprop** (no PPO/RL). A small MLP encoder + the same NSF flow architecture
-(3 transforms, hidden=[64,64], `passes=2`) generate jam symbols directly; the loss is
-fully differentiable end-to-end:
-
-```
-loss = soft_BER (BCE with flipped labels) + LAMBDA * relu(kurtosis(rx) - KURT_THRESH) + GAMMA * jam_power
-```
-
-Since the channel is deterministic and kurtosis is differentiable, no RL is needed — this is the
-cleanest possible test of "can a generative model alone push `kurtosis(rx)` toward QPSK's -2
-while keeping BER high."
-
-**Fair comparison constraint:** kurtosis must NOT be in the observation (only `tx_syms` is) —
-the generative model's only structural advantage over PPO is that its loss is differentiable,
-not extra information.
-
-**Key parameters:** N_SYMBOLS=128, BATCH_SIZE=64, LR=1e-3, LAMBDA=2.0, GAMMA=0.02,
-KURT_THRESH=-1.0, TOTAL_STEPS=5000.
-
-**run001 result + bug found:** with `demapper(rx, no=1e-10)`, the system collapsed to the trivial
-"do nothing" solution — `jam_power → 0` by step 1250, `BER → 0`, loss pinned at the
-`clamp(-20,20)` ceiling for the remaining 3750 steps. **Root cause:** `no=1e-10` makes the
-app-demapper's LLRs (`exp(-|y-s|²/no)`) saturate to ±∞ for any nonzero `rx-tx` deviation, so
-`binary_cross_entropy_with_logits` has ~zero gradient once `jam_power` shrinks even slightly —
-nothing can pull the optimizer back out, while the kurtosis and power penalty terms keep
-rewarding `jam_power → 0`. **Fix:** `no=1.0`, clamp tightened to `(-10,10)`.
-
-**Diagnostics added:** IQ scatter (`run00N_iq.png`, early/mid/late snapshots vs QPSK reference)
-and TensorBoard logging (`artifacts/sim03b/tb/run00N/`) — loss terms, BER, detection, kurtosis,
-power, steps/s. TensorBoard requires the `tensorboard` package in `bt_env`
-(`pip install tensorboard`); resolved after job 98440 failed on this. View via VSCode
-Remote-SSH: run `tensorboard --logdir artifacts/sim03b/tb --port 6006` on the cluster, then
-open the auto-forwarded port from the Ports tab — no manual `ssh -L`/fingerprint needed.
-
-**run002 result (job 98441, `no=1.0` fix, 5000 steps, ~7.7 steps/s):** fix worked — no collapse
-to the clamp ceiling. Found a non-trivial local optimum: `jam_power` settled ~0.3-0.6 (down from
-random-init ~2.75), `kurtosis` ~-1.25 to -1.5 (under `KURT_THRESH=-1.0` → ~0% detection),
-`BER` oscillating 0.05-0.15 with a slow upward drift in the last ~1500-2000 steps (not yet
-plateaued). IQ scatter: collapsed to a single small unimodal blob near the origin
-(kurtosis≈-1.3, consistent with a uniform-like/platykurtic shape) — not QPSK's 4-cluster
-structure, but already enough to evade the kurtosis detector.
-
-**run003 (job 98470, `TOTAL_STEPS` bumped to 20000, ~7.46 steps/s):** early portion (steps
-0-1500) mirrored run002 — BER spike to ~0.43 then drop near 0, kurtosis dipping to ~-1.75 then
-recovering to ~-1.25, jam_power dropping to ~0.1 then slowly rising. By step 10950: `loss
-1.8152 | BER 0.156 | kurt -1.301 | power 0.864` — i.e. *better* than run002 (higher power,
-similar kurtosis/BER), still trending. **Then it diverged to NaN** between step 10950 and
-11000 (`loss nan | kurt nan | power nan`, BER settling at ~0.5 = random-guessing level,
-consistent with NaN jam symbols) and stayed NaN for the rest of the run.
-
-**Root cause + fix (job 98470 cancelled, fixed in `train.py`):** NSF's rational-quadratic
-splines can occasionally extrapolate to huge values outside their support; once `jam_flat`
-gets large enough, `excess_kurtosis_batch`'s `m4/m2²` ratio overflows to `inf/inf = nan`. One
-bad step then permanently poisons the weights with NaN (NaN propagates forever once it's in
-the parameters). **Fix applied:**
-1. `jam_flat = jam_flat.clamp(-20, 20)` right after sampling — bounds kurtosis inputs while
-   leaving plenty of headroom above the `|jam|≈1.4` needed for the `jam=-2*tx` optimum.
-2. `torch.nn.utils.clip_grad_norm_(..., max_norm=1.0)` before `optimizer.step()`.
-3. Skip the optimizer step entirely (`continue`) if `loss` is non-finite, so a rare bad batch
-   can never poison the weights.
-
-**run004 (job 98478, `TOTAL_STEPS=20000`) — froze again at step 7664:** same symptom as run003
-— NaN right as `power` crosses ~0.85-0.92 and `kurt` ~-1.27 to -1.32 (both runs hit this exact
-"edge" region). Root cause refined: `flow(ctx).rsample()` can return literal `NaN` entries
-(likely a near-zero spline-bin-width in NSF's hypernetwork causing a `0/0`/`x/0` inside the
-rational-quadratic transform) — **`.clamp(-20,20)` does NOT fix `NaN`** (`clamp(nan,...)==nan`
-in PyTorch), only `Inf`. So the loss went non-finite, the "skip update" guard froze the weights
-at that exact broken point, and all ~12,000 remaining steps were wasted on
-`non-finite loss (nan), skipping update`.
-
-**Fix applied (job 98478 cancelled → run005, job 98483):** added
-`jam_flat = torch.nan_to_num(jam_flat, nan=0.0, posinf=20.0, neginf=-20.0)` *before* the clamp.
-This replaces any stray NaN/Inf entries with finite values (zero-gradient at those entries, so
-they don't poison the update) while the rest of the batch still provides a valid gradient —
-should let training push through the `power≈0.9` instability region instead of freezing there.
-Re-running as run005 (job 98483); if it still freezes past `power≈0.9`, the next step is
-lowering LR (currently 1e-3) and/or adding `weight_decay` to Adam, since two independent runs
-hitting the *same* power/kurtosis region suggests the flow's hypernetwork weights are drifting
-toward a structurally degenerate spline configuration around there, not just a one-off rare
-sample.
-
-**Theoretical BER ceiling (derived, not yet reached):** the global optimum of the loss is
-`jam = -2 * tx_syms` → `rx = tx + jam = -tx`. This gives:
-- `BER = 1.0` — negating a QPSK symbol flips both bits under Gray mapping, so every bit is wrong.
-- `kurtosis(rx) = kurtosis(-tx) = kurtosis(tx) ≈ -2` — `-tx` has *exactly* the same distribution
-  as `tx` (QPSK is symmetric under negation), so `rx` is statistically indistinguishable from a
-  clean signal → 0% detection, not just "below threshold."
-- `jam_power = |{-2·tx}|² = 4` (vs `GAMMA=0.02` → cost `0.08`).
-- → `loss_ber → 0`, `loss_k = relu(-2-(-1)) = 0`, total `loss ≈ 0.08` — the global minimum.
-
-Current runs (`loss≈1.8-1.9`) are far from this — there's a large basin-of-attraction gap
-between the "small low-power blob" local optimum found so far and the "full-power 180°
-rotation" global optimum, likely because both the kurtosis-relu term and `GAMMA*power` create
-gradient pressure toward small `jam_power` early on, and a big coordinated jump to `power≈4`
-is needed to escape.
-
-**Caveat on the BER=1.0 optimum:** this relies on the jammer's loss treating BER=1.0 (perfect
-bit-flip) as the target. From a strict information-theory standpoint, a *deterministic*
-full-inversion (`rx=-tx`) is informationally equivalent to BER=0 for an adversary that knows
-the pattern (just invert all received bits) — so "BER=1" here is a property of this specific
-loss formulation, not necessarily a "win" against an adaptive receiver. Relevant to the
-single-jammer-vs-detector skepticism below.
-
-**Outputs:** `artifacts/sim03b/run00N.png`, `run00N_iq.png`, `run00N_model.pt`,
-`artifacts/sim03b/tb/run00N/`. **Note:** these files are overwritten in place at every
-`CHECKPOINT_EVERY=500` checkpoint (and at the end) — only the latest snapshot is ever on disk,
-there is no per-checkpoint history.
-
 ---
 
-## Simulation 03c — GMM policy + PPO (closed, negative result)
+# APPENDIX A — Experiment history
 
-**Files:** `simulation03c/jammer_env.py`, `gmm_policy.py`, `train_ppo.py`, `submit.sh`, `README.md`
+The falsification record. Kept because the Overleaf "Experiment History" appendix (§3.5) is being
+written from it. Findings and mechanisms only — the per-run debugging chronology has been compressed
+to one line per class of bug.
 
-**What it was:** explored a per-symbol Gaussian Mixture Model (K=8 components) as a
-PPO-compatible action head — a single-feedforward alternative to sim03's NSF, motivated as a
-candidate building block for sim04's multi-agent PPO.
+## A.0 Run index
 
-**Verdict (2026-06-13): closed, does not work.** Nine runs (full table in `artifacts/RUNS.md`)
-systematically tried every PPO-mechanics fix — std clamp, target_kl, learning rate, entropy
-coefficient, removing target_kl entirely. run004 (bias-initializing `log_std` so the jammer
-starts near-silent) produced a large one-time jump (det 1.0→0.3, kurt pinned at the
-`KURT_THRESH=-1.0` cliff edge), but runs005-008 showed this point is a **dead local optimum**:
-run008 (`target_kl=None`) produced 10x more gradient updates with `approx_kl`~1.5 and
-`clip_fraction`~0.87 — massive raw parameter movement — yet `entropy_loss` and all macro stats
-(BER, power, kurtosis, detection) stayed bit-for-bit identical to run004.
+Convention for `artifacts/simXX/`: `runNNN.png` (training curves) · `runNNN_iq.png` (IQ scatter) ·
+`runNNN_model.zip`/`.pt` (saved model) · `runNNN_slurm_<jobid>.out/.err` · `tb/runNNN/`
+(TensorBoard; view with `tensorboard --logdir artifacts/simXX/tb --port 6006` + VSCode port
+forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` needed).
 
-**run009 (2026-06-16, 1M steps) — definitive confirmation:** longest run by 5–20×. BER ≈ 0.05
-and *declining*, detection flat at ~80%, kurtosis pinned at exactly −1.0 (the cliff edge),
-jammer power slowly drifting down. IQ scatter: symmetric Gaussian blob unchanged across early/
-mid/late snapshots — all K=8 components collapsed to a single isotropic Gaussian. After 1M steps
-the agent is slowly drifting toward jam=0. No path forward with GMM+PPO.
+| Sim | Runs | Method | Headline | Job(s) |
+|---|---|---|---|---|
+| 00 | — | none | BER 0→0.5, power 1.0→51, 0→2 users detect when jammer turns on | — |
+| 01 | 001–007 | PPO, Gaussian | best at N=16, β=0.5: BER 0.19, det 8–10%, power 2.2. N=512 fails (action space too large) | — |
+| 02 | 001–002 | PPO, Gaussian | det flat 100%, kurtosis stuck ~−0.25 at every setting | — |
+| 03 | 001–004 | PPO, NSF | det flat 85–100%, kurtosis ~−0.25. N=16 too noisy; N=128 fixed the estimator, not the outcome | 93396/93407/93423 |
+| 03b | 001–008 | **direct gradient, NSF** | **best pre-sim04 result: kurt −1.30, BER 0.17, det ~0%** | 98432/98441/98470/98478/98483 |
+| 03c | 001–009 | PPO, GMM | closed. run009 (1M steps): BER 0.05 *declining*, det ~80%, kurt pinned at −1.0 | 98764–98777 |
+| 04 | 001–007 | direct gradient, 2 agents | run001 BER 0.35 @ total power 0.9; run007 BER 0.65 @ total power 4.0 | 99211/99245/100037/100040 |
+| 04b | — | Sionna on GPU | validation only | — |
+| 05 | — | EfficientNet-B0 on flat QPSK | **78.9%** — detector fails without OFDM | — |
+| 06 | det 002; jam 001–003 | CNN + MAPPO | detector **99.79%** ✓; jammer fails, P(jam)≈0.999 flat | — |
+| 06b | 001 | MAPPO in 2D | stealth solved (P(jam)≈0.003) but per-SC BER plateaus 0.35; no input correlation | — |
+| 07 | 001–005 | blind causal MAPPO | dead end; entropy bit-for-bit flat (~178.4) across all runs | 101622/101632/101650/101657/101817 |
+| frontier | Phase 0 | inference sweep | **detector is an out-of-band-emission detector** | 101860 |
+| frontier | Phase 0.5 | retrain + re-sweep | blind spot closes; acc 99.8→90.5%, FAR 0→3.8% | 101866 |
+| frontier | recheck | complex-STFT + energy | out-of-band survives; **energy detector kills lossless stealth** (max stealthy BER 0.42→0.005) | 102115 |
+| 08 | m1 | TDL fading sweep | SNR-independent BER floor; channel-aware "+70%" (later refuted) | 101870 |
+| 08 | m1b | + energy detector | **stealth revived on the realistic channel**, BER 0.20–0.24 at P_energy ≤ 0.5 | 102305 |
+| 08 | m2-det | channel-valid CNN | acc 94.3%, DR 91.2%, FAR 2.3%, F1 0.94 | 102316 |
+| 08 | m2-suite | CNN ∨ energy per-sample | **suite ≡ CNN**; residual stealthy region BER 0.065–0.11 | 102319 |
+| 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
+| **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
 
-**Diagnosis: GMM permutation symmetry.** With K=8 components per symbol, gradient steps can
+## A.1 sim00–01 — the measurement chain, and the limits of a power threshold
+
+**sim00** (`simulation00/baseline_lossless.py`) is purely observational: 2 legitimate QPSK TX→RX
+pairs, 1 jammer silent for t = 0–4 then max-power Gaussian for t = 5–9, lossless `rx = tx + jam`,
+detection by `mean|rx|² > 3.0`. Result: BER 0 → ≈0.5, power ≈1.0 → ≈51.0, 0 → 2 users detecting,
+exactly at the switch. **Establishes that the measurement chain is trustworthy** — BER, power and
+detection all move when and only when they should.
+
+**sim01** adds a PPO jammer against the same power threshold. Best configuration (N=16, β=0.5): BER
+converged to ~0.19, detection fell 45% → 10%, jammer power settled at ~2.2 — just under the
+threshold. That is near-optimal: the TX contributes ~1.0 to received power, threshold 3.0 leaves a
+jammer budget ≈2.0, and the theoretical max BER at that power is ≈ Q(√0.5) ≈ 0.24. **Establishes
+that against a power threshold, power tuning is the only strategy available** — the IQ scatter stayed
+a featureless Gaussian cloud throughout. N=512 (runs 005–007) failed outright: the action space is
+too large to learn, and at β=3 the agent abandoned stealth entirely.
+
+## A.2 sim02–03c — what a policy distribution can and cannot represent
+
+**sim02** replaces the power threshold with a **kurtosis detector** (QPSK has excess kurtosis ≈ −2,
+Gaussian noise 0; flag if `kurt(rx) > −1.0`). Detection stayed flat at 100% regardless of training and
+kurtosis stuck around −0.25. **A diagonal-Gaussian policy can only produce Gaussian-shaped IQ clouds
+— it is *structurally incapable* of QPSK-like sub-Gaussian statistics, no matter how training
+proceeds.** This is the first structural (rather than tuning) negative result on the ladder, and it
+motivates every policy-distribution upgrade that follows.
+
+**sim03** swaps SB3's diagonal-Gaussian action head for a **Neural Spline Flow** (zuko), conditioned
+on the PPO MLP latent, giving exact `log_prob` via change-of-variables plus a Monte-Carlo entropy
+estimate — a drop-in for everything PPO needs. Outcome unchanged: detection flat 85–100%, kurtosis
+stuck near −0.25. Two fixes were tried and neither moved it: replacing the **binary** detection
+penalty with a **continuous** kurtosis-excess penalty (`β·max(0, kurt − thresh)`), so the agent gets a
+gradient proportional to how far above threshold it is rather than a flat step; and raising N from 16
+to 128, since N=16 was too noisy for the kurtosis estimate to give a usable signal at all. N=128 fixed
+the estimator noise but not the outcome. *Performance note:* `zuko.flows.NSF` defaults to
+fully-autoregressive (`passes=None`), needing `action_dim` sequential hypernetwork calls per
+transform (~20 s/step on CPU). Setting `passes=2` (coupling-style, RealNVP-like) gave a **~44×
+speedup** while remaining an exact-likelihood flow. **Establishes that the flow is expressive enough;
+PPO is what fails to move it.**
+
+**sim03b** removes RL entirely: the same NSF generates jam symbols and is trained by **direct
+backprop** through a fully differentiable loss
+(`soft_BER + λ·relu(kurt(rx) − thresh) + γ·power`). Fair-comparison constraint: kurtosis is **not**
+in the observation, so the generative model's only advantage over PPO is that its loss is
+differentiable, not extra information. **This is the best result of the whole pre-sim04 ladder:
+kurtosis ~−1.30, BER ~0.17, detection ~0%** — a non-trivial local optimum found where PPO found
+nothing.
+
+Three bug classes were fought and fixed along the way, each worth one line: (i) `demapper(no=1e-10)`
+saturates the LLRs so `binary_cross_entropy_with_logits` has ~zero gradient — the system collapsed to
+"do nothing"; fixed with `no=1.0` and a tighter clamp. (ii) NSF rational-quadratic splines can
+extrapolate to huge values, overflowing the kurtosis `m4/m2²` ratio to NaN, which then permanently
+poisons the weights; fixed with `nan_to_num` **before** clamping (`clamp(nan)` is still `nan`), grad
+clipping, and skipping non-finite steps. (iii) Outputs are overwritten in place at every checkpoint —
+**there is no per-checkpoint history on disk.**
+
+*The theoretical optimum, derived and never reached:* `jam = −2·tx` gives `rx = −tx`, i.e. BER 1.0
+and kurtosis exactly −2 (statistically indistinguishable from clean), for jam power 4. Runs sat far
+from it — a large basin-of-attraction gap, because both the kurtosis-relu and the power penalty push
+toward small power early. *Caveat on that optimum:* a deterministic full inversion is
+informationally equivalent to BER 0 for an adversary who knows the pattern, so "BER = 1" is a
+property of this loss formulation, not necessarily a win against an adaptive receiver.
+
+**sim03c** tried a per-symbol **GMM** (K=8) action head with PPO — a single-feedforward alternative
+to NSF. **Closed, negative.** Nine runs systematically ruled out every PPO-mechanics knob (std clamp,
+target_kl, LR, entropy coefficient, removing target_kl entirely). run004 (bias-initializing `log_std`
+so the jammer starts near-silent) produced a large one-time jump, but runs 005–008 showed it to be a
+**dead local optimum**: run008 (`target_kl=None`) produced 10× more gradient updates with
+`approx_kl` ~1.5 and `clip_fraction` ~0.87 — massive raw parameter movement — yet every macro
+statistic stayed **bit-for-bit identical** to run004. run009 (1M steps, 5–20× longer than anything
+else) confirmed it: BER ≈ 0.05 and *declining*, all K=8 components collapsed to a single isotropic
+Gaussian.
+
+**Diagnosis: GMM permutation symmetry.** With K components per symbol, gradient steps can
 substantially relabel/reshuffle individual mixture components without changing the *marginal
-distribution* that's actually sampled — the optimizer's movement budget gets absorbed by this
-symmetry instead of reshaping the output. Combined with `MixtureSameFamily`'s non-reparameterized
-(score-function) `log_prob`/`entropy` gradients being high-variance for overlapping components,
-PPO+GMM cannot make directed progress here.
+distribution* actually sampled — the optimizer's movement budget is absorbed by the symmetry instead
+of reshaping the output. Combined with `MixtureSameFamily`'s non-reparameterized (score-function)
+gradients being high-variance for overlapping components, PPO+GMM cannot make directed progress.
+**Why NSF + direct gradient did better:** a flow is a *bijective* transform (no permutation symmetry)
+and direct-gradient training uses *reparameterized* sampling — low-variance pathwise gradients from
+loss straight to distribution parameters. Neither property holds for GMM+PPO.
 
-**Why NSF + direct-gradient (sim03b) did better** (best result across sim02/03/03b/03c: kurt~-1.30,
-BER~0.17): a normalizing flow is a bijective transform (no permutation symmetry) and
-direct-gradient training uses reparameterized sampling — low-variance pathwise gradients from
-loss to distribution parameters. Neither property holds for GMM+PPO.
+**Architecture-independent side-finding: the reward "cliff".** From
+`reward = ber − β·max(0, kurt − thresh) − 0.05 − γ·power`: `jam = 0` gives kurt = −2 → no penalty →
+reward −0.05. Default init (std ≈ 1, power ≈ 2) starts at kurt ≈ 0 — **already past the penalty
+cliff**, i.e. worse than doing nothing. As power rises from 0, reward *increases* until kurt crosses
+the threshold, then falls off sharply. The true optimum sits **at the cliff edge**. Worth carrying
+into any reward design, regardless of architecture.
 
-**Useful side-finding (architecture-independent): the reward "cliff".** From
-`reward = ber - BETA*max(0, kurt-KURT_THRESH) - 0.05 - GAMMA*power`: `jam=0` gives `kurt=-2`
-(QPSK's natural kurtosis) → `kurtosis_excess=0` → `reward=-0.05`. Default init (std≈1, power≈2)
-starts with `kurt≈0`, i.e. **already past the `kurt>-1` penalty cliff** (reward≈-2.25 in
-runs001-003) — worse than doing nothing. As power increases from 0, reward *increases* (kurt
-stays ≤-1, ber rises) until the cliff at `kurt=-1`, beyond which it falls off sharply. The true
-optimum sits at this cliff edge with higher BER/power than `jam=0`. Worth carrying into sim04's
-reward design regardless of architecture.
+## A.3 sim04 / sim04b — a coordinated solution exists and is gradient-reachable
 
-**Next:** pivot to sim04 (MARL, 2 jammers) using sim03b's NSF + direct-gradient approach as the
-per-agent policy basis.
+**sim04** extends sim03b to two jammers sharing one lossless channel
+(`rx = tx + jam₁ + jam₂`), trained jointly from a single shared differentiable loss — **centralized**
+direct gradient, not MARL. Each agent has its own NSF encoder+flow; one optimizer backpropagates
+through both, so each agent's gradient already accounts for the other's contribution.
 
----
+*Why two agents:* the single-jammer optimum is `jam = −2·tx` (power 4); with two agents the
+equivalent is `jam₁ = jam₂ = −tx` (power 1 each) — the same `rx = −tx` at half the per-agent power,
+easier for the optimizer to find and avoiding the instability region that plagued sim03b.
 
-## Simulation 04 — 2 cooperative jammers, direct-gradient NSF, kurtosis detector
+**Two valid operating points, not broken-vs-fixed:**
+- **run001** (truncated at 12k steps): **BER ≈ 0.35 at total power ≈ 0.9**, detection 5–10%,
+  kurtosis ≈ −1.2. Already 2× sim03b's best.
+- **run007** (truncated at 33k/100k steps, BER still rising): **BER ≈ 0.65 at total power ≈ 4.0**,
+  detection ≈ 0.00, received kurtosis ≈ −1.65.
 
-**Files:** `simulation04/train.py`, `simulation04/submit.sh`
+**Read run007 honestly: the gain was bought with POWER, not strategy.** 4.4× the total power for 1.9×
+the BER. Total power ≈ 4.0 is exactly the power of the omniscient counter-signal `jam = −2·tx`, and
+BER climbing past 0.5 toward 1.0 is the signature of *inverting* the constellation, not merely
+disturbing it. The two-agent design argument predicts the same received signal at total power **2** —
+run007 used double that, i.e. **it did not find the efficient split.** Cause: `GAMMA = 0.02` on the
+power term is negligible against BER gains, so nothing constrained power growth. **This is a concrete
+instance of the proxy-reward problem he told us to delete, and a direct argument for the hard power
+budget** — a self-diagnosed flaw turned into a finding.
 
-**What it is:** Extends sim03b from one jammer to two. Both agents share the same lossless QPSK
-channel (`rx = tx + jam₁ + jam₂`) and are trained jointly from a single shared differentiable
-loss — centralized direct-gradient, not yet MARL/PPO. Each agent has its own NSF encoder+flow;
-the combined optimizer backpropagates through both simultaneously, so each agent's gradient
-already accounts for the other's contribution to `rx`.
+**The clearest evidence of actual coordination is the equal power split (2.0 / 2.0)**, visible in
+`run007.png` panel 4, *not* in the IQ scatter.
 
-**Why two agents over one:**  the global optimum for a single jammer is `jam = -2·tx` (power=4).
-With two agents the equivalent optimum is `jam₁ = jam₂ = -tx` (power=1 each) — the same `rx=-tx`
-result at half the per-agent power, which is easier for the optimizer to find and avoids the
-NaN instability region that plagued sim03b at power≈0.9.
+**Write the structure claim about `rx`, not the agents.** An earlier version of this note said "both
+agents independently converged to a 4-cluster QPSK-like IQ structure"; `run001_iq.png` does not
+support that. The **individual** jammer distributions are concentrated at the *origin* with four-fold
+symmetry; it is the **received** signal that is four-clustered (and hence indistinguishable from
+clean QPSK to the kurtosis detector).
 
-**Architecture (per agent):** same as sim03b — MLP encoder `[OBS→64→CTX_DIM=64]` + NSF flow
-(3 transforms, hidden=[64,64], `passes=2`, `randperm=True`).
+**Two caveats that must travel with this result:** (i) kurtosis detector, lossless channel, genie
+observation ⇒ this is a **mechanism** result, not a stealth result. (ii) **Centralised execution** —
+one optimizer over the union of both agents' parameters means coordination was *maximal*, handed over
+by the optimizer. What is absent is decentralisation. So it shows a coordinated solution **exists and
+is gradient-reachable**, *not* that decentralised agents could find it. That matters, because
+"cooperative multi-agent" is in the thesis title.
 
-**Key parameters:**
-| Parameter | Value | Notes |
-|---|---|---|
-| N_JAMMERS | 2 | |
-| N_SYMBOLS | 128 | |
-| KURT_THRESH | −1.0 | |
-| LAMBDA (kurtosis weight) | 2.0 | |
-| GAMMA (per-agent power weight) | 0.02 | |
-| BATCH_SIZE | 64 → **2048** | bumped in run005+ for GPU |
-| LR | 3e-4 | |
-| WEIGHT_DECAY | 1e-4 | |
-| TOTAL_STEPS | 100,000 | |
+*Historical note on the run005/006 LLR sign bug:* it was **introduced** in run005 when Sionna was
+removed from the training loop (the handcrafted demapper used the opposite LLR convention, so the
+optimizer rewarded *correct* decoding). Runs 001–004 used Sionna's demapper and were **correct** —
+just slow and truncated. The performance work that motivated removing Sionna (large batch, pure
+PyTorch ops, `torch.compile`) took throughput from ~248 to ~39k samples/s.
 
-**Loss:**
-```
-loss = soft_BER + LAMBDA · relu(kurt(rx) − KURT_THRESH) + GAMMA · (power₁ + power₂)
-```
+**sim04b** repeats sim04 with Sionna's `BinarySource`/`Mapper`/`Demapper` on GPU
+(`sn.config.device = "cuda:0"`, set before module creation) to confirm Sionna-on-GPU is viable for
+the OFDM work ahead. Validation only.
 
-**run001 (job 99211, cancelled at 12k/20k steps by 3h wall time):**
-- BER ≈ 0.35 and still rising — already 2× better than sim03b's best (0.17)
-- Detection ≈ 5–10%, kurtosis ≈ −1.2
-- Per-agent power ≈ 0.4–0.5 each (total ≈ 0.9)
-- **Key finding:** both agents independently converged to a **4-cluster QPSK-like IQ structure**.
-  The received signal `rx = tx + jam₁ + jam₂` is statistically indistinguishable from clean QPSK
-  (kurtosis ≈ −2), evading the kurtosis detector — a more sophisticated emergent strategy than
-  sim03b's unimodal blob.
-- Time limit bug: at ~1 step/s, 20k steps requires ~5.5h; 3h limit killed the run early.
+## A.4 sim05–sim06 (detector side) — spectrograms need OFDM
 
-**run002 (job 99245, 5h limit, 17.5k steps):**
-- Fixes from run001: all tensor→scalar logging conversions moved inside `torch.no_grad()`
-  (eliminates `requires_grad=True` UserWarning); `--time` bumped to 5h.
-- BER ≈ 0.28 at step 17k, detection ≈ 3%, kurt ≈ −1.25, power ≈ 0.8 per agent.
+**sim05** tried to train the Li et al. spectrogram CNN (EfficientNet-B0) on the **flat QPSK** channel.
+**It failed: 78.9% validation accuracy** (vs the paper's 99.79%), with massive overfitting (train
+99.7%, val stalled ~75%).
 
-**Performance crisis (runs 001–004, batch=64, CPU):** training suffered a **5× slowdown**
-over the course of a run — instantaneous sps dropped from 3.87 to 0.76 by step 10k and
-plateaued there. Three root causes investigated:
+Cross-evaluating jammers against it is what carries the diagnosis (and is the table the Overleaf
+appendix A.5 should use instead of a confusion matrix):
 
-1. *Autograd reference cycles from zuko `rsample()`.* Disabling GC + manual `gc.collect()`
-   every 500 steps (runs 001–002) still let cycles accumulate between collections,
-   causing RSS to grow from 894 MB → 2.2 GB and cache-thrashing the CPU.
-2. *Re-enabling generational GC* with aggressive thresholds (`gc.set_threshold(100,5,5)`,
-   run004) did not help — RSS still grew, sps still declined.
-3. *Sionna per-step overhead.* `BinarySource()`, `Mapper()`, `Demapper()` called every step
-   on CPU added Python-level overhead and likely contributed to RSS growth.
-
-**Fix (run005+):** three changes eliminated the slowdown:
-
-1. **Removed Sionna from the training loop.** Constellation points extracted from Sionna
-   once at init; training uses pure-PyTorch `generate_qpsk()` (random index into 4
-   constellation points) and `qpsk_demapper()` (APP demapper via `logsumexp`). Both are
-   mathematically identical to Sionna's ops — just fewer Python calls and GPU-native.
-2. **Moved to GPU** (`--gpus=1`, removed `CUDA_VISIBLE_DEVICES=""`). With `BATCH_SIZE=2048`,
-   GPU parallelism dominates kernel-launch overhead.
-3. **`torch.compile`** on `sample_jammer` — fuses the many small sequential NSF coupling-layer
-   ops into fewer kernels.
-
-Result: **19–20 sps (instantaneous, constant)** with RSS flat at ~2.5 GB. No degradation.
-Throughput: 19 sps × 2048 batch = ~39k samples/s vs old peak 3.87 × 64 = 248 samples/s
-(**157× throughput improvement**).
-
-**run005 (job 100037, batch=2048, GPU): broken — LLR sign bug.**
-The handcrafted `qpsk_demapper` used `log P(bit=0) − log P(bit=1)` instead of Sionna's
-convention `log P(bit=1) − log P(bit=0)`. With the wrong sign, `wrong_labels = 1 − tx_bits`
-rewarded *correct* decoding → optimizer drove `jam_power → 0`, `BER → 0`. Confirmed by
-`loss → 0.14` (should be ~2.0 when jammer is active). **Fix:** swapped `mask0`/`mask1` in
-the `logsumexp` terms. Also fixed `hard_decisions`: `(llr > 0)` to match the new convention
-(was `(llr < 0)` from Sionna's opposite sign).
-
-**run006 (job 100040, LLR fix applied):** BER metric still inverted (`llr < 0` not yet
-fixed in this run). Shown BER went 1.0 → 0.67, i.e. **true BER 0.0 → 0.33** — already the
-best result across all sims. 19–20 sps, RSS flat. Confirmed the training itself was correct;
-only the logged BER was `1 − actual`.
-
-**run007 (job TBD, both fixes applied):** first clean run with correct loss AND correct BER
-logging. Running at 100k steps.
-
-**Outputs:** `artifacts/sim04/run00N.png`, `run00N_iq.png`, `run00N_model.pt`
-
-**How to run:**
-```bash
-cd "Tabula Rasa/simulation04"
-sbatch submit.sh
-```
-
----
-
-## Simulation 04b — Sionna on GPU (validation run)
-
-**Files:** `simulation04b/train.py`, `simulation04b/submit.sh`
-
-**What it is:** Identical to sim04 in architecture and loss, but uses Sionna's
-`BinarySource`, `Mapper`, and `Demapper` on GPU (via `sn.config.device = "cuda:0"`)
-instead of the handcrafted pure-PyTorch replacements. This is a **validation experiment**
-to confirm that Sionna on GPU is viable for sim06/07, where Sionna's channel models will
-be needed and can't easily be replaced with hand-written PyTorch.
-
-**Key difference:** `sn.config.device` is set before creating any Sionna modules, so all
-Sionna ops run on GPU with automatic input casting. `torch.compile` is still used for the
-NSF sampling. `TOTAL_STEPS=20,000` (enough to compare sps/RSS, not a full training run).
-
-**What we're measuring:**
-1. **sps** — sim04 gets 19–20 with pure PyTorch. How close can Sionna on GPU get?
-2. **RSS** — sim04 is flat at 2.5 GB. Does Sionna leak memory on GPU?
-3. **Correctness** — same BER/kurtosis trajectory confirms the demappers are equivalent.
-
-**Outputs:** `artifacts/sim04b/run00N.png`, `run00N_iq.png`
-
-**How to run:**
-```bash
-cd "Tabula Rasa/simulation04b"
-sbatch submit.sh
-```
-
----
-
-## Simulation 05 — CNN spectrogram detector on flat QPSK (negative result)
-
-**Files:** `simulation05/train_detector.py`, `simulation05/eval_jammer_vs_detector.py`
-
-**What it was:** Attempted to train a CNN spectrogram detector (EfficientNet-B0, replicating
-Li et al. IEEE Access 2022) on the flat QPSK channel from sim04. Binary classification:
-clean vs jammed (4 classical jammer types collapsed into one label).
-
-**Result: detector failed.** Best validation accuracy 78.9% (vs Li et al.'s 99.79%).
-Massive overfitting: train accuracy hit 99.7% while val accuracy stalled at ~75%.
-
-**Cross-evaluation (sim04 jammer vs CNN detector):**
-| Jammer | Detection Rate | Verdict |
+| Jammer | Detection rate | Verdict |
 |---|---|---|
 | Clean | 2.5% | FAR — low, good |
-| Barrage | 2.5% | Undetected — same as clean |
-| Single-tone | 100.0% | Detected (spectral spike) |
-| Successive-pulse | 97.0% | Detected (periodic pattern) |
-| Protocol-aware | 1.0% | Undetected |
-| MARL (sim04) | 1.0% | Undetected |
+| Barrage | 2.5% | undetected — same as clean |
+| Single-tone | 100.0% | detected (spectral spike) |
+| Successive-pulse | 97.0% | detected (periodic pattern) |
+| Protocol-aware | 1.0% | undetected |
+| MARL (sim04) | 1.0% | undetected |
 
-**Root cause:** flat QPSK has no time-frequency structure. Spectrograms of "QPSK + Gaussian
-noise" are indistinguishable from "QPSK at different SNR." The CNN only learned to detect
-spectral lines (single-tone) and periodic impulses (successive-pulse). Broadband/noise-like
-jammers are invisible in spectrogram space without OFDM structure to disrupt.
+**Root cause: flat QPSK has no time-frequency structure.** Spectrograms of "QPSK + Gaussian noise"
+are indistinguishable from "QPSK at a different SNR", so the CNN only ever learned to detect spectral
+lines and periodic impulses. **Establishes that spectrograms require OFDM for the CNN detector to be
+meaningful** — which is why sim05/06/07's original roadmap was merged into one sim06.
 
-**Conclusion:** spectrograms require OFDM for the CNN detector to be meaningful. This
-motivated merging the original sim05/06/07 roadmap into a single sim06 that combines OFDM
-channel + CNN detector + MAPPO.
+**sim06, phase 1** puts the same detector on a 64-subcarrier 802.11a-like OFDM chain (Sionna
+`ResourceGrid`: FFT 64, CP 16, 52 effective SCs = 48 data + 4 pilot, 6+5 guard + DC null, Kronecker
+pilots on symbols 2 and 11, 14 OFDM symbols/frame, 1120 samples/frame), trained on clean + 4 classical
+jammers with Li et al.'s hyperparameters:
 
-**Outputs:** `artifacts/sim05/detector/`, `artifacts/sim05/jammer/`
-
----
-
-## Simulation 06 — OFDM + CNN detector + MAPPO jammers
-
-**Files:** `simulation06/ofdm.py`, `simulation06/detector.py`, `simulation06/jammer.py`,
-`simulation06/train_detector.py`, `simulation06/train_jammer.py`, `simulation06/eval.py`
-
-**What it is:** The core thesis contribution. Merges the original sim05/06/07 plan into one
-simulation with three simultaneous upgrades from sim04:
-
-| Component | sim04 | sim06 |
-|---|---|---|
-| Channel | Lossless flat QPSK | 64-subcarrier OFDM (802.11a-like, Sionna) |
-| Detector | Kurtosis (differentiable) | CNN EfficientNet-B0 (non-differentiable, frozen) |
-| Training | Direct-gradient | MAPPO (Yu et al. NeurIPS 2022) |
-| Reward | `soft_BER + λ·relu(kurt-thresh) + γ·power` | `BER - β·P(jammed) - γ·power` |
-
-**OFDM parameters (802.11a-like, via Sionna `ResourceGrid`):**
-| Parameter | Value |
-|---|---|
-| FFT size | 64 |
-| Cyclic prefix | 16 samples |
-| Effective subcarriers | 52 (48 data + 4 pilot) |
-| Guard carriers | 6 left + 5 right + DC null |
-| Pilot pattern | Kronecker (OFDM symbols 2, 11 all-pilot) |
-| Subcarrier spacing | 312.5 kHz |
-| OFDM symbols per frame | 14 |
-| Samples per frame | 1120 |
-
-**Phase 1 — Train CNN detector** (`train_detector.py`):
-EfficientNet-B0 on OFDM spectrograms, binary (clean vs jammed). Trained on 4 classical
-jammer types (barrage, single-tone, successive-pulse, protocol-aware). Li et al. hyperparams:
-SGD lr=0.001, batch=32, 100 epochs. Frozen after training.
-
-**Phase 2 — Train MAPPO jammers** (`train_jammer.py`):
-2 cooperative NSF jammer agents trained with MAPPO against the frozen CNN detector.
-CTDE pattern: centralized critic sees both agents' obs+actions, actors use local obs only.
-NSF flow provides exact `log_prob` for PPO importance ratio; Monte Carlo entropy estimate
-(8 rsamples). Jammers inject in the frequency domain (per subcarrier), before OFDM
-modulation. Each OFDM frame (14 symbols) = one episode.
-
-**Architecture:**
-- Per agent: MLP encoder [128→64→64] + NSF flow (3 transforms, hidden=[64,64], passes=2)
-- OBS_DIM = 128 (64 complex subcarriers → 128 real)
-- ACTION_DIM = 128 (output: 64 complex jam values per subcarrier)
-- Critic: MLP [512→256→128→1] (centralized, sees both agents)
-
-**Reward:** `BER - β·P(jammed) - γ·total_jam_power`
-- BER: hard-decision from Sionna demapper on data subcarriers
-- P(jammed): `softmax(CNN_logits)[1]` from frozen detector on full-frame spectrogram
-- Power: mean `|jam|²` across both agents
-
-**Design principle:** use Sionna wherever possible. The OFDM chain (`ResourceGrid`,
-`OFDMModulator`, `OFDMDemodulator`, `BinarySource`, `Mapper`, `Demapper`) runs on GPU
-via `sn.config.device`. Only the CNN detector and NSF jammer are custom PyTorch.
-
-**Phase 1 result (run002, 100 epochs, 312s):**
 | Metric | sim05 (flat QPSK) | sim06 (OFDM) | Li et al. (real SDR) |
 |---|---|---|---|
 | Accuracy | 78.9% | **99.79%** | 99.79% |
@@ -1941,860 +1061,454 @@ via `sn.config.device`. Only the CNN detector and NSF jammer are custom PyTorch.
 | FAR | 2.07% | **0.00%** | 0.03% |
 | F1 | 0.73 | **0.998** | 1.00 |
 
-Matches Li et al.'s paper results exactly — confirms OFDM structure was the missing piece.
-No overfitting: train and val both converge to 99%+ by epoch 5 and stay stable. Detector
-checkpoint: `artifacts/sim06/detector/run002_best.pt`.
+**Matches the published result exactly** — confirming OFDM structure was the missing piece, and
+giving the project a credible SOTA defender to attack.
 
-**Phase 2 — MAPPO jammer results (3 runs, all failed):**
+## A.5 sim06 (jammer) / 06b / 07 — the untrainability result
 
-All three runs failed to learn detection avoidance. P(jam)≈0.999 throughout.
+**This is the negative result Di Maio asked about directly, and the one to lead with the
+*action-parameterisation* explanation rather than the reward formula.**
 
-**run001 (β=2.0 linear, γ=0.02, entropy=0.01):** power diverged 4→33, BER=0.43,
-entropy→294 (maximum). Agent learned "more noise = more BER" with no detection gradient.
-The entropy bonus actively pushed the policy toward high-variance random noise.
+**sim06 phase 2** trains 2 cooperative NSF jammers with **MAPPO** (CTDE: centralized critic sees both
+agents' obs+actions, actors use local obs only) against the frozen CNN, injecting in the frequency
+domain per subcarrier. Reward `BER − β·P(jammed) − γ·power`. **All three runs failed identically**,
+with `P(jam) ≈ 0.999` throughout: run001 (β linear, entropy 0.01) diverged power 4→33 with entropy
+saturating at its ceiling; run002 (log-shaped β) amplified the penalty magnitude but it was still a
+**constant across every batch element**, so nothing differentiated; run003 (entropy 0, β warmup)
+stopped the power blowup but the policy **froze completely** — BER, entropy and power unchanged for
+290 iterations.
 
-**run002 (β=0.3 log-shaped, γ=0.1, entropy=0.01):** log reward shaping
-`-β·log(1 - P(jam) + ε)` amplified the penalty magnitude (det≈7.4 vs 1.0) but it was
-still a **constant** across all batch elements — P(jam)≈0.999 for every action, so no
-differentiation. Same power/entropy blowup as run001.
+**The diagnostic that explains it** (`probe_1sc.py`): the CNN is trivially fooled by single-subcarrier
+jamming even at power 16 (P(jam) ≈ 0.007) but detects **all-subcarrier broadband noise instantly,
+even at power 0.01 per SC** (P(jam) = 1.000). The NSF initializes to ~N(0,1) across all 128 dims —
+textbook broadband noise. **Every action the agent ever tried was detected with P(jam) ≈ 0.999, so
+there was never any reward differentiation to learn from.**
 
-**run003 (β=0.3 log + warmup, γ=0.1, entropy=0.0):** entropy=0 and β warmup (ramp over
-100 iters) prevented the power blowup (power stable at 4.4). But the policy completely
-froze — BER=0.318, entropy=179.7, power=4.4 all unchanged for 290 iterations. Without
-entropy bonus, PPO had no exploration mechanism. With constant P(jam)=0.999, no gradient
-to follow.
+**sim06b** reduces the action space to **2 real dimensions** (one target subcarrier) to test whether
+this is a dimensionality problem. It is not. Stealth was solved (P(jam) ≈ 0.003 throughout — a real,
+varying gradient existed) but **waveform learning still failed**: per-SC BER plateaued at 0.35 against
+a theoretical optimum of 1.0, with Gaussian blobs and no input correlation. **Establishes the
+mechanism: a scalar frame-level reward fundamentally cannot teach an input–output correlation.** PPO
+would have to randomly sample an action near `−2·tx`, get a high reward, and reinforce that specific
+input-dependent direction — and isotropic exploration does not find that.
 
-**Diagnostic: why does the CNN always detect?** (`probe_1sc.py`)
+**sim07** changes exactly one axis from sim06 — the observation model — and locks in a **black-box,
+score-based** threat model (the jammer sees only the scalar `P(jammed)`; the `@torch.no_grad()` in
+`detect()` is load-bearing, which is what forces RL rather than direct gradient). The jammer observes
+`tx[t−1]`, not `tx[t]`. For iid QPSK that carries **zero** information about `tx[t]`, so the
+cancellation shortcut becomes mathematically unreachable and the agent must learn a **blind waveform
+distribution** — the NSF is essentially unconditional. *(Exception: OFDM symbols 2 and 11 are pilots,
+so at t = 3 and t = 12 the observation is a known pattern — any energy concentrated there would be
+**protocol-aware jamming discovered through learning**, tracked via a `pilot_power_ratio` metric.)*
 
-Tested P(jam) for different jamming strategies at various power levels:
+Five runs, each fixing the previous one's mechanical failure, and all five failing identically:
 
-| Strategy | Scale | Power | P(jam) |
-|---|---|---|---|
-| 1SC: jam=-2*tx | 0.5 | 1.0 | **0.004** |
-| 1SC: jam=-2*tx | 2.0 | 16.0 | **0.007** |
-| 1SC: jam=-2*tx | 5.0 | 100.0 | 0.993 |
-| 1SC: random noise | 2.0 | 3.9 | **0.003** |
-| 1SC: random noise | 5.0 | 25.3 | 0.266 |
-| ALL SC: random noise | 0.1 | **0.01** | **1.000** |
-| ALL SC: random noise | 0.5 | 0.25 | 1.000 |
-| ALL SC: random noise | 1.0 | 1.0 | 0.999 |
-
-**Key finding:** the CNN is trivially fooled by single-subcarrier jamming at moderate
-power (P(jam)≈0.003), but detects **all-subcarrier broadband noise instantly — even at
-power=0.01 per SC**. The NSF flow initializes to ~N(0,1) on all 128 dims, producing
-textbook broadband noise. Every action the agent ever tried was immediately detected with
-P(jam)≈0.999. There was never any reward differentiation, making MAPPO structurally unable
-to learn stealth.
-
-**Root cause analysis:** MAPPO fails on this problem due to the combination of:
-1. **128-dim continuous action space** where the optimal action is a structured function
-   of the input (`jam[k] ∝ -tx[k]` per subcarrier)
-2. **Holistic scalar reward** (frame-level BER) that doesn't decompose per subcarrier
-3. **NSF initialization** producing broadband noise that's instantly detected
-4. PPO's isotropic noise exploration cannot discover input-correlated strategies
-
-MAPPO works well for the cooperative multi-agent jamming papers in the literature because
-they use **low-dimensional or discrete** action spaces (channel selection, discrete power
-levels, 2D position). IQ-level waveform synthesis is a different class of problem.
-
-**Where MAPPO/SAC remain relevant:**
-- Spatial coordination in sim07+ (which jammer attacks which target)
-- Discrete decisions (subcarrier selection, resource allocation)
-- Non-differentiable environments (real channels, sim-to-real transfer)
-- The MAPPO negative result is itself publishable as an ablation
-
-**Next steps (sim06b):** single-subcarrier MAPPO to validate that the algorithm works
-when the action space is tractable (2D) and P(jam) varies with power level. Then either:
-(a) scale up subcarrier count with curriculum, or (b) make the CNN pipeline differentiable
-and use direct-gradient for the full 128-dim waveform (the entire path
-`jam → OFDM → spectrogram → CNN` is differentiable except for one integer LUT lookup in
-the viridis colormap, fixable with linear interpolation).
-
-**Outputs:** `artifacts/sim06/detector/`, `artifacts/sim06/jammer/`
-
-**How to run:**
-```bash
-# Phase 1: train detector
-cd "Tabula Rasa/simulation06"
-sbatch submit_detector.sh
-
-# Phase 2: train MAPPO jammers (after detector is trained)
-sbatch submit_jammer.sh
-```
-
----
-
-## Simulation 06b — Single-subcarrier MAPPO (diagnostic)
-
-**Files:** `simulation06b/train_jammer_1sc.py`, `simulation06b/submit.sh`
-
-**What it is:** Diagnostic experiment to confirm MAPPO can learn `jam = -2·tx` and find
-the detection-avoidance sweet spot when the action space is tractable (2 real dims instead
-of 128). Uses the same OFDM chain and frozen CNN detector as sim06.
-
-**Motivation:** sim06's probe showed P(jam)≈0.003 for 1-SC jamming at moderate power,
-proving the CNN can be fooled. This experiment tests whether MAPPO discovers the optimal
-strategy when the exploration problem is tractable.
-
-**Architecture:**
-- Per agent: simple Gaussian MLP [2→64→64→2] (no NSF needed for 2D)
-- OBS_DIM = 2 (I/Q of target subcarrier)
-- ACTION_DIM = 2 (I/Q of jam signal on target subcarrier)
-- Critic: CTDE MLP [8→128→64→1]
-- TARGET_SC = 20 (FFT index, effective SC index 14)
-
-**Reward:** `per_SC_BER - β·P(jammed) - γ·power`
-- per_SC_BER: BER computed only on the target subcarrier's data symbols
-- P(jammed): full-frame CNN detection (same detector as sim06)
-- β=2.0 (linear — gradient exists in the 1-SC P(jam) range)
-- γ=0.02
-
-**What we're testing:**
-1. Does MAPPO discover `jam = -2·tx` through 2D exploration? (BER side)
-2. Does it find the power sweet spot where P(jam) transitions 0→1? (stealth side)
-3. Does the IQ scatter show structured output (rotated QPSK) vs random blob?
-
-**run001 result (390 iters, 261s, ~400 fps):**
-Stealth solved: P(jam)≈0.003 throughout — completely undetected. But waveform learning
-failed: per-SC BER plateaued at 0.35 (theoretical optimum = 1.0 for jam=-2*tx). IQ
-scatter shows Gaussian blobs in both jammers, no input correlation — identical to sim06.
-Power drifted 4.0→6.0 (entropy bonus pushing variance up).
-
-**Conclusion:** even in 2D with a working stealth gradient (P(jam) varies meaningfully),
-MAPPO converges to random noise rather than structured jam=-2*tx. The problem is NOT
-dimensionality — it's that a scalar reward fundamentally cannot teach input-output
-correlation. PPO would need to randomly sample an action near -2*tx, get a high reward,
-and reinforce that specific input-dependent direction.
-
-Combined with sim06's results, this gives a clean negative result: MAPPO fails for
-IQ-level waveform synthesis regardless of action-space dimensionality, because the
-scalar frame-level reward carries no per-dimension structural information.
-
-**However:** this negative result applies to the OMNISCIENT setting where the optimal
-strategy requires input-correlated output. In the BLIND setting (sim07), the jammer
-learns a fixed waveform distribution, not a mapping obs→jam — a fundamentally different
-and potentially more RL-tractable problem.
-
-**Outputs:** `artifacts/sim06b/jammer/`
-
-**How to run:**
-```bash
-cd "Tabula Rasa/simulation06b"
-sbatch submit.sh
-```
-
----
-
-## Simulation 07 — Blind causal MAPPO jammer (black-box threat model)
-
-**Files:** `simulation07/train_jammer.py`, `simulation07/submit.sh`
-
-**What it is:** Changes exactly ONE axis from sim06 — the observation model — plus
-locks in the black-box threat model. No channel, fading, noise, or SINR changes.
-One axis at a time so that if results misbehave, the cause is unambiguous.
-
-### Threat model: black-box, score-based
-
-The jammer accesses the frozen CNN detector ONLY through a scalar detection score
-`P(jammed)`. No gradients flow through the detector — ever. The `@torch.no_grad()`
-wiring in `detect()` is load-bearing, not incidental. This forces MAPPO (RL), not
-direct-gradient. Direct-gradient backprops through the detector and is white-box by
-definition — it is not used, even as a training shortcut.
-
-If convergence is hard, the correct responses are curriculum/reward-shaping, NOT
-switching to gradient access. The black-box constraint holds during training as well
-as evaluation.
-
-### Observation model: causal delay
-
-The jammer observes `tx[t-1]`, not `tx[t]`. At t=0, zeros. This is a 3-line change
-in the rollout loop; OBS_DIM, agent architecture, buffer, and GAE all stay the same.
-
-**Rationale:** sim06's optimum was the trivial `jam ≈ −2·tx` because the jammer saw
-the exact current symbol. With i.i.d. QPSK, `tx[t-1]` is uninformative about `tx[t]`,
-so the cancellation shortcut is mathematically unreachable. The jammer must learn a
-blind waveform distribution — a genuinely non-trivial learning problem.
-
-**What the jammer actually is:** a BLIND jammer learning a fixed stealthy waveform
-distribution, not a reactive function of the current signal. The NSF is therefore
-essentially unconditional (conditioned on an uninformative observation for data symbols).
-It is learning the shape of a distribution to sample from.
-
-**EXCEPTION — pilots:** OFDM symbols 2 and 11 carry deterministic pilot values. When
-the jammer observes `tx[t-1]` and that happens to be a pilot (at t=3 or t=12), it can
-recognize the known pattern. Any concentration of energy on pilot-adjacent symbols is
-**protocol-aware jamming discovered through learning** — a key expected result, not an
-artifact. Tracked via `pilot_power_ratio` metric and per-symbol power bar chart.
-
-### Generative model role
-
-The NSF learns a largely unconditional stealthy waveform distribution. The observation
-is uninformative for data symbols, so the flow is NOT learning a mapping obs→jam — it is
-learning the shape of a distribution to sample from. This is why a normalizing flow fits
-the blind setting: it can represent complex, non-Gaussian waveform distributions with
-exact `log_prob` for PPO's importance ratio. A GAN-discriminator-as-detector framing
-does NOT apply here because the detector is black-box (no discriminator gradients).
-
-### Key parameters
-
-| Parameter | Value | Rationale |
+| run | change | outcome |
 |---|---|---|
-| Observation | `tx[t-1]` (causal) | De-trivializes; blind for data, pilot-aware |
-| TOTAL_FRAMES | 100,000 | Diagnostic first; extend via checkpoint-resume if learning |
-| ENTROPY_COEFF | 0.005 | Moderate: some exploration without power blowup |
-| BETA_DETECT | 0.3 (log-shaped) | Amplifies gradient near P(jam)≈1 |
-| WARMUP_ITERS | 200 | β ramps from 0; learn power control first |
-| GAMMA_POWER | 0.05 | Moderate power penalty |
-| N_JAMMERS | 2 (fixed) | Permutation-invariant encoder worthless at N=2 |
-| Detector gradients | None (black-box) | `@torch.no_grad()` in `detect()` |
+| 001 | baseline | P(jam) pinned 0.999; entropy hit its ceiling; power diverged 4→33 |
+| 002 | + hard power cap, entropy → 0 | power fixed at 2.00, but P(jam) still 0.999 and every metric bit-for-bit flat |
+| 003 | + top-K=8 subcarrier masking | first movement (P(jam) 0.985–0.996) but entropy varied <0.05% over 190 iterations |
+| 004 | top-K 8→1 | P(jam) 0.35–0.44 — *not* the ≈0.0002 the static probe predicted |
+| 005 | + temporally-held frame action | final: BER ≈ 0.013, P(jam) ≈ 0.3 (pure sampling noise), entropy flat at ~178.4 |
 
-**Checkpoint-and-resume:** saves full state (agents, critic, optimizers, logs,
-iteration) so training can span multiple 8h SLURM jobs. Resume with
-`--resume ../artifacts/sim07/jammer/run001_ckpt.pt`.
+**The spectrogram probe root-caused the sparsity threshold directly:** a sharp, **power-independent**
+cliff between 3 and 4 simultaneously active subcarriers (1–3 SCs → P(jam) ≤ 0.012 at any power;
+4 SCs → 0.9955; 64 SCs → 0.9999 even at power 0.01/SC). The CNN keys off the *number* of anomalous
+spectrogram rows, not their magnitude. Plausibly because its training set contained only "1 active
+tone" and "all tones" as sparse/dense extremes, so it generalizes conservatively across the unseen
+middle. **run004's discrepancy was frequency hopping:** the NSF resamples at each of the 14 OFDM
+symbols, each potentially targeting a different top-1 subcarrier, and the frame-level spectrogram
+aggregates all 14 → looks multi-tone. Confirmed by a controlled probe (`hopping_2sc` at power 1 gives
+P(jam) = 0.4633, matching the live run exactly, vs ≈0.0002 for a temporally-fixed single SC). **Not a
+learning failure — a structural mismatch between the per-symbol rollout and the frame-level
+spectrogram.** run005 fixed it by sampling once per frame and holding.
 
-**Expected convergence:** uncertain. First run (100k frames, ~3h) is a "does it learn
-at all" diagnostic, not a final result. Extend via checkpoint-resume if learning signal
-appears. If P(jam) stays flat at 0.999 (same broadband-noise wall as sim06), the causal
-delay alone hasn't helped and curriculum/reward-shaping is the next lever.
+**Two structural causes, not tuning:**
+1. **Reward variance across the batch ≈ 0** → normalized advantages are pure noise → **PPO has no
+   gradient.** Same wall as sim06/06b: a scalar frame-level reward carries no per-dimension
+   information.
+2. The K=1 sparsity sim07 needed (to get under the detector's apparent cliff) **caps BER at
+   ~2/52 ≈ 0.04** — too low to matter.
 
-**Key convergence risk:** the NSF's initial output is still broadband noise → P(jam)≈0.999
-→ no detection gradient. The causal delay changes the PROBLEM (blind vs omniscient) but
-not the INITIALIZATION. sim06's probe showed the CNN catches even power=0.01 broadband
-noise. If the jammer can't accidentally produce sparse/structured output early in training,
-it will face the same constant-P(jam) wall. The β warmup (200 iters) is designed to let
-the agent learn power control before detection kicks in — if this works, the agent should
-settle at moderate power and then adapt to the detection signal.
+**Refined conclusion, and the one to lead with:** the root cause is the **action parameterization** —
+raw IQ, very high-dimensional — not the reward formula. This is what motivates low-dimensional
+perturbation *parameters* with surrogate gradients, and it is why a reward-engineering fix was never
+going to work. He accepts the result on its own terms: *"showing in what cases it is hard to beat is
+already a small result."* Under the adaptation-cost framing it is more than that — **direct evidence
+that attacker adaptation by that route is prohibitively expensive.**
 
-### sim07 run history (2026-06-30)
+*Honest note on the inductive bias:* top-K masking is a real architectural prior — it presupposes the
+solution is sparse rather than letting the agent discover it. Justified as a *feasibility check*,
+because an NSF initialized to ~N(0,1) across 128 dims has no natural pathway to sparse samples
+(concentration of measure means no batch element looks meaningfully different), so the policy gradient
+is provably flat in the unmasked regime. The clean way to report it is as a documented finding:
+*"unconstrained continuous RL cannot discover sparse evasive strategies from broadband initialization
+without a structural prior."*
 
-**run001 (job 101622, baseline causal/blind, no mitigations, 150 iters before kill):**
-Confirmed the predicted convergence risk exactly. `P(jam)` pinned at 0.999 for the entire
-run — zero variance. `ENTROPY_COEFF=0.005` actively made things worse: policy entropy shot
-to its ceiling (~294) within 10 iterations and total jam power diverged 4→33 (entropy bonus
-rewards high-variance broadband output, which is exactly what the detector catches hardest).
-Critic loss climbed monotonically (0→58) — the critic chasing a moving target as β warmup
-ramped, never converging. Reward fell monotonically. No learning signal anywhere. Killed.
+## A.6 Phase 0 / 0.5 / recheck — detector characterisation and errata
 
-**run002 (job 101632, + hard per-agent power cap at 1.0, entropy coeff → 0):**
-Mechanically fixed the power blowup (total power flat at 2.00 instead of 33) but did NOT
-fix detection — `P(jam)` still pinned at 0.999, all metrics (BER=0.243, entropy=178.8,
-power=2.00) bit-for-bit flat across 60 iterations. Root cause: capping power doesn't help
-because the detector catches **broadband noise at any power level** (sim06 probe: even
-power=0.01/SC broadband → P(jam)=1.0). The NSF's raw output is ~N(0,1) across all 128
-dims regardless of overall scale — i.e. inherently broadband — so power scaling alone
-can't put the agent into a regime where stealth is even possible. Killed.
+**Phase 0** (`frontier/frontier_sweep.py`, job 101860) is a pure-inference sweep — no RL — over
+(active subcarriers × power × structure) through the frozen sim06 detector, recording **both** P(det)
+and BER. Motivation: before spending more compute on RL, bound analytically what *any* jammer could
+achieve at each stealth level.
 
-**run003 (job 101650, + top-K=8 subcarrier masking on top of run002's fixes):**
-First real movement: `P(jam)` dropped from pinned-0.999 to ~0.985–0.996 (noisy but
-distinctly lower). Still **not learning** — entropy varied by <0.05% across 190 iterations
-(178.75–178.83, pure sampling noise), BER/power similarly flat. Critic loss kept climbing
-(0→40+). Diagnosis: K=8 active subcarriers is still too many for the detector to treat as
-stealthy — confirmed by direct spectrogram probe (below), so there was no usable gradient
-to learn from even with masking in place. Killed.
-
-**Spectrogram probe (2026-06-30) — root-caused the sparsity threshold directly:**
-Generated actual spectrograms through the trained CNN detector at controlled subcarrier
-counts (`artifacts/sim07/diagnostics/spectrogram_probe_comparison.png` and `_v1.png`).
-Result is a **sharp, power-independent cliff between 3 and 4 simultaneously active
-subcarriers**:
-
-| Active SCs | Power=1.0 | Power=8.0 |
-|---|---|---|
-| 1 | P(jam)=0.0002 | P(jam)=0.0001 |
-| 2 | P(jam)=0.0002 | P(jam)=0.0017 |
-| 3 | P(jam)=0.0013 | P(jam)=0.0119 |
-| **4** | **P(jam)=0.9955** | **P(jam)=0.9955** |
-| 8 | P(jam)=0.9973 | — |
-| 64 (broadband) | P(jam)=0.9999 (even at power=0.01/SC) | — |
-
-The CNN appears to key off the *number* of anomalous spectrogram rows present, not their
-magnitude (P(jam) is nearly identical at power=1 and power=8 for a given SC count — only
-the SC count moves the needle, until 4+ SCs are active, at which point it's saturated
-regardless of power). Visually: a single bright frequency line (1 SC) is indistinguishable
-from normal channel/pilot variation; 4+ simultaneous lines are not. Plausible explanation:
-the detector's training set only had "1 active tone" (single-tone jammer) and "all tones"
-(barrage) as sparse/dense extremes, so it never learned a graceful boundary in between —
-it generalizes conservatively (flags as jammed) anywhere in the unseen middle ground.
-
-**run004 (job 101657, top-K reduced 8→1, killed ~2026-07-02):** K=1 masking reduced P(jam)
-to ~0.35–0.44 (as hoped — well below the 0.999 wall) but NOT near-zero as the static probe
-predicted (expected P(jam)≈0.0002 for 1-SC jamming). Root cause identified via spectrogram
-probe: **frequency-hopping**. The NSF resamples a fresh jam waveform at every one of 14 OFDM
-symbols per frame. Each symbol potentially targets a *different* top-1 subcarrier. The
-frame-level spectrogram aggregates all 14 activations → looks multi-tone/broadband → detected
-at P(jam)≈0.46. Confirmed by a controlled probe: `hopping_2sc(2agents)` at power=1 gives
-P(jam)=0.4633, matching the live run exactly, vs P(jam)≈0.0002 for a temporally-fixed single
-SC. The discrepancy was not a learning failure — it was a structural mismatch between the
-per-symbol rollout (resamples every symbol) and the frame-level spectrogram (aggregates all 14
-symbols). Killed.
-
-**run005 (job 101817, + temporally-stable held-frame action, 2026-07-02):** Fixes the
-frequency-hopping problem by restructuring the rollout loop:
-1. Sample jam waveform ONCE per agent per frame using `obs0 = zeros` (canonical blind context)
-2. Hold this fixed across ALL data-symbol timesteps (t not in {3, 12})
-3. Resample fresh ONLY at pilot-reactive timesteps t=3 and t=12 (where `tx[t-1]` is a known
-   pilot → pilot-aware jamming discovered through learning; `PILOT_REACT_TIMESTEPS = {3, 12}`)
-
-The held-frame action means the frame-level spectrogram sees a single stable frequency line
-(or two, if both agents pick different SCs) across all 14 symbols — matching the static probe
-condition where P(jam)≈0.0002. This is the first run where the agent should actually observe
-P(jam) close to zero when it jams sparsely, providing a usable PPO gradient.
-
-Raw jam_flat from the NSF (pre-masking) is still stored in the replay buffer for the PPO
-importance ratio — the `apply_sparsity_and_power_cap()` transform is applied post-sample and
-the log_prob from the NSF over raw outputs is used for PPO, preserving importance ratio
-correctness.
-
-**Inductive bias caveat (own concern, raised and discussed 2026-06-30):** top-K masking is
-a real architectural prior — it presupposes "the solution is sparse" rather than letting
-the agent discover this through gradient descent. Argued (and still believe) this is
-justified as a *feasibility check*: an NSF initialized to ~N(0,1) across 128 dims has no
-natural pathway to produce sparse samples (concentration-of-measure in high dimensions
-means no batch element looks meaningfully different from any other), so the policy
-gradient is provably flat in the unmasked regime — this isn't a "needs more steps" problem,
-it's structurally the same wall as sim02/sim03c (Gaussian/GMM policies structurally
-incapable of producing non-Gaussian output). If K=1 masking produces a working policy, a
-natural follow-up ablation is removing the mask and confirming it fails unconstrained —
-turning the inductive-bias compromise into a documented finding ("unconstrained continuous
-RL cannot discover sparse evasive strategies from broadband initialization without a
-structural prior") rather than a quietly-shipped shortcut.
-
-**Strategic fallback (discussed, not yet decided):** if even K=1 doesn't produce meaningful
-BER, or if full CNN evasion turns out to be unreachable by black-box RL regardless of
-masking, the recommended pivot is away from "did we fully evade the strongest detector"
-as a binary claim, toward reporting jammer effectiveness/evasion across the **full detector
-roadmap** (power threshold, kurtosis, GLRT, pilot variance, CNN) — i.e. showing the
-cooperative jammer defeats simple statistical detectors outright and meaningfully reduces
-(without necessarily eliminating) CNN detection. This is more honest, lower-risk, and
-consistent with the negative/boundary-result narrative already established by sim02/03c/06.
-
-**Outputs:** `artifacts/sim07/jammer/` — training curves, IQ scatter, per-OFDM-symbol
-power bar chart (pilot vs data symbols). `artifacts/sim07/diagnostics/` — spectrogram
-probe comparison images.
-
-**How to run:**
-```bash
-cd "Tabula Rasa/simulation07"
-sbatch submit.sh
-
-# To resume:
-# Edit submit.sh to uncomment RESUME= line with checkpoint path
-sbatch submit.sh
-```
-
----
-
-## Frontier analysis (Phase 0) — effectiveness vs detectability (no RL)
-
-> **⚠ CORRECTED — read the "Recheck (2026-07-03)" note in Current status first.** The "in-band
-> jammer reaches BER 0.42 at P(det)<0.05" numbers below are **CNN-only** and misleading: an energy
-> detector catches that jamming (it raises power). The out-of-band mechanism is real (survives the
-> complex-STFT fix); the "stealth" claim is not, on the lossless channel.
-
-**Files:** `frontier/frontier_sweep.py`, `frontier/submit.sh`
-
-**What it is:** a pure-inference sweep (no training) that characterizes the frozen
-sim06 CNN detector against controlled interference. For a grid of (number of active
-subcarriers × per-SC power × structure) it injects a waveform into clean OFDM frames
-and records BOTH P(detect) and BER, producing the achievable BER-vs-P(detect) frontier.
-Reuses `simulation06/{ofdm,detector}.py` unchanged. Runs in ~40s on GPU (B=128).
-
-**Motivation:** sim07 (blind MAPPO) was confirmed a dead end through run005 — same flat
-failure as sim06/06b (BER≈0.013, P(jam)≈0.3 noise, policy entropy bit-for-bit flat).
-Before spending more compute on RL, bound analytically what any jammer could achieve at
-each stealth level, and find out whether learning can beat a random sparse strategy.
-
-**Headline result (run job 101860, B=128, CONFIRMED) — the detector is an
-OUT-OF-BAND-EMISSION detector, not a jamming detector.** The single decisive comparison,
-same power and same BER, differing only in whether the interference touches the 12
-guard/DC null bins:
+**Headline: the "99.79% SOTA detector" is essentially an OUT-OF-BAND-EMISSION detector, not a jamming
+detector.** The decisive control holds power and BER fixed and differs only in whether the 12 guard/DC
+null bins are touched:
 
 | Strategy | n_active | power | P(detect) | BER |
 |---|---|---|---|---|
-| broadband **in-band** (52 eff SCs) | 52 | 8 | **0.011** | 0.360 |
+| broadband **in-band** (52 eff. SCs) | 52 | 8 | **0.011** | 0.360 |
 | broadband **out-of-band** (all 64 bins) | 52 | 8 | **0.999** | 0.363 |
 | broadband **out-of-band** | 52 | 0.03 | **0.9999** | 0.000 |
 
-The detector fires at ~1.0 on *any* out-of-band energy (even power 0.03 causing zero BER)
-and is near-blind (P(det)≈0.01) to in-band interference causing BER=0.36. This reconciles
-the sim06 "broadband → P(jam)=0.999 even at power 0.01" wall: that probe added noise across
-all 64 FFT bins **including guard/DC nulls** (an out-of-band spectral-mask violation). It
-also likely explains sim07's "4-subcarrier cliff" — the jammer's top-K selection over the
-full 64-bin grid was selecting guard/DC bins as it activated more subcarriers.
+It fires at ~1.0 on *any* out-of-band energy — even at power 0.03 causing **zero** BER — and is
+near-blind to in-band interference causing BER 0.36. **This retroactively explains two earlier
+"walls"**: sim06's "broadband → 0.999 even at power 0.01" (that probe injected into guard/DC bins,
+i.e. a spectral-mask violation) and sim07's "4-subcarrier cliff" (its top-K over the full 64-bin grid
+was selecting guard/DC bins as it activated more subcarriers). **The earlier conclusion that
+"stealth–effectiveness tension is fundamental / BER capped at 0.04" was WRONG — an out-of-band-leakage
+artifact.** Temporal coherence (held vs hopping) turned out to be a minor axis; **in-band vs
+out-of-band is the dominant one.**
 
-**Achievable stealthy operating points (blind, in-band, temporally-held):**
+**Phase 0.5** (`frontier/retrain_detector_inband.py`, job 101866) retrains a fresh EfficientNet on
+clean + 4 classical + in-band jammers, then re-sweeps. **The blind spot closes, but only at a real
+cost:**
 
-| Detection ceiling | Max BER | Config |
-|---|---|---|
-| P(det) ≤ 0.05 | **0.252** | all 52 SCs, power 1 |
-| P(det) ≤ 0.10 | **0.335** | all 52 SCs, power 2 |
-| P(det) ≤ 0.50 | **0.419** | all 52 SCs, power 8 |
-| omniscient (jam=−2·tx) | **1.000** | all 52 SCs, P(det)=0.0016 |
-
-So a large stealthy-AND-effective region exists — the earlier "BER capped at ~0.04 by the
-sparsity needed for stealth" conclusion was an artifact of out-of-band leakage, not a
-fundamental tradeoff. Temporal coherence (held vs hopping) turned out to be a minor axis;
-**in-band vs out-of-band is the dominant one.**
-
-**Outputs:** `artifacts/frontier/{frontier,cliff,ber_vs_nactive,coherence}.png`,
-`artifacts/frontier/results.json`.
-
-**How to run:**
-```bash
-cd "Tabula Rasa/frontier"
-sbatch submit.sh          # full GPU sweep (~40s + queue)
-# or: python frontier_sweep.py --smoke --device cpu   # quick sanity
-```
-
-**Implications for the plan:**
-- The paper now has a positive, defensible finding: a 99.79%-accurate SOTA CNN jamming
-  detector is essentially a spectral-mask detector, near-blind to spectrally-compliant
-  in-band interference at any power.
-- Next (Phase 0.5): retrain/augment the detector with in-band jammer samples (held/hopping/
-  matched) — does the blind spot close and force a genuine stealth/effectiveness tradeoff?
-- Then a direct-gradient or surrogate-transfer jammer to reach the frontier-optimal in-band
-  waveform, and **sim08 (realistic channel)** where cooperative channel-aware allocation is
-  where learning genuinely helps and where paper claims begin.
-
-### Phase 0.5 — retrain the detector with in-band jammers
-
-**Files:** `frontier/retrain_detector_inband.py`, `frontier/submit_phase05.sh`
-
-**What it is:** trains a fresh EfficientNet on clean + the 4 classical jammers + **in-band
-jammers** (sparse/broadband/held/hopping/matched, injected in the frequency domain on the
-52 effective SCs — the spectrally-compliant family the original detector never saw), then
-re-runs the frontier sweep against it. Tests whether the out-of-band blind spot can be
-closed. Detector → `artifacts/frontier/detector/run001_best.pt`; re-swept frontier →
-`artifacts/frontier_inband/`.
-
-**Result (job 101866) — the blind spot closes, but only at a real cost → genuine tradeoff:**
-
-| | Original detector | Retrained (+ in-band) |
+| | Original | Retrained (+ in-band) |
 |---|---|---|
 | Overall accuracy | 99.79% | **90.5%** |
-| FAR | 0.00% | **3.81%** |
+| FAR | 0.00% | **3.81%** (up to ~50% on near-zero-power in-band perturbations) |
 | in-band broadband n=52 pwr=8 → P(det) | 0.011 | **0.995** |
-| in-band DR (fresh in-band jammers) | ~0% | **68%** (a third still evade) |
-| max stealthy BER at P(det) ≤ 0.05 | 0.252 | **none stays this stealthy** |
+| in-band DR (fresh jammers) | ~0% | **68%** — a third still evade |
 | max stealthy BER at P(det) ≤ 0.50 | 0.419 | **0.020** (sparse, n=3) |
 
-Teaching the CNN to catch in-band interference works for high-occupancy jammers but drops
-clean-signal accuracy 99.8→90.5%, raises FAR 0→3.8% (up to ~50% on near-zero-power in-band
-perturbations), still misses ~32% of in-band jammers, and leaves a residual **sparse** blind
-spot (n=3 evades at P(det)≤0.5). The re-swept frontier collapses: stealthy BER drops from
-0.42 to 0.02, and every high-BER point is pushed to P(det)≈1.0. Even the omniscient
-`jam=−2·tx` (statistically clean `rx=−tx`) is now flagged at P(det)≈0.15. **Conclusion: a
-spectrogram-CNN detector cannot catch spectrally-compliant in-band interference without
-sacrificing false-alarm rate and clean accuracy — an intrinsic effectiveness–detectability
-tradeoff, not just a training-data gap.**
+Even the omniscient `jam = −2·tx` (statistically clean `rx = −tx`) is now flagged at ≈0.15.
+**Establishes an intrinsic trade-off, not just a training-data gap: a spectrogram CNN cannot catch
+spectrally-compliant in-band interference without sacrificing false-alarm rate and clean accuracy.**
+*Caveat:* a quick 50-epoch naive retrain, with in-band samples labelled "jammed" even at BER ≈ 0,
+which inflates FAR. A careful version (BER-thresholded labels, threshold calibration) would sharpen
+the exact numbers; the qualitative result is robust.
 
-**Caveats:** this retrain is a quick 50-epoch naive augmentation, and in-band samples were
-labeled "jammed" even when they cause BER≈0 (which inflates FAR). A careful detector-design
-study (BER-thresholded labels, threshold calibration, more data) would sharpen the exact
-tradeoff — but the qualitative result (closing the blind spot costs FAR) is robust.
+**Recheck** (`frontier/recheck_suite.py`, job 102115) — prompted by scrutiny of the Li et al.
+replication (their repo confirms EfficientNet-B0 is one of their four CNNs, but they use **real
+over-the-air SDR data**, train from scratch, and their spectrogram generation is undocumented). Two
+faithfulness fixes: the detector spectrogram was **real-part-only** — a bug — corrected to the
+standard **complex two-sided STFT** and retrained (val acc 99.8%, FAR 0%); and an **energy detector**
+(mean received power vs a clean-calibrated 1% FAR threshold) was added so the frontier is evaluated
+against the **detector SUITE**, not the CNN alone.
+
+- **(A) The out-of-band finding SURVIVES the complex-STFT fix — it was real.** Same power and BER
+  (0.362): in-band P(CNN) = **0.086** vs out-of-band P(CNN) = **1.000** (out-of-band is 1.000 at every
+  power).
+- **(B) The energy detector DEMOLISHES the "stealthy BER 0.42" claim.** Against the suite (CNN OR
+  energy), max stealthy BER: P(det) ≤ 0.05 → **none**; ≤ 0.10 → **0.000**; ≤ 0.50 → **0.005**.
+  In-band jamming that flips bits necessarily raises power, and a trivial power meter catches it. The
+  original figure was an artifact of evaluating against the **CNN alone**. **"SOTA CNN is blind →
+  jammer wins" is dead as stated.**
+
+**Crucial caveat, and what kept sim08 alive:** this is the **noiseless lossless** channel, where clean
+power is a razor-sharp constant so any added power trips the threshold. On a **realistic** channel
+(finite SNR + fading) the threshold is looser and a low-power jammer can hide **under the noise
+floor**.
+
+## A.7 sim08 — the realistic channel, and the honest metric
+
+**m1** (`simulation08/channel.py`, `frontier_channel.py`, job 101870). `MultiLinkChannel` uses Sionna
+`tr38901.TDL` (model C, 100 ns delay spread, 5.2 GHz) via `GenerateOFDMChannel` for an independent
+per-subcarrier frequency response per link (TX→RX and each jammer→RX), plus per-link average path gain
+and AWGN at a target Eb/N0. The jammer transmits through its **own** channel `h_jam`; the RX does
+perfect-CSI ZF equalization of the TX link, so post-equalization the effective interference on
+subcarrier n is `(h_jam[n]/h_tx[n])·jam[n]`.
+
+1. **The channel is physically correct** — clean BER floor waterfalls 0.088 (5 dB) → 0.0003 (30 dB).
+2. **A sparse in-band jammer imposes an SNR-INDEPENDENT BER floor** — ~0.05–0.07 at n=8 across all
+   SNR; broadband ~0.34. **The jammer wins in the high-SNR regime because the impairment is
+   interference, not noise**, so more transmit power cannot fix it. *(This result does not depend on
+   any stealth threshold and still stands.)*
+3. **Channel-aware beat blind subcarrier selection by up to +70% BER at equal power** — *later
+   refuted, see below.*
+
+**m1b** (job 102305) folds in the per-SNR energy detector (calibrated on **faded** clean frames to 1%
+FAR). **Stealth is revived on the realistic channel:** a jammer stays stealthy (P_energy ≤ 0.5) while
+causing **BER ≈ 0.20–0.24 across all SNRs** — versus 0.005 max on the lossless channel. At 30 dB that
+drives a near-error-free link to BER 0.20 while hiding under the power meter. **The noise floor and
+fading provide cover the lossless channel could not.**
+
+**m2** completes the suite. **(1)** `retrain_detector_channel.py` (job 102316) retrains
+EfficientNet-B0 on complex-STFT spectrograms of signals through `MultiLinkChannel`, Eb/N0 drawn
+uniformly in [5,30] dB per mini-batch, classes = faded clean (0) vs faded + classical time-domain
+jammer or faded + in-band frequency-domain jammer through its own `h_jam` (1). Result: **held-out
+faded-mix accuracy 94.3%, DR 91.2%, FAR 2.3%, F1 0.94** — a genuine clean/jammed boundary on the
+faded channel, where the lossless-trained detector had ~13% FAR and no separation at all. Per-SNR on
+fresh samples: clean FAR 10% @ 5 dB → 1% @ 30 dB; in-band DR 88% @ 5 dB → 76% @ 30 dB (it still
+misses ~24% of in-band jammers at high SNR — a residual blind spot).
+
+**(2)** The full-suite frontier (job 102319) folds the CNN and energy detector into a per-sample suite
+(CNN hit OR energy hit). Two findings:
+
+- **The suite ≡ the CNN on the realistic channel.** Across the whole sweep the energy detector catches
+  **0** configs the CNN misses. Any jammer that evades the CNN (sparse, thin) also evades the power
+  meter. This is the **mirror image** of the lossless recheck, where the energy detector subsumed the
+  CNN — so **the expensive CNN earns its keep specifically on realistic channels.**
+- **The stealthy-effective region shrinks but survives.** A residual sparse ~16-subcarrier, power ≈ 1
+  jammer stays under both detectors (p_cnn ≈ 0.40–0.47, p_energy ≈ 0.02). Cost to the defender: the
+  CNN's clean FAR is ~20% at 5 dB, 1–3% above.
+
+**matched-detectability** (`matched_detectability.py` + dense re-sweep, job 102390) — **and this is
+where the m1 motivation dies.** The m1 "+70%" was measured at matched jammer **config** (same
+n_active, same power). But concentrating power on high-gain subcarriers raises BER **and** the
+spectrogram/energy signature together — channel-aware is *louder*. The only fair comparison holds what
+the defender sees (suite P(detect)) fixed. The tool builds, per strategy per SNR, the achievable
+frontier `BER*(β) = max BER over configs with p_suite ≤ β` — a monotone step function of the
+detectability budget — and compares blind vs channel-aware. The coarse m2 grid gave wildly swinging
+gains (+5, −24, −14, −57, −6%), clearly grid noise, so the sweep was densified to **9 powers × 11
+n_active at B=512**, written to a separate directory so the canonical m2 figures stayed intact.
+
+**Result: the channel-aware advantage collapses to ≈0 at matched detectability** — dense gain
+−4.6, +1.5, −1.8, +6.2, +0.0% across 5→30 dB. The two achievable frontiers sit essentially on top of
+each other at every SNR. **Genie channel-aware ≈ blind once detectability is matched; the "+70%" was
+a matched-config artifact.** Three nuances: (a) a faint edge (~+6%) survives only at 20–30 dB in the
+mid-detectability band; (b) the residual stealthy region is confirmed and slightly *larger* than m2
+reported (the finer grid finds better configs); (c) "suite ≡ CNN" softens at 30 dB, where the energy
+detector catches one thin-but-loud config the CNN misses.
+
+> **THE HONESTY CORRECTION — the most important line in this appendix.** The same sweep discredits the
+> `P(det) ≤ 0.5` "stealthy BER 0.065–0.11" headline. That threshold **is not operational stealth** — a
+> jammer caught half of every frame is caught within a few frames, and it contradicts m1's own
+> *persistent* SNR-independent floor. At the honest stealth budget = **the suite's own clean
+> false-alarm rate** (~0.12 @ 5 dB → 0.03 @ 30 dB), **no stealthy-effective jammer exists at
+> 5–15 dB**, and at 20/30 dB only BER **0.011 / 0.004** (~3× / ~11× the floor) — one to two orders of
+> magnitude below the ≤0.5 figure. **The "jammer beats the suite" story is real but MODEST; the strong
+> version was the loose threshold talking.** The detector-characterization results (suite ≡ CNN, the
+> out-of-band finding, the m1 floor) are unaffected — they do not depend on a stealth threshold.
+
+**What this leaves standing, and what it killed.** Standing: the detector characterization — the CNN
+is an out-of-band detector; closing the in-band blind spot costs FAR/accuracy; a channel-valid
+retrain + energy meter close most of it on realistic channels with the roles flipping; a sparse
+jammer imposes an SNR-independent BER floor. Killed: **channel-aware subcarrier selection as a lever**
+(the genie extracts no matched-detectability gain from it, so "learn the channel-aware genie" was
+never the plan) and the strong form of the stealth claim. Independently confirmed by his own note:
+*"selecting the optimal subcarrier is a proxy problem on the way to the true problem of maximizing
+BER while minimizing detection probability."*
+
+## A.8 What the ladder means under the adaptation-cost framing
+
+Almost nothing is wasted, **including the failures** — most of what exists already *is* adaptation-cost
+data:
+
+- **Phase 0.5** — closing the CNN's in-band blind spot costs accuracy 99.8 → 90.5% and FAR 0 → 3.8%.
+  **Defender adaptation cost, round 1**, already measured.
+- **m2** — the channel-valid retrain buys a genuine faded-channel decision boundary but pays ~20% FAR
+  at 5 dB. **Defender adaptation cost on the realistic channel.**
+- **matched-detectability** — the genie extracts ≈0 gain from channel-aware selection at equal
+  detectability. **The attacker's cheap adaptation lever is already exhausted.**
+- **sim06/06b/07** — black-box RL over raw IQ is structurally untrainable. Under the old framing this
+  was an embarrassing dead end filed as an "ablation"; under the new framing it is **direct evidence
+  that attacker adaptation by that route is prohibitively expensive** — i.e. a *contribution*.
+- **E1** — the learned detector catches 11% of what the NP-optimal one catches 84% of, at σ = 0.2.
+  **The remaining adaptation budget, as a number.**
+
+So the R0/R1 rounds are largely **already banked**; the genuinely new compute for RQ2 is narrower than
+it looks — a fresh retrain round using the best current attacker as input, then R2's re-optimization
+against it.
+
+## A.9 Frozen code inventory
+
+Kept for provenance; **do not extend any of it.**
+
+- `frontier/frontier_sweep.py` + `submit.sh` — Phase 0 (lossless). Contains `build_jam` (jammer
+  families) + `detect_chunked`, reused everywhere downstream.
+- `frontier/retrain_detector_inband.py` + `submit_phase05.sh` — Phase 0.5 retrain + re-sweep.
+- `frontier/recheck_suite.py` + `submit_recheck.sh` — complex-STFT retrain + energy-detector suite.
+  Energy detector = `frame_power()` vs a clean-calibrated threshold.
+- `frontier/spectrogram_figure.py` + `submit_fig.sh` — the in-band vs out-of-band figure
+  (`artifacts/frontier/inband_vs_outofband.png`, the best figure in the project).
+- `simulation06/{ofdm,detector,jammer,train_detector}.py` — OFDM chain, detector (complex STFT),
+  classical jammers.
+- `simulation08/channel.py`, `frontier_channel.py` (per-SNR energy detector + per-sample CNN∨energy
+  suite; takes `--powers`/`--n-active` overrides and writes a per-SNR incremental `results.json`
+  checkpoint so a wall-kill cannot lose a sweep), `submit.sh`, `submit_frontier.sh`,
+  `submit_frontier_dense.sh`.
+- `simulation08/retrain_detector_channel.py` — the channel-valid CNN (m2).
+- `simulation08/matched_detectability.py` — pure post-processing, no GPU.
+
+**Detector checkpoints on disk** — note which spectrogram representation each was trained on:
+
+| Path | What |
+|---|---|
+| `artifacts/sim06/detector/run002_best.pt` | original **real-part** STFT — superseded *(earlier notes gave this path as `simulation06/artifacts/...`, which does not exist)* |
+| `artifacts/sim06/detector/run003_best.pt` | **complex-STFT, lossless-trained** — the corrected lossless CNN |
+| `artifacts/frontier/detector/run001_best.pt` | Phase 0.5 in-band-augmented (real-part era) |
+| `artifacts/sim08/detector/run001_best.pt` | **complex-STFT, faded-channel-trained** — the channel-valid CNN; **the one to use on a realistic channel** |
+| `artifacts/m0/detector/dl_sigma*.pt` | M0 learned IQ-histogram detectors, one per σ |
 
 ---
 
-## Simulation 08 — realistic channel (milestone 1: channel-aware frontier)
+# APPENDIX B — Supervisor record
 
-**Files:** `simulation08/channel.py`, `simulation08/frontier_channel.py`, `simulation08/submit.sh`
+## B.1 Correspondence log
 
-**What it is:** the realistic-channel phase where paper claims begin. Adds finite SNR and
-per-link frequency-selective fading to the frontier. `channel.py` (`MultiLinkChannel`) uses
-Sionna `tr38901.TDL` (model C, 100 ns delay spread, 5.2 GHz) via `GenerateOFDMChannel` to give
-an independent per-subcarrier frequency response for each link (TX→RX and each jammer→RX),
-plus per-link average path gain (geometry) and AWGN at a target Eb/N0. The jammer transmits
-through its OWN channel `h_jam` (a blind jammer doesn't know it); the RX does perfect-CSI ZF
-equalization of the TX link. After equalization the effective interference on subcarrier n is
-`(h_jam[n]/h_tx[n])·jam[n]` — so hitting subcarriers where the jammer is strong relative to
-the TX matters, which is exactly the structure a learned, channel-aware jammer can exploit.
+- **Rahul's update email** (~mid-July 2026): reported the sim06/06b/07 negative result, the three
+  characterization findings, and asked two open questions — (a) is a single-round evasion attack on a
+  frozen detector an acceptable contribution, or does he want a co-adaptive setting; (b) is he
+  comfortable leading with detector characterization as the solid core and the cooperative learned
+  jammer as the high-upside extension. Also flagged 3+ weeks without a reply, and candidly asked
+  whether the drift toward detector characterization is still publishable.
+- **Di Maio's reply (2026-08-03)** — reframed the thesis. Answers (a) implicitly: *"one can always
+  fine-tune a defender on an attacker and vice versa … this adaptation is very expensive"* — i.e. he
+  wants the **round-based / offline co-adaptive framing** with cost-of-adaptation as the headline.
+  (b) was not answered directly. Point-by-point consequences are folded into §2.8, §2.9 and B.3.
+- **Rahul's reply (2026-08-17,** delayed by the first exam block, acknowledged as such): proposed
+  meeting the week of 17–21 Aug and registering that same week → landed on Fri 21 Aug. Stated
+  availability: 15–20 Aug full time; **22–27 Aug second exam block, no thesis work**; 1–14 Sep 100% on
+  the paper. Asked directly how available he is 1–14 Sep, requesting short/frequent feedback rounds
+  over one large end-of-block review — **still unanswered.** Gave short answers to each feedback point.
+- **Meeting 2026-08-21** — the simplification mandate and the two questions that threaten the RL
+  framing. Notes transcribed 2026-09-01; consequences are throughout Part 2, and the two questions are
+  §4.2 Q2 and §2.8 (CTDE).
+- **2026-09-01** — registration proposal handed over for correction. **Awaiting feedback.**
 
-**Milestone 1 result (job 101870, B=128, 54s):**
-1. **Channel is physically correct** — clean BER floor waterfalls 0.088 (5 dB) → 0.0003 (30 dB)
-   for QPSK over fading with ZF equalization.
-2. **A sparse in-band jammer imposes an SNR-independent BER floor.** Under an 8-subcarrier
-   jammer BER stays pinned at ~0.05–0.07 across 5–30 dB, while the clean link would be
-   essentially error-free at high SNR. Broadband in-band pins BER ~0.34 at all SNR. This is the
-   clean "the jammer wins in the high-SNR regime" result — the impairment is interference, not
-   noise, so more transmit power can't fix it.
-3. **Channel-aware beats blind subcarrier selection.** A genie that picks the top-n subcarriers
-   by `|h_jam/h_tx|` gets up to **~70% more BER than blind at equal power** (blind n=8=0.038 vs
-   channel-aware n=8=0.064 @ 20 dB, power=1), and the gain grows with SNR and is largest when
-   jammer power is constrained (the stealthy regime). Since the genie isn't optimal, this is a
-   *lower bound* on the channel-aware benefit → direct motivation for a learned jammer.
+*(A note for the record: earlier drafts of the project notes speculated about a "Thu 13 Aug" meeting,
+picked up from a date we had proposed to ourselves. That meeting never happened; **21 Aug is the real,
+agreed slot**, and it happens to land on the date we had independently set as the "show him something"
+target.)*
 
-**Energy detector on the realistic channel (job 102305) — REVIVES the stealth premise.** After
-the Phase 0 recheck showed a power-threshold energy detector demolishes stealth on the *lossless*
-channel (it catches any added power), we folded the same energy detector (calibrated per-SNR on
-FADED clean frames to 1% FAR) into `frontier_channel.py`. On the **fading + noise** channel a
-jammer stays stealthy (P_energy ≤ 0.5) while causing **BER ≈ 0.20–0.24 across all SNRs** (clean
-floor 0.093 at 5 dB → 0.0003 at 30 dB). At 30 dB that's a near-error-free link driven to BER 0.20
-*while hiding under the energy detector* — impossible on the lossless channel (max stealthy BER
-0.005 there). The noise floor + fading make clean power fluctuate, loosening the threshold and
-giving a low-power jammer room to hide. **So the stealthy-and-effective region is real, but only
-on realistic channels** — which is where the paper's claims live anyway. Caveat: the channel-aware
-vs blind advantage washes out in this max-over-configs metric (both ~0.2; needs a matched-P_energy
-comparison); and this is energy detector + lossless-trained CNN, so the *full-suite* claim needs
-the channel-valid CNN (milestone 2). Plot: `artifacts/sim08/frontier/stealth_vs_energy.png`.
+## B.2 His verbatim points and what each changed
 
-**Detector caveat (→ milestone 2):** the CNN here is the sim06 detector, trained on a lossless
-channel and **invalid on the faded channel** (clean false-alarm ≈13%, no clean/jammed separation),
-so its P(det) numbers are indicative only. A channel-valid detector, retrained on faded clean +
-classical + in-band signals, is milestone 2 — after which the frontier gets real *full-suite*
-detectability numbers (CNN + energy).
+Quotes preserved because the wording matters. Consequences already actioned are marked ✅.
 
-> **UPDATE (2026-07-08): milestone 2 is DONE** (`retrain_detector_channel.py`, jobs 102316+102319).
-> Channel-valid CNN acc 94.3%; the full CNN+energy suite ≡ the CNN on the faded channel; a residual
-> stealthy-effective region (BER 0.065–0.11 @ P(det)≤0.5) survives it. See the **"sim08 milestone 2"
-> subsection in Current status** (top of file) for the full writeup — it supersedes this caveat.
+| His point | Consequence |
+|---|---|
+| *"we will probably include a subset of those results … complementary results in the appendix"* → **(mtg) "Experiments 2,3 strongest add"** | ✅ Hard quota: **2–3 experiments** in the main paper; the entire characterization arc is appendix and **DONE**. Further sweeps have *negative* expected value. |
+| *"the most agnostic reward for the attacker is BER − beta*detections. The other aspects should not be relevant for the reward and be controlled by the environment"* | ✅ §2.8. Delete every proxy term; power becomes a hard environment constraint. |
+| *"the setup reminds a bit of GANs … one can always fine-tune a defender on an attacker and vice versa. **The core contribution is to show that this adaptation is very expensive**"* | ✅ The new headline claim, and RQ2. |
+| *"this can only happen at training time: there are no ground-truth labels at execution time"* | ✅ Justifies the frozen-detector evaluation; the arms race is round-based and offline. |
+| *"jammers need to synchronize with the victim's preamble … introducing some desynchronization due to cheap hardware will make the attacker more realistic and weaker, **which is good for the paper**"* | Realism axis (§4.3). He *wants* the attacker handicapped. |
+| *"it is important to clearly formulate the system model and both the defender and thread [threat] models"* — **said twice** | The System/Threat model is the top **written** deliverable. Drafted in `paper_drafts/sec_system_model.tex`; **not yet in Overleaf** (§3.4). |
+| *"the shapes do not seem the most energy-optimal … most of the points under attack … around the symbol classification boundary … minimal-energy alteration … (symbol error rate could also be a possible metric)"* | ✅ The boundary attack and SER. In M0 this is `boundary_genie`/`boundary_blind` (§2.5). |
+| *"selecting the optimal subcarrier is a proxy problem on the way to the true problem of maximizing BER while minimizing detection probability"* | ✅ Independently confirms the matched-detectability verdict. |
+| *"a form of detection is to leak information on the position of the jammer(s) so that a defender can physically neutralize them"* | Out of scope; **name it in the Threat Model** as an out-of-scope defender capability + future work (§4.3). |
+| *"consider PettingZoo and BenchMARL … RLlib is famous for being too complex … I would avoid it"* | ✅ §2.8. |
+| *"I did not fully get why the MAPPO jammer can't be trained against the CNN detector … showing in what cases it is hard to beat is already a small result"* | Owed a crisp write-up as a **result, not an excuse** — [A.5](#a5-sim06-jammer-06b-07-the-untrainability-result). Still open: characterize *in which cases* it is hard to beat (which detectors/regimes). |
+| *"train both attacker and defender jointly, then pick one side … if performance becomes too extreme (e.g., always stealth, high BER) then **relax assumptions** … until the performance gap between your method and the baselines increases"* | The tuning protocol, handed to us. Pick the **attacker** side, as he suggests. Also: **run the baselines** — he put it in parentheses as an assumption, so it is not optional. |
+| *"the most interesting investigation will still be the optimal multi-jammer coordination against one or more mobile victims"* | The destination: multi-agent + **victim mobility** (§4.3). |
+| **(mtg)** *"Priority: simplify, as much as possible — single subcarrier, one channel"* | ✅ M0. sim06–08 frozen. |
+| **(mtg)** *"First thing to add: spatial, after solving single, no noise, no prop"* | M1 is the only sanctioned extension. **"No noise, no prop" is literal** (confirmed): σ = 0, no propagation delay — which is why σ = 0 is the *anchor* of the noise sweep, not the operating point. |
+| **(mtg)** *"Intro: bit-error recovery 'out-of-scope' → motivate importance, we assume it's handled by another model"* | §2.9. |
+| **(mtg)** *"Impossible to beat baseline: omniscient jammer — show in results"* | ✅ In the baseline envelope, and it must appear **in the figures**. |
+| **(mtg)** *"Is it a valid assumption that all legitimate symbols are equally spread? → RL shines when it can find something"* + *"scrambling makes the transmitted sequence look statistically random"* | **The sharpest challenge of the meeting** — §4.2 Q2. Turned into an experiment (G4). |
+| **(mtg)** *"At decentralized execution: jammer is 'deaf' to rewards, maybe ACKs"* | ✅ §2.8 (CTDE). |
+| **(mtg)** *"How is 'counter signal' not viable: add vector in random direction in I/Q plot"* | Both halves required: **motivate away** *and* **run as a baseline** (§2.5). |
+| **(mtg)** *"Ablation: parameter study, increase noise and see what happens (less detection e.g.)"* + *"Noise level, ε, change exponentially"* | The **primary** ablation, on a log grid. He has predicted the direction. ⚠ E1's grid is not yet compliant (§3.2). |
+| **(mtg)** *"Scenario, e.g. #jammers, #legitimate users"* | Second ablation axis. **First mention of multiple legitimate users** — the model is 1 TX → 1 RX today. |
+| **(mtg)** *"Possibly double axes, BER/detection → show trade-off; no attackers / ground-truth attacker"* | ✅ The prescribed figure format, §2.7. |
+| **(mtg)** *"Put as much info as possible in Overleaf"* | The document is the working record. Assumption table, baseline table and ablation list go in **now**, as stubs if necessary. |
+| *"Real hardware to implement this method is available, if you'd like to experiment later on."* | Future work (§4.3). |
+| **(mtg, in `main.tex`)** *"citations should be such that text is also equally readable if removed"* | IEEEtran style: bracket **before** all punctuation with a `~` tie (`...adaptation~\cite{key}.`); group multiples as `\cite{a,b}`; keep the number out of the grammar. |
 
-**Outputs:** `artifacts/sim08/frontier/{ber_vs_snr,channelaware_vs_blind,stealth_vs_energy,stealth_suite_vs_snr}.png`,
-`results.json`; detector `artifacts/sim08/detector/run001_best.pt`.
+**Where the two sources conflict, the meeting (2026-08-21) wins.** Where the meeting was silent — the
+adaptation-cost headline, reward = BER − β·det, PettingZoo/no-RLlib, the desync axis, multi-jammer
+coordination against mobile victims as the destination — **the July email still stands.**
 
-**How to run:**
+## B.3 Remaining checklist
+
+Everything not already covered by Part 2 (settled) or §4.1 (needs his input).
+
+**Written deliverables**
+- [ ] **System & Threat Model into Overleaf.** Drafted (`paper_drafts/sec_system_model.tex`) but not
+      pasted. Must pin down: where detection happens (victim RX, composite pre-equalization frame);
+      what the detector observes (STFT spectrogram + mean frame power; no CSI, no runtime labels); the
+      **assumption tiers** (genie / realistic / blind) for the attacker *and* for the honest policy;
+      the **CTDE split**; **inter-jammer coordination** and what it costs in hardware; the power budget
+      as a hard constraint; the **counter-signal non-viability** argument; jammer localization as
+      out-of-scope. Repair the CLT paragraph first (§4.2 Q3).
+- [ ] **Related Work into Overleaf** — replace all three legacy blocks with `sec_related.tex`. Move
+      the CTDE (L256) and mobility-evasion (L262) passages to a thesis-only appendix rather than
+      deleting them; he asked that nothing suggested be thrown away.
+- [ ] **Rewrite `main.tex` §System Model around M0**, with OFDM/fading/multi-antenna as *extensions*.
+      This also repairs a live mismatch: it currently describes a system **no working experiment
+      supports.**
+- [ ] **Intro:** the bit-error-recovery scoping paragraph, and the rebuild around the detection-gap
+      argument (§2.2).
+- [ ] **Methodology:** the scope sentence about the dropped countermeasure RQ (§2.3).
+- [ ] **Move the assumption table, baseline table and ablation list into Overleaf now**, as stubs.
+- [ ] **Produce an explicit triage table:** each result → main paper / appendix / dropped.
+- [ ] **Write up the MAPPO untrainability as a result, not an excuse**, and characterize *in which
+      cases* it is hard to beat.
+- [ ] **The appendix fixes owed** — §3.5.
+
+**`refs.bib` surgery** (plan in `paper_drafts/refs_patch.bib` + `refs_new.bib`, 40 entries; do the
+edits **in Overleaf**)
+- [x] Li et al., IEEE Access 2022 (spectrogram detector) added 2026-09-01 — backs "state-of-the-art
+      learned detector" in RQ1 and is the paper we replicated.
+- [ ] Deletions he flagged: `electronics14163307` (MDPI, weak venue), `tong2025wirelessagent` (LLM
+      agents, tangential), `djuhera2025r` (R-SFLLM, out of scope), `Nguyen2025_MARL_UAVRelay`
+      (preprint adding nothing) + 3 others — full list in `refs_patch.bib` Part A.
+- [ ] Key renames assumed by `sec_related.tex`: `jamming_survey_2024` → `pirayesh2022jamming`,
+      `article` → `zhang2025cooperative`, `11302544` → `leuenberger2025proactive`.
+- [ ] Optional if tooling is cited: Sionna (Hoydis et al., arXiv:2203.11854), PettingZoo (Terry et
+      al., NeurIPS 2021).
+- [ ] Resolve the two inclusion calls — §4.2 Q6.
+
+**Proposal** (`proposal/proposal.tex`; **Overleaf is truth**, this file is the reference draft plus the
+five-title-option record — it will drift from the submitted version)
+- [ ] `\usepackage{xcolor}` — the `\adm`/`\rar` macros use `\color{orange}` and error without it.
+- [ ] Fix the Introduction's closing line: it still promises evaluation *"against reactive and
+      proactive countermeasures"*, but that RQ was dropped. Must read *"against classical and
+      non-cooperative baselines on the effectiveness–detectability plane"*.
+- [ ] Minor: spurious comma in "triggered by detection, cannot be"; *"Coordination because…, generative
+      because…"* is a sentence fragment — join with a colon or dash.
+
+**Experiments** — the compute track is §3.4; the ablations he named are §4.3 and G2–G4.
+
+---
+
+# APPENDIX C — Engineering notes
+
+## C.1 Artifacts convention
+
+All training outputs go to `artifacts/simXX/`, **not** `simulationXX/runs/`. Each `train_*.py` should
+write `runNNN.png` (+ `runNNN_iq.png` if applicable), save the model whenever the run is good enough
+to reuse, and get a row in the run index ([A.0](#a0-run-index)). This keeps every run's plots, model
+and hyperparameters discoverable in one place, and makes it possible to load a model trained in one
+simulation and evaluate it in another.
+
+## C.2 Sionna gotchas (apply to all simulations)
+
+- Sionna returns **PyTorch tensors** — use `.abs().pow(2).mean()`, not `np.mean(np.abs(...))`. Call
+  `.numpy()` before passing to numpy ops.
+- `Demapper` needs a noise variance `no`. Pass `1e-10` for the lossless case (not 0) **only when the
+  LLR is used non-differentiably** (e.g. just for `hard_decisions`/BER bookkeeping). With
+  `no=1e-10`, LLRs blow up to ±∞ for any nonzero rx−tx deviation.
+- **If the LLR feeds a differentiable loss**, use `no=1.0` and a tighter clamp (e.g. `(-10,10)`).
+  `no ≈ 0` saturates the LLR and kills the gradient — this is exactly what trapped sim03b run001.
+- `Mapper` output shape is `(N, 1)` — always `.squeeze()` to `(N,)` before arithmetic.
+- `sn.utils.PlotBER.simulate()` is for Eb/N0 sweeps only — not for timestep loops.
+- Set `sn.config.device = "cuda:0"` **before** creating any Sionna module. Sionna 2.x modules inherit
+  from `torch.nn.Module` and carry `torch.compile` guards.
+- `import sionna` fails **on the login node** (missing `libLLVM.so`, and the login CPU lacks `fma` so
+  DrJit's LLVM fallback shuts down). Fine on compute nodes. Never compute on the login node anyway.
+
+## C.3 GPU viability, in general
+
+The lesson from sim04, which generalizes: tiny networks on GPU are slower than CPU because
+kernel-launch overhead dominates and library round-trips force CPU syncs. Three changes flipped it:
+**large batch** (amortises launch overhead), **removing library calls from the training loop** (pure
+PyTorch ops run natively on GPU with no transfers), and **`torch.compile`** (fuses many small
+sequential ops into fewer kernels). Together: ~248 → ~39k samples/s. *(M0 is small enough that this
+does not matter — it runs on CPU in seconds.)*
+
+## C.4 Cluster quick reference
+
+Full detail in **[`cluster/README.md`](cluster/README.md)**; §1.5 has the summary. Day-to-day:
+
 ```bash
-cd "Tabula Rasa/simulation08"
-sbatch submit.sh
-# or: python frontier_channel.py --smoke --device cpu   # quick sanity
+cd <sim dir> && sbatch submit.sh     # always submit from the sim directory
+squeue --me                          # status
+tail -f runs/slurm_<JOBID>.out       # watch live output
+scancel <JOBID>                      # cancel
 ```
 
-**sim08 roadmap:** (1 ✓) channel + channel-aware frontier. (2) retrain a channel-valid
-detector on faded signals; re-sweep for real detectability. (3) cooperative MARL jammer —
-multiple agents with per-link channel diversity make "who jams which subcarrier at what power"
-a genuine coordination problem; target claim: cooperative learned > single-agent > blind >
-classical, all against the same channel-valid detector.
-
----
-
-## Staging / roadmap
-
-**Principle: one axis per step.** If results misbehave, the cause is unambiguous.
-
-```
-sim06   plumbing milestone — lossless + omniscient — DONE
-        detector: 99.79% accuracy ✓ ; MAPPO jammer failed (scalar reward)
-sim07   blind causal MAPPO — DEAD END (see Current status → the pivot)
-Phase 0 frontier (no RL) — DONE ✓ detector = out-of-band detector;
-        in-band jammer reaches BER 0.42 @ P(det)<0.05
-Phase 0.5 retrain detector w/ in-band — DONE ✓ blind spot closes but
-        costs FAR/accuracy → intrinsic effectiveness–detectability tradeoff
-sim08   realistic channel — IN PROGRESS
-  m1 ✓  freq-selective TDL fading + channel-aware frontier
-        (sparse jammer = SNR-independent BER floor; channel-aware > blind)
-  m2 →  retrain a CHANNEL-VALID detector on faded signals; re-sweep
-  m3 →  cooperative MARL jammer (per-link channel diversity = real
-        coordination); target: cooperative learned > single > blind > classical
-```
-
-### Explicitly deferred (with reasons)
-
-- **Realistic channel/SINR (sim08):** ~~deferred~~ — milestone 1 DONE (see Current
-  status and the "Simulation 08" section). Channel model is
-  `simulation08/channel.py`. Milestones 2 (channel-valid detector) and 3
-  (cooperative MARL) are next.
-- **Permutation-invariant encoder + N≥4 scaling:** only earns its keep at N≈6–8
-  (see analysis). At N=2, fixed-order concatenation MLP is strictly simpler with
-  no measurable downside. Separate reduced-setting experiment if pursued.
-- **Co-adaptive/learning defender:** currently fixed-policy (frozen CNN) by design.
-  An adaptive defender creates a non-stationary training environment that compounds
-  the convergence difficulty. Deferred until the jammer reliably converges against
-  the fixed detector.
-
-### Known limitation (keep visible)
-
-sim06's lossless channel and sim07's lossless channel are NOT realistic. No results
-from a lossless channel make scientific claims in the paper. The channel is a
-controlled simplification for isolating observation-model and training-algorithm
-effects. Realistic channel (sim08) is where the paper's experimental claims begin.
-
----
-
-## Detector roadmap
-
-| Detector | Used for | Source |
-|---|---|---|
-| Power threshold | sim00, sim01 (done) | scratch — 2 lines |
-| Kurtosis test | sim02–04 training reward (done) | `scipy.stats.kurtosis` / PyTorch |
-| GLRT | evaluation only | `scipy.stats` + ~20 lines custom |
-| Pilot variance | sim07 evaluation | scratch ~10 lines |
-| CNN on spectrogram (flat QPSK) | sim05 (failed — needs OFDM) | `torchvision` EfficientNet-B0 |
-| CNN on spectrogram (OFDM) | sim06 training reward (done: 99.79%) | EfficientNet-B0, Li et al. 2022 |
-| VAE anomaly detector | evaluation only | PyTorch (ref: arXiv:2410.01632) |
-| PyJama detectors | citation / reference only | see note below |
-
----
-
-## Research notes (open — pending supervisor discussion)
-
-### Thesis endgame: SOTA detection vs SOTA jamming
-
-The goal is a final comparison: *classical SOTA jammer* and *independent RL jammer* both lose to
-the *novel cooperative MARL jammer*, all facing the same strong detector. The exact baselines
-and detector are TBD. Notes from literature survey below.
-
-### PyJama (arXiv:2407.15473, SPAWC 2024, ETH Zurich IIP)
-
-PyJama is a differentiable jamming library on Sionna that uses SGD to optimise power allocation
-over an OFDM resource grid. It's the closest published work to what this project does.
-
-**Compatibility issue:** PyJama is built on Sionna 0.x + TensorFlow. This project uses
-Sionna 2.x (PyTorch backend). Porting is non-trivial. **Use as citation and results reference,
-not as a code dependency.** The pilot nulling strategy (Clancy 2011, 7.5 dB more efficient than
-barrage) can be re-implemented cleanly from scratch in ~20 lines.
-
-### On stealthy/undetectable jamming — a genuine research gap
-
-Almost no published work studies a jammer that hides its *signal statistics* to defeat
-a statistical detector. "Stealthy jamming" in the literature almost always means timing stealth
-(sense-then-jam, only transmit when channel is active), not waveform-level stealth.
-
-**Why the gap exists:** in practice a jammer is caught *physically* before signal statistics
-matter — direction finding (AoA/TDOA), path loss anomaly (RSS), and channel reciprocity
-violations all reveal a jammer regardless of IQ distribution.
-
-**Why it's still valid scope for this thesis:** physical detection requires multi-antenna
-infrastructure. In a simulation study, only baseband samples are available, so the relevant
-threat model is the statistical detector. This is also the natural threat model for
-cognitive radio / spectrum sharing scenarios where the jammer looks like another user.
-
-**Thesis framing to discuss with supervisor:**
-> "Can cooperative MARL agents learn to generate deceptive IQ-level waveforms that are both
-> effective (high BER) and undetectable by learned detectors, on OFDM channels with pilots?"
-> Physical detection (AoA/TDOA, path loss anomaly) is explicitly out of scope.
-> Demonstrated on a 64-subcarrier system (802.11a-scale); architecturally compatible with
-> larger systems via weight-sharing extensions.
-
-**What makes this novel (no existing paper combines all three):**
-1. **IQ-level waveform generation** — not power allocation (PyJama) or channel selection
-   (standard RL jammers), but raw complex-valued signal synthesis
-2. **Cooperative MARL** — multiple agents coordinate waveforms, enabling spatial strategies
-   impossible for a single jammer (e.g. distributing power across agents to stay below
-   per-link detection thresholds)
-3. **Learned stealth** — evading a neural-network detector by shaping the jam signal's
-   statistics, not just its timing or power level
-
-The closest literature neighbours are adversarial-ML attacks on modulation classifiers —
-the jammer crafts a signal that fools a neural-network detector. No existing paper does this
-with cooperative RL jamming. PyJama (ETH Zurich) is closest in setup but uses SGD-based
-power allocation, not RL and not IQ-level. Sagduyu et al. use GANs for IQ spoofing but not
-cooperative MARL or OFDM.
-
-### Jammer realism: omniscient vs causal/blind observation (deferred)
-
-Currently the jammer observes `tx_syms` for the *same* timestep it jams — a **genie-aided /
-omniscient jammer**. This is what makes `jam=-2*tx_syms` (the BER=1.0/kurtosis=-2 theoretical
-optimum above) computable. Physically this requires the jammer's sense→process→transmit
-latency to be shorter than one symbol period, which is generally unrealistic — a real reactive
-jammer would at best act on `tx[t-1]`/`rx[t-1]` to produce `jam[t]` (one-symbol causal delay).
-
-For i.i.d. symbols (no memory across symbols), `tx[t-1]` carries zero information about
-`tx[t]`, so a causal jammer collapses to a **blind jammer**: `jam[t]` must be statistically
-independent of `tx[t]`, and the `jam=-2*tx` trick becomes unreachable. The achievable-BER
-ceiling under that constraint is a genuinely different (and likely much lower) number — the
-classic jamming-vs-statistical-detector tradeoff.
-
-**Decision (2026-06-11):** keep the omniscient observation for now. Priority is to get results
-that beat SOTA with the current (simpler) formulation first; the causal/blind variant is
-flagged as a future "abstraction" step (candidate for sim04+) rather than something to build
-now. Don't let this complicate the current iteration.
-
-### On GANs vs normalizing flows for waveform synthesis
-
-GANs are the dominant approach for adversarial waveform synthesis in the literature:
-- Sagduyu et al. (ACM WiSec 2019, IEEE TCCN 2021): GAN generates spoofing IQ signals
-  over-the-air; generator produces synthetic IQ samples, discriminator distinguishes spoofed
-  from legitimate signals.
-- IEEE 2024: GAN-based radar jamming waveform generation from signal header snippets.
-- Sagduyu et al. (arXiv 2018): GAN for data augmentation in jammer training.
-
-**Decision (2026-06-18): NSF over GAN.** Three reasons:
-
-1. **log_prob requirement.** sim05 switches to MAPPO (CNN detector is non-differentiable →
-   direct-gradient breaks). PPO needs `log_prob(action|state)` — GANs fundamentally cannot
-   provide this. NSF gives exact log_prob via change-of-variables. A GAN generator would be
-   a dead end at the MARL transition.
-
-2. **Low-dimensional action space favors flows.** Grover et al. (2020) found normalizing flows
-   outperform GANs on low-dimensional density modeling. Our action space is 256 real dims
-   (128 complex symbols) — firmly in the regime where flows excel.
-
-3. **Mode collapse ≈ the GMM failure.** GAN mode collapse (generator converges to a narrow
-   waveform subset) is structurally the same failure as sim03c's GMM component collapse.
-   NSF's bijective transform is immune to this.
-
-**Thesis framing:** the sim05 MAPPO setup is conceptually GAN-like (jammer policy = generator,
-frozen CNN detector = discriminator, reward = `BER - β·D(rx)`). This connection is worth noting
-in the related work section without actually using GAN training mechanics. Cite the Sagduyu
-papers as the closest GAN-based prior work.
-
-### On CNN-based jamming detection (sim05 detector justification)
-
-CNNs on raw IQ samples / spectrograms are the established SOTA for jamming detection. The
-key papers that motivate using a CNN detector in sim05:
-
-**Foundational (DL on physical-layer signals):**
-- O'Shea & Hoydis, "An Introduction to Deep Learning for the Physical Layer" (IEEE TCCN
-  2017, ~2500 citations). Seminal paper on CNNs/autoencoders applied to raw IQ data.
-  Justifies using learned features over expert-crafted ones for any signal-level task.
-- O'Shea, Corgan, Clancy, "Convolutional Radio Modulation Recognition Networks" (EANN
-  2016, ~1100 citations). First CNN directly on raw IQ for modulation classification.
-
-**Jamming-specific:**
-- Erpek, Sagduyu, Shi, "Deep Learning for Launching and Mitigating Wireless Jamming
-  Attacks" (IEEE TCCN 2019, ~250 citations). CNN classifier detects jamming; frames it as
-  adversarial ML. **Most directly relevant** — our sim05 is the jammer side of this arms race.
-- Lichtman, Poston, Reed, "Jamming Signals Classification Using CNN" (IEEE SPAWC 2018).
-  CNN classifies jammer types from 2D IQ histograms, 91% accuracy in NLOS.
-- Li et al., "Jamming Detection in OFDM-Based UAVs via Spectrogram-Tailored ML" (IEEE
-  Access 2022). CNN on spectrograms, 99.8% accuracy, 0.03% false alarm — UAV context
-  matches our future scenario.
-- TU Darmstadt, "Detecting 5G Signal Jammers Using Spectrograms" (IEEE 2024). Generalizes
-  CNN detection to 5G; "watchdog" design with both supervised and unsupervised variants.
-
-**Our novelty vs these papers:** they all build *detectors*. We build *jammers that learn to
-evade* these detectors. The CNN detector is the adversary our MARL agents train against — a
-frozen, pretrained "opponent" that represents the best known detection approach. No existing
-paper trains a cooperative jammer against a learned CNN detector.
-
-### On MAPPO / MASAC (sim05 RL algorithm justification)
-
-**Foundational RL:**
-- Schulman et al., "Proximal Policy Optimization Algorithms" (arXiv 2017). PPO foundational
-  paper. Clipped surrogate objective, on-policy, stable training. MAPPO builds on this.
-- Haarnoja et al., "Soft Actor-Critic: Off-Policy Maximum Entropy Deep RL with a Stochastic
-  Actor" (ICML 2018). SAC foundational — entropy-regularized objective prevents premature
-  convergence in continuous action spaces. Off-policy = sample efficient.
-- Haarnoja et al., "Soft Actor-Critic Algorithms and Applications" (arXiv 2018). SAC v2
-  with automatic entropy temperature tuning — what modern implementations use.
-
-**Multi-agent:**
-- Yu et al., "The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games" (NeurIPS
-  2022). **MAPPO foundational paper.** Shows that simple PPO with parameter sharing +
-  proper normalization + centralized value function matches or beats QMIX, MAVEN, MADDPG
-  across cooperative benchmarks. Directly justifies MAPPO as first-line choice.
-- Lowe et al., "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments"
-  (NeurIPS 2017, MADDPG). Introduced the **CTDE paradigm**: centralized critic sees all
-  agents' observations during training, actors execute with local observations only.
-- Schroeder de Witt et al., "Is Independent Learning All You Need in the StarCraft
-  Multi-Agent Challenge?" (arXiv 2020). Demonstrates that independent learners with proper
-  tuning rival complex CTDE methods — supports MAPPO-style simplicity.
-
-**MASAC note:** there is no canonical "MASAC" paper. Multi-agent SAC is implemented by
-applying MADDPG's CTDE pattern (centralized critic) with SAC as the base algorithm. Cite
-SAC + MADDPG and describe the combination.
-
-**Decision (2026-06-23): start with MAPPO, then compare MASAC.**
-- MAPPO is simpler (on-policy, no replay buffer), well-validated for cooperative tasks
-  (Yu et al.), and directly compatible with NSF's `log_prob`.
-- MASAC is more sample-efficient (off-policy, replay buffer) — important when each step is
-  expensive. Test as a second algorithm once MAPPO baseline works.
-- Both use CTDE: centralized critic sees both agents' observations + actions during training;
-  each actor only sees its own observation at execution time.
-
-### On NSF as RL policy distribution (novelty justification)
-
-Using a normalizing flow instead of the standard diagonal Gaussian as a PPO/SAC policy is
-a key component of our approach. The literature basis:
-
-- Durkan, Bekasov, Murray, Papamakarios, "Neural Spline Flows" (NeurIPS 2019). The NSF
-  architecture we use — rational-quadratic spline coupling transforms for density estimation.
-- Ward, Smofsky, Bhatt, "Normalizing Flows for Reinforcement Learning" (ICML Workshop 2019).
-  **Directly proposes flow-based policies in PPO.** Shows flow policies capture multimodal
-  action distributions and improve performance on continuous control benchmarks.
-- Mazoure et al., "Soft Actor-Critic with Normalizing Flows Policies" (2020). Integrates
-  flows into SAC's max-entropy framework — relevant if we use MASAC.
-
-**Our novelty:** Ward et al. showed flow policies help in standard single-agent RL on
-MuJoCo benchmarks. **Nobody has used them for cooperative MARL, and nobody has applied them
-to wireless jamming.** The combination of NSF policy + MAPPO/MASAC + cooperative waveform
-generation is novel. The flow is essential because a diagonal Gaussian policy is structurally
-incapable of producing non-Gaussian signal statistics (proven in sim02/sim03c) — the jammer
-must shape its output distribution to evade statistical detection, which requires an
-expressive generative model.
-
-### On RL baselines
-
-Most "RL jammer" papers in the literature are actually *anti-jamming* (a defender RL agent
-avoids a fixed jammer). True offensive RL jammers that generate arbitrary waveforms are rare.
-What exists operates mostly on discrete channel-selection or power-level actions, not IQ output.
-
-The most natural RL baseline for a cooperative MARL thesis is therefore *internal*:
-independent multi-agent PPO with no coordination (same architecture, no CTDE). This is the
-standard MARL ablation and requires no external paper.
-
----
-
-## Key design principles
-
-- **No inductive bias:** never tell the jammer pilot positions, modulation scheme, or channel info.
-  Let it discover strategies from raw observations.
-- **Detection in reward, not hard clip:** power constraints come from the penalty term, not from
-  clipping the action space.
-- **Generative model upgrade path:** diagonal Gaussian (sim01) → normalizing flow (sim03/03b) → NSF carry-forward.
-  GMM action head (sim03c) tried and abandoned — PPO+GMM permutation-symmetry degeneracy.
-  GAN considered and rejected — no log_prob for PPO, mode collapse risk, flows outperform on
-  low-dim distributions (see research note). NSF + direct-gradient (sim03b) is the carry-forward
-  basis for sim04; NSF + MAPPO for sim05+.
-- **Detector pretrained and frozen** during jammer training. Gradients never flow into detector.
-- **Use Sionna wherever possible.** OFDM chain, source, mapper, demapper all via Sionna on GPU
-  (`sn.config.device`). Only hand-write what Sionna doesn't cover (CNN detector, NSF jammer).
-  sim04b validated Sionna on GPU is viable and performant.
-- **Episode = 1 OFDM frame (14 symbols) in sim06+.** Frame-level reward from CNN detector
-  broadcast to all timesteps. Per-symbol credit assignment deferred to future work.
-
----
-
-## Artifacts convention
-
-All training outputs go to `artifacts/simXX/` (one folder per simulation, including `sim03b`, `sim04`, etc.),
-**not** `simulationXX/runs/`. Each `train_*.py` script should:
-
-- write `runNNN.png` (training curves) and `runNNN_iq.png` (IQ scatter, if applicable) to `artifacts/simXX/`
-- save the trained model with `model.save(os.path.join(RUNS_DIR, f"run{run_id}_model"))` whenever the run
-  is good enough to reuse (e.g. for cross-simulation evaluation/transfer)
-- get a new row in `artifacts/RUNS.md` documenting: sim, run id, policy, key hyperparams, steps, result
-  summary, whether a model was saved, and any notes
-
-This keeps every run's plots, model, and hyperparameters discoverable in one place, and makes it possible
-to load a model trained in one simulation and evaluate it in another.
-
----
-
-## Sionna-specific notes (apply to all simulations)
-
-- Sionna returns PyTorch tensors — use `.abs().pow(2).mean()`, not `np.mean(np.abs(...))`
-- Call `.numpy()` before passing to numpy ops
-- `Demapper` needs noise variance `no` as second arg — pass `1e-10` for lossless case (not 0),
-  **but only when the LLR is used non-differentiably** (e.g. just for `hard_decisions`/BER
-  bookkeeping, as in sim00/01/02/03). With `no=1e-10`, LLRs blow up to ±∞ for any nonzero
-  rx-tx deviation.
-- **If the LLR feeds a differentiable loss** (e.g. sim03b's soft-BER `binary_cross_entropy_with_logits`),
-  use `no=1.0` (O(1)) and a tighter clamp (e.g. `(-10,10)`) — `no≈0` saturates the LLR/clamp and
-  kills the gradient, which can trap an optimizer at a local optimum it can't escape.
-- `Mapper` output shape is `(N, 1)` — always `.squeeze()` to `(N,)` before arithmetic
-- `sn.utils.PlotBER.simulate()` is for EbNo sweeps only — not used in timestep loops
-
----
-
-## GPU vs CPU on the ETH student cluster
-
-GPU: RTX 5060 Ti, sm_120 (Blackwell), nightly cu130.
-
-**sim00–03c (CPU):** GPU was slower than CPU — tiny networks ([64,64] MLPs), kernel-launch
-overhead dominated, Sionna/scipy/gym env forced CPU round trips. `submit.sh` set
-`CUDA_VISIBLE_DEVICES=""`.
-
-**sim04+ (GPU):** GPU became viable after three changes:
-1. **Large batch** (`BATCH_SIZE=2048`) amortises kernel-launch overhead.
-2. **Sionna removed from training loop** — pure-PyTorch ops run natively on GPU with no
-   CPU↔GPU transfers. (sim04b validates whether `sn.config.device="cuda:0"` can achieve
-   comparable performance with Sionna in the loop.)
-3. **`torch.compile`** fuses NSF's many small sequential coupling-layer ops into fewer kernels.
-
-Result: **19–20 sps on GPU** (constant, no degradation) vs 3.87→0.76 sps on CPU.
-Throughput: ~39k samples/s (GPU) vs ~248 samples/s peak (CPU) = **157× improvement**.
-
-**Sionna on GPU (sim04b, pending):** Sionna 2.x modules inherit from `torch.nn.Module` and
-support GPU via `sn.config.device = "cuda:0"` (set before module creation). They also have
-explicit `torch.compile` compatibility (`torch.compiler.is_compiling()` guards in
-`Block.__call__`). sim04b tests whether this eliminates the need for handcrafted replacements.
+`SLURM_CONF=/home/sladmitet/slurm/slurm.conf` must be set on the submit host or every slurm command
+fails; it is persisted in `~/.bashrc.user`. Jobs run independently — safe to close the terminal.

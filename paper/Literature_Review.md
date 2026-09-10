@@ -3,7 +3,7 @@
 > **What this is.** A complete `\section{Related Work}` for the paper, written to the
 > *current* framing (effectiveness–detectability frontier + cost of adaptation), not the
 > superseded "cooperative MARL jammer fools a CNN" framing that `related_works_draft.tex`
-> and `paper/README.md` still carry. Prose below is meant to go into `main.tex` essentially
+> still carries. Prose below is meant to go into `main.tex` essentially
 > as-is; citation numbers `[n]` map 1:1 to `Sources_And_Evaluation.md`, which also contains a
 > ready-to-paste BibTeX block with the matching keys.
 >
@@ -217,8 +217,8 @@ fixed.
 **Section placement.** Replace all three overlapping blocks in `main.tex` — `\section{Related
 Works}` (l. 72), `\section{Literature Review}` (l. 317) and `\section{Old Related Works}`
 (l. 393) — with this one section. Keep the CTDE explanation (l. 340) and the
-mobility-evasion discussion (l. 346) in a thesis-only appendix as `paper/README.md` planned;
-both are cut from the paper.
+mobility-evasion discussion (l. 346) in a thesis-only appendix (the supervisor asked that
+nothing he suggested be thrown away); both are cut from the paper.
 
 **Table.** Table I is wide; render as `table*` at the top of a page with
 `\footnotesize` and `\renewcommand{\arraystretch}{1.2}`. If it still overflows, drop the

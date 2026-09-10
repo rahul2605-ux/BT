@@ -443,7 +443,7 @@ p. 109264, Oct. 2022. DOI: `10.1016/j.comnet.2022.109264`
 Adversarial attacks to avoid modulation detection," *IEEE Transactions on Information Forensics
 and Security*, vol. 16, pp. 1074–1087, 2021. DOI: `10.1109/TIFS.2020.3025441`
 - Venue: IEEE TIFS.
-- **Relates**: **resolves the open triage question in `paper/README.md` — include it.** It is
+- **Relates**: **resolves the long-open triage question (see `Tabula Rasa/README.md` §4.2 Q6) — include it.** It is
   the cleanest published instance of the *dual* objective we adopt: perturb transmitted
   symbols so a learned classifier fails while the intended receiver still decodes. Structurally
   identical to "maximize BER subject to a detectability budget", with the two objectives
@@ -531,7 +531,7 @@ deep learning," *IEEE Transactions on Radar Systems*, vol. 3, pp. 417–429, 202
 `10.1109/TRS.2025.3542283`
 - Venue: IEEE Transactions on Radar Systems (new but fully peer-reviewed IEEE Transactions;
   part of this work appeared at Asilomar 2023).
-- **Relates**: **resolves the second open triage question in `paper/README.md` — include it.**
+- **Relates**: **resolves the second long-open triage question (see `Tabula Rasa/README.md` §4.2 Q6) — include it.**
   It is the strongest existing validation of the exact paradigm we apply: a generative model
   producing waveforms that are simultaneously *effective* (for sensing) and *statistically
   indistinguishable from the background* (undetectable), trained against a critic. Note that
@@ -627,7 +627,7 @@ nonetheless the canonical citation for the library (NVIDIA-maintained, widely ci
 - **P. N. Ward, A. Smofsky, and A. J. Bose**, "Improving exploration in soft-actor-critic with
   normalizing flows policies," *ICML 2019 Workshop on Invertible Neural Networks and
   Normalizing Flows*, arXiv:1906.02771. **⚠ workshop paper, not peer-reviewed proceedings; and
-  the third author is Bose, not "Bhatt" as `paper/README.md` records.**
+  the third author is Bose, not "Bhatt" as earlier notes recorded.**
 - **Peer-reviewed alternative, recommended instead**: **B. Mazoure, T. Doan, A. Durand,
   J. Pineau, and R. D. Hjelm**, "Leveraging exploration in off-policy algorithms via
   normalizing flows," in *Proc. Conference on Robot Learning (CoRL)*, PMLR vol. 100, 2020.
@@ -974,7 +974,7 @@ Short list, so nothing is silently assumed:
 3. **[16] Abolhassani *et al.*** — arXiv only as of this review. Re-check for a venue version.
 4. **[48] Sionna** — arXiv only by design; the library has no journal paper.
 5. **Ward *et al.* flow-policy workshop paper** — workshop, not proceedings, and
-   `paper/README.md` has the third author's name wrong (Bose, not Bhatt). Prefer
+   earlier notes had the third author's name wrong (Bose, not Bhatt). Prefer
    `mazoure2020leveraging`.
 6. **NeurIPS/ICLR entries ([18], [20], [21], [42]–[44], [46], [49])** — venue and year verified;
    page ranges for NeurIPS volumes come from the proceedings listings rather than Crossref
