@@ -1,2 +1,0 @@
- tensorboard --logdir artifacts/sim03b/tb --port 6006
-or ssh -L 6006:localhost:6006 <cluster> manually.
