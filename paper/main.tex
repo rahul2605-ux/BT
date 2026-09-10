@@ -1,4 +1,4 @@
-\documentclass[journal]{IEEEtran}
+\documentclass[conference]{IEEEtran}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{amsfonts}
@@ -14,7 +14,7 @@
 \author{Rahul~Rahman}% <-this % stops a space
 
 % The paper headers
-\markboth{December~2025}%
+\markboth{September~2026}%
 {Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for IEEE Journals}
 
 \maketitle
@@ -70,9 +70,21 @@ Finally it addresses emerging directions that incorporate large language models 
 %summarizing general cases as sections, and going to more complex ones for overview
 %\section{Adversarial Learning in Point-to-Point Links, 1tx, 1rx, 1jammer, no-ML, stationary (Working Title)}
 \section{Related Works}
-\subsection{Jamming}
-\subsection{Anti-Jamming}
-\subsection{Detection}
+\subsection{Generative Waveform Synthesis and Physical-Layer Stealth}
+To bridge the gap of sparse availability of UAV  jamming data, Burcu et al.~\cite{10773419} used Conditional Tabular Generative Adversarial Models (CTGANs), Gaussian copulas, and Variational AutoEncoders (VAEs) to generate synthetic jamming attacks from the widely used UAV attack dataset~\cite{whelan2020uav}. \rar{But, it doesnt synthesize the actual signal... dataset doesnt include it either.. -> not really PHY}
+
+Zhou et al.~\cite{11184988} have shown, that the use of Conditional Generative Adversarial Networks (CGANs) for waveform synthesis can achieve performance approaching the theoretical optimal jamming bounds. \rar{but, no stealth -> is stealth truly necessary? maybe it's redundant since stealth is not realistic?}
+
+\subsection{Cooperative Swarm Coordination and Resource Allocation}
+Valianti et al.~\cite{valianti2024cooperative} ... 
+
+\subsection{Adversarial Machine Learning-Based Jamming Detection}
+Zhang et al.~\cite{zhang2023detection} use machine learning to automatically detect and classify three stealthy Wi-Fi jamming attacks: preamble, pilot, and interleaving jamming.
+While it achieves high classification accuracy using wavelet-based feature extraction, this approach relies on hand-crafted engineering that may fail to generalize against dynamically synthesized interference patterns. 
+
+Qiaoxin et al.~\cite{11161897}
+\rar{out of scope: link, physical/spatial}
+
 As summarized in Table~\ref{tab:related_works}, \rar{and so on...}
 % Related Works table
 \begin{table*}[!t]
@@ -82,9 +94,10 @@ As summarized in Table~\ref{tab:related_works}, \rar{and so on...}
 \centering
 \begin{tabular}{l l c c c l}
 \hline\hline % double line at the top
-\textbf{Reference} & \textbf{Method} & \textbf{MARL} & \textbf{Cooperative} & \textbf{Detection Avoidance} \\ %to complete
+\textbf{Reference} & \textbf{Method} & \textbf{cooperative MARL} & \textbf{Waveform Synthesis} & \textbf{Detection Avoidance} \\ %to complete
 \hline
-Zhang \emph{et al.} \cite{article} & HDRL & Yes & Yes & No \\ %to correct
+Zhou \emph{et al.} \cite{11184988} & CGAN & No & Yes & No \\ %to correct
+Valianti \emph{et al.} \cite{valianti2024cooperative} & MARL & Yes & No & No \\
 \textbf{Proposed Work} & \textbf{MARL \& Generative} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} \\ %to complete
 \hline\hline % Double line at the bottom
 \end{tabular}
@@ -92,215 +105,115 @@ Zhang \emph{et al.} \cite{article} & HDRL & Yes & Yes & No \\ %to correct
 
 
 \section{System Model}
-We consider a discrete-time OFDM scenario in which a legitimate network defends a point-to-point link against a cooperative team of jamming agents. 
-The legitimate network comprises a transmitter and a receiver communicating over a frequency-selective fading channel, together with a detector that inspects each received frame and decides whether it has been jammed.
-Opposing the network, a team of cooperative jammers injects crafted interference with the joint objective of maximizing the receiver bit error rate (BER) while evading the detector.
-This constitutes a two-sided adversarial setting: the legitimate network senses and flags interference, while the jammer team shapes its waveform to be simultaneously disruptive and statistically indistinguishable from a jammer-free frame. We formalize each component below.
+We consider a discrete-time OFDM scenario in which a legitimate UAV node
+transmits to a second legitimate UAV node over a point-to-point link; the
+receiving node's detector monitors the link for interference. A cooperative
+team $\mathcal{J}=\{1,\ldots,N_J\}$ of jamming agents seeks to disrupt the
+link. The transmitting node, receiving node, and its detector form one fixed
+target: only the jammer team is optimized, against a
+static detection rule and a fixed demodulation chain.
+\rar{Legitimate nodes currently take fixed TX/RX roles; generalizing to
+symmetric transceivers -- each node both transmitting, receiving, and
+detecting, as in the eventual multi-node network -- is planned future work.}
+\rar{A co-adaptive/learning defender is future work; the fixed-defender
+setting isolates the jammer-side learning problem first.}
 
 \subsection{Legitimate OFDM Link}
-The transmitter communicates with the receiver over an OFDM waveform with a set of subcarriers $\mathcal{K} = \{0, \ldots, K-1\}$ of spacing $\Delta f$ around a carrier frequency $f_c$.
-Each transmitted frame spans $L$ consecutive OFDM symbols.
-The subcarriers are partitioned into a data set $\mathcal{K}_d$, a pilot set $\mathcal{K}_p$, and a guard/null set $\mathcal{K}_g$, with $\mathcal{K} = \mathcal{K}_d \cup \mathcal{K}_p \cup \mathcal{K}_g$.
-
-Let $X[k, \ell] \in \mathbb{C}$ denote the frequency-domain symbol on subcarrier $k \in \mathcal{K}$ during OFDM symbol $\ell \in \{1,\ldots,L\}$.
-Data subcarriers carry QPSK symbols drawn from the constellation
-$\mathcal{Q} = \{\tfrac{1}{\sqrt{2}}(\pm 1 \pm j)\}$, pilot subcarriers carry
-known reference symbols \rar{Kronecker pilot pattern, symbols 2 and 11 of each
-frame; values fixed by the simulation library, not drawn from $\mathcal{Q}$},
-and guard subcarriers are null.
-Applying the inverse
-DFT and prepending a cyclic prefix of length $L_{cp}$ yields the time-domain
-transmit waveform $x[n]$, radiated at fixed power $P_{tx}$. \rar{maybe redundant info}
-
-\subsection{Cooperative Jammer Team}
-A team $\mathcal{J} = \{1, \ldots, N_J\}$ of cooperative jamming agents shares the objective of degrading the legitimate link while evading the detector (Sec.~\ref{sec:detector}).
-At each OFDM symbol $\ell$, agent $j$ synthesizes a complex, per-subcarrier interference vector $\mathbf{s}_j[\ell] = (S_j[0,\ell],\ldots,S_j[K-1,\ell]) \in
-\mathbb{C}^K$, injected in the frequency domain prior to OFDM modulation.
-Unlike channel- or power-selection jammers, an agent controls the full complex
-amplitude $S_j[k,\ell]$ independently on every subcarrier and OFDM symbol,
-i.e.\ it synthesises a raw IQ waveform rather than choosing from a discrete
-action set.
-Each agent is subject to a transmit-power budget
-\begin{equation}
-\frac{1}{KL}\sum_{\ell=1}^{L}\sum_{k \in \mathcal{K}} \big|S_j[k,\ell]\big|^2
-\;\leq\; P_{\max}, \qquad \forall j \in \mathcal{J}.
-\label{eq:power}
-\end{equation}
-Each jammer's transmitted signal reaches the receiver through its own channel
-gain $G_j[k]$, so the agents' contributions superpose there rather than
-acting in isolation; effective disruption therefore requires coordinating
-which subcarriers each agent targets and at what power.
+The transmitter communicates over an OFDM waveform with subcarriers
+$\mathcal{K}=\{0,\ldots,K-1\}$, spacing $\Delta f$, carrier frequency $f_c$,
+partitioned into data $\mathcal{K}_d$, pilot $\mathcal{K}_p$, and guard/null
+$\mathcal{K}_g$ subsets; each frame spans $L$ OFDM symbols. Let
+$X[k,\ell]\in\mathbb{C}$ be the frequency-domain symbol on subcarrier $k$
+during symbol $\ell\in\{1,\ldots,L\}$: data subcarriers carry QPSK symbols
+from $\mathcal{Q}=\{\tfrac{1}{\sqrt2}(\pm1\pm j)\}$, pilots carry known
+reference symbols, and guard subcarriers are null. An inverse DFT and cyclic
+prefix of length $L_{cp}$ yield the time-domain transmit signal $x[n]$,
+radiated at power $P_{tx}$.
 
 \subsection{Channel Model and Received Signal}
-Propagation between any transmitter or jammer and the receiver is modeled as a frequency-selective, block-fading channel, constant over one frame and drawn independently for each link.
-The frequency response of the receiver-transmitter link on subcarrier $k$ is
+Propagation from the transmitter or a jammer to the receiver is a
+frequency-selective, block-fading channel, constant over one frame and
+independent per link:
 \begin{equation}
-H_0[k] = \gamma_0 \cdot h_0[k],
-\label{eq:channel-tx}
+H_0[k]=\gamma_0 h_0[k], \qquad G_j[k]=\gamma_j h_j[k],\;\; j\in\mathcal{J},
+\label{eq:channel}
 \end{equation}
-and, for each jammer $j \in \mathcal{J}$, the response of its link to the
-receiver is
+where $h_0[k],h_j[k]\in\mathbb{C}$ are normalized tapped-delay-line fading
+realizations and $\gamma_0,\gamma_j\in\mathbb{R}_+$ are link-level average
+gains. \rar{$\gamma$: stand-in for geometry; TDL params in Experiment Setup.}
+The received sample on subcarrier $k$, symbol $\ell$, is
 \begin{equation}
-G_j[k] = \gamma_j \cdot h_j[k].
-\label{eq:channel-jam}
+Y[k,\ell] = H_0[k]X[k,\ell] + \sum_{j\in\mathcal{J}} G_j[k]S_j[k,\ell] + W[k,\ell],
+\label{eq:rx}
 \end{equation}
-Here $h_0[k], h_j[k] \in \mathbb{C}$ are normalized frequency-selective fading
-realizations obtained from a tapped-delay-line multi-path profile (drawn
-independently per link), and $\gamma_0, \gamma_j \in \mathbb{R}_{+}$ are the
-corresponding link-level average gains.
-\rar{$\gamma_0,\gamma_j$ are currently free per-link parameters (a stand-in
-for geometry); deriving them from transmitter/jammer/receiver positions via a
-path-loss law is a natural extension once (and if) node positions are
-introduced.}
-\rar{TDL profile, delay spread, and carrier frequency deferred to Experiment
-Setup.}
-
-Combining both links, the frequency-domain signal at the receiver on
-subcarrier $k$ during OFDM symbol $\ell$ is
+with $S_j[k,\ell]$ jammer $j$'s interference and
+$W[k,\ell]\sim\mathcal{CN}(0,\sigma^2)$ noise fixing $E_b/N_0$. Zero-forcing
+equalization with perfect CSI gives
 \begin{equation}
-Y[k,\ell] = H_0[k]\,X[k,\ell] + \sum_{j\in\mathcal{J}} G_j[k]\,S_j[k,\ell] + N[k,\ell],
-\label{eq:received}
+\hat{X}[k,\ell] = \frac{Y[k,\ell]}{H_0[k]}
+= X[k,\ell] + \sum_{j\in\mathcal{J}}\frac{G_j[k]}{H_0[k]}S_j[k,\ell]
++ \frac{W[k,\ell]}{H_0[k]},
+\label{eq:zf}
 \end{equation}
-with $N[k,\ell]\sim\mathcal{CN}(0,\sigma^2)$ i.i.d.\ additive noise.
-The receiver has perfect knowledge of $H_0[k]$ (channel estimation is out of
-scope) and recovers data symbols by zero-forcing equalization,
-$\hat X[k,\ell] = Y[k,\ell]/H_0[k]$, followed by hard-decision demapping.
-Prior to this equalization stage, the corresponding time-domain composite
-frame $y[n]$ — the inverse DFT of $Y[k,\ell]$ across the frame together with
-its cyclic prefix — is the raw signal the detector (Sec.~\ref{sec:detector})
-observes: detection happens \emph{before} the receiver separates out the
-jammers' contribution, on a signal that already mixes $X$, every $S_j$, and
-$N$ together.
+so a jammer's impact on subcarrier $k$ scales with $G_j[k]/H_0[k]$, amplified
+on deeply faded subcarriers. \rar{This ratio does not empirically favor
+channel-aware over blind jamming; see Results.} Hard-decision demapping of
+$\hat{X}[k,\ell]$ over $\mathcal{K}_d$ yields the recovered bits; BER is the
+fraction decided in error.
 
-\subsection{Detector Model} \label{sec:detector}
-The legitimate network's decision to flag a frame as jammed is made at the
-receiver, on the composite time-domain frame $y[n]$ of
-Eq.~\eqref{eq:received}, \emph{before} channel equalization — the detector
-never observes the disentangled per-link contributions $X$, $\{S_j\}$, or the
-channel responses $H_0,\{G_j\}$, only their sum.
 
-We evaluate against a \emph{suite} of two complementary detectors that
-together represent the information available to the defender:
-\begin{itemize}
-    \item \textbf{Spectral detector} $D_{\mathrm{cnn}}$: a convolutional
-    classifier operating on the complex two-sided short-time Fourier
-    transform (spectrogram) of $y[n]$, trained offline on labelled
-    clean/jammed frames drawn from the same channel distribution used at
-    evaluation.
-    \item \textbf{Energy detector} $D_{\mathrm{en}}$: a threshold test on the
-    mean received frame power $\frac{1}{|y|}\sum_n |y[n]|^2$, calibrated
-    per-SNR to a target false-alarm rate on clean frames.
-\end{itemize}
-A frame is flagged if either detector fires,
-$p_{\mathrm{suite}} = D_{\mathrm{cnn}}(y) \vee D_{\mathrm{en}}(y)$; unless a
-single detector is named explicitly, this OR-combination is what we mean by
-``the detector'' throughout.
-
-Both detectors are \emph{frozen} at evaluation time: each is trained once,
-offline, on a fixed distribution of clean and jammed frames, and receives no
-further ground-truth labels once deployed, so neither can adapt to a new
-jammer strategy at execution time. Improving detection against a new
-strategy therefore requires an explicit, offline \emph{retraining round}
-between rounds of jammer optimization, never a within-episode update — the
-basis for treating the attacker--defender interaction as a round-based, not
-continuously online, arms race \rar{cross-ref the adaptation-cost round
-protocol once it has a section}. Neither detector has access to channel
-state information $H_0,\{G_j\}$ or to the transmitted symbols $X$; both act
-purely on the received waveform, matching what a real receiver-side monitor
-could observe without cooperation from the jammers.
+\subsection{Cooperative Jammer Team}
+\label{sec:jammer}
+The team's $N_J$ agents (currently $N_J{=}1$; cooperative $N_J{\geq}2$ is
+future work) share the objective stated above. At each OFDM symbol $\ell$,
+agent $j$ synthesizes a complex per-subcarrier vector
+$\mathbf{s}_j[\ell]=(S_j[0,\ell],\ldots,S_j[K-1,\ell])\in\mathbb{C}^K$,
+injected in the frequency domain --- a raw IQ waveform rather than a discrete
+channel/power selection --- subject to a power budget
+\begin{equation}
+\frac{1}{KL}\sum_{\ell=1}^L\sum_{k\in\mathcal{K}}|S_j[k,\ell]|^2 \leq P_{\max},
+\quad \forall j\in\mathcal{J}.
+\label{eq:power}
+\end{equation}
+By Eq.~\eqref{eq:rx}, the agents' signals combine at the receiver through
+their individual channels $G_j[k]$, so effective disruption requires
+coordinating which subcarriers each agent targets and at what power.
+\subsection{Detector Model}
+\label{sec:detector}
+The legitimate network monitors the link with a detector suite: an energy
+detector $d_E(\mathbf{y}) = \mathbb{1}[\|\mathbf{y}\|_2^2/N > \eta_E]$,
+threshold $\eta_E$ calibrated to a fixed false-alarm rate on clean frames; and
+a spectrogram CNN $d_C(\mathbf{y}) = \mathbb{1}[f_\theta(\mathcal{S}(\mathbf{y}))
+> \tfrac12]$, pretrained and frozen. A frame is declared jammed if either
+fires:
+\begin{equation}
+d(\mathbf{y}) = d_E(\mathbf{y}) \vee d_C(\mathbf{y}).
+\label{eq:suite}
+\end{equation}
+\rar{Suite = energy + CNN; kurtosis/GLRT/pilot-variance may be added.}
 
 \subsection{Threat Model}
-The attacker--defender interaction is a round-based, offline arms race
-(Sec.~\ref{sec:detector}): the jammer team optimizes against a frozen
-detector suite, and the defender may retrain only \emph{between} rounds,
-never during one. Within a round, the jammer team's objective is to maximize
-disruption while keeping its detection probability under an explicit budget,
-formalized as a constrained, zero-sum game against the detector suite:
+The jammer team accesses the suite only through the scalar outcome
+$d(\mathbf{y})$; detector weights, gradients, and architecture are not
+observed. \rar{A learned cooperative jammer may instead use a
+surrogate-gradient transfer attack, relaxing this to grey-box.} A flagged
+jammer forfeits future effectiveness --- localization, frequency
+reallocation, or spatial nulling neutralize it --- motivating the detection
+constraint below. \rar{Physical-layer localization itself is out of scope.}
+
+\subsection{Problem Formulation}
+Given the detector suite and a channel realization, the jammer team seeks
 \begin{equation}
-\max_{\{S_j\}_{j\in\mathcal J}} \;\; \mathrm{BER}\big(\{S_j\}\big)
-\quad \text{s.t.} \quad p_{\mathrm{suite}}\big(\{S_j\}\big) \le \beta,
-\;\; \text{Eq.~\eqref{eq:power}} \;\; \forall j \in \mathcal{J},
-\label{eq:objective}
+\max_{\{\mathbf{s}_j\}_{j\in\mathcal{J}}} \; \mathbb{E}[\mathrm{BER}(\hat{\mathbf{X}})]
+\quad \text{s.t.} \quad \Pr[d(\mathbf{y})=1]\leq\varepsilon,\;\;
+\text{Eq.~\eqref{eq:power}}.
+\label{eq:problem}
 \end{equation}
-i.e., for a detectability budget $\beta$ the jammers trace out the best BER
-reachable without exceeding it, subject to each agent's individual power
-constraint. \rar{state the defender's symmetric objective once the
-retraining-round protocol (R0/R1/R2) has a home section.}
-
-Jammer information is organized into three tiers, applied consistently to
-every jamming strategy we evaluate:
-\begin{itemize}
-    \item \textbf{Genie:} full, non-causal knowledge of the victim's
-    transmitted symbols $X[k,\ell]$, both channel responses $H_0[k]$ and
-    $G_j[k]$, and perfect preamble synchronization (phase- and time-locked to
-    the victim frame). This is an upper bound on attacker capability, not a
-    claimed deployment assumption; it calibrates how much headroom a
-    realistic or learned attacker could in principle recover.
-    \item \textbf{Realistic:} each jammer knows only its own link's channel
-    response $G_j[k]$ (e.g., estimated from overheard preamble
-    transmissions) and achieves preamble synchronization subject to residual
-    carrier-frequency offset, timing offset, and phase error \rar{parameterize
-    as a single "cheap hardware" quality knob}; it has no knowledge of
-    $H_0[k]$ and no knowledge of $X[k,\ell]$ beyond the modulation format.
-    \item \textbf{Blind:} no channel or symbol knowledge and no explicit
-    synchronization guarantee; the jammer acts on its own causal
-    observations only.
-\end{itemize}
-Symmetrically, the legitimate link has perfect CSI $H_0[k]$ for equalization
-but no knowledge of the jammers' presence, count, or strategy at the
-physical layer — only the detector suite (Sec.~\ref{sec:detector}) reasons
-about jamming, and only from the received waveform $y[n]$, never from
-ground-truth labels at runtime.
-
-Coordination among the $N_J$ jammers is bounded by an explicit assumption
-rather than left implicit, since it determines what the ``cooperative'' in
-cooperative jamming is allowed to cost in hardware terms:
-\rar{pick and defend one at the meeting — (a) a shared low-rate backhaul
-control channel, sufficient to exchange policy parameters or per-round power
-allocations but not raw IQ; (b) a shared clock/local-oscillator reference for
-phase alignment only, no data exchange; or (c) fully independent agents with
-no inter-agent communication at execution time, coordination emerging only
-through centralized training (CTDE) and unavailable once deployed. The
-current MAPPO/CTDE implementation matches (c) at execution time by
-construction — state it as the default tier unless a stronger assumption is
-explicitly invoked and justified.}
-
-Finally, we assume the defender does not attempt jammer localization
-(bearing or position estimation to enable physical neutralization of the
-jammers); this is a distinct detection modality that we name here as an
-out-of-scope defender capability and leave to future work rather than model.
-
-\subsection{Performance Metrics}
-We report jamming effectiveness as bit error rate
-$\mathrm{BER} = \Pr[\hat b \neq b]$ over data-bearing subcarriers, and
-alongside it symbol error rate
-$\mathrm{SER} = \Pr[\hat X[k,\ell] \neq X[k,\ell]]$, since a single flipped
-bit and a fully corrupted symbol are not equally costly to the link.
-
-Stealth is reported as the detector suite's flag probability
-$p_{\mathrm{suite}}$ on jammed frames, always alongside its \emph{clean}
-false-alarm rate at the same operating point: a jammer is only meaningfully
-``stealthy'' relative to a detector that is not already noisy on clean
-traffic, so the two numbers are never reported in isolation.
-
-Because BER and $p_{\mathrm{suite}}$ trade off against each other and
-against each jammer's power budget, we do not summarize a strategy at a
-single operating point. We report the achievable frontier
-\begin{equation}
-\mathrm{BER}^*(\beta) = \max_{\{S_j\} \,:\, p_{\mathrm{suite}}(\{S_j\}) \le \beta,\, \text{Eq.~\eqref{eq:power}}} \mathrm{BER}\big(\{S_j\}\big),
-\label{eq:frontier}
-\end{equation}
-a monotone function of the detectability budget $\beta \in [0,1]$, and
-compare strategies (blind, channel-aware, learned) by their frontiers rather
-than at one threshold. In particular a single loose threshold such as
-$\beta=0.5$ is not operational stealth — a jammer flagged on half of all
-frames is caught within a handful of frames — so any headline number is
-always read off the frontier at the defender's own clean false-alarm rate,
-not at a fixed convention.
-\rar{Add adaptation-cost metrics here once the round-based protocol (R0/R1/R2)
-has a section: $\Delta$accuracy, $\Delta$FAR, and training cost
-(samples / GPU-hours) per retraining round, mirrored by the attacker's
-re-optimization cost.}
+Raising power increases BER but also exposes the team to $d_E$; structured or
+out-of-band signals expose it to $d_C$. Whether a realistic channel admits a
+jointly effective-and-undetected regime, and whether cooperative waveform
+synthesis widens it, is this paper's central empirical question.
+\subsection{Performance Metrics} \rar{maybe move into experimental setup}
 
 \section{Methodology}
 \rar{TODO}
@@ -313,6 +226,9 @@ The sophisticated baseline is a PPO team with Centralized Training with Decentra
 
 \section{Results \& Evaluation}
 \section{Conclusion \& Future Work}
+
+\clearpage
+\appendices
 
 \section{Literature Review}
 
@@ -614,6 +530,38 @@ Finally, a critical oversight persists in the transition to decentralized, heter
 Future frameworks must move beyond centralized coordination and begin accounting for the unique hardware signatures of individual RF-chains. \adm{yes, but not only}
 Addressing these co-adaptive and hardware-specific challenges will be essential for ensuring the resilience of next-generation mobile networks against intelligent, data-driven adversaries.
 %\rar{Write at end to point towards research questions/gaps im interested in}
+
+\section{Experiment History}
+This section documents the experiments done until now. The main goal is to start with the simplest case and then extend it step-by-step until we find a meaningful result. 
+The general idea is to improve stealth in jamming with the help of generative methods and multi-agent coordination while still keeping the highest possible inference. 
+It is organised by what each group of simulations established, not necessarily in chronological order. 
+If no comment is made regarding changes of e.g. channel, that means it stayed  the same.
+QPSK modulation and demodulation, constellation, AWGN and later the channel was simulated over NVIDIA Sionna. 
+
+\subsection{Simulation Chain and Validation}
+For the very first experiment we setup one legitimate transmitter and one legitimate receiver against a non-learning barrage jammer in a lossless channel ($rx = tx + jam$).
+The legitimate nodes detected jamming with a simple power threshold set at 3.0.
+The trivial attack was trivially detected by the legitimate nodes.
+
+\subsection{Gradient-Based Attacks against Statistical Detectors}
+The first trainable configuration paired a single PPO jammer with no signal structure (diagonal Gaussian) against a power-threshold detector, which converged to $BER\approx 0.19$ at 10\% detection by simply holding power just under the threshold. 
+Replacing the threshold detector with a kurtosis detector (with threshold -1.0) completely made the agent fail: detection stayed at 100\% and the received kurtosis never moved past -0.25, because a diagonal Gaussian policy is structurally incapable of producing the sub-Gaussian statistics QPSK has.
+Upgrading the action distribution to a neural spline flow did not help while training remained PPO.
+Keeping that same flow but training it by direct backpropagation through the differentiable channel worked immediately: kurtosis reached -1.25 to -1.5, below the detection threshold, at BER up to 0.17.
+A parallel attempt with a Gaussian-mixture head under PPO was closed as negative after nine runs, including one of 1M steps, where component permutation symmetry absorbed the gradient movement without reshaping the output distribution.
+
+\subsection{Two-Agent Cooperative Attack}
+Direct-gradient training solved the single-jammer case, leaving open whether distributing the attack across agents buys anything.
+Extending the same architecture to two jammers on a shared lossless channel ($rx = tx + jam_1 + jam_2$), each agent kept its own encoder and flow but both were trained jointly from a single differentiable loss, so that each agent's gradient accounts for the other's contribution to the received signal. 
+The motivation is a power argument: the single-jammer optimum is $jam = -2tx$ at power 4, whereas two agents reach the same received signal with $jam_1 = jam_2 = -tx$ at power 1 each. An identical aggregate effect at a quarter of the per-agent footprint, and outside the numerical instability that affected the single-agent case near power 0.9.
+Training reached $BER\approx 0.33$ at 3–10\% detection, with received kurtosis $\approx -1.2$ and per-agent power $\approx 0.45$, roughly double the single-agent result.
+The mechanism is visible in the received constellation: it converges to four clean QPSK-like clusters, statistically close to an unjammed link, while a third of the bits decode incorrectly.
+The team evaded detection not by transmitting less, but by arranging for the sum to look legitimate.
+
+This is the first evidence that coordination is worth something beyond power splitting, and it is the empirical precursor to a result the minimal model later derives exactly: perturbations that map the QPSK alphabet onto itself leave the received distribution invariant, so no detector has power against them.
+
+\subsection{From Statistical to Learned Detection}
+Beating the kurtosis detector established only that a hand-designed statistic could be evaded; the relevant defender is a learned one.
 
 \ifCLASSOPTIONcaptionsoff
   \newpage
