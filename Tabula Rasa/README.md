@@ -632,9 +632,11 @@ surprise. (ii) M1's motivation is thinner post-E1 than when the proposal was wri
 
 ## 3.5 The Overleaf appendix — "Experiment History"
 
-**State (2026-09-10): 1–4 in Overleaf with fixes owed · 1b, 5, 10 drafted in `paper_drafts/`, not
-pasted · 6, 7, 8, 9 unwritten.** Live ref last read: `overleaf/main` @ `13adaf5` "push latest".
-Reviewed 2026-09-10. It belongs in the thesis (§1.4), and writing it is directly responsive to a
+**State (2026-09-10, later): 1, 1b, 2–5 in Overleaf with fixes owed · 6, 7, 8, 9, 10 drafted in
+`paper_drafts/`, not pasted.** Live ref last read: `overleaf/main` @ `b9620a0` "Experimental History:
+Learned Detectors Section done". Reviewed 2026-09-10. **`git fetch overleaf` now fails from this repo**
+(no GitHub credentials in the environment) — the local `overleaf/main` ref is what is readable, so it
+may lag the true Overleaf head. It belongs in the thesis (§1.4), and writing it is directly responsive to a
 request he made twice.
 
 > **Numbering warning.** In this subsection, `A.n` means a **subsection of the Overleaf appendix**
@@ -650,10 +652,13 @@ Attacks against Statistical Detectors (sim01, 02, 03, 03b, 03c) · 4. Two-Agent 
 (sim04) · 5. From Statistical to Learned Detection (sim05, sim06 detector side) — drafted,
 `paper_drafts/sec_exphist_5_learned_detection.tex`, condensed to 418 words to match the register of
 the user-written parts · 6. Untrainability
-of Policy-Gradient RL over Raw IQ (sim06 jammer, 06b, 07) · 7. Detector Characterisation and Errata
-(Phase 0, 0.5, recheck) · 8. Realistic Channel, Suite, and Matched Detectability (sim08 m1, m2,
-dense) · 9. Summary of Hypotheses and Verdicts (one table: hypothesis · evidence · verdict ·
-superseded-by) · 10. **What the History Determines** — the forward-facing close, added 2026-09-10:
+of Policy-Gradient RL over Raw IQ (sim06 jammer, 06b, 07) — drafted,
+`paper_drafts/sec_exphist_6_untrainability.tex` · 7. Detector Characterisation and Errata
+(Phase 0, 0.5, recheck) — drafted, `paper_drafts/sec_exphist_7_characterisation.tex` · 8. Realistic
+Channel, Suite, and Matched Detectability (sim08 m1, m2, dense) — drafted,
+`paper_drafts/sec_exphist_8_realistic_channel.tex` · 9. Summary of Hypotheses and Verdicts (verdict
+table + the traceability table convention (a) owes) — drafted,
+`paper_drafts/sec_exphist_9_verdicts.tex` · 10. **What the History Determines** — the forward-facing close, added 2026-09-10:
 each of his mandates (§2.9) restated as a *design constraint derived from the history*, never as an
 instruction, so the appendix hands off to the remaining experiments instead of stopping at a verdict
 table. Drafted, `paper_drafts/sec_exphist_10_determines.tex`.
@@ -708,16 +713,10 @@ diagnosis.
 - **Wording:** "until we find a meaningful result" → reads as an admission none exists; "we
   **setup**" → "set up". *(The "highest possible **inference**" → "similar interference" fix landed in
   `13adaf5`.)*
-- **New in `13adaf5`, and wrong as written** — the two sentences added to A.3 ("this approach might
-  not work in a realistic scenario, as a jammer wouldn't have direct access to a detectors channel. At
-  the other hand it could try to predict it"). The instinct is right and the caveat belongs there, but
-  (i) the assumption is misnamed — direct backprop needs a *differentiable white-box model* of the
-  receiver chain and the statistic, plus **genie access to `tx[t]`**, and it is the second one that
-  fails on a real link; (ii) **"it could try to predict it" is falsified two subsections later** — A.6
-  moves the observation to `tx[t−1]`, which for iid QPSK carries **zero** information about `tx[t]`,
-  so prediction is impossible, not merely hard; (iii) register — "might not work" is a hedge where
-  convention (d) wants a mechanism. Rewrite as a forward pointer to the black-box setting. Also
-  `detectors` → `detector's`, `At the other hand` → `On the other hand`.
+- **RESOLVED in `b9620a0`.** The A.3 caveat was rewritten correctly: it now names the differentiable
+  white-box model *and* the genie observation of `tx[t]`, says which of the two fails on a real link,
+  and states that predicting `tx[t]` from `tx[t−1]` is impossible for iid QPSK rather than merely hard.
+  The "might not work / could try to predict it" hedge is gone. No further action.
 - **Structural:** A.2 never says what it *establishes* (that the measurement chain is trustworthy —
   BER, power and detection all move when and only when they should), omits its numbers (BER 0→0.5,
   power 1.0→51, 0→2 users detecting), and omits sim04b. A.4 is missing both caveat sentences: the
@@ -728,19 +727,31 @@ diagnosis.
   decentralised agents could find it. That matters because "cooperative multi-agent" is in the title.
 - **Sentence fragment** in A.4 ("An identical aggregate effect at …") — the same construction he
   already flagged in the proposal.
-- **LaTeX:** add `\appendix` before L534 or the section numbers as a regular section; **remove
-  `\nocite{*}` (L572 in `13adaf5`) before he reads it** — it emits the whole `refs.bib`.
+- **LaTeX:** `\appendices` already exists (L232 in `b9620a0`), so this is *not* owed — but Experiment
+  History is the **third** appendix, behind `\section{Literature Review}` (L233) and `\section{Old
+  Related Works}` (L309), both scratch material dense with `\adm{}`/`\rar{}` notes. It will render as
+  "Appendix C" after ~300 lines of unfinished notes: **move it first among the appendices, or comment
+  the two scratch sections out before he reads it.** Still owed: **remove `\nocite{*}` (L662 in
+  `b9620a0`)** — it emits the whole `refs.bib`.
+- **Cross-references:** no Experiment History subsection carries a `\label`, so nothing can be
+  referenced. The drafts introduce `subsec:exphist:{untrainable,characterisation,realistic,verdicts}`;
+  parts 5 and 6 both forward-reference the characterisation subsection.
+- **The traceability table required by convention (a) does not exist in Overleaf.** It is drafted at
+  the end of `sec_exphist_9_verdicts.tex`.
 - Still-live `\rar{}` notes above the appendix: L216, L256.
 
-**A.1b is drafted** — `paper_drafts/sec_exphist_1b_objective.tex`, 2026-09-10, not yet pasted.
+**A.1b is drafted and PASTED** (`b9620a0`), lightly edited by the user on paste — the opening was
+shortened and the κ definition moved out of the table caption into the prose, where it still stands.
+Source: `paper_drafts/sec_exphist_1b_objective.tex`.
 Inserts after the scope paragraph, before "Simulation Chain and Validation": two equations, the
 definition of κ, and a `table*` of per-step constants. **It ends at the table.** The two findings the
 table makes visible were deliberately moved to their point of use — the log barrier to part 6, γ = 0.02
 to part 4 — and the "power is a constraint" paragraph was cut as a duplicate of
 `sec:system:objective`. A header comment in the file records all three so they are not lost.
 
-**A.5 is drafted** — `paper_drafts/sec_exphist_5_learned_detection.tex`, 2026-09-10, not yet pasted
-into Overleaf. Replaces the one-sentence stub and keeps that sentence as its opening line. **418 words
+**A.5 is drafted and PASTED** (`b9620a0`), expanded slightly by the user on paste (the training
+recipe — SGD at 1e-3, batch 32, 100 epochs — was restored, and the four jammer families spelled out).
+Source: `paper_drafts/sec_exphist_5_learned_detection.tex`. Replaces the one-sentence stub and keeps that sentence as its opening line. **418 words
 of prose** (vs 244 for the user-written part 4) after a rewrite for concision and register; the
 cross-evaluation table is six rows × **two** columns, the third having duplicated the prose. Ends on
 three deviations (binary head, ImageNet-pretrained, synthetic frames) plus the real-part-only STFT
@@ -748,13 +759,24 @@ erratum, which forward-references part 7 — **if part 7 is dropped or renamed t
 Needs one `\ref` once the characterisation subsection has a `\label`, and it is the first place
 `\cite{9707819}` (Li et al.) is used in `main.tex`.
 
-**Next in this thread:** **part 6 — the untrainability result**, which is the one he asked about
-directly, and the one to lead with the *action-parameterisation* explanation, not the reward formula.
-It now has a mechanism to lead with as well: the log barrier
-([A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)). Then 7, 8, 9.
+**Parts 6–9 are drafted** (2026-09-10), all four verified to compile under `IEEEtran` with no errors:
+- `sec_exphist_6_untrainability.tex` — leads with the **action parameterisation**, not the reward
+  formula; the log barrier appears as the proximate mechanism only. The four-subcarrier "cliff" is
+  written as an *observation* that part 7 explains away, never as a finding.
+- `sec_exphist_7_characterisation.tex` — carries `\label{subsec:exphist:characterisation}`, which parts
+  5 and 6 both forward-reference. **If this part is dropped or renamed, both dangle.**
+- `sec_exphist_8_realistic_channel.tex` — both retractions (+70%, and the `≤0.5` stealth figure) are
+  written to share one stated cause: a comparison that held the wrong thing fixed.
+- `sec_exphist_9_verdicts.tex` — 17-row verdict table plus the traceability table convention (a) owes.
 
-**Dependency to respect when pasting:** parts 5 and 10 both `\ref` into `sec_system_model.tex`, which
-is **itself not in Overleaf yet** (§B.3). Paste the System Model section first or those refs dangle.
+**Dependency to respect when pasting — verified 2026-09-10, and worse than recorded.** The System Model
+*is* in Overleaf (L107–217 of `b9620a0`), but it is the **older OFDM version**, not
+`paper_drafts/sec_system_model.tex`. It defines `sec:jammer`, `sec:detector`, `eq:problem` — and
+**not** `sec:system:objective` or `sec:system:link`, which part 10 references three times. A test
+compile confirms both come back undefined. It also does **not** define matched detectability, the
+false-alarm-rate stealth budget, or the omniscient-ceiling rule, so convention (f) — the appendix
+defers, never re-defines — is currently unsatisfiable. **Paste `sec_system_model.tex` first**, or part
+10 has to carry those definitions itself.
 
 ## 3.6 Explicitly NOT doing
 

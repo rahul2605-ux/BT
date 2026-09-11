@@ -1,0 +1,117 @@
+% ---------------------------------------------------------------------------
+% Experiment History -- subsection 7: Detector Characterisation and Errata.
+% Sources: README A.6 (Phase 0, Phase 0.5, recheck).
+% Jobs: 101860 (Phase 0), 101866 (Phase 0.5), 102115 (recheck).
+%
+% This subsection carries \label{subsec:exphist:characterisation}, which
+% subsection 5 forward-references ("bears on results reported later") and
+% subsection 6 forward-references (the four-subcarrier cliff).  IF THIS
+% SUBSECTION IS DROPPED OR RENAMED, BOTH OF THOSE DANGLE.
+%
+% Two errata are reported here rather than hidden: the real-part-only
+% spectrogram, and the CNN-alone evaluation that produced the "stealthy
+% BER 0.42" figure.  Convention (d): both are stated with their mechanism
+% and neither is apologised for.  Note the asymmetry that makes them worth
+% keeping -- the first erratum left its finding standing, the second
+% destroyed one.
+%
+% Figure: artifacts/frontier/inband_vs_outofband.png, four panels, use as-is.
+% ---------------------------------------------------------------------------
+
+\subsection{Detector Characterisation and Errata}
+\label{subsec:exphist:characterisation}
+Every attack up to this point had been evaluated against a detector whose only published number was
+its accuracy on its own training distribution.
+That number says what the detector separates, not what it resists, and the preceding step had spent
+five runs against an apparent detection threshold whose origin we had not established.
+Before committing further compute to learning an attacker, we characterised the defender by
+enumeration instead.
+
+The sweep is pure inference and involves no learning: a grid over the number of active subcarriers,
+the injected power and the temporal structure of the interference, pushed through the frozen detector,
+recording the detection probability and the bit error rate for every cell.
+Its decisive cell is a control that holds power and bit error rate fixed and varies only whether the
+interference touches the twelve guard and DC bins that the waveform leaves empty
+(Table~\ref{tab:inband}).
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.3}
+\caption{The frozen detector, at fixed power and fixed damage. Only the occupancy of the guard and DC
+bins differs between the first two rows.}
+\label{tab:inband}
+\centering
+\begin{tabular}{l c c c}
+\hline\hline
+\textbf{Interference} & \textbf{Power} & $\Pr[\text{flag}]$ & \textbf{BER} \\
+\hline
+in-band, 52 subcarriers      & 8    & 0.011  & 0.360 \\
+out-of-band, all 64 bins     & 8    & 0.999  & 0.363 \\
+out-of-band, all 64 bins     & 0.03 & 0.9999 & 0.000 \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+The detector fires almost surely on any energy outside the occupied band, including energy far too
+weak to cause a single bit error, and is close to blind to in-band interference that breaks a third of
+the bits.
+What reproduces the published accuracy is therefore a spectral-mask monitor, not a jamming detector,
+and the two coincide only because every jammer in its training set violates the mask.
+This retroactively accounts for both of the walls the previous step ran into: the broadband probe that
+was flagged at power $0.01$ injected into the guard and DC bins, and the top-$K$ selection ran over
+the full 64-bin grid, so activating more subcarriers meant selecting null ones.
+The threshold at four active subcarriers was an artifact of that selection.
+The earlier conclusion drawn from it -- that the tension between effectiveness and stealth is
+fundamental, with the bit error rate capped near $0.04$ -- does not survive, and temporal coherence,
+which we had treated as the important axis, is a minor one beside in-band versus out-of-band.
+
+\begin{figure*}[!t]
+\centering
+% \includegraphics[width=\textwidth]{fig/inband_vs_outofband.pdf}
+\caption{Detection probability and bit error rate against injected power, for interference confined to
+the occupied subcarriers and for interference that also occupies the guard and DC bins.}
+\label{fig:inband}
+\end{figure*}
+
+Whether the blind spot is a gap in the training data is a question the sweep can also answer.
+Retraining the same architecture on clean frames, the four classical jammers and in-band interference,
+then re-running the sweep, closes it: the in-band configuration above moves from $0.011$ to $0.995$.
+It closes at a price paid on every clean frame.
+Overall accuracy falls from $99.79\,\%$ to $90.5\,\%$ and the false-alarm rate rises from $0.00\,\%$ to
+$3.81\,\%$, reaching roughly $50\,\%$ on in-band perturbations of near-zero power; against fresh
+in-band jammers the detection rate reaches only $68\,\%$; and the omniscient counter-signal, whose
+received distribution is exactly that of a clean frame, is now flagged at $0.15$.
+A spectrogram classifier cannot separate spectrally compliant in-band interference from a clean frame
+without spending false alarms, because at the resolution it sees them the two differ by a scale
+factor.
+That is a trade-off in the representation and not a deficit in the training set, and it is the first
+measurement of what an adaptation costs the defender.
+The retrain was deliberately quick, at 50 epochs and with in-band samples labelled jammed even where
+they caused no errors, which inflates the false-alarm rate; a calibrated version would sharpen the
+numbers without moving the direction.
+
+Two corrections belong with these results.
+The first concerns the detector's input: the short-time transform had been taken over the in-phase
+component alone rather than as the complex two-sided transform, which is what the reference computes.
+Correcting it and retraining leaves the replication unchanged, at $99.8\,\%$ accuracy and a zero
+false-alarm rate, and leaves the characterisation above unchanged in kind: at equal power and equal
+damage, in-band interference is flagged at $0.086$ and out-of-band interference at $1.000$, the latter
+at every power.
+The finding was real and survives the correction.
+
+The second correction removes a result.
+The frontier above evaluates the learned detector alone, and the legitimate receiver is not obliged to
+use only that detector.
+Adding an energy detector -- mean received power against a threshold calibrated to a one percent
+false-alarm rate on clean frames -- and declaring a frame jammed if either fires collapses the stealthy
+region on this channel: the largest bit error rate attainable at a detection probability of at most
+$0.05$ is nothing at all, at most $0.10$ it is $0.000$, and at most $0.50$ it is $0.005$, against the
+$0.419$ reported for the classifier by itself.
+In-band interference that flips bits necessarily raises the received power, and a power meter costs
+nothing.
+The claim that a state-of-the-art classifier is blind and the attacker therefore wins is dead in that
+form, and the detector to attack from here is a suite.
+
+What keeps the question open is that this channel is lossless and noiseless, so clean received power
+is a sharp constant and any addition to it crosses the threshold.
+On a channel with a noise floor and fading the same threshold is loose, and interference below the
+floor is invisible to it -- which is what the next step measures.

@@ -1,0 +1,116 @@
+% ---------------------------------------------------------------------------
+% Experiment History -- subsection 8: Realistic Channel, Detector Suite, and
+% Matched Detectability.  Sources: README A.7 (m1, m1b, m2, dense).
+% Jobs: 101870 (m1), 102305 (m1b), 102316 (m2 detector), 102319 (m2 suite),
+% 102390 (dense re-sweep).
+%
+% This subsection retracts two of our own headline numbers -- the "+70%"
+% channel-aware gain and the "stealthy BER 0.065-0.11" figure -- and both
+% retractions have the same cause: a comparison held the wrong thing fixed.
+% That common cause is the point of the subsection and should not be buried
+% under the individual numbers.  It is also the direct justification for the
+% two reporting rules in the System Model, which are NOT restated here
+% (convention (f)).
+%
+% Figure: artifacts/sim08/frontier_dense/matched_detectability.png, CROPPED
+% TO TWO PANELS (5 dB and 30 dB).  Five panels is overkill and the two
+% extremes carry the whole reading.
+% An optional second figure, artifacts/sim08/frontier/stealth_suite_vs_snr.png,
+% HAS NOT BEEN EYEBALLED -- check it before committing to it.
+% ---------------------------------------------------------------------------
+
+\subsection{Realistic Channel, Detector Suite, and Matched Detectability}
+\label{subsec:exphist:realistic}
+The characterisation closed on a caveat about its own channel: with no noise and no fading, clean
+received power is a constant, and a power meter catches anything added to it.
+That property is an artifact of the channel and not of jamming, so the question of whether an
+effective and unflagged attack exists had to be re-asked where a noise floor exists to hide under.
+
+We replaced the lossless channel with an independent frequency-selective block-fading realisation per
+link -- transmitter to receiver, and each jammer to the receiver -- drawn from a tapped-delay-line
+model at a 100\,ns delay spread and 5.2\,GHz, with additive noise at a target $E_b/N_0$ and
+zero-forcing equalisation of the legitimate link at the receiver.
+The jammer now reaches the receiver through its own channel, so after equalisation its effect on
+subcarrier $k$ is scaled by $G_j[k]/H_0[k]$ and is amplified wherever the legitimate link is faded.
+Three things follow, and they are of quite different standing.
+
+The chain is physically correct: the clean bit error rate waterfalls from $0.088$ at 5\,dB to
+$0.0003$ at 30\,dB.
+A sparse in-band jammer imposes a bit error floor that does not move with the signal-to-noise ratio --
+roughly $0.05$ to $0.07$ with eight active subcarriers, and $0.34$ when broadband -- across the whole
+range.
+This is the one result here that depends on no detector and no stealth threshold, and it is the
+strongest: the impairment is interference rather than noise, so the legitimate link cannot buy its way
+out with transmit power, and the high-signal-to-noise regime is where the attacker is relatively
+strongest rather than weakest.
+Third, and unlike the other two, we measured that concentrating power on subcarriers where the
+legitimate link is faded beat blind subcarrier selection by up to $70\,\%$ in bit error rate at equal
+power, which is retracted below.
+
+Adding the energy detector back, now calibrated per signal-to-noise ratio on faded clean frames,
+recovers what the lossless channel had ruled out.
+An attacker can hold its detection probability under that meter at or below $0.5$ while driving the
+bit error rate to between $0.20$ and $0.24$ at every signal-to-noise ratio, against a maximum of
+$0.005$ on the lossless channel; at 30\,dB that takes a nearly error-free link to $0.20$.
+The noise floor and the fading are the cover, exactly as the caveat predicted.
+
+The learned half of the suite had to be rebuilt for this channel, because a detector is valid only for
+the channel and representation it was trained on: retrained on complex spectrograms of faded signals,
+with $E_b/N_0$ drawn uniformly over $[5, 30]$\,dB and both time-domain classical and frequency-domain
+in-band jammers as the positive class, it reaches $94.3\,\%$ accuracy at a $91.2\,\%$ detection rate
+and a $2.3\,\%$ false-alarm rate, where the lossless-trained checkpoint had no separation on this
+channel at all.
+Its residual blind spot is at high signal-to-noise ratio, where it still misses about a quarter of
+in-band jammers.
+Composing it with the energy detector per sample then produces a result that is the mirror image of
+the lossless case: across the entire sweep the energy detector flags no configuration that the
+classifier misses.
+On a lossless channel the power meter subsumed the classifier; on a realistic one the classifier
+subsumes the power meter, and that is where the cost of the learned detector is repaid.
+
+\begin{figure}[!t]
+\centering
+% \includegraphics[width=\columnwidth]{fig/matched_detectability_crop.pdf}
+\caption{Attainable bit error rate against the detectability budget, blind versus channel-aware
+subcarrier selection, at 5\,dB and 30\,dB. The two frontiers coincide.}
+\label{fig:matched}
+\end{figure}
+
+The $70\,\%$ figure was measured between a blind and a channel-aware attacker at the same number of
+active subcarriers and the same power, which is a comparison at matched attacker configuration.
+Concentrating power where the legitimate link is faded raises the bit error rate and the received
+signature together: a channel-aware attacker is also a louder one, and the comparison charged it
+nothing for that.
+The comparison that the defender's position actually licenses holds the detection probability fixed
+instead, so we built, per strategy and per signal-to-noise ratio, the attainable frontier
+$\mathrm{BER}^*(\varepsilon)$ -- the largest bit error rate over all configurations whose suite
+detection probability is at most $\varepsilon$ -- and compared the two frontiers.
+A first pass on a coarse grid returned gains swinging from $+5$ to $-57\,\%$, which is grid noise
+rather than a measurement, so the sweep was densified to nine powers by eleven subcarrier counts at
+512 frames per cell.
+The gains are then $-4.6$, $+1.5$, $-1.8$, $+6.2$ and $+0.0\,\%$ from 5 to 30\,dB: the two frontiers
+lie on top of each other (Figure~\ref{fig:matched}), and the genie extracts essentially nothing from
+knowing the channel that a blind attacker cannot get by spending the same detectability.
+A faint edge near $+6\,\%$ survives at 20 to 30\,dB in the middle of the budget range, and the finer
+grid finds slightly better stealthy configurations than the coarse one did.
+Channel-aware subcarrier selection is therefore not a lever, and since the genie is the ceiling on it,
+learning to approximate the genie was never going to be one either.
+
+The same sweep disposes of one more of our numbers, and this is the correction that matters most in
+this appendix.
+The stealthy region reported above was read off at a detection probability of at most $0.5$, and a
+frame-level detection probability of one half is not stealth: such an attacker is identified within a
+few frames, which also contradicts the persistent bit error floor that motivated the whole step.
+Read instead at the budget the defender itself sets -- its own false-alarm rate on clean frames, which
+runs from about $0.12$ at 5\,dB to $0.03$ at 30\,dB -- no effective and unflagged attacker exists at 5
+to 15\,dB, and at 20 and 30\,dB the attainable bit error rates are $0.011$ and $0.004$, some three and
+eleven times the clean floor.
+That is one to two orders of magnitude below the figure the loose threshold produced.
+The attacker does retain an advantage over the suite on a realistic channel, and it is real, and it is
+modest; the strong version of the claim was the threshold talking and not the data.
+
+Both retractions in this subsection have one cause: a comparison that held fixed something other than
+what the defender observes.
+The characterisation results are untouched by either, because none of them is defined relative to a
+stealth threshold -- the classifier's out-of-band bias, the price of closing it, the reversal of which
+detector subsumes which, and the signal-to-noise-independent bit error floor all stand as measured.
