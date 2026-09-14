@@ -1,0 +1,125 @@
+{
+  "source": "Zhou, Tan & Xu, 'Communication Jamming Waveform Generation Technology Based on CGANs', ISSET 2025, Fig. 6 (QPSK), proceedings p. 376 / PDF page 4",
+  "method": "pixel-digitised by cgan/digitise_fig6.py from a 400-dpi pdftoppm render; axes least-squares-calibrated on the plot's own gridlines; markers located by legend colour",
+  "snr_db": 30.0,
+  "jsr_db": [
+    -10.0,
+    -8.0,
+    -6.0,
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0
+  ],
+  "ber": {
+    "optimal": [
+      4.4297459150426806e-05,
+      0.0004183876874335825,
+      0.0026964195768602903,
+      0.011857811576124233,
+      0.03558198035782415,
+      0.08543332508886459,
+      0.1377579553062098,
+      0.2018869239184089,
+      0.26465829198699536,
+      0.3525162426648563,
+      0.37570275780489637
+    ],
+    "noise": [
+      8.858031485691501e-11,
+      4.555455049482762e-08,
+      8.059968904044995e-06,
+      8.926815759911658e-05,
+      0.0005939334332594185,
+      0.0027397048857576984,
+      0.06835950872008957,
+      0.26465829198699536,
+      null,
+      null,
+      null
+    ],
+    "gan": [
+      8.590107854832464e-06,
+      0.0001115642237786892,
+      0.000754192939217214,
+      0.007837551669425026,
+      0.024669192017174515,
+      0.0601822515993625,
+      0.24832489180130835,
+      0.35817514478307505,
+      0.381733870345671,
+      0.5249125398497126,
+      0.5419005267496119
+    ]
+  },
+  "flags": {
+    "optimal": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "occluded",
+      "",
+      "",
+      "",
+      "",
+      "occluded"
+    ],
+    "noise": [
+      "unmeasurable_by_stated_protocol",
+      "unmeasurable_by_stated_protocol",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "occluded",
+      "not_found_occluded",
+      "not_found_occluded",
+      "not_found_occluded"
+    ],
+    "gan": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  "calibration": {
+    "px_per_db": 43.38333333333333,
+    "px_per_decade": 72.29285714285714,
+    "gridline_residual_px_x": [
+      0.44,
+      -0.01,
+      -0.47,
+      0.07,
+      -0.39,
+      0.65,
+      -0.31,
+      -0.76,
+      0.78
+    ],
+    "gridline_residual_px_y": [
+      0.44,
+      -0.73,
+      -0.31,
+      0.6
+    ],
+    "fec_line_log10_ber": -2.998
+  },
+  "uncertainty": "about +-3 px on a marker centre, i.e. about +-0.04 decade in BER and +-0.07 dB in JSR; larger where flagged occluded",
+  "stated_test_bits": 2000000.0,
+  "unmeasurable_below": 1e-06
+}

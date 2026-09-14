@@ -1,0 +1,30 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+stage 1: noise curve, closed form
+  best free processing gain: g = 7.18 dB, rms 0.452 decades
+  sps  4 rrc0.25  full   kappa  1.000  rms 0.791  JSR@1e-3 -3.75
+  sps  4 rrc0.5   full   kappa  1.000  rms 0.791  JSR@1e-3 -3.75
+  sps  4 rect     full   kappa  1.000  rms 0.791  JSR@1e-3 -3.75
+  sps  4 rrc0.35  full   kappa  1.000  rms 0.791  JSR@1e-3 -3.75
+  sps  8 rrc0.25  full   kappa  1.000  rms 1.513  JSR@1e-3 -0.67
+  sps  8 rect     full   kappa  1.000  rms 1.513  JSR@1e-3 -0.67
+  sps  8 rrc0.35  full   kappa  1.000  rms 1.513  JSR@1e-3 -0.67
+  sps  8 rrc0.5   full   kappa  1.000  rms 1.513  JSR@1e-3 -0.67
+
+stage 2: optimal curve, Monte Carlo at sps=4, band=full
+  optimal rect     locked        rms 3.154  JSR@1e-3 None  (1s)
+  optimal rect     random_phase  rms 2.597  JSR@1e-3 None  (0s)
+  optimal rect     async         rms 2.587  JSR@1e-3 None  (0s)
+  optimal rrc0.25  locked        rms 3.154  JSR@1e-3 None  (1s)
+  optimal rrc0.25  random_phase  rms 2.597  JSR@1e-3 None  (0s)
+  optimal rrc0.25  async         rms 0.981  JSR@1e-3 -6.433739883147741  (0s)
+  optimal rrc0.35  locked        rms 3.154  JSR@1e-3 None  (0s)
+  optimal rrc0.35  random_phase  rms 2.596  JSR@1e-3 None  (0s)
+  optimal rrc0.35  async         rms 1.430  JSR@1e-3 None  (0s)
+  optimal rrc0.5   locked        rms 3.154  JSR@1e-3 None  (0s)
+  optimal rrc0.5   random_phase  rms 2.594  JSR@1e-3 None  (0s)
+  optimal rrc0.5   async         rms 1.465  JSR@1e-3 -5.349537995292431  (0s)
+
+SELECTED: {"sps": 4, "band": "full", "pulse": "rrc0.25", "sync": "async", "pulse_identified_by_noise_curve": true, "gan_training_alignment": "random timing offset and phase"}
+paper JSR@1e-3: {'optimal': np.float64(-7.064713064713057), 'gan': np.float64(-5.758989310009713), 'noise': np.float64(-1.3184523809523723)}
+noise fit rms 0.791 dec (free-gain floor 0.452); optimal fit rms 0.981 dec; our optimal JSR@1e-3 -6.433739883147741 vs paper -7.06
+wrote /home/rrahman/BT/Tabula Rasa/cgan/../artifacts/cgan/calibration.json

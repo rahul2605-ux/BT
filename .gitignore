@@ -201,6 +201,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Licensed source papers (IEEE copies under ETH licence) — never push
+**/source_papers/*.pdf
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

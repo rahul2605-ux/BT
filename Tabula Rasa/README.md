@@ -19,6 +19,13 @@ Last consolidated: 2026-09-12.
 
 ## 1.1 What this is, in one page
 
+> **STATE 2026-09-14 — exploratory track opened: [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).**
+> The findings up to 2026-09-12 were judged too weak to carry the thesis. A new direction is being
+> tried: **reproduce the CGAN jamming-waveform generator of Zhou et al. (ISSET 2025) on QPSK, then
+> condition it on stealth** and evaluate against three detectors (power threshold · a statistical
+> test, still to be chosen · the Zhang & Krunz 2023 CWT-CNN). The coordination direction described in
+> the rest of this page is **paused, not superseded**. Live code for the new track goes in `cgan/`.
+
 A **cooperative multi-agent generative jamming attacker** is built and evaluated against a link and
 its detector. The question is what a *coordinated, learned* attacker achieves that a single or
 uncoordinated one cannot — with detectability retained as an **evaluation axis** (how do two jammers
@@ -81,7 +88,9 @@ BT/
 ├── Tabula Rasa/            <- this repo's working tree
 │   ├── README.md           <- you are here; the only planning document
 │   ├── CLAUDE.md           <- operating rules for Claude Code (commands, contracts, gotchas)
-│   ├── m0/                 <- THE LIVE CODE (minimal model)
+│   ├── m0/                 <- live code: the minimal model (coordination track, paused)
+│   ├── cgan/               <- live code: the CGAN exploratory track (§2.10), being built
+│   ├── source_papers/      <- PDFs the CGAN track reproduces/uses (IEEE-licensed; git-ignored)
 │   ├── cluster/README.md   <- cluster ops; read before submitting anything
 │   ├── artifacts/          <- all outputs, one dir per simulation
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
@@ -115,6 +124,18 @@ BT/
 | `m0/train_detector.py` + `submit_train.sh` | one CNN per σ (job 2243867, 89 s) |
 | `m0/frontier_m0.py` + `submit_frontier.sh` | the E1 sweep, 8-task array (job 2243879, 8 s/task) |
 | `m0/figures.py`, `m0/figure_geometry.py` | all figures → `artifacts/m0/*.png` |
+
+**Live code (CGAN track, `cgan/`):** being built. The planned modules and their order are in
+[§3.4](#34-the-plan-20-days-re-cut-2026-09-12-for-the-pivot) (items C0–C6); this table gets one row
+per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, so it runs via sbatch.**
+
+| file | what |
+|---|---|
+| `cgan/digitise_fig6.py` → `paper_fig6.json` | C0: Zhou Fig. 6 pixel-digitised, axes calibrated on its own gridlines (the only login-node-safe script) |
+| `cgan/link.py` | Sionna QPSK waveform link (upsample → pulse → AWGN + jammer → matched filter → sign decision), closed-form Gaussian-jammer BER, `measure_ber` with an error stopping rule, paper-curve helpers |
+| `cgan/jammers.py` | `noise` (full / inband), `optimal` (locked / random_phase / async), exact JSR scaling |
+| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (75 checks, job 2259149) |
+| `cgan/calibrate.py` + `submit_calibrate.sh` | C2: fit the unstated link parameters to Fig. 6 → `artifacts/cgan/calibration.json`, `c2_calibration.png` |
 
 **Frozen code** (sim06/07/08 + frontier) is inventoried in [A.9](#a9-frozen-code-inventory).
 
@@ -506,6 +527,10 @@ losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
 Do not re-litigate these; they are decided. Reasoning kept because it gets revisited when his
 corrections come back.
 
+> **2026-09-14:** the exploratory CGAN track reopens the "NOT a GAN" and "never raw IQ" rows **outside
+> M0 only**, with the reason for each — see [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).
+> Inside M0 both rows stand.
+
 | Decision | Why |
 |---|---|
 | **Reward = `BER − β·detections`. Nothing else.** | His "most agnostic reward". Every proxy term (idle penalty, power penalty, kurtosis penalty) from sim01–04 is **deleted**. |
@@ -598,13 +623,138 @@ The paper-side home for all of this is the appendix's closing subsection
 derived from the experiment history rather than as an instruction — the rationale has to survive a
 reader who does not know the supervision history, and has to be reusable in the findings paper.
 
+## 2.10 Exploratory track: CGAN jamming waveforms under detection
+
+**STATE: opened 2026-09-14 by the user. Step 1 (reproduction) in progress. Step 2 not started.**
+Everything else in Part 2 describes the coordination direction, which is **paused, not superseded**:
+nothing in §2.1–2.9 was re-validated when this track opened. Where this track contradicts a settled
+decision, the contradiction is spelled out below rather than silently overridden.
+
+**Why.** The findings up to 2026-09-12 — E1's impossibility result (prior art, §2.1) and a
+coordination question with no code behind it yet (§3.4 G6) — were judged too weak to build on. This
+track tests whether a different idea is stronger before any further commitment.
+
+**Goal, in two gated steps.**
+1. **Reproduce Zhou, Tan & Xu 2025** — *"Communication Jamming Waveform Generation Technology Based on
+   Conditional Generative Adversarial Networks"*, ISSET 2025, pp. 373–377
+   (`source_papers/L.Zhou 2025.pdf`; Overleaf bibkey `11184988`, drafts use `zhou2025cgan`). A CGAN
+   (generator conditioned on a modulation label; discriminator with scoring, feature and
+   auxiliary-classifier heads) generates jamming waveforms whose BER-vs-JSR curve, at SNR 30 dB, sits
+   close to an "optimal" matched-modulation jammer and needs 2–6 dB less JSR than Gaussian noise to
+   reach BER 1e-3. **Scope: QPSK only** (user decision 2026-09-14). The conditioning path (label
+   embedding, auxiliary classifier) is kept with `n_classes = 1`, because step 2 reuses it.
+2. **Condition the generator on stealth** — only after step 1 is signed off. Evaluate against three
+   detectors: **(i) power threshold** (energy detector); **(ii) one statistical detector — which one is
+   still to be discussed** (§4.2 Q8); **(iii) Zhang & Krunz 2023** as the SOTA learned baseline —
+   *"Detection and Classification of Smart Jamming in Wi-Fi Networks Using Machine Learning"*, MILCOM
+   2023, pp. 919–924 (`source_papers/Zhang & Kunz 2023.pdf` — the filename misspells Krunz; bibkey
+   `zhang2023detection`): Morlet CWT scalogram → 4-conv-layer DCNN₁ (32,292 parameters).
+
+**Success bar for step 1 — decided 2026-09-14.** A number-for-number match is not achievable: the
+paper leaves most link and training parameters unstated (§4.2 Q7), and its Figs. 4–6 plot BERs down to
+~1e-8 while its stated test (10⁴ symbols × 100 repetitions ≈ 2·10⁶ bits) cannot resolve anything
+below ~5·10⁻⁷. So:
+- the unstated link parameters are **calibrated** by fitting the Gaussian-noise curve — the only one
+  with a closed form — to the digitised Fig. 6 (QPSK);
+- **REVISED 2026-09-14 at the C2 checkpoint (user decision): report only, no pass/fail.** Step 1
+  reports, at BER = 1e-3, **JSR_GAN − JSR_opt** and **JSR_noise − JSR_GAN** on the calibrated link,
+  next to the paper's own values from the digitised Fig. 6 (**1.31 dB** and **4.44 dB**), with our
+  curves overlaid on the paper's. Whether that counts as a reproduction is judged from those numbers,
+  not from a threshold.
+- *Superseded:* the original bar was "GAN − Optimal ≤ 1 dB and Noise − GAN ∈ [2, 6] dB". It was
+  dropped because C0 showed the paper's own figure fails its first half (1.31 dB).
+
+**The link — decided 2026-09-14 at the C2 checkpoint, as stated assumptions (`cgan/link.py` `LINK`).**
+- **sps 8.** A common simulation choice, well above the Nyquist minimum (sps > 1 + β).
+- **RRC pulse, β = 0.35, span 32.** The classic default roll-off.
+- **White-noise ("full"-band) jammer.** A classical barrage jammer.
+- **Asynchronous, random-phase "optimal" jammer.** A jammer is not synchronised to its victim unless
+  that is assumed.
+
+Each choice has a reason independent of Zhou's figure. The C2 calibration is kept as a record of where
+they land against it:
+- **Noise** crosses 1e-3 at −0.67 dB (paper −1.32).
+- **Optimal** crosses at −6.00 dB (paper −7.06).
+- **Noise − Optimal** is 5.33 dB (paper 5.75).
+
+Fitting was considered and rejected. The paper's Noise curve fits no single sps, and its far-left
+Optimal points come from a figure with other signs of not being plain simulation output (§4.2 Q7).
+Tuning β to 0.25 would have gained 0.35 dB by fitting that figure.
+
+**Why sps > 1 is not a detail** — it came up at the checkpoint and holds for every later stage. M0
+(one number per symbol) and sim06–08 (OFDM, jammer per resource element) both put the jammer **on the
+victim's own symbol grid**, an unstated perfect-synchronisation assumption (§4.4). Two things follow:
+- Zhou's noise-vs-optimal gap comes from **bandwidth** (the matched filter averages out wideband noise
+  by a factor of sps) and **timing** (only a time-offset jammer causes errors below −3 dB JSR, §3.4
+  C2). Neither exists on a symbol grid.
+- Once **spatial positions** enter, distances become continuous propagation delays and carrier
+  phases. A delay is representable only on an oversampled waveform (sps > 1), where Sionna's
+  `cir_to_time_channel` / `ApplyTimeChannel` apply. With sps = 1 a delay can only be a whole number of
+  symbols, so neither geometry nor the inter-jammer delay of M1 (§2.4) could be expressed.
+
+A physical symbol rate and carrier frequency are needed only once real distances enter; step 1 does not
+need them.
+
+**Decision 0 — libraries, decided 2026-09-14.**
+
+| Component | Chosen | Why | Rejected |
+|---|---|---|---|
+| **GAN** (G, D, losses, loop) | **plain PyTorch** | Zhou's model is a custom composite — four generator loss terms (STFT, adversarial, feature matching, I/Q distance) and three discriminator terms (adversarial, gradient penalty, auxiliary classifier) on 1-D I/Q, not images — so any GAN framework would be overridden exactly where the paper is specific. Step 2 changes the objective, which is easiest when every term is visible in one file. Already in the venv. | **StudioGAN** (image-only, YAML-driven, last updated Aug 2024, torch 1.13 image); **TorchGAN** (CI covers torch 1.8/1.9 only); **Lightning** (not GAN-specific, adds a dependency for a single-GPU job); **TF-GAN** (splits the stack) |
+| **Link** (mapping, pulse shaping, matched filter, AWGN, BER) | **Sionna 2.0.1** — `sionna.phy.mapping`, `sionna.phy.signal` (`RootRaisedCosineFilter`, `CustomFilter`, `Upsampling`, `Downsampling`), `sionna.phy.channel.AWGN`, `compute_ber` | Tested filters and mappers; listed in §1.1's library rule. | plain torch port of `m0/link.py` |
+
+**Consequence of the Sionna choice:** `import sionna` fails on the login node (§C.2), so **everything
+in `cgan/` runs through sbatch, `verify.py` included** — unlike M0's CPU exception. The GAN modules
+stay pure torch and do not import Sionna.
+
+**What this track reopens, and why each is legitimate here.**
+- **§2.8 "Conditional generator + direct gradient. NOT a GAN."** The argument was that a
+  discriminator estimates a density ratio, which **in M0 is closed form**. At waveform level, against a
+  learned CWT-CNN detector, it is not closed form, so the GAN is back in the likelihood-free case it
+  exists for. The M0 argument stands for M0.
+- **§2.8 "Actions are low-dimensional perturbation parameters, never raw IQ".** What sim06/06b/07
+  falsified (§A.5) was **policy-gradient RL over raw IQ, driven by a scalar black-box reward**. A
+  generator trained by **direct gradient through a differentiable discriminator** is a different
+  method: the gradient reaches every output sample. Do not read this track as reviving the falsified
+  method, and do not use it as licence to try PPO over IQ.
+- **§3.6 "Stealth as the attacker's objective — retired".** Step 2 reintroduces stealth, as a
+  **conditioning variable** on an exploratory track. The square-root-law argument of §2.1 has **not**
+  gone away: a covert jammer against an optimal warden pays for covertness in effectiveness. Step 2's
+  results must be read against that bound, not presented as if it did not exist.
+
+**Still binding on this track** (§2.7–2.8): compare at **matched detectability**, not matched
+configuration; the stealth budget is the detector's own **clean false-alarm rate**; **power is a hard
+constraint** — here, the jammer waveform is scaled to the target JSR by projection, never penalised in
+a loss.
+
+**Risks recorded at opening.**
+- The supervisor mandate of 2026-09-12 (§2.9): novelty must not live *"in the neural architecture"*. A
+  reproduced CGAN is architecture by construction; step 2's contribution has to be the stealth
+  conditioning and what it reveals, not the network.
+- Zhou's "optimal" jammer is a matched-modulation waveform, **not** the BER-maximising jammer under a
+  power constraint (Amuru & Buehrer, §2.1) — see §4.2 Q9.
+- Zhang & Krunz is an OFDM Wi-Fi *classifier* of preamble/pilot/interleaving attacks; on single-carrier
+  QPSK it can only be used as an adaptation — see §4.2 Q10.
+
 ---
 
 # PART 3 — CURRENT STATE
 
 ## 3.1 Status line
 
-**STATE 2026-09-12: the project changed direction, and the supervisor's proposal feedback arrived
+**STATE 2026-09-14: exploratory CGAN track opened — [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).
+Step 1 (reproduce Zhou 2025 on QPSK) is in progress; nothing has run yet.** The user judged the
+2026-09-12 findings too weak to carry the thesis. The coordination plan below is **paused, not
+superseded**, and was not re-validated today. Whether the §4.1 #0 email to Di Maio was sent is not
+recorded after 2026-09-12, and he has not been told about this track as far as this README records.
+
+**Where it stands: C0, C1 and C2 are done, and the C2 checkpoint is passed** (link = stated
+assumptions, bar = report-only, §2.10). **Next action: C3–C5** (GAN code, tests, training). Step 2 does not start until step 1 has
+been reported against the paper's gaps (report-only, §2.10) and the statistical detector has been
+chosen together (§4.2 Q8).
+
+---
+
+**STATE 2026-09-12 (coordination plan — PAUSED 2026-09-14, kept as written): the project changed direction, and the supervisor's proposal feedback arrived
 the same day pointing the same way. Read [§2.1](#21-the-question-and-what-has-been-falsified) first.**
 Stealth is retired as the attacker's objective — the impossibility result E1 measured is prior art
 three times over — and the direction is now **cooperative multi-agent generative jamming, with the
@@ -787,6 +937,29 @@ transcription drift. The JSON row keys are `p_e1`, `p_e2`, `p_l`, `p_np` — **n
 > best row alone would repeat the m1 mistake (§2.7).
 
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
+
+### Exploratory CGAN track — ACTIVE since 2026-09-14
+
+Goal, success bar and library decisions: [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).
+All code goes in `cgan/`, following M0's layout conventions: flat sibling modules, run from inside the
+directory, `verify.py` as the test suite, outputs in `artifacts/cgan/runNNN*`, SLURM logs in
+`cgan/runs/`. **Every item runs via sbatch** (Sionna). The coordination compute track further down is
+paused while this runs.
+
+| # | Item | Output | Gate |
+|---|---|---|---|
+| **C0** | **DONE 2026-09-14.** Fig. 6 pixel-digitised by script: a 400-dpi render; axes least-squares-calibrated on the plot's own gridlines (residuals < 1 px; the FEC line independently reads log₁₀ BER = −2.998 vs −3); markers located by legend colour; overlay checked by eye. **The data points are at JSR −10:2:10 dB (11 points); the axis ticks at −10:2.5:10 are not the data grid.** Reading uncertainty ≈ ±0.04 decade / ±0.07 dB where visible. At JSR ≥ 0 dB the curves overlap: 3 Noise markers are fully hidden under GAN (recorded as `null`) and 3 other markers are partly hidden (flagged). What the numbers show is recorded in §4.2 Q7. | `cgan/digitise_fig6.py` → `cgan/paper_fig6.json`, `artifacts/cgan/c0_fig6_digitised.png` | — |
+| **C1** | **DONE 2026-09-14 (noise + optimal; `gan` lands with C3).** Verified by C4 (job 2259149). **Sionna QPSK waveform link + the three jammers.** Link: `BinarySource` → Gray QPSK `Mapper` → `Upsampling(sps)` → pulse filter → + AWGN (SNR 30 dB) + jammer → matched filter → `Downsampling` → hard decision → BER. Jammers: `noise` (white complex Gaussian), `optimal` (same modulation and filter, random symbols), `gan(G)`. JSR = mean per-sample jammer power / signal power at the RX input, imposed by a hard power projection. Includes the closed-form `ber_noise_jammer` reference. | `cgan/link.py`, `cgan/jammers.py` | — |
+| **C2** | **DONE 2026-09-14 (job 2259157, supersedes 2259150). Checkpoint passed: the link was chosen as stated assumptions, not fitted values — sps 8, RRC 0.35, white noise, async optimal (§2.10); `calibration.json`'s `selected` is deliberately `null`, the decision lives in `link.py` `LINK`.** With those assumptions: Noise crosses 1e-3 at −0.67 dB, Optimal at −6.00 dB (async rrc0.35, RMS 1.44 dec). What the calibration found: **Noise:** no link matches the paper's curve everywhere. The best constant-gain Q-function leaves RMS 0.45 decades. **sps 4** is RMS-best (0.79 dec) but crosses 1e-3 at −3.75 dB vs the paper's −1.32. **sps 8** is 1e-3-best (−0.67 dB, 0.64 dB off) but RMS 1.51 dec, too steep at low JSR. The gain that hits the paper's crossing exactly is 8.49 dB ≈ sps 7.06. The pulse is **not identified** (white noise is pulse-independent), and in-band noise fits far worse. **Optimal:** `locked` and `random_phase` produce **zero errors below −2 / −4 dB** — a geometric impossibility for the paper's low-JSR points, not a tuning problem. Only **`async`** produces errors there, via the pulse's tails at off-Nyquist instants. Best is **async, RRC β = 0.25**: crossing −6.43 dB (sps 4) / −6.35 dB (sps 8) vs the paper's −7.06, RMS 0.98 / 1.01 dec. It still falls ~1.5 decades too fast below −6 dB (paper 4.4e-5 at −10 dB; ours < 1.5e-7). **Gap at 1e-3, Noise − Optimal:** paper 5.75 dB; sps 8 gives 5.68 dB; sps 4 gives 2.69 dB. | `cgan/calibrate.py` → `artifacts/cgan/calibration.json` + `c2_calibration.png` | Checkpoint passed 2026-09-14; the bar is report-only (§2.10). **Calibrate the unstated link parameters.** (1) Fit the closed-form noise curve to the digitised Noise points (BER ≥ 1e-6) over sps ∈ {2,4,8,16} × pulse ∈ {rect, RRC β ∈ {0.25,0.35,0.5}} × noise band ∈ {full fs, in-band}. (2) On the fitted link, Monte-Carlo the `optimal` jammer under three synchronisation variants — {symbol+phase-locked, symbol-synchronous with random phase, asynchronous} — and pick the best match to the digitised Optimal curve. The same assumption then governs how the GAN training data is cut. | `cgan/calibrate.py` → `artifacts/cgan/calibration.json` + figure | **⛔ STOP: report both fits' residuals to the user before C3.** If no variant brings Optimal within ~1 dB, the success bar needs revisiting — and that is itself a finding about the paper. |
+| **C3** | **Generator, discriminator, losses** per Zhou Figs. 2–3. Every unstated choice is recorded in §4.2 Q7. | `cgan/models.py`, `cgan/losses.py` (pure torch) | after C2 sign-off |
+| **C4** | **LINK HALF DONE 2026-09-14 — 75/75 checks pass, job 2259149** (rrc0.35 at sps 8, rect at sps 4). Two real defects were caught on the way, both fixed at the source rather than by loosening a tolerance: **(a)** span-8 RRC truncation ISI of 3.6 % flipped zero-margin symbols (job 2259141) → span 32 (§4.2 Q7); **(b)** JSR was averaged over the filter tails, over-driving short frames by up to 1.76 dB (job 2259142) → power ratios are now defined over the symbols' active window (`Link.active`). The model/loss half follows with C3. **Test suite.** Clean BER vs the Q-function reference; noise-jammer BER vs the closed form (which validates the processing gain C2 relies on); realised JSR within 0.05 dB of the request for all three jammers; a phase-locked optimal jammer at zero noise flips exactly past the amplitude margin; model shapes (G → (B,2,1024) in [−1,1]; D features 32768; score (B,1); logits (B,n_classes)); classifier loss ≡ 0 when n_classes = 1; STFT and I/Q losses ≡ 0 on identical batches; exact normalisation round trip. The link checks are written with C1 and extended at C3. | `cgan/verify.py` + `submit_verify.sh` | must exit 0 before any C2/C5/C6 job |
+| **C5** | **Train.** 10,000 iterations, batch 128, Adam 2e-4 with β = (0.5, 0.999), non-saturating loss + gradient penalty (`--adv wgan-gp` as ablation). | `cgan/train_cgan.py` + `submit_train.sh` → `artifacts/cgan/run001_G.pt`, loss log, `run001_losses.png` | after C4 |
+| **C6** | **Evaluate against Zhou's protocol** (SNR 30 dB, JSR −10:2:10 dB — the grid of Fig. 6's markers — 10⁴ symbols × 100 trials), **extended** to ≥ 100 bit errors or 10⁹ bits so the low-BER points are real. Overlay on the digitised Fig. 6. Report JSR at BER 1e-3 for each jammer, and the two gaps next to the paper's 1.31 / 4.44 dB (report-only, §2.10). | `cgan/evaluate.py` + `submit_eval.sh` → `artifacts/cgan/run00N_ber_vs_jsr.{json,png}` | after C5. **Then stop: step 1 sign-off, and choose the statistical detector (§4.2 Q8), before any step-2 work** |
+
+With no pass/fail bar, hyperparameters are iterated **only** by explicit user decision after seeing
+C6. Each run gets a row in [A.0](#a0-run-index).
+
+### Coordination track — PAUSED 2026-09-14 (kept as written 2026-09-12)
 
 **What changed.** The old plan was ordered around G1 as the gate, because G1 decided whether a
 *stealthy* attacker had headroom. That question is retired (§2.1), so **G1 is demoted from gate to
@@ -1023,6 +1196,9 @@ defers, never re-defines — is currently unsatisfiable. **Paste `sec_system_mod
 - **Stealth as the attacker's objective** — retired 2026-09-12 (§2.1). Detectability stays as the
   axis attackers are *compared* on; it is not what anything optimises, and no headline rests on it.
   **This does not license reintroducing it later in the guise of "just one more frontier sweep".**
+  *2026-09-14: reopened as a conditioning variable on the exploratory CGAN track only, by explicit
+  user decision, with the square-root-law caveat carried over —
+  [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).*
 - **Any novelty claim about the impossibility result** without first reading Bash (JSAC 2013), Li
   (TIFS 2016/2020) and Csiszár–Narayan. The result is correct; the claim of priority is not.
 
@@ -1213,6 +1389,89 @@ Methodology when introducing Sionna, not in Related Work. *(It is also Sionna 0.
 was never usable as a dependency; the Clancy-2011 pilot-nulling strategy it builds on is ~20 lines
 from scratch if ever wanted.)*
 
+**Q7 — Zhou 2025: what the paper leaves unstated, and what we use instead (CGAN track, §2.10).**
+Filled in as each value is fixed; "calibrated" rows are decided by §3.4 C2. Every row marked *default*
+is a choice of ours and must be called one if these results are ever written up.
+
+| Parameter | Paper | Ours | Status |
+|---|---|---|---|
+| Segment length | **1024** in Figs. 2–3; **1200** in the §II-C text | 1024 | fixed — the figures are self-consistent (256 × 128 = 32768 flattened) |
+| D feature map | text: (256, 1, **28**) | (256, 1, **128**) | fixed — "28" is a typo; Fig. 3 flattens to 32768 |
+| Batch size | "126" as rendered in the figure labels | 128 | fixed — almost certainly 128 at low resolution |
+| Samples per symbol | — | **8** | **assumed** (C2 checkpoint, §2.10). The calibration grid was {2, 4, 8, 16}; no value fits the whole Noise curve |
+| Pulse shape | "identical filtering" to the target, unspecified | **RRC β = 0.35** | **assumed** (C2 checkpoint). β = 0.25 fits the Optimal curve slightly better and was deliberately not chosen |
+| RRC filter span | — | **32 symbols** | fixed (C1). Span 8 left summed truncation ISI of 3.6 % of the symbol amplitude (β = 0.35), which flipped symbols in the zero-noise geometry checks (verify job 2259141: BER 1.3e-3 where 0 is predicted). Span 32 → 0.3 %. The link must not create errors the paper's model does not have. `verify.py` now asserts ISI < 0.5 %. |
+| Noise-jammer bandwidth | — | **full sample band** (white) | **assumed** (C2 checkpoint); the in-band alternative fits far worse |
+| JSR / SNR definitions | SNR 30 dB, JSR −10…10 dB, no definitions | mean per-sample power ratios at the RX input | default |
+| JSR grid | not stated; axis ticks every 2.5 dB | **−10:2:10 dB**, read off the marker positions | fixed (C0) |
+| Receiver | — | coherent matched filter, symbol-time sampling, per-axis hard decision | default |
+| "Optimal" jammer synchronisation | "identical filtering and modulation parameters" | **asynchronous**: uniform timing offset in [0, sps) samples + uniform carrier phase, both per frame | **assumed** (C2 checkpoint). It is also the only variant that produces errors below −3 dB JSR, as the paper's curve does |
+| Adversarial loss | BCE equations (1)–(6) **and** "gradient penalty" in the D-loss list, with an InstanceNorm critic | non-saturating eqs. (4)/(5) + GP (λ = 10); `wgan-gp` as ablation | default — reconciles both statements |
+| G conv blocks | Conv1d–BN–LeakyReLU–Dropout–MaxPool ×3, sizes unstated | channels 64/128/256, kernel 5, pool 2, dropout 0.3 | default |
+| D conv blocks | Conv2d–(InstanceNorm)–LeakyReLU–MaxPool ×3, sizes unstated | (1×5) kernels, (1×2) pools, 64/128/256 channels | default |
+| "Time-frequency discrepancy" loss | STFT of generated vs target (Fig. 1) | L1 between log batch-mean power STFTs — unpaired, since z is random | default |
+| Feature-matching loss | named only | ‖E f(x) − E f(G(z))‖² on D's features | default (Salimans et al. 2016) |
+| "I/Q distribution distance" loss | named only | sorted-sample 1-D Wasserstein on the I, Q and \|x\| marginals | default |
+| Loss weights, optimiser, LR | — | all weights 1; Adam 2e-4, β = (0.5, 0.999); n_critic 1 | default |
+| Training data | "target signal", normalised, inverse-normalised on output | clean QPSK waveform segments ÷ a global peak scale; G output × that scale | default |
+| Iterations / test protocol | 10,000 iterations; 10⁴ symbols × 100 trials | same; plus trials until ≥ 100 bit errors or 10⁹ bits | stated + extended |
+
+**Properties of the paper that shape both steps**, recorded so they are not rediscovered:
+- **(i) BER is not in any loss term.** The generated jammer is effective only because it imitates the
+  target modulation, so "conditioning on stealth" gets no help from the paper's objective.
+- **(ii) Parts of Fig. 6 cannot be Monte-Carlo output from the stated protocol.** The digitised Noise
+  curve reaches **8.9·10⁻¹¹ at −10 dB and 4.6·10⁻⁸ at −8 dB**; ≈2·10⁶ bits cannot resolve either value.
+- **(iii) The top of the GAN curve exceeds BER 0.5** — 0.53 at +8 dB and 0.54 at +10 dB (C0; the
+  markers sit visibly above the 0.5 level, not a reading error). A jammer that is independent of the
+  payload cannot push Gray-QPSK BER past 0.5, so either the GAN jammer was correlated with the
+  transmitted data, or these points were not measured as described.
+- **(iv) Their own "optimal" is not an upper bound in their own figure.** GAN > Optimal at every
+  JSR ≥ +2 dB, and Noise ≈ Optimal from +4 dB.
+- **(v) The Noise curve is not a single Q-function** (a check on the digitised points, ahead of C2).
+  Inverting BER = Q(√(g·10^(−JSR/10))) point by point gives an implied processing gain **g = 6.10,
+  6.56, 6.70, 7.48, 8.22, 8.87, 5.45, −0.03 dB** at JSR −10, −8, …, +4 dB. It climbs steadily by
+  2.8 dB and then collapses, with BER jumping 25× between 0 and +2 dB. A white-noise jammer through a
+  fixed matched filter has a constant g. So C2's closed-form fit is expected to leave a systematic
+  residual, and C2 must report it rather than hide it inside the parameter choice.
+
+What (ii)–(v) mean for the comparison: it is read at **JSR at BER 1e-3**, the region the paper's
+protocol can resolve and where no curve is occluded. Matching the whole figure was already ruled out.
+
+**Paper values at BER 1e-3** (linear interpolation in log₁₀ BER between the bracketing digitised
+points; exact values from `calibration.json`): **Optimal −7.06 dB, GAN −5.76 dB, Noise −1.32 dB.**
+- Noise − GAN = **4.44 dB**, inside the abstract's "2–6 dB".
+- GAN − Optimal = **1.31 dB**, which fails the original ≤ 1 dB bar by 0.3 dB, well beyond the
+  ±0.07 dB reading error. **That is why the bar became report-only** (§2.10, decided at the C2
+  checkpoint).
+- Noise − Optimal = **5.75 dB**, the gap the C2 link choice is judged on.
+
+**Q8 — Which statistical detector for step 2? OPEN — to be discussed with the user before step 2.**
+Not decided. Candidates to bring to that discussion:
+- **kurtosis / higher-order cumulants** — the detector of sim02–04, cheap and classical;
+- **a cyclostationary (spectral-correlation) test** at the symbol-rate cycle frequency — the natural
+  test against a jammer that imitates the target's modulation, since it looks at exactly the structure
+  the CGAN copies;
+- **a GLRT / likelihood-ratio test** on matched-filter outputs — the waveform-level descendant of M0's
+  NP test; needs a stated jammer model;
+- **eigenvalue-based detectors** (max–min eigenvalue ratio) — blind, no noise-power knowledge needed.
+
+The power threshold (detector i) follows M0's convention: larger statistic = more suspicious,
+threshold set from the empirical (1−α) quantile of clean segments (`m0/detectors.py` `calibrate`).
+
+**Q9 — Zhou's "optimal" jammer is not optimal in the Amuru–Buehrer sense.** Zhou's reference is a
+matched-modulation waveform; the BER-maximising jammer under an average-power constraint (Amuru &
+Buehrer, §2.1) is generally *pulsed* at low JSR. For step 1 we reproduce Zhou's definition, because
+that is the claim under test. **For step 2, decide which ceiling a stealth-conditioned generator is
+measured against** — this matters as soon as effectiveness at matched detectability is reported.
+
+**Q10 — Zhang & Krunz is an adaptation, not a drop-in baseline.** The original classifies clean vs
+preamble / pilot / interleaving jamming on 802.11ac OFDM (20 MHz, TGac-B channel, SNR 20 dB,
+400-sample windows = 5 OFDM symbols, scalogram input 400 × 100). Single-carrier QPSK has none of
+those attack classes. What transfers is the **representation (Morlet CWT, f_b = 2, f_c = 1) and the
+network (DCNN₁)**, retrained on our clean-vs-jammed segments over a mixture of JSRs. Report it as
+*"the Zhang & Krunz detector architecture, retrained"*, never as their detector. `pywt` is not in the
+venv, so the CWT will be written in torch.
+
 ## 4.3 Ideas on the shelf — specified, not adopted
 
 - **Time-to-first-detection.** The cheap countermeasure-facing result: measure the **trigger**
@@ -1273,6 +1532,12 @@ from scratch if ever wanted.)*
   is frozen sim-stack code, not M0 code, and was **centralised-execution** (one optimizer over both
   agents' parameters), so it shows a coordinated solution is gradient-reachable, **not** that
   decentralised agents find it (§A.3). RQ1 must not overclaim past that.
+- **Every model before `cgan/` placed the jammer on the victim's own symbol grid** (found
+  2026-09-14, §2.10): M0 as one complex number per symbol, sim06–08 as one value per OFDM resource
+  element. That is an unstated **perfect time-synchronisation** assumption. `cgan/`'s C2 shows it is
+  not innocuous: a grid-aligned jammer cannot cause any bit error below −3 dB JSR at 30 dB SNR, while a
+  time-offset one can. E1's numbers are correct *for a synchronised jammer* and must be quoted with that
+  qualifier.
 - **The realistic range of inter-jammer delay is unknown to us** (§4.1 #8). RQ1's x-axis is
   therefore currently in arbitrary units — symbol periods, or radians of residual phase error. The
   decay *curve* is meaningful without it, but any sentence of the form "at realistic delays the gain

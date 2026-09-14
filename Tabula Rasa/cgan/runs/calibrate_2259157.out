@@ -1,0 +1,53 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+paper JSR@1e-3: {'optimal': np.float64(-7.06), 'gan': np.float64(-5.76), 'noise': np.float64(-1.32)}
+
+stage 1: noise curve, closed form
+  best constant gain on rms:     g = 7.18 dB, rms 0.452
+  gain matching the 1e-3 point:  g = 8.49 dB (= sps 7.06 under white noise), rms 1.060
+  sps  4 rrc0.25  full   kappa  1.000  rms 0.791  1e-3 off 2.43 dB
+  sps  4 rrc0.5   full   kappa  1.000  rms 0.791  1e-3 off 2.43 dB
+  sps  4 rect     full   kappa  1.000  rms 0.791  1e-3 off 2.43 dB
+  sps  4 rrc0.35  full   kappa  1.000  rms 0.791  1e-3 off 2.43 dB
+  sps  8 rrc0.25  full   kappa  1.000  rms 1.513  1e-3 off 0.64 dB
+  sps  8 rect     full   kappa  1.000  rms 1.513  1e-3 off 0.64 dB
+  sps  8 rrc0.35  full   kappa  1.000  rms 1.513  1e-3 off 0.64 dB
+  sps  8 rrc0.5   full   kappa  1.000  rms 1.513  1e-3 off 0.64 dB
+  sps  2 rrc0.35  full   kappa  1.000  rms 1.801  1e-3 off 5.39 dB
+  sps  2 rect     full   kappa  1.000  rms 1.801  1e-3 off 5.39 dB
+
+stage 2: optimal curve, Monte Carlo at sps=4, band=full (rms-best)
+  sps  4 rect     locked        rms 3.154  JSR@1e-3 >=-0.77  (1s)
+  sps  4 rect     random_phase  rms 2.597  JSR@1e-3 >=-2.73  (0s)
+  sps  4 rect     async         rms 2.587  JSR@1e-3 >=-2.65  (0s)
+  sps  4 rrc0.25  locked        rms 3.154  JSR@1e-3 >=-0.77  (1s)
+  sps  4 rrc0.25  random_phase  rms 2.597  JSR@1e-3 >=-2.73  (0s)
+  sps  4 rrc0.25  async         rms 0.981  JSR@1e-3 -6.43  (0s)
+  sps  4 rrc0.35  locked        rms 3.154  JSR@1e-3 >=-0.77  (0s)
+  sps  4 rrc0.35  random_phase  rms 2.596  JSR@1e-3 >=-2.73  (0s)
+  sps  4 rrc0.35  async         rms 1.430  JSR@1e-3 >=-6.13  (0s)
+  sps  4 rrc0.5   locked        rms 3.154  JSR@1e-3 >=-0.77  (0s)
+  sps  4 rrc0.5   random_phase  rms 2.594  JSR@1e-3 >=-2.71  (0s)
+  sps  4 rrc0.5   async         rms 1.465  JSR@1e-3 -5.35  (0s)
+
+stage 2: optimal curve, Monte Carlo at sps=8, band=full (cross-best)
+  sps  8 rect     locked        rms 3.154  JSR@1e-3 >=-0.77  (1s)
+  sps  8 rect     random_phase  rms 2.597  JSR@1e-3 >=-2.73  (0s)
+  sps  8 rect     async         rms 2.586  JSR@1e-3 >=-2.63  (0s)
+  sps  8 rrc0.25  locked        rms 3.154  JSR@1e-3 >=-0.77  (2s)
+  sps  8 rrc0.25  random_phase  rms 2.596  JSR@1e-3 >=-2.72  (2s)
+  sps  8 rrc0.25  async         rms 1.010  JSR@1e-3 -6.35  (1s)
+  sps  8 rrc0.35  locked        rms 3.154  JSR@1e-3 >=-0.77  (2s)
+  sps  8 rrc0.35  random_phase  rms 2.597  JSR@1e-3 >=-2.73  (2s)
+  sps  8 rrc0.35  async         rms 1.437  JSR@1e-3 -6.00  (1s)
+  sps  8 rrc0.5   locked        rms 3.154  JSR@1e-3 >=-0.77  (2s)
+  sps  8 rrc0.5   random_phase  rms 2.596  JSR@1e-3 >=-2.72  (2s)
+  sps  8 rrc0.5   async         rms 1.458  JSR@1e-3 -5.39  (1s)
+
+SUMMARY per candidate (best optimal variant by rms, and by crossing):
+  sps=4 full [rms-best]: noise rms 0.791 dec, noise 1e-3 at -3.75 dB (paper -1.32)
+    optimal by rms:   rrc0.25 async  rms 0.981  1e-3 at -6.433739883147741 (paper -7.06)
+    optimal by cross: rrc0.25 async  rms 0.981  1e-3 at -6.43
+  sps=8 full [cross-best]: noise rms 1.513 dec, noise 1e-3 at -0.67 dB (paper -1.32)
+    optimal by rms:   rrc0.25 async  rms 1.010  1e-3 at -6.352621226153298 (paper -7.06)
+    optimal by cross: rrc0.25 async  rms 1.010  1e-3 at -6.35
+wrote /home/rrahman/BT/Tabula Rasa/cgan/../artifacts/cgan/calibration.json
