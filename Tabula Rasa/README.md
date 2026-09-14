@@ -1,7 +1,7 @@
 # Tabula Rasa — learned jamming under detection constraints
 
 **Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
-Last consolidated: 2026-09-10.
+Last consolidated: 2026-09-12.
 
 > **This file is the single entry point.** It is organised as:
 > **[1. The whole picture](#part-1-the-whole-picture)** ·
@@ -19,22 +19,26 @@ Last consolidated: 2026-09-10.
 
 ## 1.1 What this is, in one page
 
-A jamming attacker is built and evaluated against a *learned* jamming detector, and the question is
-not "does the jammer win" but **what does the effectiveness–detectability trade-off actually look
-like, and what does it cost either side to move it.**
+A **cooperative multi-agent generative jamming attacker** is built and evaluated against a link and
+its detector. The question is what a *coordinated, learned* attacker achieves that a single or
+uncoordinated one cannot — with detectability retained as an **evaluation axis** (how do two jammers
+compare at equal exposure) rather than as the objective being optimised.
 
 The project began as "a cooperative multi-agent RL jammer that fools a CNN detector". That bundled
-three independent bets: (a) multi-agent cooperation, (b) reinforcement learning over raw IQ,
-(c) black-box access to the detector. A ladder of thirteen simulations (sim00 → sim08) **falsified
-(b)+(c) as a method** — RL-over-raw-IQ with black-box access is structurally untrainable here, not
-merely badly tuned. What survives, method-agnostic, is the **scientific question**: *can a learned jammer
-evade a state-of-the-art learned detector while staying effective, on a realistic channel?*
+four bets: (a) multi-agent cooperation, (b) reinforcement learning over raw IQ, (c) black-box access
+to the detector, (d) **stealth as the attacker's objective.** A ladder of thirteen simulations
+(sim00 → sim08) **falsified (b)+(c) as a method** — RL-over-raw-IQ with black-box access is
+structurally untrainable here, not merely badly tuned. A literature check on 2026-09-12 then
+**retired (d) as a headline** (§2.1). **(a) is what remains, and as of 2026-09-12 it is the
+direction.**
 
 After a supervisor mandate to **simplify as hard as possible** (2026-08-21), the working model is no
 longer the 64-subcarrier OFDM stack but **M0**: one QPSK symbol, one channel, AWGN with swept σ.
 The retreat buys something the big stack could never have: at this size the **Neyman–Pearson optimal
-detector is computable in closed form**, so results read *"no detector can do better than X"*
-instead of *"our CNN failed to catch it"*.
+detector is computable in closed form**, so detectability claims read *"no detector can do better
+than X"* instead of *"our CNN failed to catch it"*. That machinery is built, verified and keeps its
+value under the new direction — it is what makes "at equal exposure" a measurable statement rather
+than a hand-wave.
 
 **Hard rule:** only library code (Sionna, SB3, gymnasium, scipy, PyTorch). No reuse from the old
 project.
@@ -68,6 +72,7 @@ Each row is a step of the ladder and **what it killed**. Full writeups in
 | sim08 m2 | channel-valid CNN + energy suite | **suite ≡ CNN** on the faded channel; residual stealthy region survives |
 | sim08 dense | matched-detectability re-sweep | **refutes "channel-aware > blind"** — the gain was a matched-*config* artifact |
 | **M0 / E1** | minimal model + NP-optimal detector | **no realizable attack achieves stealthy jamming** (§3.3) |
+| **Lit check** | is E1's headline novel? (2026-09-12, desk work) | **no** — the impossibility half is known three times over (§2.1). **Kills stealth as the objective**; the learned-vs-NP gap survives |
 
 ## 1.3 Where everything lives
 
@@ -80,7 +85,7 @@ BT/
 │   ├── cluster/README.md   <- cluster ops; read before submitting anything
 │   ├── artifacts/          <- all outputs, one dir per simulation
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
-│   ├── proposal/           <- registration proposal (reference draft; Overleaf is truth)
+│   ├── proposal/           <- registration proposal; `*_reviewed_2026-09-12.tex` = his annotated copy
 │   ├── frontier/ simulation00..08/   <- FROZEN. Appendix material. Do not extend.
 │   └── live.main.tex, first_results.py   <- scratch
 └── paper/                  <- git subtree of the Overleaf document (see 1.4)
@@ -166,30 +171,127 @@ numbers in 2.9 s). **M0 runs on CPU in seconds**, so compute is not currently a 
 
 # PART 2 — GOAL & APPROACH
 
-## 2.1 The question, and what has been falsified as *method*
+## 2.1 The question, and what has been falsified
 
-The enduring question: **can a learned jammer evade a SOTA learned detector while staying effective,
-on a realistic channel — and what does it cost either side to adapt?**
+**STATE: the question changed on 2026-09-12.** Read this section before anything else in Part 2 —
+several later sections still carry the old framing where it is still useful, and say so.
 
-MARL + black-box + raw-IQ was a **method-hypothesis**, tested and largely rejected (sim06/06b/07).
-Re-anchoring on the question rather than the method is why signature-shaping is a *return* to the
-goal, not a drift: it pursues the same question with the method the ladder proved works
-(direct/surrogate gradient, sim03b/sim04) instead of the one it proved does not.
+**The question, as of 2026-09-12:** **what does *coordination* buy an attacker that a single
+jammer cannot get, and can a generative policy find it?** Detectability is how attackers are
+compared (at equal exposure), not what they maximise.
 
-**What this actually is, in the literature's terms: an adversarial-ML evasion attack with
-wireless-physical constraints.** Signature-shaping via surrogate-gradient transfer is precisely a
-transferability-based **evasion attack** against a *fixed* classifier (Papernot-style). The novelty
-over vanilla adversarial ML is the constraint set: the perturbation must be a **physically
-realizable** interference through the jammer's own channel, AND it must **cause BER**, not merely
-flip a label. That triple — realizable + effective + stealthy — is the contribution.
+**The question it replaces:** *can a learned jammer evade a SOTA learned detector while staying
+effective?* That was the anchor from the proposal through E1. It is retired as a headline for the
+reason below.
 
-**Scope caveat to state plainly:** this is a **single-round** attack on a **frozen** detector — an
-evasion result, not a full adaptive arms race. Standard for the genre, but not a solved
-co-adaptation game. RQ2 (§2.3) is what partially buys this back.
+### Why stealth was retired as the objective
 
-## 2.2 The motivating argument — the UAV detection gap
+E1 (§3.3) measured that no realizable attack in M0 is both effective and undetectable. A literature
+check on 2026-09-12 asked whether that finding was novel, and found that **the impossibility half is
+established in at least three independent literatures**:
 
-Settled 2026-09-01 while drafting the registration proposal. This is what the Introduction argues.
+| Prior result | Where | What it already says |
+|---|---|---|
+| **Square-root law** — only O(√n) bits are transmissible covertly in n channel uses; positive *rate* ⇒ detection probability → 1 against an optimal warden | Bash, Goeckel & Towsley, **IEEE ISIT 2012**; extended IEEE JSAC 31(9), 2013 | A jammer is a transmitter. "You cannot inject meaningful per-symbol energy and stay under an optimal detector" is the SRL restated for a hostile one. E1 is its finite-blocklength QPSK instance. |
+| **Symmetrizability** — if the jammer can make the channel symmetric, deterministic capacity is exactly zero | Csiszár & Narayan, 1988 (arbitrarily-varying channels) | The general form of E1's constellation-symmetry result. |
+| **Disguised jamming** — a jammer that replicates the legitimate codebook is indistinguishable at the receiver; defence is to break the symmetry with shared secret randomness (SP-OFDM) | Tongtong Li's group — CDMA: **IEEE TIFS 2016**; OFDM: **IEEE TIFS 2020** | Our `counter_flip`/`permute` result, mechanism *and* genie requirement included, in the wireless setting. |
+
+Two further collisions, recorded so they are not rediscovered:
+- **G1's formulation is not ours.** `max damage s.t. D(p₁‖p₀) ≤ δ` against an NP/χ² detector, with
+  Chernoff–Stein converting the divergence into a detection bound, is the standard **stealthy
+  false-data-injection** program in the cyber-physical-systems literature, roughly a decade old.
+  G1 instantiates a known program; it does not introduce one.
+- **The effectiveness half of the ladder is published.** Amuru & Buehrer, *"Optimal jamming
+  strategies in digital communications — impact of modulation"*, **IEEE GLOBECOM 2014**, extended in
+  **IEEE TIFS 10(10), 2015** — the optimal jamming waveform against digital AM-PM constellations,
+  without the detectability axis. That is our closed-form boundary attack.
+
+**The inference that follows, and it is the reason for the pivot.** The near-absence of stealthy
+jamming from the jamming literature is not an oversight left lying around — it is a **rational
+response to a known limit.** The SRL says covertness costs effectiveness catastrophically, so an
+attacker who does not need to hide simply does not pay that cost, and gets far better results. A gap
+that exists *because the thing is known not to be worth doing* cannot carry an Introduction.
+
+**What survived the check** (searched for, not found — so still claimable, with the caveat below):
+1. **The learned-vs-NP gap as a measured quantity.** The covert-comms and CPS literatures assume an
+   optimal or fixed analytic adversary. "How far short of optimal does a deployed CNN detector fall,
+   and how does that gap move with attack sparsity?" appears unmeasured. §3.3's 0.73 → 0.16
+   duty-dependence is the number.
+2. **The one-sided energy detector's structural blind spot to power-*reducing* attacks**, shown
+   against the optimal test as reference (P(det) = 0.0000 while causing BER 0.25).
+3. **A BER–P(det) frontier across attacker-knowledge tiers on one model, at matched detectability.**
+4. **The matched-detectability methodological correction** (§2.7) — retracting our own +70% because
+   the comparison held the wrong variable fixed.
+
+> **Caveat on the negative half of that list.** These were web searches on 2026-09-12, not a
+> systematic IEEE Xplore sweep. Treat "not found" as strong evidence, not proof of absence. **Before
+> any of items 1–4 is claimed as novel in print, read Li et al. (TIFS 2016, 2020) and Bash et al.
+> (JSAC 2013) in full** — the overlap with item 3 in particular has not been checked at the level of
+> individual claims.
+
+### Corroboration from the supervisor, same day, independently
+
+His proposal feedback arrived **2026-09-12**, the same day as the literature check and with no
+knowledge of it ([B.1](#b1-correspondence-log), [B.2](#b2-his-verbatim-points-and-what-each-changed)).
+It points the same way, and sharpens the destination:
+
+- He flags the contribution as reading like *"the application of some neural architecture"* — §4.1
+  item 5, in his words — and names the escape: **novelty in "how defenders and attackers interact,
+  coordinate, and syncronize within themselves"**, not in the architecture.
+- He supplies the mechanism that makes coordination hard and therefore interesting: **inter-jammer
+  communication delay, hence desynchronisation**, which *"makes it hard for jammers to react to
+  honest symbol"* — and, symmetrically, hard for the defender.
+
+**Consequence, and it is a real sharpening rather than a restatement.** RQ1 as first written after
+the pivot asked whether coordination beats independence. That is a thin question: with a shared
+clock and zero delay, coordination trivially wins, and the answer is a number nobody will argue
+about. **The question his two comments define is the good one — how the coordination gain decays as
+the inter-jammer link degrades** — because it has a floor (independent jammers), a ceiling (perfect
+coordination, which sim04 already reached), and a realistic middle nobody has measured. It is also
+the axis on which he has *twice* asked for the attacker to be handicapped (§B.2, desync).
+
+### What the pivot does and does not touch
+
+- **Nothing about M0 is discarded.** `link.py`, `attacks.py`, `detectors.py`, `verify.py` and E1 all
+  stand; the numbers are correct and reproducible. What changes is the *sentence they support*.
+- **`P_NP` keeps its job**, in a smaller role: it is the instrument that makes "at equal exposure"
+  well-defined when comparing 1 jammer against N (§2.6).
+- **The falsified methods stay falsified.** The pivot is *back to (a) cooperation*, **not** back to
+  PPO-over-raw-IQ. Actions remain low-dimensional perturbation parameters; the training method
+  remains direct/surrogate gradient (sim03b/sim04), which is the one thing on the ladder that worked.
+  See §3.6.
+
+**Scope caveat that still stands:** any detector-facing result here is **single-round** against a
+**frozen** detector — an evasion result, not an adaptive arms race.
+
+## 2.2 The motivating argument — the UAV detection gap ⚠ SUPERSEDED as the Introduction
+
+> **STATE (2026-09-12): this argument is NO LONGER what the Introduction argues.** Its load-bearing
+> step is **point 5**, and the literature check (§2.1) falsified it: the attack side has not
+> optimised non-detectability because the **square-root law says it is not worth optimising**, not
+> because nobody thought of it. An Introduction built on point 5 walks into a citation the reviewer
+> already knows.
+>
+> **Kept, in full, for two reasons.** (i) Points 1–4 are still true and still useful — they are a
+> correct description of how reactive defenses are structured, and are reusable as *context* in the
+> new Introduction, just not as the gap. (ii) The proposal handed to Di Maio on 2026-09-01 argues
+> exactly this, so when his feedback arrives it will be feedback on *this* text; it has to be
+> readable. **Do not delete it, and do not build on point 5.**
+>
+> **A second, independent reason it fails, from his 2026-09-12 feedback** (§B.2): the "defenders are
+> merely reactive" criticism in points 2–4 cuts both ways, and he said so — *"doesn't the proposed
+> method also use some form of prediction of activity? i.e., jammer predicts distribution of honest
+> codewords, and defender predicts jammer presence?"* Our attacker predicts too. So even setting the
+> square-root law aside, the rhetorical structure of points 2–5 was unsound. **Two independent
+> failures, found the same day, by different routes.**
+>
+> The replacement motivation is §2.3's RQ1: coordination has no closed form, and that is a gap of a
+> different kind — an unsolved optimisation, not an unnoticed opportunity. **His own framing
+> question — does this motivate a *proactive* or an *adaptive* defender? — is the right way to close
+> the Introduction**, and it is answerable rather than rhetorical (§B.2).
+
+Settled 2026-09-01 while drafting the registration proposal. This is what the Introduction argued
+until 2026-09-12.
 
 1. UAV / mobile ad-hoc anti-jamming has converged on learned, often multi-agent countermeasures —
    relay repositioning, coordinated spectrum access, trajectory + power adaptation.
@@ -207,24 +309,54 @@ Settled 2026-09-01 while drafting the registration proposal. This is what the In
    contributions add at the victim has no closed form. *Generative* because the signature must be
    **shaped**, not a channel merely chosen.
 
-> **Honesty constraint on claim 5 — load-bearing, and the first thing a reader will test.**
-> "Nobody studies stealthy jamming" is false and easy to attack: covert communication and LPI
-> waveforms exist. The defensible claim is the **conjunction** — explicit stealth objective **and**
-> evaluated against a *learned* detector **and** reported as a trade-off curve. Related Work must
-> name the nearest neighbours (`wen2025generative` GAN-aided covert comms, `valianti2024cooperative`
-> cooperative-RL jamming) and say precisely what they do not do.
+> **Honesty constraint on claim 5 — this is where it broke.** The 2026-09-01 version of this note
+> already flagged that "nobody studies stealthy jamming" is false and easy to attack, and proposed
+> defending the **conjunction** — explicit stealth objective **and** a learned detector **and** a
+> trade-off curve. The 2026-09-12 check (§2.1) shows that defence is not enough: the conjunction is
+> narrower than the prior work, but the *reason* the conjunction is unoccupied is the square-root
+> law, and pointing at an unoccupied cell does not answer "why is it empty?". **The nearest
+> neighbours are no longer `wen2025generative` and `valianti2024cooperative` but `bash2013limits`,
+> Csiszár–Narayan and the disguised-jamming line — and those are not neighbours, they are the result.**
 
-The characterization work (Phase 0/0.5, m1, m2, matched-detectability) is now an *instrument* of this
-argument rather than the contribution itself.
+The characterization work (Phase 0/0.5, m1, m2, matched-detectability) was an *instrument* of this
+argument. Under the new direction it is appendix material only (§3.5) — it characterises a detector
+for a question no longer being asked.
 
-## 2.3 Research questions, as registered
+## 2.3 Research questions
 
-- **RQ1** — can a cooperative multi-agent generative policy degrade the link while staying below a
-  SOTA learned detector's threshold, and what trade-off does it achieve **relative to baselines**
-  (barrage / closed-form minimum-energy / single-agent learned / omniscient cancellation as ceiling)?
-- **RQ2** — **adaptation cost**, round-based and offline: frozen detector → attacker optimized
+**STATE: revised 2026-09-12.** The registered wording is kept below each revision, because
+registration (§4.1) was submitted against it and the proposal Di Maio is reviewing uses it.
+
+- **RQ1 — the coordination gain, and what it costs to actually have it.** What does a *coordinated*
+  team of N_J generative jammers achieve that N_J independent ones, and a single jammer at the same
+  **total** power, do not — **and how does that gain decay as the inter-jammer link degrades?**
+  Measured **relative to baselines** (barrage / closed-form minimum-energy / single-agent learned /
+  omniscient cancellation as ceiling) and reported **at matched detectability** as well as matched
+  power.
+  **The second clause is the contribution, and it is his** (§B.2, 2026-09-12): coordination with a
+  perfect shared clock is not a research question, because sim04 already reached that ceiling and
+  nobody disputes it. Coordination over a link with **delay, and the desynchronisation it causes**,
+  has a floor, a ceiling and an unmeasured middle. It is also his answer to "the contribution looks
+  like applying a neural architecture" — the novelty lives in *how the agents coordinate and
+  synchronise*, not in the network.
+  **Deliverable shape: a decay curve** — coordination gain against inter-jammer delay / phase error,
+  with the independent-jammer floor and the perfect-coordination ceiling drawn in. Same envelope
+  convention as every other figure (§2.7).
+  *Registered wording:* "can a cooperative multi-agent generative policy degrade the link while
+  staying below a SOTA learned detector's threshold, and what trade-off does it achieve relative to
+  baselines?" — the baseline envelope is unchanged; what changed is that the *objective* is the
+  coordination gain and detectability is the axis it is reported against (§2.1).
+  **Why this is a real question and stealth was not:** the single-link minimum-energy attack has a
+  closed form (Amuru & Buehrer, §2.1) and E1 confirms it is at the limit. **N_J jammers splitting
+  power and phase so their perturbations add at the victim has no closed form** — it is a genuine
+  joint optimisation, which is exactly what a learner is for (§4.2 Q2 items 3–4).
+- **RQ2 — adaptation cost**, round-based and offline: frozen detector → attacker optimized
   against it → detector retrained → attacker re-optimized. What does re-closing the gap cost the
   defender, and how much does the attacker recover?
+  **Status after the pivot: DEMOTED but not dropped.** It is the strongest surviving detector-facing
+  claim (§2.1 item 1) and it is Di Maio's mandated headline (§2.9), so it cannot simply be cut —
+  but it is no longer what RQ1 serves, and G7 sits behind G5/G6 in the plan (§3.4). **This tension
+  is real and he has to resolve it** (§4.1 #0).
   **What counts as "expensive" — still to be pinned down.** Candidates, all measurable with existing
   tooling: Δaccuracy · ΔFAR · training samples required · GPU-hours · how much performance the other
   side recovers · and, uniquely available in M0, **distance from the NP-optimal detector**, i.e. how
@@ -239,13 +371,26 @@ must carry a scope sentence saying so.**
 
 **Working title** (option A of five in `proposal/proposal.tex`'s header comment): *Cooperative
 Multi-Agent Generative Jamming of UAV Networks under Detection Constraints*. Chosen because it names
-method, target and constraint without committing to a result. The sharper *"Breaking the Detection
-Assumption: …"* is the better eventual **paper** title but promises a finding not yet measured.
+method, target and constraint without committing to a result. **After the 2026-09-12 pivot this
+title has aged well** — "cooperative multi-agent generative jamming" is now literally the subject,
+and "under detection constraints" reads correctly as the evaluation axis. Keep it. *(The sharper
+"Breaking the Detection Assumption: …" alternative is now actively wrong — it promises the stealth
+finding that §2.1 retired. Do not revive it.)*
 
 ## 2.4 The model — M0 and M1
 
 Per the 2026-08-21 mandate. **M0** = the simplified base (built). **M1** = M0 + spatial, the *only*
 sanctioned extension. Naming is ours; he did not name them.
+
+> **M1 gained a required component on 2026-09-12** (§B.2): the **inter-jammer link is explicit, and
+> it has delay.** It is not a modelling nicety — under §2.3's revised RQ1 the delay is the swept
+> variable, so M1 without it cannot answer the research question. Minimum viable form: a per-jammer
+> timing/phase offset, plus a one-parameter staleness on whatever each jammer knows about its
+> partners. His single-channel confirmation in the same message means **nothing else** gets added.
+>
+> He also volunteered that a **journal extension (TWC) is the path for whatever the 6-page ICC limit
+> forces out** — so multi-carrier, fading and mobility are *deferred*, not cut, and the layer
+> ordering in `proposal/proposal.tex`'s "incremental system model" stays as written.
 
 | | **M0 — built** | **M1 — the one sanctioned extension** | *(sim06–08, frozen)* |
 |---|---|---|---|
@@ -254,6 +399,7 @@ sanctioned extension. Naming is ours; he did not name them.
 | Propagation | **none** — no delay, no path loss (literal) | none; geometry enters only as per-link gain/phase | — |
 | Noise | **AWGN, σ swept** | single global σ, same sweep | per-SNR Eb/N0 5–30 dB |
 | Jammers | 1 | **N_J ≥ 2, coordinated** — the point of M1 | 1 (frontier) / MAPPO team (dead) |
+| Inter-jammer link | — | **explicit, with delay** — the swept variable of RQ1 (added 2026-09-12) | — |
 | Legit users | 1 TX → 1 RX | 1, then sweep | 1 |
 | Attacker action | per-symbol complex perturbation, hard power budget | + the split between jammers | full per-subcarrier IQ (falsified) |
 | Detector | energy meter + learned CNN on the IQ histogram + **the NP-optimal test** | same | spectrogram CNN + energy |
@@ -365,7 +511,7 @@ corrections come back.
 | **Reward = `BER − β·detections`. Nothing else.** | His "most agnostic reward". Every proxy term (idle penalty, power penalty, kurtosis penalty) from sim01–04 is **deleted**. |
 | **Power budget is a hard environment/action-space constraint**, not a reward term | His instruction, and sim04-run007 is the concrete proof: `GAMMA = 0.02` was negligible against BER gains, so nothing constrained power and it climbed monotonically to 4.0. |
 | **Conditional generator + direct gradient. NOT a GAN.** | A GAN discriminator is a *density-ratio estimator* — it exists for the **likelihood-free** case. In M0 the ratio is **closed form**, so an adversarially trained discriminator would spend its budget approximating a function we can already write down. Use a reparameterised `G_θ(z; c) → d` + hard power projection, trained by direct gradient on the exact objective. That is sim03b's method — the one thing on the ladder that worked — and it drops GAN instability, mode collapse and discriminator scheduling from the risk list. `zhou2025cgan` stays in Related Work as the nearest neighbour, not as the method. |
-| **The optimality gate is a *divergence*-constrained convex program** | `max BER s.t. E|d|² ≤ P, P_det^NP ≤ β` is **not convex** — the optimal test depends on π, so the constraint moves as the variable moves. Replace the detection constraint with `D(p₁‖p₀) ≤ δ` (or TV): BER is linear in π, power is linear in π, and the divergence is convex in `p₁` which is linear in π ⇒ a genuine convex program on a discretised `d`-grid. **Pinsker's inequality converts δ into a bound on *every* detector's error probability**, so the answer is detector-free and therefore a true ceiling. This is exactly the covert-communication formulation (`bash2013limits`), already cited for the stealth-budget convention — method and citation line up. |
+| **The optimality gate is a *divergence*-constrained convex program** | `max BER s.t. E|d|² ≤ P, P_det^NP ≤ β` is **not convex** — the optimal test depends on π, so the constraint moves as the variable moves. Replace the detection constraint with `D(p₁‖p₀) ≤ δ` (or TV): BER is linear in π, power is linear in π, and the divergence is convex in `p₁` which is linear in π ⇒ a genuine convex program on a discretised `d`-grid. **Pinsker's inequality converts δ into a bound on *every* detector's error probability**, so the answer is detector-free and therefore a true ceiling. This is exactly the covert-communication formulation (`bash2013limits`), already cited for the stealth-budget convention — method and citation line up. **⚠ 2026-09-12: this program is prior art, not ours** — it is the standard stealthy-FDI formulation in the cyber-physical-systems literature, Chernoff–Stein included (§2.1). Still worth running as G1, but write it up as *instantiating* a known program. |
 | **CTDE: the jammer is deaf to its own reward at execution** | BER is a **training-time** construct, available to the centralized critic only. A deployed jammer cannot measure the victim's BER. The executed policy observes its own waveform, its own channel estimate, and *at best* a 1-bit delayed noisy **ACK/NACK**. Not BER, not P(detect). This is the attacker-side mirror of his defender-side "no ground-truth labels at execution time", and it must be labelled as such in the threat model. |
 | **PettingZoo for the multi-agent env API; BenchMARL only if an off-the-shelf MARL algorithm is genuinely needed; SB3 for single-agent baselines over the same env. Never RLlib.** | His words: *"RLlib is famous for being too complex for what we need, so I would avoid it."* Confirmed absent from the repo. Surrogate gradients stay the **primary** method; MARL is the comparison, not the default. |
 | **Actions are low-dimensional perturbation *parameters*, never raw IQ** | This is what killed sim06/07. |
@@ -410,6 +556,19 @@ Full record and open items in [Appendix B](#appendix-b-supervisor-record).
   necessary.
 - **The noise-level sweep is the primary ablation**, on a **log grid** ("change exponentially"), and
   he has predicted its direction (detection falls as noise rises).
+- **⚠ NEW 2026-09-12 — the novelty must live in coordination and synchronisation, not in the neural
+  architecture.** His words: the contribution *"seems the application of some neural architecture"*,
+  and the fix is *"a novelty in the neural architecture or in how defenders and attackers interact,
+  coordinate, and syncronize within themselves"*. We take the second branch. **Operationally this
+  forbids a paper whose method section is a network diagram** — the method section has to be about
+  the coordination protocol and what delay does to it (§2.3 RQ1).
+- **⚠ NEW 2026-09-12 — model the inter-jammer communication delay and the desynchronisation it
+  causes.** Required in M1 (§2.4), swept in RQ1. He notes it degrades the *defender* too, which is
+  worth keeping: it is a symmetric realism constraint, not just an attacker handicap.
+- **⚠ NEW 2026-09-12 — the Introduction must show the single-agent → multi-agent transition
+  explicitly**, and he considers the single-agent case *"already a problem in itself"* worth
+  understanding. Both halves matter: the first is a writing instruction, the second is a sanctioned
+  fallback if the multi-agent work does not land in time.
 
 **Coverage — which mandate is discharged by what.** Added 2026-09-10 because the mandates, the plan
 (§3.4) and the written deliverables (§B.3) were three separate lists with no way to check that every
@@ -423,13 +582,16 @@ instructions but were filed as decisions. They are listed first here so this tab
 | **Reward = `BER − β·detections`, nothing else** (recorded §2.8, verbatim §B.2) | M0 carries no proxy terms; the historical objectives it replaces are tabulated in [A.0](#a0-run-index) | **code clean, not yet exercised** — M0 has no trained attacker, so this first *binds* at G5 |
 | **Power is a hard environment constraint, never a reward term** (recorded §2.8) | `m0/attacks.py:62` `project_power`, applied at `attacks.py:220` — a projection onto the budget, not a normalisation | **done** |
 | Simplify, as much as possible | M0 replaces sim06–08; sim00–08 + `frontier/` frozen (§3.6) | **done** |
-| Adaptation cost is the headline | G7 (R0/R1/R2); the NP−learned gap E1 already measures | **not started** — G7 is last in §3.4 |
-| Only 2–3 experiments in the main paper | triage table (§B.3); candidates E1/E2/E3 | **blocked on him** (§4.1 #4) |
+| Adaptation cost is the headline | G7 (R0/R1/R2); the NP−learned gap E1 already measures | **not started, and now in tension with RQ1** — the 2026-09-12 pivot makes the coordination gain the headline and demotes adaptation cost to the strongest *detector-facing* claim. He has to choose; §4.1 #0 |
+| Only 2–3 experiments in the main paper | triage table (§B.3); candidates E1/E2/E3 | **blocked on him** (§4.1 #4), and the candidate list changed on 2026-09-12: **E3 (coordination) is now the lead**, E1 demoted to a calibration/appendix result |
 | Omniscient jammer in **every** results figure | `m0/figures.py` | **PARTIAL — 2 of 4.** `fig_tradeoff` (L92) and `fig_frontier` (L135) carry `counter_flip`; **`fig_detectors` (L162) and `fig_stealth_vs_sigma` (L202) do not** — their attack lists omit `counter_null`/`counter_flip` |
 | Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3) | **not started** |
 | Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
 | Noise sweep = primary ablation, log grid | G2 | **not started** — needs the σ=0 anchor + a proper log grid (§3.2) |
-| Untrainability written up as a *result* | Overleaf appendix A.6 (§3.5) | **next in the writing thread** |
+| Untrainability written up as a *result* | Overleaf appendix A.6 (§3.5) | **drafted, not pasted** — `sec_exphist_6_untrainability.tex` |
+| Novelty in coordination/synchronisation, not architecture (2026-09-12) | §2.3 RQ1's delay-decay curve; G6 (§3.4) | **not started** — this is the paper's contribution now |
+| Inter-jammer delay + desync modelled and swept (2026-09-12) | M1 spec (§2.4); G6 | **not started** — M1 does not exist yet |
+| Intro shows single→multi transition (2026-09-12) | Intro rewrite (§B.3) | **not started** |
 
 The paper-side home for all of this is the appendix's closing subsection
 (`paper_drafts/sec_exphist_10_determines.tex`), which states each mandate as a design constraint
@@ -442,44 +604,65 @@ reader who does not know the supervision history, and has to be reusable in the 
 
 ## 3.1 Status line
 
-**M0 exists, is verified, and E1 has been run. The headline is NEGATIVE.** The deadline moved from
-15 Sept to **ICC, 2026-10-02** — 24 days instead of 7, a 3.4× expansion that changes the *plan* rather
-than merely relaxing it: the ablations **and** the learned-attacker arc both fit, where before they
-were mutually exclusive.
+**STATE 2026-09-12: the project changed direction, and the supervisor's proposal feedback arrived
+the same day pointing the same way. Read [§2.1](#21-the-question-and-what-has-been-falsified) first.**
+Stealth is retired as the attacker's objective — the impossibility result E1 measured is prior art
+three times over — and the direction is now **cooperative multi-agent generative jamming, with the
+coordination gain measured as a function of inter-jammer delay**, and detectability kept as the
+comparison axis. M0's code and E1's numbers all stand; what changed is the claim they support.
 
-**Blocking and outstanding since 2026-09-01:** thesis **registration** (title, dates, supervisor of
-record) and Di Maio's **feedback on the proposal**. The deadline move does not make registration less
-blocking. Chase both. See [§4.1](#41-blocking-needs-supervisor-input).
+**The two events are independent and mutually reinforcing.** The literature check (ours) killed the
+old headline. His feedback (§B.2) — *"the main contrib now seems the application of some neural
+architecture … a novelty in … how defenders and attackers interact, coordinate, and syncronize"*
+plus the inter-jammer-delay note — supplies the replacement, and it is a sharper question than the
+one we would have written alone. **He does not yet know about the literature collision.**
 
-**The single next action is [G1](#34-the-plan-24-days-two-parallel-tracks)** — the
-covertness-constrained optimality program. ~1 h of CPU, and it is the gate: it decides whether a
-learned attacker has any headroom to chase, and therefore what G5/G6 are even *for*. Everything else
-in the compute track (G2–G4) is independent of it and can run alongside. The writing track — the
-Overleaf appendix (§3.5) and the **five** drafted LaTeX sections still not pasted in (§3.4) — needs no
-compute and is not blocked by anything.
+**20 days to ICC (2026-10-02).** This is the tightest the schedule has been, because the pivot moves
+the lead experiment from E1 (done) to E3/coordination (not started, needs the M1 multi-jammer
+extension that does not exist yet). **The plan in §3.4 has been re-cut accordingly and is now
+front-loaded on G6.**
 
-**Next session, in this order.** Nothing here needs the cluster except item 5.
+**Blocking** — see [§4.1](#41-blocking-needs-supervisor-input): thesis **registration** (open since
+2026-09-01, still the longest-running item) · and **top of the list: sign-off on the pivot** (§4.1
+#0). *Proposal feedback (#3) and the inter-jammer coordination assumption (#8) both closed on
+2026-09-12.* Do not spend the remaining 20 days building toward a headline he has not agreed to —
+though note his feedback already endorses the *direction*, so #0 is narrower than it was this
+morning: it is the literature collision and the RQ1/RQ2 tension, not the change of subject.
+
+**The single next action is [§4.1 #0](#41-blocking-needs-supervisor-input) — email Di Maio.** It is
+half a day of writing at most, it unblocks everything, and every compute item below reads differently
+depending on his answer. Draft it around three points: (i) the literature collision, stated plainly
+with the three citations; (ii) the proposed new RQ1; (iii) the RQ1-vs-RQ2 tension he has to break
+(§2.3). **Do not start G6 before that reply** — it is 4–5 days of new code committed to one branch of
+the fork.
+
+**Next session, in this order.**
 
 | # | Do | Where | Note |
 |---|---|---|---|
-| 1 | **Paste the A.4 correction into Overleaf** | §3.5 fixes-owed | *Do this first.* A wrong claim ("roughly double the single-agent result") is live in a document he may read. The rest of the owed fixes ride along. |
-| 2 | Rewrite the two A.3 sentences added in `13adaf5` | §3.5 fixes-owed | "it could try to predict it" is **falsified by part 6**. Misnames the assumption too. |
-| 3 | **Write appendix parts 6, 7, 8, 9** | §3.5 | 6 = untrainability, lead with action-parameterisation, and it now has the log-barrier mechanism ([A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)). 7 and 8 must land or part 5's erratum sentence forward-references nothing. 9 is a table. |
-| 4 | Paste `sec_system_model.tex`, **then** parts 1b / 5 / 10 | §B.3, §3.5 | Ordering is load-bearing: 5 and 10 `\ref` into it, so pasting them first leaves dangling refs. |
-| 5 | Add the omniscient reference to `fig_detectors` and `fig_stealth_vs_sigma` | §2.9 coverage, `m0/figures.py:162,202` | Small, CPU-only. Do it **before** regenerating E1 figures — the paper asserts the convention in print (`sec:system:objective`). |
-| 6 | G1 | §3.4 | The compute gate. Independent of 1–5. |
+| 0 | **Email Di Maio: the pivot** | §4.1 #0 | *Do this first, before any other work.* Everything below is contingent on it. Open by adopting his coordination/synchronisation steer, then disclose the literature collision, then ask him to break the RQ1/RQ2 tension. |
+| 1 | **Read the three prior-art papers in full** | §2.1 table | Bash JSAC 2013 · Li TIFS 2016 + 2020 · Amuru TIFS 2015. Desk work, no compute. Needed before *any* novelty claim goes in print, and needed to write the email in #0 credibly. |
+| 1b | **Apply his prose fixes to `proposal/proposal.tex`** | §B.3 | Small and unblocked: broadband-jamming citation, the two surviving grammar items, the single→multi transition paragraph, the delay/desync passage. **Do not** rewrite the proposal's RQs before #0 returns. |
+| 2 | **Paste the A.4 correction into Overleaf** | §3.5 fixes-owed | A wrong claim ("roughly double the single-agent result") is live in a document he may read. Unaffected by the pivot — the appendix records history, and the history did not change. |
+| 3 | Rewrite the two A.3 sentences added in `13adaf5` | §3.5 fixes-owed | "it could try to predict it" is **falsified by part 6**. Misnames the assumption too. |
+| 4 | Paste appendix parts 6, 7, 8, 9 (**drafted, revised 2026-09-11**) | §3.5 | Already written and compiling; this is a paste job, not a writing job. Paste `sec_system_model.tex` **first** — 5 and 10 `\ref` into it. |
+| 5 | Add the omniscient reference to `fig_detectors` and `fig_stealth_vs_sigma` | §2.9 coverage, `m0/figures.py:162,202` | ~15 min, CPU-only. Still correct under the pivot — the omniscient ceiling is a baseline, not a stealth claim. |
+| 6 | G6 planning only (**not code**) until #0 returns | §3.4 | Spec the M1 multi-jammer extension on paper so it can start the hour his reply lands. |
 
 **Do not** re-derive the sim04 numbers from the README alone — §A.3's figures came from the SLURM
 logs on 2026-09-10 and the prose that preceded them was wrong. `simulation04/runs/slurm_99211.out`
-(run001) and `slurm_100041.out` (run007) are the sources.
+(run001) and `slurm_100041.out` (run007) are the sources. **sim04 matters more after the pivot than
+before it:** it is the only existing evidence that a coordinated solution is gradient-reachable, so
+it is now RQ1's precursor rather than a historical footnote.
 
-> **Where the last working session stopped (2026-09-10, second session of the day).** No experiments
-> were run and nothing in `m0/` was modified, so `verify.py` is still valid as last run. The session
-> was entirely Overleaf-appendix writing (§3.5) and produced three drafts in `paper_drafts/`, none yet
-> pasted. Re-reading the SLURM logs to source those drafts **disproved the sim04 two-agent headline**
-> (§A.3) and produced the **per-step objective table** (§A.0), which in turn gave the untrainability
-> result a mechanism. A mandate-coverage audit (§2.9) found the omniscient reference **missing from
-> two of the four M0 figures**.
+> **Where the last working session stopped (2026-09-12).** No experiments were run and nothing in
+> `m0/` was modified, so `verify.py` is still valid as last run. Two things happened, both desk work:
+> a **literature check on E1's novelty** (§2.1) came back negative and triggered the pivot, and
+> **Di Maio's proposal feedback arrived** and was transcribed into [B.2](#b2-his-verbatim-points-and-what-each-changed)
+> with its consequences propagated. Nothing in `paper_drafts/` was edited; parts 6–9 carry
+> uncommitted revisions from 2026-09-11 (see §3.5). His annotated proposal was saved to
+> **`proposal/proposal_reviewed_2026-09-12.tex`** (new file, untracked); `proposal/proposal.tex` is
+> the older pre-feedback draft and both are kept (§B.3).
 
 ## 3.2 What exists and is verified
 
@@ -514,7 +697,16 @@ Outputs `artifacts/m0/frontier/results_sigma*.json` + `e1_{frontier,tradeoff,det
 > sim08's 5–30 dB from below**, which keeps the appendix results comparable to the new ones. The
 > Eb/N0 column in §3.3 confirms the implemented grid does this.
 
-## 3.3 E1 result — the negative headline
+## 3.3 E1 result — correct, reproducible, and no longer the headline
+
+> **STATE (2026-09-12): every number in this section stands. Its *status* changed.** The literature
+> check (§2.1) found the impossibility finding to be prior art — square-root law, symmetrizability,
+> disguised jamming — so E1 is **no longer the paper's lead result**. Its surviving roles, in order
+> of strength: (i) the **adaptation-cost reference point** at the end of this section, which is the
+> one measurement the check did *not* find prior art for; (ii) the **energy-detector blind spot**,
+> likewise; (iii) a **calibration result** — evidence that the M0 instrument reproduces known theory,
+> which is what licenses using it on the coordination question. Write it up as (i)+(ii) with (iii)
+> as the framing, and **cite the prior art rather than competing with it**.
 
 Max **excess** BER over the clean floor, while staying under the detector's own false-alarm rate
 (α = 0.05), against the **NP-optimal** detector:
@@ -532,7 +724,9 @@ Max **excess** BER over the clean floor, while staying under the detector's own 
 
 **No realizable (blind) attack achieves meaningful stealthy jamming in M0** — the best is an excess
 BER of 3×10⁻⁴. Only genie attacks work. This is the M0-level, *derivable* version of the sim08
-"honesty correction", which measured the same thing empirically on the OFDM stack.
+"honesty correction", which measured the same thing empirically on the OFDM stack. **It is also, per
+§2.1, the finite-blocklength QPSK instance of the square-root law** — which is why it reads as
+confirmation rather than discovery.
 
 > **Sharpened by re-analysis of the raw results, 2026-09-10 — the negative result is stronger than
 > the table suggests.** Every stealthy `boundary_genie` point in the entire sweep, at every σ, sits
@@ -565,11 +759,18 @@ BER of 3×10⁻⁴. Only genie attacks work. This is the M0-level, *derivable* v
    any perturbation mapping the QPSK alphabet onto itself leaves the received law invariant, so
    `p₁ ≡ p₀` and no test has any power (`p_np` is exactly 0.0000, not merely below α). Members:
    `ρ = √2` along an axis (energy 2, BER 0.5) and `d = −2s` (energy 4, BER 1.0). Frontier
-   `BER*(P) = min(P/4, 0.5)` — invisibility costs exactly 4× the power. **Do not oversell this:** it
-   is a direct consequence of the symmetry, the `d = −2s` case was already known ("statistically
-   clean rx = −tx"), it is knife-edged, and it needs the genie.
+   `BER*(P) = min(P/4, 0.5)` — invisibility costs exactly 4× the power. **Do not oversell this — and
+   as of 2026-09-12 the ceiling on how much it can be sold is known.** It is **symmetrizability**
+   (Csiszár–Narayan, 1988) and **disguised jamming** (Li et al., IEEE TIFS 2016/2020) in QPSK form:
+   both the mechanism and the genie requirement are published, and TIFS 2020 additionally gives the
+   defence (break the symmetry with shared secret randomness). Present it as *"the minimal model
+   reproduces the known symmetrizability result exactly, including the 4× power cost"* — a
+   calibration claim, correctly cited. The earlier caveats all still apply: knife-edged, needs the
+   genie, and the `d = −2s` case was already known to us ("statistically clean rx = −tx").
 
-**The adaptation-cost reference point now exists.** At σ = 0.2, α = 0.05, `boundary_blind` at
+**The adaptation-cost reference point now exists — and after 2026-09-12 this is the most valuable
+paragraph in the section**, because it is the one measurement §2.1's check found no prior art for.
+At σ = 0.2, α = 0.05, `boundary_blind` at
 P = 0.01, **duty = 0.0196**: one-sided energy **0.123**, two-sided energy 0.090, learned CNN
 **0.116**, **NP-optimal 0.847**. The learned detector catches ~12% of what an optimal one catches
 ~85% of — **that gap is the remaining adaptation budget, as a number.** *(Re-read off
@@ -585,22 +786,28 @@ transcription drift. The JSON row keys are `p_e1`, `p_e2`, `p_l`, `p_np` — **n
 > test is largest exactly where the attack is sparsest"*, not a single headline number. Reporting the
 > best row alone would repeat the m1 mistake (§2.7).
 
-## 3.4 The plan (24 days) — two parallel tracks
+## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
-The writing track needs no compute and the compute track has idle time built into it.
+**What changed.** The old plan was ordered around G1 as the gate, because G1 decided whether a
+*stealthy* attacker had headroom. That question is retired (§2.1), so **G1 is demoted from gate to
+optional** and the critical path now runs through the multi-jammer extension, which was previously
+last. G0 and G2–G4 are unchanged in content; several changed in priority.
+
+**Everything below is contingent on §4.1 #0** — his sign-off on the pivot. Items marked ⛔ commit
+days of work to one branch of that fork and **must not start before his reply.**
 
 **Compute track.**
 
 | # | Item | Cost | Gate |
 |---|---|---|---|
-| **G0** | **Add the omniscient reference (`counter_flip`) to `fig_detectors` and `fig_stealth_vs_sigma`** in `m0/figures.py` (L162, L202 — their attack lists omit it). His mandate is *every* results figure, and `sec:system:objective` states the convention in print. | ~15 min, CPU | **Before any figure regeneration.** |
-| **G1** | **The covertness-constrained optimality program** (§2.8). Convex, CPU, discretised `d`-grid. Produces the ceiling for *any* attacker at each (σ, P, δ). | ~1 h compute, ~½ day to write | **Do first.** Everything below reads differently depending on its answer. |
-| G2 | **E2 — noise ablation.** Largely already produced by the 8-σ E1 sweep; needs the dual-axis figure and the matched-P(det) companion — **and the missing σ = 0 anchor + a proper log grid** (§3.2). | ~½ day | independent of G1 |
-| G3 | **Power-budget ablation**, log grid. | ~½ day | independent |
-| G4 | **Structure ablation** (§4.2) — iid-uniform → non-uniform priors → correlated → pilots. Decides *where* the learning contribution lives. | ~1 day | independent, but read with G1 |
-| G5 | **Conditional generator on M0**, direct gradient, vs the closed-form frontier at matched detectability. | ~3–4 days | after G1 + G4 |
-| G6 | **M1 — spatial / multi-jammer.** PettingZoo only if a MARL algorithm is genuinely needed. Justified on the V>1 mechanism (§4.2). | ~4–5 days | after G5 |
-| G7 | **Adaptation-cost rounds R0/R1/R2** (RQ2). Tooling exists; in M0 it gains the distance-from-`D_NP` reference E1 already measured. | ~2 days | after G5; can precede G6 if G6 slips |
+| **G0** | **Add the omniscient reference (`counter_flip`) to `fig_detectors` and `fig_stealth_vs_sigma`** in `m0/figures.py` (L162, L202 — their attack lists omit it). His mandate is *every* results figure, and `sec:system:objective` states the convention in print. | ~15 min, CPU | **Do now.** Unaffected by the pivot; needed before any figure regeneration. |
+| **G6** | **M1 — multi-jammer coordination under a delayed inter-jammer link. THE LEAD EXPERIMENT (E3).** N_J ≥ 2 jammers, per-link gain/phase, superposing at the victim. Three arms: coordinated · N_J-independent · single jammer at equal *total* power, at matched power **and** matched detectability. **The sweep is the inter-jammer delay / phase error** (§2.3 RQ1, his 2026-09-12 note) — the deliverable is the gain-decay curve between the independent floor and the perfect-coordination ceiling. Direct/surrogate gradient as in sim04; PettingZoo only if an off-the-shelf MARL algorithm is genuinely needed. | ~4–5 days, mostly new code | ⛔ **after §4.1 #0.** Spec it on paper meanwhile. |
+| G5 | **Conditional generator on M0**, direct gradient. Under the pivot its job is no longer "beat the closed form" but **be the policy class G6 coordinates** — so it is now a *component* of G6 rather than a separate result, and can be built single-jammer-first as a de-risking step. | ~2–3 days | ⛔ merge into G6's schedule |
+| G3 | **Power-budget ablation**, log grid. Cheap, and it is the axis the coordination gain is read against (equal *total* power is the whole comparison). | ~½ day | independent — **promoted**, do while waiting on #0 |
+| G2 | **E2 — noise ablation.** Largely already produced by the 8-σ E1 sweep; needs the dual-axis figure and the matched-P(det) companion — **and the missing σ = 0 anchor + a proper log grid** (§3.2). Still his mandated primary ablation, so it survives the pivot intact. | ~½ day | independent, do while waiting |
+| G4 | **Structure ablation** (§4.2 Q2) — iid-uniform → non-uniform priors → correlated → pilots. **Weakened by the pivot:** it was there to find the single-link learner a job, and RQ1 now says the learner's job is coordination (Q2 items 3–4), which G4 does not test. Keep only if time allows. | ~1 day | **demoted** |
+| G1 | **The covertness-constrained optimality program** (§2.8). ⚠ Prior art (§2.1) — instantiates the CPS stealthy-FDI program. | ~1 h compute, ~½ day to write | **demoted from gate to optional.** Run only if the stealth axis is still being reported quantitatively. |
+| G7 | **Adaptation-cost rounds R0/R1/R2** (RQ2). Tooling exists; in M0 it gains the distance-from-`D_NP` reference E1 already measured. | ~2 days | **depends on how he breaks the RQ1/RQ2 tension** (§4.1 #0) |
 
 **Writing track (starts now, no compute).**
 - **Appendix: the sim00–08 experiment record** — see §3.5. The single largest piece of prose still
@@ -618,22 +825,46 @@ The writing track needs no compute and the compute track has idle time built int
 - Likewise `sec_system_model.tex` is **not yet in Overleaf**; `main.tex` §System Model (L107) still
   describes the K-subcarrier / TDL / N_J-jammer setting **that no working experiment supports**.
 
-**Rough calendar.** Sep 8–14: G1–G4 + start the appendix. Sep 15–21: G5 + system-model repair.
-Sep 22–28: G6/G7 + results write-up. Sep 29–Oct 2: lock results, figures, polish.
-**Results lock Sep 28** — leave four days, not one, given how many headlines on this project have
-died to a late-arriving honest metric.
+**Rough calendar, re-cut 2026-09-12 (20 days).** Sep 12–13: §4.1 #0 email + read the three prior-art
+papers + G0 + spec G6 on paper. Sep 14–15: G2 + G3 while waiting on his reply; paste the appendix
+backlog (§3.1 items 2–5). Sep 16–22: G5-as-component then G6. Sep 23–26: G6 results, figures,
+write-up. Sep 27–Oct 2: lock, polish, buffer. **Results lock Sep 27** — one day earlier than the old
+plan, because the lead experiment is now the one that does not exist yet.
 
-**Risks, in order.** (i) G5 produces no separation from the closed form — mitigated, because G1 tells
-us in advance whether separation is even *possible*, so this is a known outcome rather than a
-surprise. (ii) M1's motivation is thinner post-E1 than when the proposal was written; if G1 returns
-≈0 headroom, M1 rests on the V>1 mechanism alone and the multi-user extension is new code.
-(iii) Scope creep against his explicit "simplify, as much as possible" and the 2–3-experiment quota —
-**the extra 17 days are permission to do the *planned* work properly, not permission to add layers.**
+**Risks, in order — reordered after the pivot.**
+(i) **He does not agree with the pivot**, or breaks the RQ1/RQ2 tension toward RQ2. Mitigated only by
+asking early, which is why #0 is the next action and not a background task. **This is now the top
+risk and it is a scheduling risk, not a technical one.**
+(ii) **G6 is new code on a 20-day clock**, and the multi-user/multi-jammer extension has never been
+written for M0. sim04 is the precedent (two coordinated agents, direct gradient, worked) but it is
+frozen sim-stack code, not M0 code — treat it as a design reference, not something to lift.
+(iii) **The coordination gain turns out to be small.** sim04's honest number at matched total power
+was ~15%, not the 2× the draft once claimed (§A.3). A 15% gain is still a result, but it must be
+reported at matched detectability too, or it is the m1 mistake again (§2.7).
+(iv) Scope creep against his explicit "simplify, as much as possible" and the 2–3-experiment quota —
+**the pivot is permission to change direction, not permission to add layers.** M1 as specified in
+§2.4 is the sanctioned extension; nothing beyond it.
+
+> **The fallback, in his own words, banked 2026-09-12.** If G6 does not land in 20 days, the
+> single-agent case is *"already a problem in itself. even understanding the first would be good"*
+> (§B.2). So the degraded outcome is a paper on the single-agent generative attacker with the
+> coordination result as future work — **not** a scramble back to the retired stealth headline.
+> Decide this by **Sep 22**: if M1 does not run end-to-end by then, take the fallback rather than
+> spending the buffer.
 
 ## 3.5 The Overleaf appendix — "Experiment History"
 
-**State (2026-09-10, later): 1, 1b, 2–5 in Overleaf with fixes owed · 6, 7, 8, 9, 10 drafted in
-`paper_drafts/`, not pasted.** Live ref last read: `overleaf/main` @ `b9620a0` "Experimental History:
+**State (2026-09-12): 1, 1b, 2–5 in Overleaf with fixes owed · 6, 7, 8, 9, 10 drafted in
+`paper_drafts/`, not pasted. Parts 6–9 carry uncommitted working-tree revisions made 2026-09-11**
+(prose cut hard, verdict table 17 → 13 rows) — `git diff` before assuming the committed version is
+current.
+
+> **Pivot impact (2026-09-12): this appendix is unaffected and should still be finished.** It
+> records what each experiment *established*, and the 2026-09-12 literature check changed none of
+> that — it changed which forward claim the history supports, which is part 10's job, not parts
+> 1–9's. **Part 10 (`sec_exphist_10_determines.tex`) is the one file that needs revision**: it
+> closes by handing off to the stealth-frontier experiments, and that hand-off is now wrong. Rewrite
+> its closing to hand off to the coordination question (§2.3 RQ1) before pasting.** Live ref last read: `overleaf/main` @ `b9620a0` "Experimental History:
 Learned Detectors Section done". Reviewed 2026-09-10. **`git fetch overleaf` now fails from this repo**
 (no GitHub credentials in the environment) — the local `overleaf/main` ref is what is readable, so it
 may lag the true Overleaf head. It belongs in the thesis (§1.4), and writing it is directly responsive to a
@@ -789,6 +1020,18 @@ defers, never re-defines — is currently unsatisfiable. **Paste `sec_system_mod
 - **Further characterization sweeps.** Characterization has already done its job: it defined the
   target (the residual region) and the metric (matched detectability). More of it is the main way
   left to waste the remaining hours.
+- **Stealth as the attacker's objective** — retired 2026-09-12 (§2.1). Detectability stays as the
+  axis attackers are *compared* on; it is not what anything optimises, and no headline rests on it.
+  **This does not license reintroducing it later in the guise of "just one more frontier sweep".**
+- **Any novelty claim about the impossibility result** without first reading Bash (JSAC 2013), Li
+  (TIFS 2016/2020) and Csiszár–Narayan. The result is correct; the claim of priority is not.
+
+> **What the pivot does NOT reopen.** The 2026-09-12 change of direction is a return to bet (a),
+> cooperation — **not** to bets (b) and (c) (§1.1). PPO/MAPPO over raw IQ with black-box access
+> stays falsified (sim06/06b/07, [A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)); actions
+> stay low-dimensional perturbation *parameters*; the training method stays direct/surrogate
+> gradient. "Cooperative multi-agent generative" describes the *problem*, not a licence to re-run the
+> algorithm that failed. If G6 seems to need MARL, re-read A.5 before writing any of it.
 
 **Deferred refinements, not on the critical path:** BER-thresholded in-band labels + threshold
 calibration for the m2 detector; extending the sim08 suite with more classical detectors
@@ -802,19 +1045,21 @@ calibration for the m2 detector; extending the sim08 suite with more classical d
 
 | # | Item | Why it blocks |
 |---|---|---|
+| **0** | **⚠ 2026-09-12, TOP PRIORITY — sign-off on the pivot.** Three things in one email: (i) the literature collision (§2.1) — E1's impossibility finding is prior art in the square-root law, symmetrizability and disguised jamming, so the stealth headline cannot stand; (ii) the proposed replacement, RQ1 = the coordination gain **as a function of inter-jammer delay** (§2.3) — which is *his own* 2026-09-12 steer, so frame it as adopting his suggestion, not as a unilateral change of subject; (iii) **the RQ1/RQ2 tension he must break** — his mandated headline is *adaptation cost*, but the pivot makes *coordination* the lead, and 20 days does not fit both. | **Blocks the entire remaining plan.** G5/G6 are 4–5 days of new code committed to one branch of this fork (§3.4). Do not start them on a guess. **His proposal feedback (§B.2) already endorses the direction** — coordination/synchronisation as the novelty axis — so only (i) and (iii) are genuinely open. That makes this email easier to write and *more* urgent, not less: the cheap half is already agreed. |
 | 1 | **Supervisor of record for the ETH registration** | D-INFK professor requirement; may need Di Maio as co-supervisor. Needed on the myStudies form. |
 | 2 | **Title, start date, end date, task description** | All four gate registration. Open since 2026-09-01. |
-| 3 | **Feedback on the proposal** (handed over 2026-09-01) | Nothing downstream is blocked on *us*, but it is the longest-outstanding item. |
-| 4 | **Which 2–3 experiments go in the main paper** | His call. Candidates E1 / E2 / E3 (§2.9). |
+| 3 | ~~**Feedback on the proposal** (handed over 2026-09-01)~~ **RESOLVED 2026-09-12 — it arrived.** Nine inline `\adm{}` comments, transcribed in [B.2](#b2-his-verbatim-points-and-what-each-changed); consequences propagated to §2.1, §2.3, §2.4, §2.9, §3.4 and §4.3. Three prose fixes remain owed on the proposal itself (§B.3). | — |
+| 4 | **Which 2–3 experiments go in the main paper** | His call. Candidates **changed 2026-09-12**: E3 (coordination) now leads, E2 (noise ablation) is his mandated primary ablation, E1 demoted to calibration/appendix (§3.3). Ask as part of #0. |
 | 5 | **Single-round evasion on a frozen detector, or fully co-adaptive?** | His 2026-08-03 phrasing leans co-adaptive (*"one can always fine-tune a defender on an attacker and vice versa"*) but was never a direct answer. RQ2 assumes round-based-and-offline. |
-| 6 | **Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension? | Asked in the mid-July email; never answered directly. |
+| 6 | ~~**Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension?~~ **MOOT as posed, 2026-09-12.** The pivot answers it the other way round: the cooperative jammer *is* the core and characterisation is appendix. Still worth flagging in #0 that this is a reversal of the mid-July proposal he never answered. |
 | 7 | **His September availability / feedback cadence** | Asked twice, still unanswered. Short frequent rounds >> one large end-of-block review. |
-| 8 | **Inter-jammer coordination assumption** — shared backhaul / shared clock only / fully independent? | Needed to finish the Threat Model. Good candidate to decide together rather than guess. |
+| 8 | ~~**Inter-jammer coordination assumption** — shared backhaul / shared clock only / fully independent?~~ **ANSWERED 2026-09-12, and reframed.** He does not pick from that menu; he says the interesting thing is that the inter-jammer link *"introduces desynchronization"* through **communication delay** (§B.2). So the assumption is a link with a delay parameter, and the delay is swept rather than assumed (§2.3 RQ1, §2.4). Residual open question, much smaller: what delay *range* is realistic — worth one line in the reply to #0. | — |
 
 **When his corrections come back — the four things most likely to be challenged**, recorded so the
 reasoning does not have to be reconstructed:
-1. **The gap claim** (§2.2 point 5) — the load-bearing sentence of the Introduction. Defend it as the
-   *conjunction*, and name the nearest neighbours.
+1. ~~**The gap claim** (§2.2 point 5)~~ — **no longer a risk, because we withdrew it first**
+   (2026-09-12, §2.1). It would have been the first thing challenged; it is now the first thing
+   disclosed. Raising it ourselves in #0 is worth more than defending it would have been.
 2. **The dropped countermeasure RQ** — the answer is the cost argument (§2.3); the cheap fallback is
    time-to-first-detection (§4.3), already specified and needing no new machinery.
 3. **RQ2 vs the bachelor timeline.** It is last in the plan and depends on a working attacker; if the
@@ -825,8 +1070,10 @@ reasoning does not have to be reconstructed:
    (protocol-deterministic fields are exactly what survives scrambling) but he may read it as a claim
    about our method.
 5. **"Isn't this just a combination of existing methods?"** (own concern, not his — but it will be
-   asked.) The honest answer is yes, and that is fine **as long as the paper leads with the problem
-   and the findings, not the architecture.** What justifies it: the systematic **ablation trail**
+   asked. **Sharpened 2026-09-12: the literature check is the concrete instance of exactly this
+   objection landing**, so treat it as demonstrated rather than hypothetical.) The honest answer is
+   yes, and that is fine **as long as the paper leads with the problem and the findings, not the
+   architecture.** What justifies it: the systematic **ablation trail**
    showing *why* each simpler alternative structurally fails (Gaussian → GMM → GAN → flow, each with
    a mechanism, not a preference); the **problem formulation** itself; and whatever the attacker
    actually discovers. Comparable precedent exists at solid venues. The bar is whether the
@@ -835,17 +1082,27 @@ reasoning does not have to be reconstructed:
 
 ## 4.2 Open technical questions
 
-**Q1 — Does M1 still have a target? (the big one; G1 answers it.)**
-E1 tested a *menu* of eight hand-written attack laws and found none of the realizable ones works. It
-did **not** compute the best possible law. G1 does. Two outcomes, and the deadline move turned this
-from a go/no-go into a **sequencing gate** — run it either way, because it determines what the
-learner is *for*:
+**Q1 — Does M1 still have a target? — ANSWERED 2026-09-12, and not by G1.**
+The question was whether a *stealthy* learned attacker had headroom over the closed form, with G1 as
+the gate that would decide. **The literature check answered it first and differently: there is no
+headroom worth chasing on the stealth axis, and the fact that there isn't is published** (§2.1). So
+the "headroom ≈ 0" branch below is the one that obtains — but its stated consequence has changed too.
+
+The old branch said: with no headroom, the generator's job becomes rediscovering the closed form and
+the claim becomes the learned-vs-optimal detector gap. **That is still a true claim and it is
+surviving item 1 in §2.1.** What the pivot adds is that it is not the only option — M1 does not have
+to rest on the V>1 mechanism alone, because **coordination itself is the target** (§2.3 RQ1): N_J
+jammers splitting power and phase has no closed form to be beaten by, so the "a learner can at best
+rediscover the closed form" objection simply does not apply there.
+
+*Original two-branch text kept below because G1 is still optional and its output is still readable
+against it:*
 - **Headroom exists** → the generator is chasing a quantified gap, and we can report how much of it a
   learned policy recovers. Strictly better than "our generator got BER X".
 - **Headroom ≈ 0** → the generator's job changes from *beating the closed form* to *rediscovering it
   without the genie's information*, and the paper's claim becomes about the **learned vs optimal
   detector gap** (adaptation cost) rather than attack effectiveness. Still a paper; different
-  headline. M1 is then justified on the V>1 mechanism only.
+  headline.
 
 **Q2 — Does the learner have a job at all? (§13.1 of the old checklist; G4 answers it.)**
 His sharpest challenge: *"Is it a valid assumption that all legitimate symbols are equally spread?
@@ -883,17 +1140,48 @@ beat concentration at matched worst-case detectability — survives, and it is w
 `valianti2024cooperative`'s coupling actually transfers. It needs a multi-user extension that does
 not exist yet. **Either repair the paragraph or cut it to the V>1 argument alone.**
 
-**Q4 — The scoping fork, still unresolved.** Is multi-agent cooperation the **destination** (the
-thesis is about *cooperative* jamming; single-agent signature-shaping is a stepping stone) or the
-**garnish** (the thesis is about *learned evasion*; cooperation is an extension)? That decision — not
-any further sweep — shapes M1. Note the title as registered says "Cooperative Multi-Agent", which
-leans destination.
+**Q4 — The scoping fork — RESOLVED 2026-09-12: cooperation is the DESTINATION.**
+The fork was whether multi-agent cooperation is the destination (the thesis is about *cooperative*
+jamming; single-agent signature-shaping is a stepping stone) or the garnish (the thesis is about
+*learned evasion*; cooperation is an extension). **Resolved toward destination**, because the
+evasion branch is what §2.1 retired — so the fork collapsed rather than being decided on its merits.
+Two things corroborate the landing: the registered title already says "Cooperative Multi-Agent", and
+Di Maio's own stated destination is *"the optimal multi-jammer coordination against one or more
+mobile victims"* (§B.2). **Pending his sign-off (§4.1 #0), which is the only thing that could
+reopen it.**
 
 **Q5 — E1 hygiene, cheap to fix (§3.2, §3.3).** Add the σ = 0 anchor; put the σ grid on a proper log
 spacing; re-caption anything quoting the `boundary_genie` row to say it is the ρ = √2 permutation
 degeneracy; fix the meaningless `power` column for the `counter_*` attacks.
 
-**Q6 — Related Work: the two long-open inclusion calls are RESOLVED. Include both.**
+**Q6 — Related Work inclusion calls.**
+
+> **⚠ FIVE MANDATORY ADDITIONS, 2026-09-12 (§2.1). These are not optional and not "nice to have" —
+> they are the prior art the retired headline collided with, and a paper in this area that omits
+> them is not defensible.** None is in `refs.bib` yet; none has a key yet.
+> 1. **Bash, Goeckel & Towsley**, "Square root law for communication with low probability of
+>    detection on AWGN channels", **IEEE ISIT 2012**, pp. 448–452, DOI `10.1109/ISIT.2012.6284228`.
+>    Extended journal version: IEEE JSAC 31(9), 2013. **Checked 2026-09-12: the key
+>    `bash2013limits`, used throughout this README, is NOT in the live `paper/refs.bib`** — it
+>    exists only in the staging file `paper_drafts/refs_new.bib`. The live bibliography has **no
+>    covert-communication entry at all**. So every README sentence citing `bash2013limits` (§2.8's
+>    divergence row, §2.7's stealth-budget convention) currently points at nothing in the paper.
+> 2. **Csiszár & Narayan**, arbitrarily-varying-channel symmetrizability (1988) — the general form of
+>    the constellation-symmetry result.
+> 3. **Li et al. (Tongtong Li's group), disguised jamming** — CDMA: IEEE TIFS 2016,
+>    DOI `10.1109/TIFS.2016.2585089`; OFDM/SP-OFDM: IEEE TIFS 15, 2020. **The nearest neighbour of
+>    all, and the one to read first.**
+> 4. **Amuru & Buehrer**, "Optimal jamming strategies in digital communications — impact of
+>    modulation", **IEEE GLOBECOM 2014**, pp. 1619–1624; extended IEEE TIFS 10(10), 2015,
+>    pp. 2212–2224. The closed-form effectiveness half of our attacker ladder.
+> 5. **The stealthy-FDI / CPS line** (one representative citation is enough) — for G1's divergence
+>    program and the Chernoff–Stein bridge.
+>
+> **Also owed: a Related Work paragraph that positions us against these**, not around them. The
+> honest positioning after the pivot is: these establish what a *stealthy* attacker cannot do; we ask
+> what a *coordinated* one can, and use their bound as the instrument (§2.3 RQ1).
+
+The two long-open inclusion calls are RESOLVED. Include both.
 Settled in `paper/Sources_And_Evaluation.md`; recorded here so they are not reopened.
 - **Hameed, György, Gündüz, "The best defense is a good offense"** (IEEE TIFS, vol. 16,
   pp. 1074–1087, 2021, DOI `10.1109/TIFS.2020.3025441`, key `hameed2021offense`) — **include.** The
@@ -935,11 +1223,14 @@ from scratch if ever wanted.)*
 - **ACK/NACK as the execution-time observation** (§2.8, CTDE). If any execution-time adaptivity is
   wanted, this is the channel to model — one line in the system model, and if cheap, an
   observation-space ablation (blind vs ACK-aware).
-- **Desync / realism axis.** Per-jammer CFO, timing and residual phase error as a "cheap hardware"
-  quality level. He *wants* the attacker handicapped: *"introducing some desynchronization … will
-  make the attacker more realistic and weaker, which is good for the paper, especially if BER is high
-  and detection rate is low."* Only meaningful once the attack is phase-coherent, and it is the
-  experiment that substantiates the counter-signal-vs-boundary robustness claim (§2.5).
+- ~~**Desync / realism axis.**~~ **PROMOTED OFF THE SHELF 2026-09-12 — it is now RQ1's swept
+  variable** (§2.3), not an optional realism garnish. Recorded here only so the trail is visible:
+  it sat on this shelf from the 2026-08-03 email, where he wrote *"introducing some
+  desynchronization … will make the attacker more realistic and weaker, which is good for the paper,
+  especially if BER is high and detection rate is low."* His 2026-09-12 note gives it a **cause**
+  (inter-jammer communication delay) and therefore a reason to be the x-axis rather than a
+  robustness check. Per-jammer CFO, timing and residual phase error are the implementation. It still
+  also substantiates the counter-signal-vs-boundary robustness claim (§2.5) as a by-product.
 - **Scenario-size ablation:** #jammers, **#legitimate users**. The latter is new — the model is
   1 TX → 1 RX today, so it needs a multi-user extension first (and it is the same extension the V>1
   coordination mechanism needs — see Q3).
@@ -973,6 +1264,19 @@ from scratch if ever wanted.)*
 - **M0 has no pilots**, which is exactly the structure Q2 says the learner would need. Keeping pilots
   is the one argued exception to the simplification.
 - **E1's σ grid is incomplete** vs the design (§3.2).
+- **The novelty check behind the 2026-09-12 pivot was web search, not a systematic IEEE Xplore
+  sweep** (§2.1). The positive findings (what prior art exists) are solid — those papers were
+  located and identified. The negative findings (what does *not* exist, i.e. §2.1's four surviving
+  claims) are **weak evidence and must not be quoted as "no prior work exists"** in print until the
+  three key papers have been read in full.
+- **The multi-jammer extension G6 depends on does not exist yet**, and sim04 — the only precedent —
+  is frozen sim-stack code, not M0 code, and was **centralised-execution** (one optimizer over both
+  agents' parameters), so it shows a coordinated solution is gradient-reachable, **not** that
+  decentralised agents find it (§A.3). RQ1 must not overclaim past that.
+- **The realistic range of inter-jammer delay is unknown to us** (§4.1 #8). RQ1's x-axis is
+  therefore currently in arbitrary units — symbol periods, or radians of residual phase error. The
+  decay *curve* is meaningful without it, but any sentence of the form "at realistic delays the gain
+  is X" needs a number we do not have. Ask him, or report the axis normalised and say so.
 
 ---
 ---
@@ -1531,7 +1835,18 @@ Kept for provenance; **do not extend any of it.**
 - **Meeting 2026-08-21** — the simplification mandate and the two questions that threaten the RL
   framing. Notes transcribed 2026-09-01; consequences are throughout Part 2, and the two questions are
   §4.2 Q2 and §2.8 (CTDE).
-- **2026-09-01** — registration proposal handed over for correction. **Awaiting feedback.**
+- **2026-09-01** — registration proposal handed over for correction.
+- **2026-09-12 — HIS PROPOSAL FEEDBACK ARRIVED.** Returned as inline `\adm{}` comments in
+  `proposal/proposal.tex`; nine substantive, transcribed verbatim into [B.2](#b2-his-verbatim-points-and-what-each-changed).
+  **The headline of the feedback is his "important:" note on Methodology** — the contribution as
+  written reads as *"the application of some neural architecture"*, and he names where the novelty
+  should come from instead: **how attackers and defenders interact, coordinate and synchronise
+  within themselves.** Read together with his inter-jammer-delay note, that is a direct steer to the
+  coordination axis, arriving independently of, and on the same day as, our own literature-driven
+  pivot (§2.1). He has **not** seen the literature collision — that is still ours to disclose
+  (§4.1 #0).
+  *(Two of the three proposal fixes B.3 was tracking are also visibly done in the returned file: the
+  `xcolor` package and the Introduction's closing line.)*
 
 *(A note for the record: earlier drafts of the project notes speculated about a "Thu 13 Aug" meeting,
 picked up from a date we had proposed to ourselves. That meeting never happened; **21 Aug is the real,
@@ -1556,7 +1871,7 @@ Quotes preserved because the wording matters. Consequences already actioned are 
 | *"consider PettingZoo and BenchMARL … RLlib is famous for being too complex … I would avoid it"* | ✅ §2.8. |
 | *"I did not fully get why the MAPPO jammer can't be trained against the CNN detector … showing in what cases it is hard to beat is already a small result"* | Owed a crisp write-up as a **result, not an excuse** — [A.5](#a5-sim06-jammer-06b-07-the-untrainability-result). Still open: characterize *in which cases* it is hard to beat (which detectors/regimes). |
 | *"train both attacker and defender jointly, then pick one side … if performance becomes too extreme (e.g., always stealth, high BER) then **relax assumptions** … until the performance gap between your method and the baselines increases"* | The tuning protocol, handed to us. Pick the **attacker** side, as he suggests. Also: **run the baselines** — he put it in parentheses as an assumption, so it is not optional. |
-| *"the most interesting investigation will still be the optimal multi-jammer coordination against one or more mobile victims"* | The destination: multi-agent + **victim mobility** (§4.3). |
+| *"the most interesting investigation will still be the optimal multi-jammer coordination against one or more mobile victims"* | The destination: multi-agent + **victim mobility** (§4.3). **After the 2026-09-12 pivot this is no longer the distant destination but the actual next experiment** (G6/E3, §3.4) — the strongest single piece of evidence that the pivot moves *toward* his stated preference rather than away from it. Lead with it in §4.1 #0. |
 | **(mtg)** *"Priority: simplify, as much as possible — single subcarrier, one channel"* | ✅ M0. sim06–08 frozen. |
 | **(mtg)** *"First thing to add: spatial, after solving single, no noise, no prop"* | M1 is the only sanctioned extension. **"No noise, no prop" is literal** (confirmed): σ = 0, no propagation delay — which is why σ = 0 is the *anchor* of the noise sweep, not the operating point. |
 | **(mtg)** *"Intro: bit-error recovery 'out-of-scope' → motivate importance, we assume it's handled by another model"* | §2.9. |
@@ -1570,6 +1885,22 @@ Quotes preserved because the wording matters. Consequences already actioned are 
 | **(mtg)** *"Put as much info as possible in Overleaf"* | The document is the working record. Assumption table, baseline table and ablation list go in **now**, as stubs if necessary. |
 | *"Real hardware to implement this method is available, if you'd like to experiment later on."* | Future work (§4.3). |
 | **(mtg, in `main.tex`)** *"citations should be such that text is also equally readable if removed"* | IEEEtran style: bracket **before** all punctuation with a `~` tie (`...adaptation~\cite{key}.`); group multiples as `\cite{a,b}`; keep the number out of the grammar. |
+
+**Proposal feedback, 2026-09-12** — inline `\adm{}` comments on `proposal/proposal.tex`. Kept in a
+separate table because they are one document's review, and because three of them change the
+direction rather than the prose. Quoted verbatim.
+
+| His point | Consequence |
+|---|---|
+| **⚠ *"important: the main contrib now seems the application of some neural architecture for this problem. discussing a novelty in the neural architecture or in how defenders and attackers interact, coordinate, and syncronize within themselves could strengthen the contribution's novelty"*** | **The most consequential comment in the set, and he flagged it himself.** It is §4.1 item 5 ("isn't this just a combination of existing methods?") arriving from the supervisor. He offers two escapes and we take the second: novelty in **coordination and synchronisation**, not in architecture. This is what sharpens §2.3 RQ1 from "coordination helps" to "coordination *under a realistic inter-jammer link*". |
+| **⚠ *"I'd add somewhere here that one big issue in general is the inter-jammer or inter-node communication delay, which introduces desynchronization, and therefore makes it hard for jammers to react to honest symbol, and hard for honest node to defend against jamming symbols"*** | **Answers §4.1 #8**, which asked what the inter-jammer coordination assumption should be: not "shared backhaul" vs "independent" but a **link with delay**, and the delay is the interesting variable. Also independently motivates the desync axis (§4.3), which was on the shelf. Note the symmetry he draws: delay hurts the *defender* too. |
+| **⚠ *"highlight in intro the transition from single-agent jamming, which is already a problem in itself, to multi-agent cooperative jamming. even understanding the first would be good"*** | Structural instruction for the Introduction — show the single→multi transition explicitly. **The second clause is a safety net worth banking:** he considers the single-agent case alone a worthwhile result. If G6 slips (§3.4 risk ii), that is his own words authorising the fallback. |
+| *"doesn't the proposed method also use some form of prediction of activity? i.e., jammer predicts distribution of honest codewords, and defender predicts jammer presence?"* | A consistency challenge to the Introduction's "defenders are merely reactive" criticism: our attacker predicts too, so the criticism as phrased cuts both ways. **An independent second reason §2.2's framing fails**, unrelated to the square-root-law reason (§2.1). |
+| *"would this motivate 'proactive' (i.e., always spend a certain amount of resources to be resilient at any time, i.e., uniformizing the codeword distribution) or 'adaptive' (i.e., increase budget, e.g., stronger modulation, when defender detects a higher probability that the channel is being jammed)?"* | Asks what defense the gap argument actually motivates, and supplies the taxonomy. **Note the convergence:** "uniformizing the codeword distribution" is essentially the shared-randomness defence from the disguised-jamming literature (SP-OFDM, §2.1) — he arrived at the published countermeasure independently. Worth telling him. |
+| *"regarding channel, we can also assume a single channel to simplify the scope and we can always extend the proposed method in the future if the paper is accepted for a journal extension, e.g., IEEE Transaction on Wireless Communications"* | ✅ Confirms M0's single channel is the right cut, and re-states the simplify mandate unprompted. **New information: he has a journal-extension path in mind (TWC).** That reframes anything cut for the 6-page ICC limit as deferred rather than discarded. |
+| *"Beyond conventional broadband jamming \adm{cite?}"* | Citation owed for broadband jamming in the Introduction. |
+| *(commented out) "cite"* on the ML-in-PHY sentence | Already discharged — `pirayesh2022jamming` is now on that sentence. |
+| *(commented out) "replace 'obvious' with more precise term: detected? if so, how are detected?"* | Already discharged — the text now reads "without producing the wide-band energy signature that conventional detectors sense". |
 
 **Where the two sources conflict, the meeting (2026-08-21) wins.** Where the meeting was silent — the
 adaptation-cost headline, reward = BER − β·det, PettingZoo/no-RLlib, the desync axis, multi-jammer
@@ -1614,15 +1945,35 @@ edits **in Overleaf**)
 - [ ] Optional if tooling is cited: Sionna (Hoydis et al., arXiv:2203.11854), PettingZoo (Terry et
       al., NeurIPS 2021).
 - [ ] Resolve the two inclusion calls — §4.2 Q6.
+- [ ] **⚠ Add the five mandatory prior-art entries (§4.2 Q6 box), 2026-09-12.** Bash ISIT 2012 /
+      JSAC 2013 · Csiszár–Narayan 1988 · Li et al. TIFS 2016 + TIFS 2020 · Amuru–Buehrer GLOBECOM
+      2014 / TIFS 2015 · one stealthy-FDI CPS reference. **Verified 2026-09-12: `bash2013limits` is
+      absent from the live `paper/refs.bib`** (it is only in `paper_drafts/refs_new.bib`), and the
+      live bibliography has no covert-comms entry at all — so all five are genuinely new additions,
+      not renames.
 
-**Proposal** (`proposal/proposal.tex`; **Overleaf is truth**, this file is the reference draft plus the
-five-title-option record — it will drift from the submitted version)
-- [ ] `\usepackage{xcolor}` — the `\adm`/`\rar` macros use `\color{orange}` and error without it.
-- [ ] Fix the Introduction's closing line: it still promises evaluation *"against reactive and
-      proactive countermeasures"*, but that RQ was dropped. Must read *"against classical and
-      non-cooperative baselines on the effectiveness–detectability plane"*.
-- [ ] Minor: spurious comma in "triggered by detection, cannot be"; *"Coordination because…, generative
-      because…"* is a sentence fragment — join with a colon or dash.
+**Proposal** — **two files on disk, both kept; Overleaf is truth and both will drift from it.**
+`proposal/proposal_reviewed_2026-09-12.tex` is **his annotated copy**, saved verbatim with the
+`\adm{}` comments intact — *do not clean the comments out of it*, it is the primary record of the
+review. `proposal/proposal.tex` is the older, longer pre-feedback draft (262 lines, no annotations,
+no Experimental Setup / Evaluation sections) and holds the five-title-option record in its header
+comment. **Apply fixes to the reviewed file.**
+- [x] `\usepackage{xcolor}` — **done**, visible in the returned 2026-09-12 file (now with a
+      `\ifshowcomments` switch to hide the annotations for submission).
+- [x] Fix the Introduction's closing line — **done**; it now reads *"against classical and
+      non-cooperative baselines on the effectiveness–detectability plane"*, relocated into
+      §Experimental Setup.
+- [ ] Minor, **still owed** (both survive in the returned file): spurious comma in "triggered by
+      detection, cannot be"; *"Coordination because…, generative because…"* is a sentence fragment —
+      join with a colon or dash.
+- [ ] **From his 2026-09-12 comments** (§B.2): add the missing broadband-jamming citation; add the
+      single→multi-agent transition paragraph to the Introduction; add the inter-jammer
+      delay/desynchronisation passage; close the Introduction on his proactive-vs-adaptive defender
+      question.
+- [ ] **Rewrite RQ1 and RQ2 in the proposal to match §2.3.** The submitted text still has the
+      stealth-framed RQ1 ("remaining below the detection threshold") and gives RQ2 equal billing.
+      **Gate this on §4.1 #0** — do not resubmit a proposal that changes direction before he has
+      agreed to the change.
 
 **Experiments** — the compute track is §3.4; the ablations he named are §4.3 and G2–G4.
 

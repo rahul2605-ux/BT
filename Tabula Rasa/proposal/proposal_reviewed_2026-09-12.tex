@@ -1,0 +1,102 @@
+% ---------------------------------------------------------------------------
+% Registration proposal AS RETURNED BY THE SUPERVISOR, 2026-09-12.
+%
+% This is Di Maio's annotated copy: his review comments are the \adm{} macros
+% inline.  Preserved verbatim -- do NOT clean the comments out of this file.
+% It is the primary record of the feedback; README Appendix B.2 carries the
+% transcription and the consequences.
+%
+% It is NOT the same document as proposal/proposal.tex, which is the older,
+% longer pre-feedback draft (262 lines, no \adm{} comments, no Experimental
+% Setup / Evaluation sections).  Both are kept.  Overleaf remains truth.
+%
+% Outstanding fixes against this file are tracked in README Appendix B.3.
+% ---------------------------------------------------------------------------
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+
+\newif\ifshowcomments
+\showcommentstrue   % comment out this line (or set \showcommentsfalse) to hide
+
+\ifshowcomments
+  \newcommand{\adm}[1]{{\color{orange}{[#1]}}}
+  \newcommand{\rar}[1]{{\color{blue}{[#1]}}}
+\else
+  \newcommand{\adm}[1]{\ignorespaces}
+  \newcommand{\rar}[1]{\ignorespaces}
+\fi
+
+% hyperref is optional: guarded so the file also compiles on minimal TeX installs.
+\IfFileExists{etoolbox.sty}{\usepackage[hidelinks]{hyperref}}{}
+
+\title{Cooperative Multi-Agent Generative Jamming\\
+of UAV Networks under Detection Constraints\\
+\large Bachelor's Thesis Project Proposal}
+
+\author{Rahul~Rahman\\~Supervisor: Dr.~Antonio~Di~Maio, ETH Zurich
+\thanks{June 2026}}
+
+\begin{document}
+\maketitle
+\vspace{-2em}
+
+\section{Introduction}
+As mobile networks evolve, the growing complexity of the physical layer (PHY) has made Machine Learning (ML) standard for tasks such as channel estimation and signal detection~\cite{pirayesh2022jamming}.
+%\adm{cite}
+Beyond conventional broadband jamming \adm{cite?}, the deployment of intelligent adversaries capable of exploiting the deterministic structures of communication protocols themselves poses a severe threat.
+These protocol-aware attacks differ from high-power jamming because they surgically target specific control signals such as synchronization preambles and pilot subcarriers~\cite{zhang2023detection} and thus degrade network performance without producing the wide-band energy signature that conventional detectors sense~\cite{pirayesh2022jamming}.
+%\adm{replace "obvious" with more precise term: detected? if so, how are detected?}
+
+Existing physical layer security and anti-jamming research offers a broad set of defenses, including robust signal processing, game-theoretic formulations~\cite{article} (which model the attacker--defender interaction), and reinforcement-learning-based adaptation~\cite{qin2025multi}~\cite{abolhassani2025coordinated}.
+However, many approaches still rely on human-designed attacker models, fixed jammer classes, or strong assumptions about channel statistics and system knowledge.
+More fundamentally, they are reactive: they assume the jammer's activity is known or can be sensed~\cite{zhang2023detection}~\cite{Nguyen2025_MARL_UAVRelay}~\cite{electronics14163307}\adm{doesn't the proposed method also use some form of prediction of activity? i.e., jammer predicts distribution of honest codewords, and defender predicts jammer presence?}.
+A countermeasure that is triggered by detection, cannot be triggered by an attack it never detects.
+\adm{would this motivate "proactive" (i.e., always spend a certain amount of resources to be resilient at any time, i.e., uniformizing the codeword distribution) or "adaptive" (i.e., increase budget, e.g., stronger modulation, when defender detects a higher \textit{probability} that the channel is being jammed)?}
+These observations meet in a gap: attackers have not optimized non-detectability as a first-class objective~\cite{valianti2024cooperative}, and defenders have assumed they would not have to.
+This work treats it as one, formulating the attack as a cooperative \adm{highlight in intro the transition from single-agent jamming, which is already a problem in itself, to multi-agent cooperative jamming. even understanding the first would be good} multi-agent problem with generative waveform policies.
+\adm{I'd add somewhere here that one big issue in general is the inter-jammer or inter-node communication delay, which introduces desynchronization, and therefore makes it hard for jammers to react to honest symbol, and hard for honest node to defend against jamming symbols}
+Coordination because keeping each jammer below threshold while their contributions add at the victim has no closed form, generative because the signature must be shaped rather than a channel merely chosen.
+\adm{regarding channel, we can also assume a single channel to simplify the scope and we can always extend the proposed method in the future if the paper is accepted for a journal extension, e.g., IEEE Transaction on Wireless Communications}
+%\adm{following can be moved to an experimental setup section}
+
+
+\section{Research Questions}
+
+\textbf{RQ1.} Can a cooperative multi-agent, generative jamming policy degrade a UAV link while
+remaining below the detection threshold of a established learned detector~\cite{9707819}, and what effectiveness--detectability trade-off does it achieve relative to baselines?
+The baselines span the full range of attacker capability: barrage interference, a closed-form minimum-energy attack, a single-agent learned attacker, and an omniscient cancellation attacker as an upper bound.
+
+\textbf{RQ2.} What does adaptation cost either side? Treating the interaction as a round-based offline game --- frozen detector, attacker optimized against it, detector retrained on those attacks, attacker re-optimized --- this asks what re-closing the gap costs the defender in accuracy and false-alarm rate, and how much of the loss the attacker subsequently recovers.
+
+\section{Methodology}
+
+\adm{important: the main contrib now seems the application of some neural architecture for this problem. discussing a novelty in the neural architecture or in how defenders and attackers interact, coordinate, and syncronize within themselves could strengthen the contribution's novelty}
+\textbf{System and threat model:}
+The first step fixes what the proposal currently leaves implicit: where detection takes place, what the detector observes, and what each side knows.
+Detection is performed at the legitimate receiver from the received signal alone, with no channel state information about the attacker and no ground-truth labels at run time, which restricts the defender to offline adaptation.
+
+\textbf{Incremental system model:}
+The work starts from the smallest model in which the research questions remain meaningful --- a single-carrier link with swept noise level and one interferer under a hard power budget --- and adds one layer at a time, each addition justified by a question the previous layer could not answer.
+The reason is not simplicity for its own sake: in a small model the optimal decision rule is analytically available, so detectability can be reported against the best possible defender rather than against one particular trained network.
+Layers are added in the order: multiple coordinating jammers with distinct channels, imperfect attacker synchronization, a multi-carrier waveform over a frequency-selective fading channel, and node mobility.
+
+\textbf{Attacker and defender:}
+The attack policy is generative and trained under centralized training with decentralized execution, optimizing the induced error rate penalized by detection probability, with the transmit-power budget imposed as an environment constraint rather than a reward term.
+The defender is a suite rather than a single model --- an energy detector at fixed false-alarm rate, a learned spectrogram classifier, and where available the optimal likelihood-ratio test --- so that evading one detector family is not mistaken for evading detection.
+
+%\adm{following to move in its separate section after: experimental setup}
+
+\section{Experimental Setup}
+Evaluation is against classical and non-cooperative baselines on the effectiveness--detectability plane.
+
+\section{Evaluation}
+Results are reported as bit and symbol error rate against detection probability at a fixed false-alarm rate, with attack strategies compared at matched detectability rather than at equal transmit power, since an attack that raises the error rate by raising its own signature is not an improvement.
+Parameter studies cover noise level, power budget and the number of jammers. RQ2 is answered by running the round-based protocol described above and recording the cost of each adaptation step. Experiments are implemented with Sionna~\cite{hoydis2022sionna}, PyTorch and PettingZoo.
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}

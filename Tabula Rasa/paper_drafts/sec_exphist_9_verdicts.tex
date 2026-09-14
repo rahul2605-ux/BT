@@ -1,124 +1,105 @@
 % ---------------------------------------------------------------------------
 % Experiment History -- subsection 9: Summary of Hypotheses and Verdicts.
-% Sources: README A.0-A.7 throughout.
+% Sources: README A.0-A.7.
 %
-% Two tables, and they do different jobs:
-%   tab:verdicts     -- what was asked, what answered it, and what the answer
+% Rewritten 2026-09-11: prose cut to four sentences (the tables are the
+% content) and the verdict table cut from 17 rows to 13, with cell text
+% shortened to plain wording.
+%
+% Two tables, two jobs:
+%   tab:verdicts     -- what was asked, what answered it, what the answer
 %                       was.  "Superseded by" is the column the supervisor
-%                       reads: it shows that retracted claims were retracted
-%                       BY US and by a named later measurement, not left to
-%                       be found.
-%   tab:traceability -- convention (a): the prose names no simulation, so the
-%                       mapping from narrative step to directory and job ID
-%                       lives here, once, at the end.  This is the
-%                       reproducibility artefact if the material is reused.
+%                       reads: it shows retracted claims were retracted BY
+%                       US, by a named later measurement.
+%   tab:traceability -- convention (a): the prose names no simulation, so
+%                       the mapping to directory and job ID lives here once.
 %
-% PLACEMENT: this subsection goes second-to-last.  "What the History
-% Determines" (subsection 10) stays the closing subsection -- a reference
-% table is a bad last word for an appendix that is supposed to hand off
-% forward.
+% PLACEMENT: second-to-last.  "What the History Determines" stays the
+% closing subsection -- a reference table is a bad last word for an appendix
+% meant to hand off forward.
 %
-% Job IDs for the white-box MAPPO jammer and the 2-D reduction predate
-% job-ID logging in the run index; the dash is accurate, not an omission.
+% The dashes in the job column are accurate: those runs predate job-ID
+% logging in the run index.
 % ---------------------------------------------------------------------------
 
 \subsection{Summary of Hypotheses and Verdicts}
 \label{subsec:exphist:verdicts}
-Table~\ref{tab:verdicts} collects the questions each step was built to answer.
-Four entries are verdicts against claims we had ourselves reported, and each names the later
-measurement that overturned it; those rows are the reason the reporting rules the results sections
-follow are what they are.
+Table~\ref{tab:verdicts} collects what each step was built to answer.
+Four rows are verdicts against claims we had reported ourselves, and each names the later measurement
+that overturned it.
+The prose above names no simulation, since the code is not what the argument rests on, so
+Table~\ref{tab:traceability} gives the mapping for anyone reproducing a number.
 
 \begin{table*}[!t]
 \renewcommand{\arraystretch}{1.3}
 \caption{What each step asked, what answered it, and what the answer was.}
 \label{tab:verdicts}
 \centering
-\begin{tabular}{p{0.30\textwidth} p{0.30\textwidth} l p{0.20\textwidth}}
+\begin{tabular}{p{0.29\textwidth} p{0.31\textwidth} l p{0.19\textwidth}}
 \hline\hline
-\textbf{Hypothesis} & \textbf{Evidence} & \textbf{Verdict} & \textbf{Superseded by} \\
+\textbf{Question} & \textbf{Evidence} & \textbf{Verdict} & \textbf{Superseded by} \\
 \hline
 A power threshold is evaded by power tuning alone
 & BER $0.19$ at $10\,\%$ detection, power held just below the threshold
-& supported & --- \\
+& yes & --- \\
 
 A diagonal Gaussian policy can produce QPSK-like received statistics
-& detection at $100\,\%$, received kurtosis stalled at $-0.25$
-& refuted, structurally & --- \\
+& detection $100\,\%$, kurtosis stalled at $-0.25$
+& no, structurally & --- \\
 
 A more expressive action distribution repairs it under policy gradient
-& flow and mixture heads stall at the same kurtosis; nine mixture runs, one of $10^6$ steps
-& refuted & --- \\
+& flow and mixture heads stall at the same kurtosis, one run of $10^6$ steps
+& no & --- \\
 
 The same flow trained by direct gradient evades the kurtosis test
 & kurtosis $-1.31$ at BER $0.170$, detection $\approx 0\,\%$
-& supported, under genie observation
-& black-box observation, \S\ref{subsec:exphist:untrainable} \\
+& yes, with a genie observation
+& \S\ref{subsec:exphist:untrainable} \\
 
-Two coordinated agents outperform one at equal total power
+Two coordinated agents beat one at equal total power
 & BER $0.195$ against $0.170$ at total power $\approx 0.97$
-& supported, by $\approx 15\,\%$
+& yes, by $\approx 15\,\%$
 & retracts our ``roughly double'' \\
 
-The larger two-agent gain is coordination rather than power
-& $3.2\times$ the power for $2.7\times$ the BER; the power term never binds
-& refuted for that operating point
-& hard power budget \\
-
-A published spectrogram classifier reproduces on our chain
-& $78.9\,\%$ on a flat carrier, $99.79\,\%$ on OFDM, waveform the only variable
-& supported only with OFDM & --- \\
-
 Policy-gradient learning over raw IQ yields a stealthy jammer
-& detector output pinned at $0.999$ across every run; entropy flat to $0.05\,\%$
-& refuted, structurally
-& low-dimensional perturbation parameters \\
+& detector output pinned at $0.999$ in every run, entropy flat
+& no, structurally
+& perturbation parameters \\
 
 Effectiveness and stealth trade off fundamentally, capping BER near $0.04$
 & the cap was guard-bin occupancy, not a detector property
-& refuted
-& characterisation sweep, \S\ref{subsec:exphist:characterisation} \\
+& no
+& \S\ref{subsec:exphist:characterisation} \\
 
-The classifier's $99.79\,\%$ measures resistance to jamming
-& flags power $0.03$ out-of-band causing no errors; misses in-band interference at BER $0.36$
-& refuted & --- \\
+The CNN's $99.79\,\%$ measures resistance to jamming
+& flags power $0.03$ out-of-band causing no errors, misses in-band at BER $0.36$
+& no & --- \\
 
 The in-band blind spot is a gap in the training data
 & retraining closes it at accuracy $99.8 \to 90.5\,\%$, false alarms $0 \to 3.8\,\%$
-& refuted; it is a trade-off & --- \\
-
-The real-part-only spectrogram invalidates the out-of-band finding
-& complex transform: in-band $0.086$ against out-of-band $1.000$ at equal damage
-& refuted; the finding stands & --- \\
+& no, it is a trade-off & --- \\
 
 A stealthy attacker reaching BER $0.42$ exists on the lossless channel
 & against the suite, at most $0.005$ at any usable budget
-& refuted
-& energy detector, \S\ref{subsec:exphist:characterisation} \\
+& no
+& energy detector \\
 
-A sparse in-band jammer imposes a BER floor independent of signal-to-noise ratio
+A sparse in-band jammer imposes a BER floor independent of SNR
 & $0.05$--$0.07$ at eight subcarriers across 5--30\,dB
-& supported & --- \\
-
-The energy detector is redundant beside the classifier
-& lossless: the meter subsumes the classifier; faded: the classifier subsumes the meter
-& conditional on the channel & --- \\
+& yes & --- \\
 
 Channel-aware subcarrier selection beats blind selection
-& $+70\,\%$ at matched configuration; $-4.6$ to $+6.2\,\%$ at matched detectability
-& refuted at matched detectability
-& dense sweep, \S\ref{subsec:exphist:realistic} \\
+& $+70\,\%$ at matched configuration, $-4.6$ to $+6.2\,\%$ at matched detectability
+& no, once detectability is matched
+& \S\ref{subsec:exphist:realistic} \\
 
 An effective and unflagged attacker exists on a realistic channel
 & at the defender's own false-alarm rate: none at 5--15\,dB, BER $0.011$ and $0.004$ at 20 and 30\,dB
-& supported, and modest
+& yes, and modest
 & retracts our $\varepsilon \leq 0.5$ figure \\
 \hline\hline
 \end{tabular}
 \end{table*}
-
-The prose above names no simulation, because the code is not the artefact the argument rests on.
-Table~\ref{tab:traceability} supplies the mapping for anyone reproducing a specific number.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.3}
@@ -130,8 +111,8 @@ Table~\ref{tab:traceability} supplies the mapping for anyone reproducing a speci
 \textbf{Step} & \textbf{Directory} & \textbf{Job(s)} \\
 \hline
 Chain validation          & \texttt{simulation00}, \texttt{04b} & --- \\
-Power threshold           & \texttt{simulation01} & --- \\
-Kurtosis, Gaussian head   & \texttt{simulation02} & --- \\
+Power threshold           & \texttt{simulation01}  & --- \\
+Kurtosis, Gaussian head   & \texttt{simulation02}  & --- \\
 Kurtosis, flow, PPO       & \texttt{simulation03}  & 93396--93423 \\
 Kurtosis, flow, direct    & \texttt{simulation03b} & 98432--98516 \\
 Kurtosis, mixture head    & \texttt{simulation03c} & 98764--98777 \\
