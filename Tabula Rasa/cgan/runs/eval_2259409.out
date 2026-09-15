@@ -1,0 +1,47 @@
+node: artongpu03.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+
+noise:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER         8.00e-09  (8 err / 1.0e+09 bits)
+  JSR  -4.0 dB  BER         3.74e-06  (101 err / 2.7e+07 bits)
+  JSR  -2.0 dB  BER         1.89e-04  (189 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         2.41e-03  (2405 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         1.24e-02  (12373 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         3.72e-02  (37212 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         7.82e-02  (78230 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         1.30e-01  (130040 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         1.85e-01  (185311 err / 1.0e+06 bits)
+
+optimal:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER         1.35e-03  (1345 err / 1.0e+06 bits)
+  JSR  -4.0 dB  BER         2.17e-02  (21737 err / 1.0e+06 bits)
+  JSR  -2.0 dB  BER         9.61e-02  (96113 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         2.03e-01  (203485 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         2.64e-01  (263838 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         3.14e-01  (314150 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         3.50e-01  (350400 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         3.68e-01  (368173 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         3.90e-01  (390475 err / 1.0e+06 bits)
+
+gan:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER         1.20e-08  (12 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER         1.31e-04  (131 err / 1.0e+06 bits)
+  JSR  -4.0 dB  BER         8.81e-03  (8805 err / 1.0e+06 bits)
+  JSR  -2.0 dB  BER         7.93e-02  (79286 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         2.10e-01  (209516 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         3.13e-01  (313063 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         3.78e-01  (377650 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         4.13e-01  (412777 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         4.37e-01  (436804 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         4.53e-01  (452927 err / 1.0e+06 bits)
+
+--- REPORT (no pass/fail; §2.10) ---
+JSR at BER 1e-3:  ours {'noise': np.float64(-0.69), 'optimal': None, 'gan': np.float64(-5.03)}
+                 paper {'noise': np.float64(-1.32), 'optimal': np.float64(-7.06), 'gan': np.float64(-5.76)}
+Noise - GAN:      ours 4.34 dB  (paper 4.44 dB)
+GAN - Optimal:    ours None dB  (paper 1.31 dB)
+wrote run001_ber_vs_jsr.json, run001_ber_vs_jsr.png to /home/rrahman/BT/Tabula Rasa/cgan/../artifacts/cgan

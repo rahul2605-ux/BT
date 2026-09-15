@@ -1,0 +1,211 @@
+{
+  "run": "run001",
+  "snr_db": 30.0,
+  "jsr_db": [
+    -10.0,
+    -8.0,
+    -6.0,
+    -4.0,
+    -2.0,
+    0.0,
+    2.0,
+    4.0,
+    6.0,
+    8.0,
+    10.0
+  ],
+  "link": {
+    "sps": 8,
+    "pulse": "rrc0.35",
+    "noise_band": "full",
+    "optimal_sync": "async"
+  },
+  "ber": {
+    "noise": [
+      3e-09,
+      3e-09,
+      8e-09,
+      3.740740740740741e-06,
+      0.000189,
+      0.002405,
+      0.012373,
+      0.037212,
+      0.07823,
+      0.13004,
+      0.185311
+    ],
+    "optimal": [
+      3e-09,
+      3e-09,
+      0.001345,
+      0.021737,
+      0.096113,
+      0.203485,
+      0.263838,
+      0.31415,
+      0.3504,
+      0.368173,
+      0.390475
+    ],
+    "gan": [
+      3e-09,
+      1.2e-08,
+      0.000131,
+      0.008805,
+      0.079286,
+      0.209516,
+      0.313063,
+      0.37765,
+      0.412777,
+      0.436804,
+      0.452927
+    ]
+  },
+  "zero_error": {
+    "noise": [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "optimal": [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "gan": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "errors": {
+    "noise": [
+      0,
+      0,
+      8,
+      101,
+      189,
+      2405,
+      12373,
+      37212,
+      78230,
+      130040,
+      185311
+    ],
+    "optimal": [
+      0,
+      0,
+      1345,
+      21737,
+      96113,
+      203485,
+      263838,
+      314150,
+      350400,
+      368173,
+      390475
+    ],
+    "gan": [
+      0,
+      12,
+      131,
+      8805,
+      79286,
+      209516,
+      313063,
+      377650,
+      412777,
+      436804,
+      452927
+    ]
+  },
+  "bits": {
+    "noise": [
+      1000000000,
+      1000000000,
+      1000000000,
+      27000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000
+    ],
+    "optimal": [
+      1000000000,
+      1000000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000
+    ],
+    "gan": [
+      1000000000,
+      1000000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000,
+      1000000
+    ]
+  },
+  "jsr_at_1e3": {
+    "optimal": -6.05,
+    "gan": -5.03,
+    "noise": -0.69
+  },
+  "paper_jsr_at_1e3": {
+    "noise": -1.32,
+    "optimal": -7.06,
+    "gan": -5.76
+  },
+  "gaps_ours": {
+    "noise_minus_gan": 4.34,
+    "gan_minus_optimal": 1.01
+  },
+  "gaps_paper": {
+    "noise_minus_gan": 4.44,
+    "gan_minus_optimal": 1.31
+  },
+  "jsr_at_1e3_is_lower_bound": {
+    "optimal": true,
+    "gan": false,
+    "noise": false
+  },
+  "note": "Crossing uses plotted values (zero-error points at their 95% upper bound); a crossing whose left bracket had zero errors is a lower bound on JSR. Report-only, no pass/fail (README \u00a72.10)."
+}

@@ -186,10 +186,12 @@ def test_models():
         check(f"[n_cls={n_cls}] D score shape (B,1)", float(score.shape == (B, 1)), 1.0, 0)
         check(f"[n_cls={n_cls}] D class logits shape (B,n_cls)",
               float(clogits.shape == (B, n_cls)), 1.0, 0)
-        check(f"[n_cls={n_cls}] classification loss (0 iff n_cls==1)",
-              float(losses.classification_loss(clogits, labels)),
-              0.0 if n_cls == 1 else float(losses.classification_loss(clogits, labels)),
-              0.0 if n_cls == 1 else 1e9)
+        closs = float(losses.classification_loss(clogits, labels).detach())
+        if n_cls == 1:
+            check("[n_cls=1] classification loss is exactly 0", closs, 0.0, 0.0)
+        else:
+            check("[n_cls=3] classification loss is finite and > 0",
+                  float(math.isfinite(closs) and closs > 0), 1.0, 0)
     # Loss zero-points and finiteness, on an identical real/fake pair.
     real = torch.randn(B, 2, seg, device=device).clamp(-1, 1)
     check("STFT loss on identical batches", float(losses.stft_loss(real, real.clone())), 0.0, 1e-6)

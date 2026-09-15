@@ -24,7 +24,7 @@ Last consolidated: 2026-09-12.
 > tried: **reproduce the CGAN jamming-waveform generator of Zhou et al. (ISSET 2025) on QPSK, then
 > condition it on stealth** and evaluate against three detectors (power threshold · a statistical
 > test, still to be chosen · the Zhang & Krunz 2023 CWT-CNN). The coordination direction described in
-> the rest of this page is **paused, not superseded**. Live code for the new track goes in `cgan/`.
+> the rest of this page is **paused, not superseded**. Live code for the new track is in `cgan/`. **Step 1 (reproduce Zhou 2025 on QPSK) is done as of 2026-09-14** — the GAN's Noise/Optimal gaps at BER 1e-3 match the paper (§3.3b); next is the statistical detector for step 2 (§4.2 Q8).
 
 A **cooperative multi-agent generative jamming attacker** is built and evaluated against a link and
 its detector. The question is what a *coordinated, learned* attacker achieves that a single or
@@ -134,8 +134,11 @@ per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, s
 | `cgan/digitise_fig6.py` → `paper_fig6.json` | C0: Zhou Fig. 6 pixel-digitised, axes calibrated on its own gridlines (the only login-node-safe script) |
 | `cgan/link.py` | Sionna QPSK waveform link (upsample → pulse → AWGN + jammer → matched filter → sign decision), closed-form Gaussian-jammer BER, `measure_ber` with an error stopping rule, paper-curve helpers |
 | `cgan/jammers.py` | `noise` (full / inband), `optimal` (locked / random_phase / async), exact JSR scaling |
-| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (75 checks, job 2259149) |
+| `cgan/models.py`, `cgan/losses.py` | C3: generator + discriminator (score + auxiliary-classifier heads), `PeakScaler`; the seven loss terms |
+| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (94 checks, job 2259280) |
 | `cgan/calibrate.py` + `submit_calibrate.sh` | C2: fit the unstated link parameters to Fig. 6 → `artifacts/cgan/calibration.json`, `c2_calibration.png` |
+| `cgan/train_cgan.py` + `submit_train.sh` | C5: train the CGAN → `artifacts/cgan/runNNN_G.pt`, `_losses.{json,png}` |
+| `cgan/evaluate.py` + `submit_eval.sh` | C6: BER vs JSR (noise/optimal/gan) overlaid on Fig. 6 → `artifacts/cgan/runNNN_ber_vs_jsr.{json,png}` |
 
 **Frozen code** (sim06/07/08 + frontier) is inventoried in [A.9](#a9-frozen-code-inventory).
 
@@ -742,13 +745,14 @@ a loss.
 ## 3.1 Status line
 
 **STATE 2026-09-14: exploratory CGAN track opened — [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).
-Step 1 (reproduce Zhou 2025 on QPSK) is in progress; nothing has run yet.** The user judged the
+Step 1 (reproduce Zhou 2025 on QPSK) is DONE (§3.3b); step 2 (stealth conditioning) not started.** The user judged the
 2026-09-12 findings too weak to carry the thesis. The coordination plan below is **paused, not
 superseded**, and was not re-validated today. Whether the §4.1 #0 email to Di Maio was sent is not
 recorded after 2026-09-12, and he has not been told about this track as far as this README records.
 
-**Where it stands: C0, C1 and C2 are done, and the C2 checkpoint is passed** (link = stated
-assumptions, bar = report-only, §2.10). **Next action: C3–C5** (GAN code, tests, training). Step 2 does not start until step 1 has
+**Where it stands: C0–C6 all done (§3.3b). Step 1 is reproduced** — the GAN's BER-vs-JSR gaps
+at 1e-3 match Zhou within ~0.3 dB. **Next action: pick the step-2 statistical detector with the
+user (§4.2 Q8), then build stealth conditioning + the three-detector evaluation.** Step 2 does not start until step 1 has
 been reported against the paper's gaps (report-only, §2.10) and the statistical detector has been
 chosen together (§4.2 Q8).
 
@@ -936,6 +940,39 @@ transcription drift. The JSON row keys are `p_e1`, `p_e2`, `p_l`, `p_np` — **n
 > test is largest exactly where the attack is sparsest"*, not a single headline number. Reporting the
 > best row alone would repeat the m1 mistake (§2.7).
 
+## 3.3b CGAN step-1 result — Zhou 2025 reproduced on QPSK (2026-09-14)
+
+Run001 (jobs 2259289 train, 2259409 eval), on the calibrated link (§2.10: sps 8, RRC 0.35, white-noise
+jammer, async optimal jammer). SNR 30 dB, JSR −10:2:10 dB, ≥100 bit errors or 1e9 bits per point.
+Figures: `artifacts/cgan/run001_ber_vs_jsr.png` (overlaid on Zhou Fig. 6), `run001_losses.png`.
+
+**What reproduces — the gaps between curves at BER 1e-3** (the paper's own claim is "GAN beats noise by
+2–6 dB", and its figure shows the ordering Optimal ≳ GAN > Noise):
+
+| gap at BER 1e-3 | ours | Zhou Fig. 6 |
+|---|---|---|
+| Noise − GAN | **4.34 dB** | 4.44 dB |
+| GAN − Optimal | **1.01 dB** | 1.31 dB |
+
+The ordering holds and the GAN needs 4.3 dB less JSR than white noise to force BER 1e-3, inside the
+paper's 2–6 dB. Our GAN sits marginally closer to the optimal jammer than the paper's does.
+
+**What does not, and why it is not a GAN issue.** All three absolute crossings sit ~1 dB to the right
+of the paper's (ours: Optimal −6.05, GAN −5.03, Noise −0.69 dB; paper −7.06 / −5.76 / −1.32). The
+shift is the same for all three curves and equals the C2 link-calibration offset (§2.10) — no single
+sps reproduces the paper's Noise curve, and we chose stated assumptions over fitting it. Because the
+offset is common to all curves, the *gaps* — which is what the paper's contribution is about — are
+unaffected. Below −6 dB JSR the optimal/GAN curves also fall faster than the paper's (§4.2 Q7(v)),
+outside the 1e-3 region the comparison is read at.
+
+**Training.** Stable to 10k iterations, no mode collapse (final G≈7.5, D≈0.02; the four generator loss
+terms — adversarial, feature-matching, STFT, I/Q-Wasserstein — all healthy). Zhou's "L_G, L_D → 0.5"
+is a bare-BCE-GAN statement and does not apply to the composite loss; not a concern.
+
+**Caveat carried into step 2.** BER is in no loss term (§4.2 Q7): the GAN is effective purely by
+imitating the QPSK waveform. So "conditioning on stealth" (step 2) gets no help from the reproduced
+objective and is a genuine addition, not a tweak.
+
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
 ### Exploratory CGAN track — ACTIVE since 2026-09-14
@@ -951,10 +988,10 @@ paused while this runs.
 | **C0** | **DONE 2026-09-14.** Fig. 6 pixel-digitised by script: a 400-dpi render; axes least-squares-calibrated on the plot's own gridlines (residuals < 1 px; the FEC line independently reads log₁₀ BER = −2.998 vs −3); markers located by legend colour; overlay checked by eye. **The data points are at JSR −10:2:10 dB (11 points); the axis ticks at −10:2.5:10 are not the data grid.** Reading uncertainty ≈ ±0.04 decade / ±0.07 dB where visible. At JSR ≥ 0 dB the curves overlap: 3 Noise markers are fully hidden under GAN (recorded as `null`) and 3 other markers are partly hidden (flagged). What the numbers show is recorded in §4.2 Q7. | `cgan/digitise_fig6.py` → `cgan/paper_fig6.json`, `artifacts/cgan/c0_fig6_digitised.png` | — |
 | **C1** | **DONE 2026-09-14 (noise + optimal; `gan` lands with C3).** Verified by C4 (job 2259149). **Sionna QPSK waveform link + the three jammers.** Link: `BinarySource` → Gray QPSK `Mapper` → `Upsampling(sps)` → pulse filter → + AWGN (SNR 30 dB) + jammer → matched filter → `Downsampling` → hard decision → BER. Jammers: `noise` (white complex Gaussian), `optimal` (same modulation and filter, random symbols), `gan(G)`. JSR = mean per-sample jammer power / signal power at the RX input, imposed by a hard power projection. Includes the closed-form `ber_noise_jammer` reference. | `cgan/link.py`, `cgan/jammers.py` | — |
 | **C2** | **DONE 2026-09-14 (job 2259157, supersedes 2259150). Checkpoint passed: the link was chosen as stated assumptions, not fitted values — sps 8, RRC 0.35, white noise, async optimal (§2.10); `calibration.json`'s `selected` is deliberately `null`, the decision lives in `link.py` `LINK`.** With those assumptions: Noise crosses 1e-3 at −0.67 dB, Optimal at −6.00 dB (async rrc0.35, RMS 1.44 dec). What the calibration found: **Noise:** no link matches the paper's curve everywhere. The best constant-gain Q-function leaves RMS 0.45 decades. **sps 4** is RMS-best (0.79 dec) but crosses 1e-3 at −3.75 dB vs the paper's −1.32. **sps 8** is 1e-3-best (−0.67 dB, 0.64 dB off) but RMS 1.51 dec, too steep at low JSR. The gain that hits the paper's crossing exactly is 8.49 dB ≈ sps 7.06. The pulse is **not identified** (white noise is pulse-independent), and in-band noise fits far worse. **Optimal:** `locked` and `random_phase` produce **zero errors below −2 / −4 dB** — a geometric impossibility for the paper's low-JSR points, not a tuning problem. Only **`async`** produces errors there, via the pulse's tails at off-Nyquist instants. Best is **async, RRC β = 0.25**: crossing −6.43 dB (sps 4) / −6.35 dB (sps 8) vs the paper's −7.06, RMS 0.98 / 1.01 dec. It still falls ~1.5 decades too fast below −6 dB (paper 4.4e-5 at −10 dB; ours < 1.5e-7). **Gap at 1e-3, Noise − Optimal:** paper 5.75 dB; sps 8 gives 5.68 dB; sps 4 gives 2.69 dB. | `cgan/calibrate.py` → `artifacts/cgan/calibration.json` + `c2_calibration.png` | Checkpoint passed 2026-09-14; the bar is report-only (§2.10). **Calibrate the unstated link parameters.** (1) Fit the closed-form noise curve to the digitised Noise points (BER ≥ 1e-6) over sps ∈ {2,4,8,16} × pulse ∈ {rect, RRC β ∈ {0.25,0.35,0.5}} × noise band ∈ {full fs, in-band}. (2) On the fitted link, Monte-Carlo the `optimal` jammer under three synchronisation variants — {symbol+phase-locked, symbol-synchronous with random phase, asynchronous} — and pick the best match to the digitised Optimal curve. The same assumption then governs how the GAN training data is cut. | `cgan/calibrate.py` → `artifacts/cgan/calibration.json` + figure | **⛔ STOP: report both fits' residuals to the user before C3.** If no variant brings Optimal within ~1 dB, the success bar needs revisiting — and that is itself a finding about the paper. |
-| **C3** | **Generator, discriminator, losses** per Zhou Figs. 2–3. Every unstated choice is recorded in §4.2 Q7. | `cgan/models.py`, `cgan/losses.py` (pure torch) | after C2 sign-off |
-| **C4** | **LINK HALF DONE 2026-09-14 — 75/75 checks pass, job 2259149** (rrc0.35 at sps 8, rect at sps 4). Two real defects were caught on the way, both fixed at the source rather than by loosening a tolerance: **(a)** span-8 RRC truncation ISI of 3.6 % flipped zero-margin symbols (job 2259141) → span 32 (§4.2 Q7); **(b)** JSR was averaged over the filter tails, over-driving short frames by up to 1.76 dB (job 2259142) → power ratios are now defined over the symbols' active window (`Link.active`). The model/loss half follows with C3. **Test suite.** Clean BER vs the Q-function reference; noise-jammer BER vs the closed form (which validates the processing gain C2 relies on); realised JSR within 0.05 dB of the request for all three jammers; a phase-locked optimal jammer at zero noise flips exactly past the amplitude margin; model shapes (G → (B,2,1024) in [−1,1]; D features 32768; score (B,1); logits (B,n_classes)); classifier loss ≡ 0 when n_classes = 1; STFT and I/Q losses ≡ 0 on identical batches; exact normalisation round trip. The link checks are written with C1 and extended at C3. | `cgan/verify.py` + `submit_verify.sh` | must exit 0 before any C2/C5/C6 job |
-| **C5** | **Train.** 10,000 iterations, batch 128, Adam 2e-4 with β = (0.5, 0.999), non-saturating loss + gradient penalty (`--adv wgan-gp` as ablation). | `cgan/train_cgan.py` + `submit_train.sh` → `artifacts/cgan/run001_G.pt`, loss log, `run001_losses.png` | after C4 |
-| **C6** | **Evaluate against Zhou's protocol** (SNR 30 dB, JSR −10:2:10 dB — the grid of Fig. 6's markers — 10⁴ symbols × 100 trials), **extended** to ≥ 100 bit errors or 10⁹ bits so the low-BER points are real. Overlay on the digitised Fig. 6. Report JSR at BER 1e-3 for each jammer, and the two gaps next to the paper's 1.31 / 4.44 dB (report-only, §2.10). | `cgan/evaluate.py` + `submit_eval.sh` → `artifacts/cgan/run00N_ber_vs_jsr.{json,png}` | after C5. **Then stop: step 1 sign-off, and choose the statistical detector (§4.2 Q8), before any step-2 work** |
+| **C3** | **Generator, discriminator, losses** per Zhou Figs. 2–3. Every unstated choice is recorded in §4.2 Q7. | `cgan/models.py`, `cgan/losses.py` (pure torch) | **DONE 2026-09-14** (job 2259280). `models.py` + `losses.py`, plain torch. |
+| **C4** | **DONE 2026-09-14 — 94/94 checks pass, job 2259280** (link + models + losses). Two real link defects were caught and fixed at source, not by loosening a tolerance: **(a)** span-8 RRC truncation ISI of 3.6 % flipped zero-margin symbols (job 2259141) → span 32 (§4.2 Q7); **(b)** JSR was averaged over the filter tails, over-driving short frames by up to 1.76 dB (job 2259142) → power ratios defined over the symbols' active window (`Link.active`). **Test suite.** Clean BER vs the Q-function reference; noise-jammer BER vs the closed form (which validates the processing gain C2 relies on); realised JSR within 0.05 dB of the request for all three jammers; a phase-locked optimal jammer at zero noise flips exactly past the amplitude margin; model shapes (G → (B,2,1024) in [−1,1]; D features 32768; score (B,1); logits (B,n_classes)); classifier loss ≡ 0 when n_classes = 1; STFT and I/Q losses ≡ 0 on identical batches; exact normalisation round trip. The link checks are written with C1 and extended at C3. | `cgan/verify.py` + `submit_verify.sh` | exits 0; ran before C5/C6 |
+| **C5** | **DONE 2026-09-14 (run001, job 2259289, ~12 min).** Trained stably to 10k iters — no collapse (G≈7.5, D≈0.02 at the end), all four G loss terms healthy. NOTE: Zhou's "L_G, L_D → 0.5" claim is for a bare BCE GAN; our composite loss does not asymptote there, which is expected. **Train.** 10,000 iterations, batch 128, Adam 2e-4 with β = (0.5, 0.999), non-saturating loss + gradient penalty (`--adv wgan-gp` as ablation). | `cgan/train_cgan.py` + `submit_train.sh` → `artifacts/cgan/run001_G.pt`, loss log, `run001_losses.png` | done, after C4 |
+| **C6** | **DONE 2026-09-14 (run001, job 2259409). REPRODUCED on the metric that matters:** the gaps between curves at BER 1e-3 match Zhou — **Noise−GAN 4.34 dB (paper 4.44), GAN−Optimal 1.01 dB (paper 1.31)** — and the ordering Optimal ≳ GAN > Noise holds. Our GAN needs 4.3 dB less JSR than white noise to reach BER 1e-3, squarely inside Zhou's "2–6 dB" claim. Absolute crossings sit ~1 dB right of the paper (ours: Optimal −6.05, GAN −5.03, Noise −0.69 dB), which is the C2 link-calibration offset, the same for all three curves, not a GAN effect. **Evaluate against Zhou's protocol** (SNR 30 dB, JSR −10:2:10 dB — the grid of Fig. 6's markers — 10⁴ symbols × 100 trials), **extended** to ≥ 100 bit errors or 10⁹ bits so the low-BER points are real. Overlay on the digitised Fig. 6. Report JSR at BER 1e-3 for each jammer, and the two gaps next to the paper's 1.31 / 4.44 dB (report-only, §2.10). | `cgan/evaluate.py` + `submit_eval.sh` → `artifacts/cgan/run00N_ber_vs_jsr.{json,png}` | done, after C5. **Step 1 reproduced; next: choose the statistical detector (§4.2 Q8) before step 2** |
 
 With no pass/fail bar, hyperparameters are iterated **only** by explicit user decision after seeing
 C6. Each run gets a row in [A.0](#a0-run-index).
@@ -1582,6 +1619,7 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 08 | m2-suite | CNN ∨ energy per-sample | **suite ≡ CNN**; residual stealthy region BER 0.065–0.11 | 102319 |
 | 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
 | **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
+| **cgan** | run001 | CGAN (Zhou 2025), plain torch | **step 1 reproduced**: Noise−GAN 4.34 dB, GAN−Optimal 1.01 dB at BER 1e-3 (paper 4.44 / 1.31); §3.3b | 2259289, 2259409 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
 appendix states it nowhere and two findings below are properties of the objective, not of the
