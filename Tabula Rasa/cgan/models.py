@@ -43,6 +43,7 @@ POOL = 2
 DROPOUT = 0.3
 LRELU = 0.2
 G_POOL_TO = 16      # AdaptiveAvgPool1d target length before G's dense layer
+HEADROOM = 0.95     # largest normalised real sample ([5] Fre-GAN / HiFi-GAN loader)
 
 
 class Generator(nn.Module):
@@ -75,15 +76,19 @@ class PeakScaler:
     by that same scale ("inverse normalisation") before they hit the link. The
     scale is one saved number, fit once on a sample of clean waveforms. The round
     trip is exact by construction (verify.py checks it).
+
+    HEADROOM 0.95 follows Zhou's normalisation reference [5] (Fre-GAN, via the
+    HiFi-GAN loader: audio = normalize(audio) * 0.95): the largest real sample maps
+    to 0.95, not to 1.0, which Tanh only reaches asymptotically.
     """
 
     def __init__(self, scale=1.0):
         self.scale = float(scale)
 
     @classmethod
-    def fit(cls, waveforms, margin=1.0):
-        """waveforms: (..., 2, seg_len). Scale = max|sample| over the sample, times margin."""
-        return cls(waveforms.abs().max().item() * margin)
+    def fit(cls, waveforms, headroom=HEADROOM):
+        """waveforms: (..., 2, seg_len). The largest |sample| normalises to `headroom`."""
+        return cls(waveforms.abs().max().item() / headroom)
 
     def normalize(self, x):
         return x / self.scale

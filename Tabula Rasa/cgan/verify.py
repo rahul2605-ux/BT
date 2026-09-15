@@ -53,6 +53,22 @@ def ber(L, n_frames, n_sym, snr_db, jammer=None, batches=1):
     return err / bits, bits
 
 
+class PerfectG:
+    """
+    A stand-in for a perfect generator: ignores z and returns clean QPSK segments
+    from the link itself, peak-normalised exactly as training data is. Anything
+    the GAN evaluation path does to a generator's output must leave this one
+    indistinguishable from the `optimal` jammer.
+    """
+
+    def __init__(self, L):
+        self.L = L
+        self.scaler = models.PeakScaler.fit(L.real_segments(256, models.SEG_LEN))
+
+    def __call__(self, z, labels):
+        return self.scaler.normalize(self.L.real_segments(z.shape[0], models.SEG_LEN))
+
+
 # ---------------------------------------------------------------- 1. waveform
 def test_waveform(L):
     """
@@ -121,19 +137,22 @@ def test_jsr_is_exact(L):
     """
     print(f"\n4. Realised JSR [{L.pulse}, sps={L.sps}]")
     n_sym = 64
+    G = PerfectG(L)
     cases = [("noise", dict(band="full")), ("noise", dict(band="inband"))] + \
-            [("optimal", dict(sync=s)) for s in jammers.SYNC_VARIANTS]
+            [("optimal", dict(sync=s)) for s in jammers.SYNC_VARIANTS] + \
+            [("gan", dict(G=G, scale=G.scaler.scale, sync=s)) for s in jammers.SYNC_VARIANTS]
     _, _, x = L.modulate(256, n_sym)
     ps = x[..., L.active(n_sym)].abs().pow(2).mean().item()
     check("signal power over the active window == 1/sps", ps, L.p_s, 0.02 * L.p_s)
     for name, kw in cases:
+        tag = {k: v for k, v in kw.items() if k in ("band", "sync")}
         for jsr in [-10.0, 3.0]:
             j = jammers.make(name, jsr, **kw)(L, 32, n_sym)
             p = j[..., L.active(n_sym)].abs().pow(2).mean(dim=-1) / L.p_s
             got = (10 * torch.log10(p) - jsr).abs().max().item()
-            check(f"{name} {kw} JSR={jsr:+.0f} dB: max |realised - target| dB", got, 0.0, 0.05)
+            check(f"{name} {tag} JSR={jsr:+.0f} dB: max |realised - target| dB", got, 0.0, 0.05)
         want_len = L.waveform_length(n_sym)
-        check(f"{name} {kw} length", j.shape[-1], want_len, 0)
+        check(f"{name} {tag} length", j.shape[-1], want_len, 0)
 
 
 # ---------------------------------------------------------------- 5. geometry
@@ -160,6 +179,34 @@ def test_optimal_geometry(L):
         b, n = ber(L, n_frames, 64, NO_NOISE_DB, jammers.make("optimal", jsr, sync="random_phase"))
         tol = 0.0 if want == 0.0 else 4 * math.sqrt(want * (1 - want) / n_frames) + 1e-3
         check(f"random_phase BER(JSR={jsr:+.1f} dB)", b, want, tol)
+
+
+# ---------------------------------------------------------------- 5b. GAN path == optimal
+def test_perfect_generator(L):
+    """
+    The GAN jammer path (tile -> align -> desync -> JSR projection) fed by a
+    perfect generator must produce the same BER as `optimal` under the same sync.
+    locked vs async differ by ~0.06 at 0 dB and ~0.2 at +3 dB, so a path that
+    silently changes the synchronisation (the pre-2026-09-15 bug) fails here.
+
+    Tolerance: 4 sigma on a difference of two frame means, with the per-frame
+    variance bounded by p(1-p) (conservative: async draws one offset and phase per
+    frame, so errors are correlated within a frame), plus 0.01 for the tile
+    boundaries, where a perfect generator's independent segments lose their
+    neighbours' pulse tails.
+    """
+    print(f"\n5b. GAN path with a perfect generator == optimal jammer [{L.pulse}, sps={L.sps}]")
+    G = PerfectG(L)
+    n_frames, n_sym = 8000, 128
+    for sync in ("locked", "async"):
+        for jsr in (0.0, 3.0):
+            b_opt, _ = ber(L, n_frames, n_sym, lk.SNR_DB, jammers.make("optimal", jsr, sync=sync))
+            b_gan, _ = ber(L, n_frames, n_sym, lk.SNR_DB,
+                           jammers.make("gan", jsr, G=G, scale=G.scaler.scale, sync=sync))
+            p = max(b_opt, b_gan)
+            tol = 4 * math.sqrt(2 * p * (1 - p) / n_frames) + 0.01
+            check(f"{sync:<6} JSR={jsr:+.0f} dB: BER gan(perfect G) - BER optimal", b_gan - b_opt,
+                  0.0, tol, note=f"optimal {b_opt:.4f}")
 
 
 # ---------------------------------------------------------------- 6. GAN models
@@ -197,17 +244,23 @@ def test_models():
     check("STFT loss on identical batches", float(losses.stft_loss(real, real.clone())), 0.0, 1e-6)
     check("I/Q loss on identical batches", float(losses.iq_distribution_loss(real, real.clone())),
           0.0, 1e-6)
+    f = torch.randn(B, models.D_CH * models.FEAT_LEN, device=device)
+    check("feature-matching loss on identical features",
+          float(losses.feature_matching_loss(f, f.clone())), 0.0, 1e-6)
+    check("STFT loss > 0 on different batches",
+          float(losses.stft_loss(real, torch.randn_like(real).clamp(-1, 1)) > 0), 1.0, 0)
     gp = losses.gradient_penalty(D, real, torch.randn_like(real).clamp(-1, 1))
     check("gradient penalty is finite and >= 0", float(torch.isfinite(gp) & (gp >= 0)), 1.0, 0)
 
 
 # ---------------------------------------------------------------- 7. normalisation
 def test_normalisation(L):
-    """PeakScaler round trip is exact, and it maps real segments into (-1, 1)."""
+    """PeakScaler round trip is exact, and the largest real sample maps to HEADROOM < 1."""
     print(f"\n7. Peak normalisation [{L.pulse}, sps={L.sps}]")
     seg = L.real_segments(64, models.SEG_LEN)
     sc = models.PeakScaler.fit(seg)
-    check("normalize -> max|.| <= 1", float(sc.normalize(seg).abs().max() <= 1.0), 1.0, 0)
+    check("normalize -> max|.| == HEADROOM", sc.normalize(seg).abs().max().item(),
+          models.HEADROOM, 1e-6)
     rt = sc.denormalize(sc.normalize(seg))
     check("denormalize(normalize(x)) == x", (rt - seg).abs().max().item(), 0.0, 1e-6)
 
@@ -230,6 +283,7 @@ def main():
         test_noise_jammer_vs_closed_form(L)
         test_jsr_is_exact(L)
         test_optimal_geometry(L)
+        test_perfect_generator(L)
         test_normalisation(L)
     test_models()
 

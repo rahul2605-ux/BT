@@ -4,15 +4,21 @@ CGAN track -- the loss terms of Zhou et al. 2025, in plain PyTorch (Decision 0).
 The paper's loss is a composite and its equations do not fully line up with its
 prose (README §4.2 Q7): the adversarial term is written as BCE (eqs. 1-6) yet the
 discriminator carries a "gradient penalty" and an InstanceNorm critic, which are
-Wasserstein-GP ingredients. We reconcile that as the NON-SATURATING GAN loss with a
-gradient penalty, and keep a pure `wgan-gp` mode as an ablation (`--adv`), so both
-readings are runnable.
+Wasserstein-GP ingredients. Both readings are runnable (`--adv`); the default is
+`wgan-gp` (below). Eqs. 1-6 are textbook background from Zhou's ref. [4].
 
 Generator loss = adversarial + feature matching + time-frequency (STFT) + I/Q
 distribution distance. Discriminator loss = adversarial + gradient penalty +
-auxiliary classification. All weights default to 1 and every change is logged
-(README §4.2 Q7); BER never appears -- the jammer is effective only by imitating
-the target modulation.
+auxiliary classification. BER never appears -- the jammer is effective only by
+imitating the target modulation.
+
+Where Zhou is silent, the terms follow the papers Zhou cites (README §4.2 Q7):
+  * adversarial + GP  -> WGAN-GP, the loss of [7] Saarinen & Koivunen 2020
+    (conditional WGAN-GP) and the reason for Zhou's InstanceNorm critic;
+    `nsgan` (non-saturating BCE + GP, Zhou's eqs. 4-5) is kept as the ablation.
+  * feature matching and time-frequency loss -> [5] Fre-GAN: L1 distances, the
+    spectrogram compressed as log(clamp(|S|, 1e-5)). Fre-GAN's weights
+    (feat 2, spectrogram 45) are train_cgan.py's defaults.
 
 Each term is a small, self-contained function so verify.py can check its zero
 points, and step 2 can add or reweight a stealth term without touching the rest.
@@ -64,27 +70,35 @@ def classification_loss(class_logits, labels):
 
 # ------------------------------------------------------------------ feature matching
 def feature_matching_loss(f_real, f_fake):
-    """Salimans et al. 2016: match the batch-mean discriminator features."""
-    return F.mse_loss(f_fake.mean(0), f_real.mean(0))
+    """
+    L1 between batch-mean discriminator features. L1 as in [5] Fre-GAN; batch
+    means (Salimans et al. 2016) because G(z) has no paired real sample. Only the
+    final features: they are the one feature output Zhou's Fig. 3 exposes.
+    """
+    return F.l1_loss(f_fake.mean(0), f_real.mean(0))
 
 
 # ------------------------------------------------------------------ time-frequency (STFT)
-def _stft_logpower(x, n_fft=256, hop=64):
-    """Mean over the batch of log(1 + |STFT|^2) of the complex signal x[:, 0] + i x[:, 1]."""
+STFT_CLAMP = 1e-5       # HiFi-GAN / Fre-GAN dynamic-range compression floor
+
+
+def _stft_logmag(x, n_fft=256, hop=64):
+    """log(clamp(batch-mean |STFT|, 1e-5)) of the complex signal x[:, 0] + i x[:, 1]."""
     z = torch.complex(x[:, 0], x[:, 1])
     win = torch.hann_window(n_fft, device=x.device)
     spec = torch.stft(z, n_fft=n_fft, hop_length=hop, window=win,
                       return_complex=True, center=True)
-    return torch.log1p(spec.abs().pow(2)).mean(0)
+    return torch.log(torch.clamp(spec.abs().mean(0), min=STFT_CLAMP))
 
 
 def stft_loss(real, fake, n_fft=256, hop=64):
     """
-    L1 between the batch-mean log-power STFTs of real and generated batches.
-    Unpaired: z is random, so it compares distributions, not paired samples.
-    Zero on identical batches.
+    L1 between the log-magnitude STFTs of real and generated batches ([5]).
+    Unpaired: z is random, so it compares batch-mean spectra, not paired samples.
+    The log (not log1p of power) makes an out-of-band floor cost as much as an
+    in-band error of the same ratio. Zero on identical batches.
     """
-    return F.l1_loss(_stft_logpower(fake, n_fft, hop), _stft_logpower(real, n_fft, hop))
+    return F.l1_loss(_stft_logmag(fake, n_fft, hop), _stft_logmag(real, n_fft, hop))
 
 
 # ------------------------------------------------------------------ I/Q distribution distance
@@ -121,7 +135,12 @@ def generator_loss(D, real, fake, labels, weights, mode="nsgan"):
 
 
 def discriminator_loss(D, real, fake, labels, weights, mode="nsgan"):
-    """D's total loss and its components. Call with `fake` detached."""
+    """
+    D's total loss and its components. Call with `fake` detached. The returned
+    dict also carries `score_gap` = E D(real) - E D(fake) (logged, not optimised):
+    the critic's Wasserstein estimate under wgan-gp, the logit margin under nsgan.
+    It shows a discriminator that has won outright, whatever the loss scale.
+    """
     real_score, real_class, _ = D(real)
     fake_score, _, _ = D(fake)
     terms = {
@@ -131,4 +150,6 @@ def discriminator_loss(D, real, fake, labels, weights, mode="nsgan"):
     }
     w = {"adv": 1.0, "gp": GP_LAMBDA, "cls": 1.0, **weights}
     total = sum(w.get(k, 1.0) * v for k, v in terms.items())
-    return total, {k: float(v.detach()) for k, v in terms.items()}
+    stats = {k: float(v.detach()) for k, v in terms.items()}
+    stats["score_gap"] = float((real_score.mean() - fake_score.mean()).detach())
+    return total, stats

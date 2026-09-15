@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=disco-med
-#SBATCH --time=02:00:00
+#SBATCH --time=03:00:00
 #SBATCH --job-name=cgan_eval
 #SBATCH --output=runs/eval_%j.out
 #SBATCH --error=runs/eval_%j.err

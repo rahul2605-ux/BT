@@ -1,0 +1,84 @@
+% ---------------------------------------------------------------------------
+% Experiment History -- CONDENSED, conference version (6-page IEEEtran).
+% Replaces the whole \section{Experiment History} in main.tex (L534-) and the
+% per-part drafts 1b, 5, 6, 7, 8, 9, 10 (cut 2026-09-15; recover the long
+% versions from git, commit 4f6a1d5, if the thesis needs them).
+%
+% Budget: ~600 words of prose = ~1.1 IEEE columns, no table, no figure.
+% It summarises; experiments that carry a claim are written out in full in
+% their own sections, so no number here needs a table to be read.
+%
+% Carries the corrections README 3.5 lists as owed on the Overleaf parts 2-4:
+%   - first experiment had 2 legitimate TX->RX pairs, not 1;
+%   - two-agent numbers are job 99211's: BER ~0.24, per-agent power ~0.62,
+%     det 2-8%, kurt ~-1.25 (NOT 0.33 / 0.45 / 3-10%); "double the single
+%     agent" is gone -- the gain at matched total power is ~15%;
+%   - the centralised-optimiser caveat is stated.
+% Other numbers from: jobs 101306/101314/101328 (learned detector),
+% 101622-101817 (raw-IQ RL), 101860/101866/102115 (characterisation),
+% 101870/102305/102316/102319/102390 (realistic channel).
+% ---------------------------------------------------------------------------
+
+\section{Experiment History}
+\label{sec:exphist}
+We arrived at the current model by extending a simple link one step at a time.
+This section summarises what each step established and why we moved on.
+Unless stated otherwise, an attacker maximised $R = \mathrm{BER} - \beta D - \gamma P$, with $D$ a
+detection penalty and $P$ the jammer power, trained either by PPO or by backpropagating directly
+through a differentiable QPSK link built in Sionna.
+
+\subsection{Statistical detectors}
+A barrage jammer against two legitimate pairs on a lossless channel validated the chain: BER, power and
+detection moved when, and only when, the jammer did.
+A PPO jammer with a Gaussian policy then beat a power threshold ($\mathrm{BER} \approx 0.19$ at
+$10\%$ detection) by transmitting just below it.
+A kurtosis detector stopped it completely, since a Gaussian policy cannot produce the sub-Gaussian
+statistics of QPSK, and neither a spline flow nor a Gaussian mixture trained by PPO did better.
+The same flow trained by direct gradient evaded at once (kurtosis $-1.25$ against a threshold of
+$-1.0$, BER up to $0.17$), but only with a white-box receiver and a genie view of the transmitted
+symbol.
+
+\textit{Two cooperating jammers.}
+Trained jointly, two jammers reached $\mathrm{BER} \approx 0.24$ at $2$--$8\%$ detection and power
+$0.62$ each.
+The received constellation converged to four clean QPSK-like clusters with a quarter of the bits
+wrong: the team hid by making the sum look legitimate.
+At matched total power the gain over one jammer was about $15\%$, and with a single optimiser over
+both agents this shows that a coordinated solution exists, not that decentralised agents find it.
+
+\textit{Learned detection.}
+The spectrogram CNN of Li \emph{et al.}~\cite{9707819} did not replicate on the flat carrier
+($78.9\%$ accuracy), and caught barrage noise only at its $2.5\%$ false-alarm rate: there, a jammed
+spectrogram is a clean one at lower SNR.
+On an 802.11a-like OFDM link it replicated at once ($99.79\%$ accuracy, $0\%$ false alarms).
+
+\textit{Policy gradient over raw IQ.}
+MAPPO jammers emitting a complex value per subcarrier never learned against the frozen CNN, whose
+output stayed at $0.999$ in every run.
+Every broadband action the policy sampled was flagged, so the penalty was the same across the batch
+and the normalised advantages carried no signal.
+Reducing the action to two dimensions solved stealth but not damage ($\mathrm{BER}$ stuck at $0.35$),
+and without the genie symbol cancellation is impossible for i.i.d.\ QPSK.
+The obstacle was the action space, not the reward.
+
+\textit{Detector characterisation.}
+Sweeping attack parameters through the frozen CNN instead of training against it, interference at
+equal power and equal damage ($\mathrm{BER} \approx 0.36$) was flagged $1.1\%$ of the time in-band and
+$99.9\%$ once it also touched the empty guard and DC bins.
+The replicated detector was a spectral-mask monitor.
+Retraining on in-band jamming closed the gap at a price of $3.8\%$ false alarms, and adding a simple
+energy detector cut the best stealthy BER from $0.42$ to $0.005$, because on a lossless channel any
+added power is visible.
+
+\textit{Realistic channel.}
+With per-link frequency-selective fading and zero-forcing equalisation, a sparse in-band jammer imposed
+a BER floor of $0.05$--$0.07$ that did not fall with SNR, and fading gave it cover again.
+Two of our own numbers did not survive the right comparison.
+A $70\%$ gain from channel-aware subcarrier selection, measured at equal configuration, fell to between
+$-4.6\%$ and $+6.2\%$ at equal detectability.
+And with the detector's own false-alarm rate as the stealth budget, no effective unflagged attacker
+existed below $20$\,dB, and the best BER at $20$ and $30$\,dB was $0.011$ and $0.004$.
+
+These steps fixed three choices for what follows: attacks are parameterised in low dimension rather
+than raw IQ, results are compared at matched detectability under the false-alarm budget, and a learned
+detector is judged against the optimal one rather than by its accuracy.

@@ -1,7 +1,7 @@
 # Tabula Rasa — learned jamming under detection constraints
 
 **Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
-Last consolidated: 2026-09-12.
+Last consolidated: 2026-09-15.
 
 > **This file is the single entry point.** It is organised as:
 > **[1. The whole picture](#part-1-the-whole-picture)** ·
@@ -152,7 +152,9 @@ The current Overleaf document **is the thesis**. Di Maio will open a separate on
 — his note at `overleaf/main` L463: *"VDN; QMIX are interesting info but not for paper, rather for
 your thesis. To keep nice separation, I will create a new overleaf for paper and we keep this for
 thesis."* Reinforced at L441 (*"do not throw away anything that I suggest not including in the
-paper"*). This is why ICC's ~6-page limit does not constrain the appendix.
+paper"*). This was read as meaning ICC's ~6-page limit does not constrain the appendix — **superseded
+2026-09-15: the user writes the Experiment History to the 6-page conference budget** (§3.5); long
+forms stay in [Appendix A](#appendix-a-experiment-history) for the thesis.
 
 ```bash
 cd /home/rrahman/BT
@@ -616,15 +618,14 @@ instructions but were filed as decisions. They are listed first here so this tab
 | Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3) | **not started** |
 | Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
 | Noise sweep = primary ablation, log grid | G2 | **not started** — needs the σ=0 anchor + a proper log grid (§3.2) |
-| Untrainability written up as a *result* | Overleaf appendix A.6 (§3.5) | **drafted, not pasted** — `sec_exphist_6_untrainability.tex` |
+| Untrainability written up as a *result* | Experiment History summary (§3.5) | **drafted, not pasted** — one paragraph in `sec_exphist.tex`; the long write-up was cut 2026-09-15 for the page limit |
 | Novelty in coordination/synchronisation, not architecture (2026-09-12) | §2.3 RQ1's delay-decay curve; G6 (§3.4) | **not started** — this is the paper's contribution now |
 | Inter-jammer delay + desync modelled and swept (2026-09-12) | M1 spec (§2.4); G6 | **not started** — M1 does not exist yet |
 | Intro shows single→multi transition (2026-09-12) | Intro rewrite (§B.3) | **not started** |
 
-The paper-side home for all of this is the appendix's closing subsection
-(`paper_drafts/sec_exphist_10_determines.tex`), which states each mandate as a design constraint
-derived from the experiment history rather than as an instruction — the rationale has to survive a
-reader who does not know the supervision history, and has to be reusable in the findings paper.
+The paper-side home for these mandates was a closing "What the History Determines" subsection; it was
+**dropped 2026-09-15** with the condensed Experiment History (§3.5). State each mandate as a design
+constraint where the paper uses it, never as an instruction.
 
 ## 2.10 Exploratory track: CGAN jamming waveforms under detection
 
@@ -671,8 +672,14 @@ below ~5·10⁻⁷. So:
 - **sps 8.** A common simulation choice, well above the Nyquist minimum (sps > 1 + β).
 - **RRC pulse, β = 0.35, span 32.** The classic default roll-off.
 - **White-noise ("full"-band) jammer.** A classical barrage jammer.
-- **Asynchronous, random-phase "optimal" jammer.** A jammer is not synchronised to its victim unless
-  that is assumed.
+- **Asynchronous, random-phase structured jammers — Optimal *and* GAN.** A jammer is not synchronised
+  to its victim unless that is assumed. **Extended to the GAN on 2026-09-15 (user decision)**: G is
+  trained on segments cropped on the victim's symbol grid at carrier phase 0, so tiling its output
+  unchanged had scored it as a *locked* jammer while Optimal was async (`jammers.desync` now applies one
+  model to both; locked-for-both is reported as a sensitivity row, §3.3b). The paper states no sync
+  at all. "No offset" is not the neutral reading — it assumes the victim's clock and carrier phase are
+  known at the receiver — and on our link it makes Optimal no better than noise at BER 1e-3 (locked
+  Noise − Optimal 0.10 dB, random-phase 2.06 dB, async 5.33 dB; paper 5.75; C2 `calibration.json`).
 
 Each choice has a reason independent of Zhou's figure. The C2 calibration is kept as a record of where
 they land against it:
@@ -689,7 +696,12 @@ Tuning β to 0.25 would have gained 0.35 dB by fitting that figure.
 victim's own symbol grid**, an unstated perfect-synchronisation assumption (§4.4). Two things follow:
 - Zhou's noise-vs-optimal gap comes from **bandwidth** (the matched filter averages out wideband noise
   by a factor of sps) and **timing** (only a time-offset jammer causes errors below −3 dB JSR, §3.4
-  C2). Neither exists on a symbol grid.
+  C2). Neither exists on a symbol grid. **At sps = 1 Zhou's claim reverses** (checked 2026-09-15,
+  closed form + C2's synchronous curves, which do not depend on sps): white noise crosses BER 1e-3 at
+  −9.84 dB, Optimal at −0.77 dB (locked) or −2.73 dB (random phase), so *noise* is the better jammer
+  by 7–9 dB, and a 1024-sample segment is i.i.d. symbols with a flat spectrum, leaving the STFT loss
+  nothing to match. This is why `cgan/` alone runs at sps 8; M0 and the rest of the thesis stay at
+  one sample per symbol, and spatial effects stay out of scope for steps 1–2.
 - Once **spatial positions** enter, distances become continuous propagation delays and carrier
   phases. A delay is representable only on an oversampled waveform (sps > 1), where Sionna's
   `cir_to_time_channel` / `ApplyTimeChannel` apply. With sps = 1 a delay can only be a whole number of
@@ -756,6 +768,19 @@ user (§4.2 Q8), then build stealth conditioning + the three-detector evaluation
 been reported against the paper's gaps (report-only, §2.10) and the statistical detector has been
 chosen together (§4.2 Q8).
 
+> **Where this session stopped (2026-09-14).** The entire CGAN track was built from nothing and step 1
+> completed: `cgan/{digitise_fig6,link,jammers,models,losses,calibrate,train_cgan,evaluate,verify}.py`
+> plus four submit scripts. C0–C6 all ran on the cluster (jobs 2259280 verify · 2259157 calibrate ·
+> 2259289 train · 2259409 eval). `cgan/verify.py` passes 94/94 as last run; rerun it via
+> `sbatch submit_verify.sh` after any change to `link.py`, `jammers.py`, `models.py` or `losses.py`.
+> **Nothing in `m0/` or the frozen stack was touched.** Result and every design decision are in §3.3b
+> and §2.10; the run is in §A.0. Nothing is committed (git state below). The step-2 detector choice
+> (§4.2 Q8) is the open decision and needs the user.
+
+**Paper drafts (2026-09-15):** the Experiment History was cut from a 10-part appendix (~4,300 words) to a
+~1-column summary, `paper_drafts/sec_exphist.tex`, for the 6-page limit; parts 9–10 dropped. Not yet
+pasted into Overleaf; the user is still editing it (§3.5).
+
 ---
 
 **STATE 2026-09-12 (coordination plan — PAUSED 2026-09-14, kept as written): the project changed direction, and the supervisor's proposal feedback arrived
@@ -790,16 +815,19 @@ with the three citations; (ii) the proposed new RQ1; (iii) the RQ1-vs-RQ2 tensio
 (§2.3). **Do not start G6 before that reply** — it is 4–5 days of new code committed to one branch of
 the fork.
 
-**Next session, in this order.**
+> **⚠ The table and next-action just above belong to the PAUSED coordination plan (2026-09-12), NOT to
+> now.** The active track is the CGAN reproduction (top of §3.1); its next action is choosing the
+> step-2 statistical detector (§4.2 Q8). The list below is preserved so the coordination plan can be
+> resumed intact if the CGAN track is dropped — it is not this session's to-do list.
+
+**Next session of the coordination plan, in this order (paused).**
 
 | # | Do | Where | Note |
 |---|---|---|---|
 | 0 | **Email Di Maio: the pivot** | §4.1 #0 | *Do this first, before any other work.* Everything below is contingent on it. Open by adopting his coordination/synchronisation steer, then disclose the literature collision, then ask him to break the RQ1/RQ2 tension. |
 | 1 | **Read the three prior-art papers in full** | §2.1 table | Bash JSAC 2013 · Li TIFS 2016 + 2020 · Amuru TIFS 2015. Desk work, no compute. Needed before *any* novelty claim goes in print, and needed to write the email in #0 credibly. |
 | 1b | **Apply his prose fixes to `proposal/proposal.tex`** | §B.3 | Small and unblocked: broadband-jamming citation, the two surviving grammar items, the single→multi transition paragraph, the delay/desync passage. **Do not** rewrite the proposal's RQs before #0 returns. |
-| 2 | **Paste the A.4 correction into Overleaf** | §3.5 fixes-owed | A wrong claim ("roughly double the single-agent result") is live in a document he may read. Unaffected by the pivot — the appendix records history, and the history did not change. |
-| 3 | Rewrite the two A.3 sentences added in `13adaf5` | §3.5 fixes-owed | "it could try to predict it" is **falsified by part 6**. Misnames the assumption too. |
-| 4 | Paste appendix parts 6, 7, 8, 9 (**drafted, revised 2026-09-11**) | §3.5 | Already written and compiling; this is a paste job, not a writing job. Paste `sec_system_model.tex` **first** — 5 and 10 `\ref` into it. |
+| 2 | **Replace Overleaf's Experiment History with `paper_drafts/sec_exphist.tex`** | §3.5 | Condensed 2026-09-15 to ~1 column; it also removes the wrong two-agent claim ("roughly double") still live in Overleaf. |
 | 5 | Add the omniscient reference to `fig_detectors` and `fig_stealth_vs_sigma` | §2.9 coverage, `m0/figures.py:162,202` | ~15 min, CPU-only. Still correct under the pivot — the omniscient ceiling is a baseline, not a stealth claim. |
 | 6 | G6 planning only (**not code**) until #0 returns | §3.4 | Spec the M1 multi-jammer extension on paper so it can start the hour his reply lands. |
 
@@ -813,8 +841,8 @@ it is now RQ1's precursor rather than a historical footnote.
 > `m0/` was modified, so `verify.py` is still valid as last run. Two things happened, both desk work:
 > a **literature check on E1's novelty** (§2.1) came back negative and triggered the pivot, and
 > **Di Maio's proposal feedback arrived** and was transcribed into [B.2](#b2-his-verbatim-points-and-what-each-changed)
-> with its consequences propagated. Nothing in `paper_drafts/` was edited; parts 6–9 carry
-> uncommitted revisions from 2026-09-11 (see §3.5). His annotated proposal was saved to
+> with its consequences propagated. Nothing in `paper_drafts/` was edited that day (the
+> experiment-history drafts were later condensed, 2026-09-15, §3.5). His annotated proposal was saved to
 > **`proposal/proposal_reviewed_2026-09-12.tex`** (new file, untracked); `proposal/proposal.tex` is
 > the older pre-feedback draft and both are kept (§B.3).
 
@@ -1020,12 +1048,8 @@ days of work to one branch of that fork and **must not start before his reply.**
 | G7 | **Adaptation-cost rounds R0/R1/R2** (RQ2). Tooling exists; in M0 it gains the distance-from-`D_NP` reference E1 already measured. | ~2 days | **depends on how he breaks the RQ1/RQ2 tension** (§4.1 #0) |
 
 **Writing track (starts now, no compute).**
-- **Appendix: the sim00–08 experiment record** — see §3.5. The single largest piece of prose still
-  owed, and it depends on nothing. **Four of the ten parts remain unwritten: 6 (untrainability),
-  7 (detector characterisation + errata), 8 (realistic channel / matched detectability), 9 (the
-  hypotheses-and-verdicts table).** Three more are drafted in `paper_drafts/` and **not yet pasted**:
-  `sec_exphist_1b_objective.tex`, `sec_exphist_5_learned_detection.tex`,
-  `sec_exphist_10_determines.tex`. Parts 1–4 are in Overleaf with fixes owed (§3.5).
+- **Experiment History: the sim00–08 record** — condensed to one ~1-column summary,
+  `paper_drafts/sec_exphist.tex`, **not yet pasted** (§3.5).
 - Repair `paper_drafts/sec_system_model.tex` (§Cooperative — the CLT argument, see §4.2); fold the
   §2.8 decisions into §Defender Model and §Generative Attack Policy.
 - Related Work is drafted (`paper_drafts/sec_related.tex`, 1081 words ≈ 1.93 columns; the
@@ -1036,8 +1060,8 @@ days of work to one branch of that fork and **must not start before his reply.**
   describes the K-subcarrier / TDL / N_J-jammer setting **that no working experiment supports**.
 
 **Rough calendar, re-cut 2026-09-12 (20 days).** Sep 12–13: §4.1 #0 email + read the three prior-art
-papers + G0 + spec G6 on paper. Sep 14–15: G2 + G3 while waiting on his reply; paste the appendix
-backlog (§3.1 items 2–5). Sep 16–22: G5-as-component then G6. Sep 23–26: G6 results, figures,
+papers + G0 + spec G6 on paper. Sep 14–15: G2 + G3 while waiting on his reply; paste the condensed
+Experiment History (§3.1 item 2). Sep 16–22: G5-as-component then G6. Sep 23–26: G6 results, figures,
 write-up. Sep 27–Oct 2: lock, polish, buffer. **Results lock Sep 27** — one day earlier than the old
 plan, because the lead experiment is now the one that does not exist yet.
 
@@ -1064,160 +1088,33 @@ reported at matched detectability too, or it is the m1 mistake again (§2.7).
 
 ## 3.5 The Overleaf appendix — "Experiment History"
 
-**State (2026-09-12): 1, 1b, 2–5 in Overleaf with fixes owed · 6, 7, 8, 9, 10 drafted in
-`paper_drafts/`, not pasted. Parts 6–9 carry uncommitted working-tree revisions made 2026-09-11**
-(prose cut hard, verdict table 17 → 13 rows) — `git diff` before assuming the committed version is
-current.
+**State (2026-09-15): condensed to one summary section, `paper_drafts/sec_exphist.tex`, not pasted.**
+The user decided the 10-part appendix was far too long for a 6-page conference paper: its job is only
+to *summarise* what was done, and experiments that carry a claim get written out in full in their own
+sections. Parts 9 (verdicts + traceability table) and 10 (What the History Determines) are **dropped**;
+parts 1b and 5–8 were folded into the summary and their per-part drafts deleted (recoverable from git,
+commit `4f6a1d5`, if the thesis wants the long versions).
 
-> **Pivot impact (2026-09-12): this appendix is unaffected and should still be finished.** It
-> records what each experiment *established*, and the 2026-09-12 literature check changed none of
-> that — it changed which forward claim the history supports, which is part 10's job, not parts
-> 1–9's. **Part 10 (`sec_exphist_10_determines.tex`) is the one file that needs revision**: it
-> closes by handing off to the stealth-frontier experiments, and that hand-off is now wrong. Rewrite
-> its closing to hand off to the coordination question (§2.3 RQ1) before pasting.** Live ref last read: `overleaf/main` @ `b9620a0` "Experimental History:
-Learned Detectors Section done". Reviewed 2026-09-10. **`git fetch overleaf` now fails from this repo**
-(no GitHub credentials in the environment) — the local `overleaf/main` ref is what is readable, so it
-may lag the true Overleaf head. It belongs in the thesis (§1.4), and writing it is directly responsive to a
-request he made twice.
+`sec_exphist.tex` is ~610 words of prose (~1.1 IEEE columns), no table, no figure: a two-sentence
+opener with the reward in one inline formula, then one italic-headed paragraph per step (statistical
+detectors · two cooperating jammers · learned detection · policy gradient over raw IQ · detector
+characterisation · realistic channel), and a one-sentence close naming the three choices the history
+fixed (low-dimensional action, matched detectability under the FAR budget, judge against the optimal
+detector). It **replaces the entire `\section{Experiment History}` in Overleaf** (`main.tex` L534– at
+`b9620a0`), including the user-written parts 2–4, and already carries the corrections those parts owed:
+2 legitimate TX→RX pairs in the first experiment; two-agent numbers from job 99211 (**BER ≈ 0.24,
+per-agent power ≈ 0.62, det 2–8%**, not 0.33 / 0.45 / 3–10%); the gain at matched total power is ~15%,
+not 2× ([A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable)); and the
+centralised-optimiser caveat. Header comment in the file lists the job IDs behind every number.
 
-> **Numbering warning.** In this subsection, `A.n` means a **subsection of the Overleaf appendix**
-> (the 10-part structure below, plus the inserted 1b). It does **not** line up with this README's own
-> [Appendix A](#appendix-a-experiment-history), which is numbered independently. The source material
-> is the same; the numbering is not.
-
-Structure — `\section{Experiment History}`, at `main.tex` L534 as of `13adaf5`:
-1. Scope and Reading Guide · **1b. The Attacker's Objective** (inserted 2026-09-10 between the scope
-paragraph and part 2; drafted, `paper_drafts/sec_exphist_1b_objective.tex` — two equations plus the
-per-step constants table, **ending at the table**) · 2. Simulation Chain and Validation (sim00, 04b) · 3. Gradient-Based
-Attacks against Statistical Detectors (sim01, 02, 03, 03b, 03c) · 4. Two-Agent Cooperative Attack
-(sim04) · 5. From Statistical to Learned Detection (sim05, sim06 detector side) — drafted,
-`paper_drafts/sec_exphist_5_learned_detection.tex`, condensed to 418 words to match the register of
-the user-written parts · 6. Untrainability
-of Policy-Gradient RL over Raw IQ (sim06 jammer, 06b, 07) — drafted,
-`paper_drafts/sec_exphist_6_untrainability.tex` · 7. Detector Characterisation and Errata
-(Phase 0, 0.5, recheck) — drafted, `paper_drafts/sec_exphist_7_characterisation.tex` · 8. Realistic
-Channel, Suite, and Matched Detectability (sim08 m1, m2, dense) — drafted,
-`paper_drafts/sec_exphist_8_realistic_channel.tex` · 9. Summary of Hypotheses and Verdicts (verdict
-table + the traceability table convention (a) owes) — drafted,
-`paper_drafts/sec_exphist_9_verdicts.tex` · 10. **What the History Determines** — the forward-facing close, added 2026-09-10:
-each of his mandates (§2.9) restated as a *design constraint derived from the history*, never as an
-instruction, so the appendix hands off to the remaining experiments instead of stopping at a verdict
-table. Drafted, `paper_drafts/sec_exphist_10_determines.tex`.
-
-**Conventions settled.** (a) **Do not name simulations** ("sim04") in the prose — the reader has no
-access to the code; write it as a continuous narrative, with a *small traceability table at the very
-end* mapping narrative step → directory → job ID. (b) Register: **"we"**, past tense for events,
-present tense for what remains true; rationale expressed as *what the previous step established*,
-never as "I decided". (c) Every subsection follows the same four moves: **what the previous step left
-open → what changed → what happened (numbers) → what it established**. Move 1 is the one that gets
-skipped and the one the supervisor is reading for. (d) Negative results are findings with a
-mechanism, never apologies — no "unfortunately", "we tried to", "we hoped". (e) **The objective is
-stated once, up front, not per section** — a new opening subsection ("The Attacker's Objective") gives
-the two forms and one table of per-step constants
-([Appendix A.0](#a0-run-index)), and each later subsection then names only its *delta* in a clause.
-Rationale: the supervisor cannot give useful input on a result whose objective is invisible, and the
-table is the reproducibility artefact if this material is reused in the findings paper. **The
-objective subsection ends at the table** — findings go at their point of use, not next to the
-reference table. (f) **The appendix never re-defines what §System Model defines; it references.**
-`sec_system_model.tex` §`sec:system:objective` already owns the final objective, the *matched
-detectability* rule, the false-alarm-rate stealth budget and the omniscient-ceiling-in-every-figure
-rule — two of the appendix drafts restated all four before this was caught on 2026-09-10. §System
-Model is §II and the appendix is last, so the appendix is always the one that defers. It does still
-own what §System Model has no reason to carry: the 64-subcarrier OFDM grid, the spectrogram
-representation and the frozen detectors, none of which exist in the minimal model.
-
-**Figure shortlist — 5 for the whole appendix, deliberately.** ~130 PNGs exist; almost all are
-training dashboards, not findings.
-
-| Figure | Section | Note |
-|---|---|---|
-| `artifacts/sim04/run001_iq_rx.png` | A.4 | bottom row of `run001_iq.png` (`rx` early/mid/late). The one place the finding is *visible*. **If A.4 quotes run007 numbers, re-crop from `run007_iq.png` — do not mix runs between text and figure.** |
-| `artifacts/frontier/inband_vs_outofband.png` | A.7 | best figure in the project; four panels, self-explanatory. Use as-is. |
-| `artifacts/sim06b/jammer/run001.png` | A.6 | **crop to the bottom two panels** (mean reward falling, policy entropy *rising*). The rising entropy is the smoking gun — the policy diffuses rather than learns. |
-| `artifacts/sim08/frontier_dense/matched_detectability.png` | A.8 | crop to 2 panels (5 dB, 30 dB); five is overkill. |
-| `artifacts/sim08/frontier/stealth_suite_vs_snr.png` | A.8 | optional; **not yet eyeballed** — check before committing. |
-
-**Deliberately no figure in A.3 or A.5.** A.3's finding is about *how the gradient reaches the
-policy*, which no single figure shows, and the only candidates are pictures of featureless clouds.
-A.5 uses the six-row **cross-evaluation table** instead of a confusion matrix — it carries the
-diagnosis.
-
-**Fixes owed on the user's draft (reviewed 2026-09-10):**
-- **Factual:** the first experiment had **2 legitimate TX→RX pairs, not 1**, and the jammer was
-  silent t=0–4 then max-power t=5–9 (that on/off structure is the point). Overleaf §A.4's numbers are
-  run001's and are **also wrong**: the draft says "BER ≈ 0.33 at 3–10% detection, per-agent power
-  ≈ 0.45", but job 99211 ends at **BER ≈ 0.24, per-agent power ≈ 0.62** (total 1.25), det 2–8%,
-  kurt ≈ −1.25. The claim "roughly double the single-agent result" must go — at matched total power
-  the two-agent gain is ~15%, not 2× (see
-  [README A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable)).
-  Quote run001 and run007 as **two operating points**, not broken-vs-fixed.
-- **Wording:** "until we find a meaningful result" → reads as an admission none exists; "we
-  **setup**" → "set up". *(The "highest possible **inference**" → "similar interference" fix landed in
-  `13adaf5`.)*
-- **RESOLVED in `b9620a0`.** The A.3 caveat was rewritten correctly: it now names the differentiable
-  white-box model *and* the genie observation of `tx[t]`, says which of the two fails on a real link,
-  and states that predicting `tx[t]` from `tx[t−1]` is impossible for iid QPSK rather than merely hard.
-  The "might not work / could try to predict it" hedge is gone. No further action.
-- **Structural:** A.2 never says what it *establishes* (that the measurement chain is trustworthy —
-  BER, power and detection all move when and only when they should), omits its numbers (BER 0→0.5,
-  power 1.0→51, 0→2 users detecting), and omits sim04b. A.4 is missing both caveat sentences: the
-  one-liner (kurtosis detector, lossless, genie observation ⇒ a *mechanism* result, not a stealth
-  result) and the **centralised-execution** caveat — one optimizer over the union of both agents'
-  parameters means coordination was *maximal*, handed over by the optimizer; what is absent is
-  decentralisation, so it shows a coordinated solution exists and is gradient-reachable, **not** that
-  decentralised agents could find it. That matters because "cooperative multi-agent" is in the title.
-- **Sentence fragment** in A.4 ("An identical aggregate effect at …") — the same construction he
-  already flagged in the proposal.
-- **LaTeX:** `\appendices` already exists (L232 in `b9620a0`), so this is *not* owed — but Experiment
-  History is the **third** appendix, behind `\section{Literature Review}` (L233) and `\section{Old
-  Related Works}` (L309), both scratch material dense with `\adm{}`/`\rar{}` notes. It will render as
-  "Appendix C" after ~300 lines of unfinished notes: **move it first among the appendices, or comment
-  the two scratch sections out before he reads it.** Still owed: **remove `\nocite{*}` (L662 in
-  `b9620a0`)** — it emits the whole `refs.bib`.
-- **Cross-references:** no Experiment History subsection carries a `\label`, so nothing can be
-  referenced. The drafts introduce `subsec:exphist:{untrainable,characterisation,realistic,verdicts}`;
-  parts 5 and 6 both forward-reference the characterisation subsection.
-- **The traceability table required by convention (a) does not exist in Overleaf.** It is drafted at
-  the end of `sec_exphist_9_verdicts.tex`.
-- Still-live `\rar{}` notes above the appendix: L216, L256.
-
-**A.1b is drafted and PASTED** (`b9620a0`), lightly edited by the user on paste — the opening was
-shortened and the κ definition moved out of the table caption into the prose, where it still stands.
-Source: `paper_drafts/sec_exphist_1b_objective.tex`.
-Inserts after the scope paragraph, before "Simulation Chain and Validation": two equations, the
-definition of κ, and a `table*` of per-step constants. **It ends at the table.** The two findings the
-table makes visible were deliberately moved to their point of use — the log barrier to part 6, γ = 0.02
-to part 4 — and the "power is a constraint" paragraph was cut as a duplicate of
-`sec:system:objective`. A header comment in the file records all three so they are not lost.
-
-**A.5 is drafted and PASTED** (`b9620a0`), expanded slightly by the user on paste (the training
-recipe — SGD at 1e-3, batch 32, 100 epochs — was restored, and the four jammer families spelled out).
-Source: `paper_drafts/sec_exphist_5_learned_detection.tex`. Replaces the one-sentence stub and keeps that sentence as its opening line. **418 words
-of prose** (vs 244 for the user-written part 4) after a rewrite for concision and register; the
-cross-evaluation table is six rows × **two** columns, the third having duplicated the prose. Ends on
-three deviations (binary head, ImageNet-pretrained, synthetic frames) plus the real-part-only STFT
-erratum, which forward-references part 7 — **if part 7 is dropped or renamed that sentence dangles.**
-Needs one `\ref` once the characterisation subsection has a `\label`, and it is the first place
-`\cite{9707819}` (Li et al.) is used in `main.tex`.
-
-**Parts 6–9 are drafted** (2026-09-10), all four verified to compile under `IEEEtran` with no errors:
-- `sec_exphist_6_untrainability.tex` — leads with the **action parameterisation**, not the reward
-  formula; the log barrier appears as the proximate mechanism only. The four-subcarrier "cliff" is
-  written as an *observation* that part 7 explains away, never as a finding.
-- `sec_exphist_7_characterisation.tex` — carries `\label{subsec:exphist:characterisation}`, which parts
-  5 and 6 both forward-reference. **If this part is dropped or renamed, both dangle.**
-- `sec_exphist_8_realistic_channel.tex` — both retractions (+70%, and the `≤0.5` stealth figure) are
-  written to share one stated cause: a comparison that held the wrong thing fixed.
-- `sec_exphist_9_verdicts.tex` — 17-row verdict table plus the traceability table convention (a) owes.
-
-**Dependency to respect when pasting — verified 2026-09-10, and worse than recorded.** The System Model
-*is* in Overleaf (L107–217 of `b9620a0`), but it is the **older OFDM version**, not
-`paper_drafts/sec_system_model.tex`. It defines `sec:jammer`, `sec:detector`, `eq:problem` — and
-**not** `sec:system:objective` or `sec:system:link`, which part 10 references three times. A test
-compile confirms both come back undefined. It also does **not** define matched detectability, the
-false-alarm-rate stealth budget, or the omniscient-ceiling rule, so convention (f) — the appendix
-defers, never re-defines — is currently unsatisfiable. **Paste `sec_system_model.tex` first**, or part
-10 has to carry those definitions itself.
+Still valid from the old plan: **do not name simulations in the prose**; negative results are stated
+with their mechanism, never apologised for. It has no `\ref`s (the user replaced the `sec:system` ref
+with "the current model"); its only citation is `9707819` (Li et al.), already in `refs.bib`. **The
+user is converting the italic paragraph heads to `\subsection`s** — as of 2026-09-15 only "Statistical
+detectors" is converted; keep the rest consistent with whichever the user settles on. Unrelated Overleaf hygiene still owed: remove `\nocite{*}`, and Experiment History sits
+behind two scratch appendices (`Literature Review`, `Old Related Works`) full of `\adm{}`/`\rar{}`
+notes. Live ref last read: `overleaf/main` @ `b9620a0`; **`git fetch overleaf` fails from this repo**
+(no GitHub credentials), so it may lag the real Overleaf head.
 
 ## 3.6 Explicitly NOT doing
 
@@ -1442,15 +1339,16 @@ is a choice of ours and must be called one if these results are ever written up.
 | JSR / SNR definitions | SNR 30 dB, JSR −10…10 dB, no definitions | mean per-sample power ratios at the RX input | default |
 | JSR grid | not stated; axis ticks every 2.5 dB | **−10:2:10 dB**, read off the marker positions | fixed (C0) |
 | Receiver | — | coherent matched filter, symbol-time sampling, per-axis hard decision | default |
-| "Optimal" jammer synchronisation | "identical filtering and modulation parameters" | **asynchronous**: uniform timing offset in [0, sps) samples + uniform carrier phase, both per frame | **assumed** (C2 checkpoint). It is also the only variant that produces errors below −3 dB JSR, as the paper's curve does |
-| Adversarial loss | BCE equations (1)–(6) **and** "gradient penalty" in the D-loss list, with an InstanceNorm critic | non-saturating eqs. (4)/(5) + GP (λ = 10); `wgan-gp` as ablation | default — reconciles both statements |
+| Jammer synchronisation (Optimal **and GAN**) | "identical filtering and modulation parameters"; nothing on timing or phase | **asynchronous**: uniform timing offset in [0, sps) samples + uniform carrier phase, both per frame, for both structured jammers (`jammers.desync`) | **assumed** (C2 checkpoint; extended to the GAN 2026-09-15, §2.10). The only variant that produces errors below −3 dB JSR, as the paper's curve does. **run001 scored the GAN locked** — see §3.3b |
+| Adversarial loss | BCE equations (1)–(6) **and** "gradient penalty" in the D-loss list, with an InstanceNorm critic | **WGAN-GP** (λ = 10, n_critic 5, Adam β = (0.5, 0.9)); `--adv nsgan` (eqs. 4/5 + GP) as ablation | **from ref. [7]** (2026-09-15): Saarinen & Koivunen 2020 is a *conditional WGAN-GP* (paper paywalled; per Aalto follow-ups and MathWorks' port of it), which is also why the critic uses InstanceNorm. Eqs. (1)–(6) are textbook background from [4]. run001 used nsgan, n_critic 1, β = (0.5, 0.999) |
 | G conv blocks | Conv1d–BN–LeakyReLU–Dropout–MaxPool ×3, sizes unstated | channels 64/128/256, kernel 5, pool 2, dropout 0.3 | default |
 | D conv blocks | Conv2d–(InstanceNorm)–LeakyReLU–MaxPool ×3, sizes unstated | (1×5) kernels, (1×2) pools, 64/128/256 channels | default |
-| "Time-frequency discrepancy" loss | STFT of generated vs target (Fig. 1) | L1 between log batch-mean power STFTs — unpaired, since z is random | default |
-| Feature-matching loss | named only | ‖E f(x) − E f(G(z))‖² on D's features | default (Salimans et al. 2016) |
-| "I/Q distribution distance" loss | named only | sorted-sample 1-D Wasserstein on the I, Q and \|x\| marginals | default |
-| Loss weights, optimiser, LR | — | all weights 1; Adam 2e-4, β = (0.5, 0.999); n_critic 1 | default |
-| Training data | "target signal", normalised, inverse-normalised on output | clean QPSK waveform segments ÷ a global peak scale; G output × that scale | default |
+| "Time-frequency discrepancy" loss | STFT of generated vs target (Fig. 1) | L1 between log(clamp(batch-mean \|STFT\|, 1e-5)) of real and generated — unpaired, since z is random | **from ref. [5]** Fre-GAN / HiFi-GAN's spectrogram compression (2026-09-15). run001 used log1p(\|S\|²), which barely penalises an out-of-band floor |
+| Feature-matching loss | named only | L1 between batch-mean final D features (the one feature output Fig. 3 exposes) | **L1 from ref. [5]**, batch means from Salimans et al. 2016 (no paired real sample). run001 used squared L2 |
+| "I/Q distribution distance" loss | named only | sorted-sample 1-D Wasserstein on the I, Q and \|x\| marginals | default — no reference defines it |
+| Loss weights, optimiser, LR | — | G: adv 1, feat **2**, STFT **45**, I/Q 1; D: adv 1, GP 10, cls 1; Adam 2e-4 | **feat/STFT weights from ref. [5]** (λ_fm = 2, λ_mel = 45); rest default. run001: all weights 1 |
+| Training data | "target signal", normalised, inverse-normalised on output (cites [5]) | clean QPSK waveform segments ÷ a global peak scale, largest sample → **0.95**; G output × that scale | **headroom from ref. [5]**'s loader (`normalize(audio) * 0.95`); run001 mapped the peak to 1.0, Tanh's asymptote. Irrelevant to BER: JSR is imposed by projection |
+| Ref. [6] GAN-TTS (cited for D's "multitask capability") | — | nothing taken | conditional + unconditional random-window discriminators; with one class there is nothing to transfer |
 | Iterations / test protocol | 10,000 iterations; 10⁴ symbols × 100 trials | same; plus trials until ≥ 100 bit errors or 10⁹ bits | stated + extended |
 
 **Properties of the paper that shape both steps**, recorded so they are not rediscovered:
@@ -1461,7 +1359,10 @@ is a choice of ours and must be called one if these results are ever written up.
 - **(iii) The top of the GAN curve exceeds BER 0.5** — 0.53 at +8 dB and 0.54 at +10 dB (C0; the
   markers sit visibly above the 0.5 level, not a reading error). A jammer that is independent of the
   payload cannot push Gray-QPSK BER past 0.5, so either the GAN jammer was correlated with the
-  transmitted data, or these points were not measured as described.
+  transmitted data, or these points were not measured as described. Its plateau near 0.5 is also what a
+  **locked** jammer gives (0.50), while the paper's Optimal plateau (0.38 at +10 dB) matches **async**
+  (0.39, C2). So Zhou's GAN may have been scored synchronised and their Optimal not — the same
+  mismatch run001 had (§2.10, §3.3b).
 - **(iv) Their own "optimal" is not an upper bound in their own figure.** GAN > Optimal at every
   JSR ≥ +2 dB, and Noise ≈ Optimal from +4 dB.
 - **(v) The Noise curve is not a single Q-function** (a check on the digitised points, ahead of C2).
@@ -1470,6 +1371,24 @@ is a choice of ours and must be called one if these results are ever written up.
   2.8 dB and then collapses, with BER jumping 25× between 0 and +2 dB. A white-noise jammer through a
   fixed matched filter has a constant g. So C2's closed-form fit is expected to leave a systematic
   residual, and C2 must report it rather than hide it inside the parameter choice.
+  **Extended 2026-09-15 to all three curves** — this is *why the figures look different*
+  (`evaluate.py` → `artifacts/cgan/run001_async_implied_gain.png`, same inversion with the link's
+  noise term, BER = Q(√(1/(1/(sps·SNR) + JSR/g)))). The paper's **Optimal** implies an almost flat
+  g = 1.9–3.1 dB over −10…+2 dB and its **GAN** 2.7–4.0 dB over −10…0 dB: the signature of
+  *Gaussian-like* interference, whose tails give errors at any JSR, hence smooth low-JSR slopes. Ours
+  cannot do that: noise is flat at exactly 9.03 dB (the closed form, which validates the diagnostic),
+  while async Optimal falls 3.6 → 0.3 dB over −6…−2 dB and is zero-error below. A same-pulse QPSK jammer
+  through a Nyquist matched filter is *bounded*: it flips nothing until √JSR·Σ|g_k| > 1/√2, ≈ −7.7 dB
+  for RRC 0.35 async, and SNR 30 dB noise is too weak to smooth that edge — hence our cliff. No sps,
+  pulse or sync in C2's grid changes this, and no reference defines the jammer, so the low-JSR shape
+  of Fig. 6 is **not reproducible under a stated physical model**; it is not a GAN problem.
+- **(vi) The paper names two different noise baselines.** §III: "conventional Gaussian noise
+  interference"; §IV (conclusion): "traditional frequency-modulated noise jamming". We use Gaussian
+  (the experiment section's wording).
+- **(vii) The references define none of the link.** [7], cited for the "optimal" baseline, is a
+  radar-waveform GAN paper; [5] and [7] do inform the training recipe (Q7 table); [1], [2], [4] are
+  background, [6] is not transferable to one class, and [3] is a garbled citation (Mirza & "Osindero",
+  invented venue).
 
 What (ii)–(v) mean for the comparison: it is read at **JSR at BER 1e-3**, the region the paper's
 protocol can resolve and where no curve is occluded. Matching the whole figure was already ruled out.
@@ -1585,8 +1504,8 @@ venv, so the CWT will be written in torch.
 
 # APPENDIX A — Experiment history
 
-The falsification record. Kept because the Overleaf "Experiment History" appendix (§3.5) is being
-written from it. Findings and mechanisms only — the per-run debugging chronology has been compressed
+The falsification record. The paper's Experiment History (§3.5) is a ~1-column summary condensed from
+it; this appendix is the long form, kept for the thesis. Findings and mechanisms only — the per-run debugging chronology has been compressed
 to one line per class of bug.
 
 ## A.0 Run index
@@ -2233,8 +2152,9 @@ Everything not already covered by Part 2 (settled) or §4.1 (needs his input).
 - [ ] **Move the assumption table, baseline table and ablation list into Overleaf now**, as stubs.
 - [ ] **Produce an explicit triage table:** each result → main paper / appendix / dropped.
 - [ ] **Write up the MAPPO untrainability as a result, not an excuse**, and characterize *in which
-      cases* it is hard to beat.
-- [ ] **The appendix fixes owed** — §3.5.
+      cases* it is hard to beat. *(2026-09-15: stated as a result with its mechanism in one paragraph of
+      `paper_drafts/sec_exphist.tex`; the "in which cases" characterisation is not in the paper.)*
+- [ ] **Paste the condensed Experiment History** — §3.5.
 
 **`refs.bib` surgery** (plan in `paper_drafts/refs_patch.bib` + `refs_new.bib`, 40 entries; do the
 edits **in Overleaf**)

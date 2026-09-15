@@ -1,0 +1,76 @@
+node: artongpu02.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+
+noise:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER         8.00e-09  (8 err / 1.0e+09 bits)
+  JSR  -4.0 dB  BER         3.74e-06  (101 err / 2.7e+07 bits)
+  JSR  -2.0 dB  BER         1.89e-04  (189 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         2.41e-03  (2405 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         1.24e-02  (12373 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         3.72e-02  (37212 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         7.82e-02  (78230 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         1.30e-01  (130040 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         1.85e-01  (185311 err / 1.0e+06 bits)
+
+optimal:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER         1.35e-03  (1345 err / 1.0e+06 bits)
+  JSR  -4.0 dB  BER         2.17e-02  (21737 err / 1.0e+06 bits)
+  JSR  -2.0 dB  BER         9.61e-02  (96113 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         2.03e-01  (203485 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         2.64e-01  (263838 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         3.14e-01  (314150 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         3.50e-01  (350400 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         3.68e-01  (368173 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         3.90e-01  (390475 err / 1.0e+06 bits)
+
+gan:
+  JSR -10.0 dB  BER         3.63e-03  (3625 err / 1.0e+06 bits)
+  JSR  -8.0 dB  BER         8.96e-03  (8964 err / 1.0e+06 bits)
+  JSR  -6.0 dB  BER         1.81e-02  (18112 err / 1.0e+06 bits)
+  JSR  -4.0 dB  BER         2.89e-02  (28947 err / 1.0e+06 bits)
+  JSR  -2.0 dB  BER         4.64e-02  (46355 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         8.25e-02  (82471 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         1.19e-01  (119193 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         1.69e-01  (168776 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         2.22e-01  (221825 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         2.65e-01  (265381 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         3.14e-01  (313750 err / 1.0e+06 bits)
+
+optimal_locked:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -4.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -2.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  +0.0 dB  BER         2.50e-01  (250466 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         5.00e-01  (500472 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         5.00e-01  (499840 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         5.00e-01  (499939 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         5.00e-01  (499532 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         5.00e-01  (499934 err / 1.0e+06 bits)
+
+gan_locked:
+  JSR -10.0 dB  BER         4.15e-03  (4150 err / 1.0e+06 bits)
+  JSR  -8.0 dB  BER         1.27e-02  (12653 err / 1.0e+06 bits)
+  JSR  -6.0 dB  BER         2.30e-02  (22958 err / 1.0e+06 bits)
+  JSR  -4.0 dB  BER         3.74e-02  (37447 err / 1.0e+06 bits)
+  JSR  -2.0 dB  BER         6.11e-02  (61109 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         9.92e-02  (99155 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         1.48e-01  (147707 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         2.00e-01  (199743 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         2.52e-01  (251866 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         2.97e-01  (297386 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         3.35e-01  (335267 err / 1.0e+06 bits)
+
+--- REPORT (no pass/fail; §2.10) ---
+sync async | sensitivity locked
+JSR at BER 1e-3:  ours {'noise': np.float64(-0.69), 'optimal': np.float64(-6.05), 'gan': None, 'optimal_locked': np.float64(-0.61), 'gan_locked': None}
+                 paper {'optimal': np.float64(-7.06), 'noise': np.float64(-1.32), 'gan': np.float64(-5.76)}
+Noise - GAN:      ours None dB  (paper 4.44 dB)
+GAN - Optimal:    ours None dB  (paper 1.31 dB)
+[locked] Noise - GAN None dB, GAN - Optimal None dB
+G constellation: {'clean': {'evm_rms': 0.0011, 'mean_power': 1.0}, 'gan_offset0': {'evm_rms': 0.7006, 'mean_power': 0.8153}, 'gan_offset_half': {'evm_rms': 0.7203, 'mean_power': 0.5354}}
+wrote run002_ber_vs_jsr.json/.png, run002_implied_gain.png, run002_iq.png to /home/rrahman/BT/Tabula Rasa/cgan/../artifacts/cgan

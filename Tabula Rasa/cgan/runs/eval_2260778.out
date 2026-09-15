@@ -1,0 +1,16 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+
+noise:
+  JSR -10.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -8.0 dB  BER >=3.0e-09 (0 err)  (0 err / 1.0e+09 bits)
+  JSR  -6.0 dB  BER         8.00e-09  (8 err / 1.0e+09 bits)
+  JSR  -4.0 dB  BER         3.74e-06  (101 err / 2.7e+07 bits)
+  JSR  -2.0 dB  BER         1.89e-04  (189 err / 1.0e+06 bits)
+  JSR  +0.0 dB  BER         2.41e-03  (2405 err / 1.0e+06 bits)
+  JSR  +2.0 dB  BER         1.24e-02  (12373 err / 1.0e+06 bits)
+  JSR  +4.0 dB  BER         3.72e-02  (37212 err / 1.0e+06 bits)
+  JSR  +6.0 dB  BER         7.82e-02  (78230 err / 1.0e+06 bits)
+  JSR  +8.0 dB  BER         1.30e-01  (130040 err / 1.0e+06 bits)
+  JSR +10.0 dB  BER         1.85e-01  (185311 err / 1.0e+06 bits)
+
+optimal:
