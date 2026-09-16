@@ -1,0 +1,60 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+
+[1] noiseless anchor: ZF with perfect CSI and no noise makes zero errors
+  [PASS] noiseless clean BER                                          got=0           want=0           tol=0
+
+[2] equal total transmit power across N_J (exact, by construction)
+  [PASS] N_J=1: sum_k sum_SC |jam_k|^2 per OFDM symbol                got=16          want=16          tol=1e-06
+  [PASS] N_J=2: sum_k sum_SC |jam_k|^2 per OFDM symbol                got=16          want=16          tol=1e-06
+  [PASS] N_J=4: sum_k sum_SC |jam_k|^2 per OFDM symbol                got=16          want=16          tol=1e-06
+
+[3] received JSR = n_active * power / 52 in expectation (unit-power QPSK, 0 dB path gains, independent fading)
+  [PASS] N_J=1 n=52 p=1: JSR_rx (dB)                                  got=0.14539     want=0           tol=0.5
+  [PASS] N_J=4 n=52 p=1: JSR_rx (dB)                                  got=-0.0038123  want=0           tol=0.5
+  [PASS] N_J=1 n=13 p=1: JSR_rx (dB)                                  got=-6.014      want=-6.0206     tol=0.5
+
+[4] N_J = 1 reproduces the frozen dense sweep (job 102390)
+  [PASS] 10 dB n=16 p=1: BER                                          got=0.089171    want=0.089449    tol=0.0087
+  [PASS] 10 dB n=16 p=1: p_cnn                                        got=0.44922     want=0.41211     tol=0.0979
+  [PASS] 10 dB n=16 p=1: p_energy                                     got=0.024414    want=0.027344    tol=0.0314
+  [PASS] 10 dB n=16 p=1: p_suite                                      got=0.46826     want=0.43555     tol=0.0984
+  [PASS] 10 dB n=8 p=4: BER                                           got=0.079386    want=0.081382    tol=0.00691
+  [PASS] 10 dB n=8 p=4: p_cnn                                         got=0.65771     want=0.70117     tol=0.0922
+  [PASS] 10 dB n=8 p=4: p_energy                                      got=0.065918    want=0.03125     tol=0.0425
+  [PASS] 10 dB n=8 p=4: p_suite                                       got=0.68652     want=0.71875     tol=0.0903
+  [PASS] 30 dB n=16 p=1: BER                                          got=0.066006    want=0.067309    tol=0.00631
+  [PASS] 30 dB n=16 p=1: p_cnn                                        got=0.47559     want=0.44336     tol=0.0985
+  [PASS] 30 dB n=16 p=1: p_energy                                     got=0.018555    want=0.029297    tol=0.0302
+  [PASS] 30 dB n=16 p=1: p_suite                                      got=0.49023     want=0.46875     tol=0.0987
+  [PASS] 30 dB n=8 p=4: BER                                           got=0.051286    want=0.05119     tol=0.00309
+  [PASS] 30 dB n=8 p=4: p_cnn                                         got=0.71289     want=0.69531     tol=0.0902
+  [PASS] 30 dB n=8 p=4: p_energy                                      got=0.047852    want=0.039062    tol=0.0403
+  [PASS] 30 dB n=8 p=4: p_suite                                       got=0.73145     want=0.70703     tol=0.0888
+
+[5] clean BER floor and CNN clean FAR match the dense sweep
+  [PASS] 5 dB: clean BER floor                                        got=0.086212    want=0.084335    tol=0.0105
+  [PASS] 5 dB: clean p_cnn                                            got=0.13965     want=0.10938     tol=0.0653
+  [PASS] 10 dB: clean BER floor                                       got=0.033494    want=0.033183    tol=0.00608
+  [PASS] 10 dB: clean p_cnn                                           got=0.033203    want=0.013672    tol=0.0299
+  [PASS] 15 dB: clean BER floor                                       got=0.011412    want=0.011691    tol=0.00295
+  [PASS] 15 dB: clean p_cnn                                           got=0.019531    want=0.0058594   tol=0.0221
+  [PASS] 20 dB: clean BER floor                                       got=0.0035009   want=0.0035807   tol=0.00136
+  [PASS] 20 dB: clean p_cnn                                           got=0.018066    want=0.0078125   tol=0.0223
+  [PASS] 30 dB: clean BER floor                                       got=0.00035604  want=0.00033804  tol=0.000243
+  [PASS] 30 dB: clean p_cnn                                           got=0.019531    want=0.013672    tol=0.0253
+
+[6] the energy threshold honours its 1% FAR on fresh clean frames
+  [PASS] ebno_10: fresh clean p_energy                                got=0.0097656   want=0.01        tol=0.00879
+  [PASS] noiseless: fresh clean p_energy                              got=0.010254    want=0.01        tol=0.00879
+
+[7] a vanishing jammer is indistinguishable from clean
+  [PASS] 20 dB: p_suite(p=1e-5) vs clean                              got=0.022461    want=0.03125     tol=0.0202
+  [PASS] 20 dB: BER(p=1e-5) vs clean                                  got=0.0034058   want=0.0036011   tol=0.00073
+
+[8] frontier selection picks the max-BER config under the budget
+  [PASS] pick at budget 0.03                                          got=0.2         want=0.2         tol=0
+  [PASS] pick at budget 0.05 (inclusive)                              got=0.3         want=0.3         tol=0
+  [PASS] pick at budget 0.001 is None                                 got=1           want=1           tol=0
+
+ALL CHECKS PASS

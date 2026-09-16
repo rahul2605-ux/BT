@@ -1,0 +1,14 @@
+SMOKE: panels use [0.0, 2.5, 5.0] / [0.0, 2.5, 5.0]
+3 noise levels: ['Eb/N0 0 dB', 'Eb/N0 2.5 dB', 'Eb/N0 5 dB']
+
+Strongest confirmed stealthy jammer at each detector's own FAR budget (* = failed confirmation)
+    level |    floor | FAR cnn FAR suite | vs cnn: N_J n p -> BER (xfloor) | vs suite: N_J n p -> BER (xfloor)
+     0 dB | 1.81e-01 |   0.433     0.441 | 1  2 0.316   -> 0.1837 (x1.0, +2.0σ) | 4 16 0.01    -> 0.1823 (x1.0, +1.0σ)
+   2.5 dB | 1.29e-01 |   0.264     0.277 | 4  1 0.562   -> 0.1316 (x1.0, +1.7σ) | 1  8 0.178   -> 0.1337 (x1.0, +3.2σ)
+     5 dB | 8.51e-02 |   0.132     0.142 | 2  1 0.562   -> 0.0867 (x1.0, +1.4σ) | 1  1 0.178   -> 0.0866 (x1.0, +1.3σ)
+
+stealth-map cell counts (N_J = 1, 91 configs each):
+        Eb/N0 0 dB: {'stealthy': 45, 'C': 22, 'E': 0, 'B': 24, 'S': 0}
+      Eb/N0 2.5 dB: {'stealthy': 42, 'C': 19, 'E': 0, 'B': 29, 'S': 1}
+        Eb/N0 5 dB: {'stealthy': 40, 'C': 30, 'E': 0, 'B': 21, 'S': 0}
+wrote 5 figures + summary.json to /home/rrahman/BT/Tabula Rasa/sim08_ablation/../artifacts/sim08_ablation/run001

@@ -617,7 +617,7 @@ instructions but were filed as decisions. They are listed first here so this tab
 | Omniscient jammer in **every** results figure | `m0/figures.py` | **PARTIAL — 2 of 4.** `fig_tradeoff` (L92) and `fig_frontier` (L135) carry `counter_flip`; **`fig_detectors` (L162) and `fig_stealth_vs_sigma` (L202) do not** — their attack lists omit `counter_null`/`counter_flip` |
 | Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3) | **not started** |
 | Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
-| Noise sweep = primary ablation, log grid | G2 | **not started** — needs the σ=0 anchor + a proper log grid (§3.2) |
+| Noise sweep = primary ablation, log grid | G2 (M0) · §3.3c (sim08) | **done on the sim08 stack 2026-09-16** (18 levels + noiseless anchor, §3.3c); **still not started for M0/E2** — needs the σ=0 anchor + a proper log grid (§3.2) |
 | Untrainability written up as a *result* | Experiment History summary (§3.5) | **drafted, not pasted** — one paragraph in `sec_exphist.tex`; the long write-up was cut 2026-09-15 for the page limit |
 | Novelty in coordination/synchronisation, not architecture (2026-09-12) | §2.3 RQ1's delay-decay curve; G6 (§3.4) | **not started** — this is the paper's contribution now |
 | Inter-jammer delay + desync modelled and swept (2026-09-12) | M1 spec (§2.4); G6 | **not started** — M1 does not exist yet |
@@ -780,6 +780,15 @@ chosen together (§4.2 Q8).
 **Paper drafts (2026-09-15):** the Experiment History was cut from a 10-part appendix (~4,300 words) to a
 ~1-column summary, `paper_drafts/sec_exphist.tex`, for the 6-page limit; parts 9–10 dropped. Not yet
 pasted into Overleaf; the user is still editing it (§3.5).
+
+**STATE 2026-09-16: sim08 ablations done ([§3.3c](#33c-sim08-ablations--noise-jammer-power-number-of-jammers-2026-09-16)).**
+Agreed with the supervisor, and run on the frozen sim08 suite from new read-only code in
+`sim08_ablation/`: noise level, jammer power and #jammers, all on log grids. Headlines: the stealthy
+jammer holds **BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** while the clean floor falls away (×1.4 → ×109);
+detection is set by the jammer's **total power**, not its spread; **uncoordinated multi-jammer buys
+nothing at matched detectability** (the m1 trap again) — which is the baseline RQ1's coordination must
+beat; and *suite ≡ CNN* now holds over 0–40 dB. The CGAN step-1 decision (accept run001 as a partial
+reproduction vs one more training run) is **still open** and unaffected.
 
 ---
 
@@ -1000,6 +1009,73 @@ is a bare-BCE-GAN statement and does not apply to the composite loss; not a conc
 **Caveat carried into step 2.** BER is in no loss term (§4.2 Q7): the GAN is effective purely by
 imitating the QPSK waveform. So "conditioning on stealth" (step 2) gets no help from the reproduced
 objective and is a genuine addition, not a tweak.
+
+## 3.3c sim08 ablations — noise, jammer power, number of jammers (2026-09-16)
+
+Agreed with the supervisor: go back to the sim08 realistic channel and ask which jammer setting is
+strongest at matched detectability, and where the frozen CNN is evaded. Two of his named ablation axes
+(§B.2): **noise level** and **scenario size (#jammers)**, both on log grids, with **jammer power** as
+the third. `sim08_ablation/` is new code that **imports `simulation08/` and `simulation06/`
+read-only** — nothing frozen was edited ([A.9](#a9-frozen-code-inventory)).
+
+**Setup.** 18 noise levels (Eb/N0 0:2.5:40 dB plus a **noiseless anchor**) × 13 powers per active
+subcarrier (0.01–10, four per decade) × 7 n_active (1…52) × N_J ∈ {1, 2, 4} **independent,
+uncoordinated, blind** jammers at **equal total power** (each sends `power/N_J` on its own random
+subcarriers through its own TDL-C link) = 4,914 configs at B = 512, plus a 4,096-frame clean reference
+per level. Detectors are frozen and unchanged: the channel-valid CNN
+(`artifacts/sim08/detector/run001_best.pt`, threshold 0.5) and the 1 %-FAR energy detector, combined
+per frame as the suite. Every headline number is a **confirmation pass on 4,096 fresh frames**: picking
+the max-BER config under a noisy P(detect) favours lucky draws, so the frontier pick is re-measured,
+and picks whose confirmed P(detect) lands > 2σ above the budget are flagged. Jobs: 2261123 verify
+(37 checks, incl. reproducing job 102390 at N_J = 1) · 2261126 / 2261146 / 2261173 sweep · 2261174
+figures. Figures and `summary.json` in `artifacts/sim08_ablation/run001/`.
+
+**1. Noise changes the detector's false-alarm rate, not its hit rate.** For a fixed jammer (n = 16,
+power 1, JSR ≈ −5 dB) P(detect) is **flat at 0.40–0.60 across the whole range**, while the CNN's clean
+FAR collapses: **0.42 (0 dB) → 0.031 (10 dB) → 0.010 (20 dB) → ~0.015–0.02 (25–40 dB and noiseless)**.
+Discrimination (hit rate − FAR) therefore *grows* with SNR, 0.16 → 0.46. His predicted direction —
+*"increase noise … less detection"* — holds **as a statement about the false-alarm rate and
+discrimination, not about the jammer's detection probability**, which noise barely moves.
+
+**2. At matched detectability the strongest stealthy jammer is SNR-independent in absolute terms.**
+Within the suite's own clean FAR, the best confirmed jammer causes **BER 0.005–0.016 at every Eb/N0
+≥ 15 dB**, including the noiseless anchor — essentially constant — while the clean floor falls from
+1.1e-2 to 3.2e-5. Its advantage over the floor therefore grows ×1.4 (15 dB) → ×3.8 (20) → ×15 (30) →
+×109 (40 dB). Below ~12.5 dB the best stealthy jammer is within ×1.2 of the floor, i.e. it does
+nothing. This **refines** [A.7](#a7-sim08--the-realistic-channel-and-the-honest-metric): the absolute
+numbers reproduce (0.013 at 20 dB, 0.0054 at 30 dB vs A.7's 0.011 / 0.004), but "the stealthy region
+shrinks at high SNR" was the wrong reading — it holds its BER while the floor drops away beneath it.
+
+**3. Detection is set by the jammer's TOTAL power, not by how it is spread.** The stealthy/detected
+boundary sits at **total power ≈ 1–2** (JSR ≈ −15 dB) at every noise level, across a 1000× power grid
+and a 52× spread in n_active — the diagonal frontier in `stealth_map.png`. So the attacker's only real
+lever against this detector is total power; the shape of the occupancy is free. The strongest settings
+are correspondingly varied (n = 8…52 at total power 0.9–1.6) and equally good.
+
+**4. More jammers at equal total power buy nothing at matched detectability — the m1 trap again.**
+Mean over Eb/N0 ≥ 15 dB, one jammer vs two vs four at the same total power (n = 16 each):
+BER **0.066 → 0.084 → 0.096** (+45 %), but suite detection **0.475 → 0.513 → 0.544**. At matched
+detectability the gain disappears: median confirmed stealthy BER **0.0078 / 0.0092 / 0.0088**, fully
+overlapping. This is the same error shape as the retracted "+70 % channel-aware" (§2.7): splitting
+power is *louder*, and the extra BER is bought, not free. **For RQ1 this is the baseline coordination
+has to beat** — uncoordinated multi-jammer is worth zero here.
+
+**5. "Suite ≡ CNN" now holds across the whole noise range.** Only **26 of 4,914** configs are caught by
+the energy detector when the CNN misses them (0.5 %). A.7 established this for 5–30 dB; it extends to
+0–40 dB and the noiseless anchor. The expensive CNN is still the whole detector.
+
+**6. The frozen CNN degrades gently outside its training range** (Eb/N0 5–30 dB, power 0.3–8): clean
+FAR stays 1.5–3 % at 32.5–40 dB and noiseless, and it still catches jammers an order of magnitude
+below its training power. No blind spot opens up out of distribution.
+
+**Caveats.** The CNN runs at threshold 0.5 (not FAR-calibrated, unlike the energy detector) — as in all
+sim08 work; the budget is each detector's *own* clean FAR, so the comparison is still matched. ~20 % of
+frontier picks failed confirmation and are drawn hollow. Our clean CNN FAR measured on 4,096 frames is
+about **twice** job 102390's B = 512 estimates at 10–15 dB (0.031 vs 0.014, 0.014 vs 0.006); the dense
+sweep's estimates were noisy at that batch size — quote these. Unchanged from sim08 and still binding:
+held random-phase jammers only, perfect-CSI ZF, the jammer sits on the victim's symbol grid (§4.4), the
+detector is frozen (no retraining round), and the multi-jammer arm is **uncoordinated** — it is not
+G6/E3.
 
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
@@ -1539,6 +1615,7 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
 | **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
 | **cgan** | run001 | CGAN (Zhou 2025), plain torch | **step 1 reproduced**: Noise−GAN 4.34 dB, GAN−Optimal 1.01 dB at BER 1e-3 (paper 4.44 / 1.31); §3.3b | 2259289, 2259409 |
+| **sim08_abl** | run001 | noise × power × #jammers on the frozen sim08 suite | **stealthy BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** (×1.4→×109 the floor); detection set by *total* power; more jammers = louder, no matched-detectability gain; suite ≡ CNN (26/4914); §3.3c | 2261123, 2261126, 2261146, 2261173, 2261174 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
 appendix states it nowhere and two findings below are properties of the objective, not of the
@@ -2023,6 +2100,13 @@ Kept for provenance; **do not extend any of it.**
 - `simulation08/retrain_detector_channel.py` — the channel-valid CNN (m2).
 - `simulation08/matched_detectability.py` — pure post-processing, no GPU.
 
+**`sim08_ablation/` (2026-09-16, live) reads this stack but does not modify it** — it imports
+`channel.MultiLinkChannel` and `frontier_channel`'s `build_jam` / `frame_power` / `calibrate_energy` /
+`detect_chunked` plus `simulation06/`'s OFDM chain and detector, and adds only what the frozen
+`evaluate()` cannot express: N_J > 1 jammers (it applies jammer 0 only, because `chan.apply` zips the
+jammer list), a noiseless anchor, and the received JSR. Its `verify.py` re-measures frozen dense-sweep
+points (job 102390) as a regression check. Results: §3.3c.
+
 **Detector checkpoints on disk** — note which spectrogram representation each was trained on:
 
 | Path | What |
@@ -2102,7 +2186,7 @@ Quotes preserved because the wording matters. Consequences already actioned are 
 | **(mtg)** *"At decentralized execution: jammer is 'deaf' to rewards, maybe ACKs"* | ✅ §2.8 (CTDE). |
 | **(mtg)** *"How is 'counter signal' not viable: add vector in random direction in I/Q plot"* | Both halves required: **motivate away** *and* **run as a baseline** (§2.5). |
 | **(mtg)** *"Ablation: parameter study, increase noise and see what happens (less detection e.g.)"* + *"Noise level, ε, change exponentially"* | The **primary** ablation, on a log grid. He has predicted the direction. ⚠ E1's grid is not yet compliant (§3.2). |
-| **(mtg)** *"Scenario, e.g. #jammers, #legitimate users"* | Second ablation axis. **First mention of multiple legitimate users** — the model is 1 TX → 1 RX today. |
+| **(mtg)** *"Scenario, e.g. #jammers, #legitimate users"* | Second ablation axis. **#jammers done on the sim08 stack 2026-09-16** (N_J ∈ {1,2,4}, uncoordinated, equal total power — no gain at matched detectability, §3.3c). **First mention of multiple legitimate users** — the model is 1 TX → 1 RX today, so that half is still open. |
 | **(mtg)** *"Possibly double axes, BER/detection → show trade-off; no attackers / ground-truth attacker"* | ✅ The prescribed figure format, §2.7. |
 | **(mtg)** *"Put as much info as possible in Overleaf"* | The document is the working record. Assumption table, baseline table and ablation list go in **now**, as stubs if necessary. |
 | *"Real hardware to implement this method is available, if you'd like to experiment later on."* | Future work (§4.3). |

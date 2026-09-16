@@ -1,0 +1,300 @@
+node: tikgpu07.ee.ethz.ch | gpu: NVIDIA GeForce RTX 3090
+OFDM initialized on cuda: 624 data syms, 104 pilot syms, 52 effective SC
+ebno_10: no=0.0729 e_thresh=2.7383 | clean BER 0.03373 FAR cnn 0.0305 energy 0.0056 suite 0.0361
+  N_J=1 n= 1 p=0.01      | BER 0.0307 cnn 0.039 en 0.002 suite 0.041 JSR -37.3 dB
+  N_J=1 n= 2 p=0.01      | BER 0.0336 cnn 0.047 en 0.002 suite 0.049 JSR -34.0 dB
+  N_J=1 n= 4 p=0.01      | BER 0.0341 cnn 0.041 en 0.006 suite 0.047 JSR -31.0 dB
+  N_J=1 n= 8 p=0.01      | BER 0.0331 cnn 0.031 en 0.006 suite 0.037 JSR -28.1 dB
+  N_J=1 n=16 p=0.01      | BER 0.0349 cnn 0.023 en 0.002 suite 0.025 JSR -24.8 dB
+  N_J=1 n=32 p=0.01      | BER 0.0361 cnn 0.031 en 0.008 suite 0.039 JSR -22.1 dB
+  N_J=1 n=52 p=0.01      | BER 0.0397 cnn 0.041 en 0.002 suite 0.043 JSR -19.9 dB
+  N_J=1 n= 1 p=0.017783  | BER 0.0326 cnn 0.027 en 0.006 suite 0.033 JSR -34.6 dB
+  N_J=1 n= 2 p=0.017783  | BER 0.0322 cnn 0.031 en 0.010 suite 0.041 JSR -32.1 dB
+  N_J=1 n= 4 p=0.017783  | BER 0.0315 cnn 0.039 en 0.006 suite 0.045 JSR -28.8 dB
+  N_J=1 n= 8 p=0.017783  | BER 0.0365 cnn 0.035 en 0.004 suite 0.039 JSR -25.6 dB
+  N_J=1 n=16 p=0.017783  | BER 0.0356 cnn 0.043 en 0.004 suite 0.047 JSR -22.7 dB
+  N_J=1 n=32 p=0.017783  | BER 0.0377 cnn 0.039 en 0.008 suite 0.047 JSR -19.4 dB
+  N_J=1 n=52 p=0.017783  | BER 0.0417 cnn 0.045 en 0.012 suite 0.055 JSR -17.3 dB
+  N_J=1 n= 1 p=0.031623  | BER 0.0334 cnn 0.021 en 0.014 suite 0.035 JSR -31.9 dB
+  N_J=1 n= 2 p=0.031623  | BER 0.0332 cnn 0.035 en 0.002 suite 0.037 JSR -29.0 dB
+  N_J=1 n= 4 p=0.031623  | BER 0.0340 cnn 0.049 en 0.008 suite 0.057 JSR -26.4 dB
+  N_J=1 n= 8 p=0.031623  | BER 0.0364 cnn 0.033 en 0.004 suite 0.037 JSR -23.1 dB
+  N_J=1 n=16 p=0.031623  | BER 0.0387 cnn 0.023 en 0.004 suite 0.027 JSR -20.0 dB
+  N_J=1 n=32 p=0.031623  | BER 0.0412 cnn 0.059 en 0.006 suite 0.064 JSR -17.1 dB
+  N_J=1 n=52 p=0.031623  | BER 0.0439 cnn 0.078 en 0.010 suite 0.088 JSR -14.9 dB
+  N_J=1 n= 1 p=0.056234  | BER 0.0335 cnn 0.047 en 0.004 suite 0.051 JSR -29.5 dB
+  N_J=1 n= 2 p=0.056234  | BER 0.0343 cnn 0.025 en 0.010 suite 0.035 JSR -27.0 dB
+  N_J=1 n= 4 p=0.056234  | BER 0.0372 cnn 0.027 en 0.002 suite 0.029 JSR -23.4 dB
+  N_J=1 n= 8 p=0.056234  | BER 0.0353 cnn 0.025 en 0.006 suite 0.031 JSR -20.5 dB
+  N_J=1 n=16 p=0.056234  | BER 0.0394 cnn 0.037 en 0.004 suite 0.041 JSR -17.6 dB
+  N_J=1 n=32 p=0.056234  | BER 0.0467 cnn 0.072 en 0.004 suite 0.076 JSR -14.5 dB
+  N_J=1 n=52 p=0.056234  | BER 0.0548 cnn 0.121 en 0.006 suite 0.127 JSR -12.4 dB
+  N_J=1 n= 1 p=0.1       | BER 0.0338 cnn 0.047 en 0.000 suite 0.047 JSR -27.7 dB
+  N_J=1 n= 2 p=0.1       | BER 0.0352 cnn 0.035 en 0.006 suite 0.041 JSR -24.4 dB
+  N_J=1 n= 4 p=0.1       | BER 0.0341 cnn 0.035 en 0.006 suite 0.041 JSR -21.2 dB
+  N_J=1 n= 8 p=0.1       | BER 0.0379 cnn 0.049 en 0.002 suite 0.051 JSR -18.5 dB
+  N_J=1 n=16 p=0.1       | BER 0.0434 cnn 0.068 en 0.006 suite 0.074 JSR -15.1 dB
+  N_J=1 n=32 p=0.1       | BER 0.0556 cnn 0.092 en 0.012 suite 0.104 JSR -12.1 dB
+  N_J=1 n=52 p=0.1       | BER 0.0706 cnn 0.189 en 0.012 suite 0.201 JSR -10.0 dB
+  N_J=1 n= 1 p=0.177828  | BER 0.0359 cnn 0.029 en 0.004 suite 0.033 JSR -24.6 dB
+  N_J=1 n= 2 p=0.177828  | BER 0.0370 cnn 0.039 en 0.004 suite 0.043 JSR -21.3 dB
+  N_J=1 n= 4 p=0.177828  | BER 0.0370 cnn 0.055 en 0.004 suite 0.059 JSR -18.8 dB
+  N_J=1 n= 8 p=0.177828  | BER 0.0439 cnn 0.059 en 0.002 suite 0.061 JSR -15.5 dB
+  N_J=1 n=16 p=0.177828  | BER 0.0556 cnn 0.096 en 0.006 suite 0.102 JSR -12.3 dB
+  N_J=1 n=32 p=0.177828  | BER 0.0694 cnn 0.201 en 0.006 suite 0.207 JSR -9.7 dB
+  N_J=1 n=52 p=0.177828  | BER 0.0901 cnn 0.336 en 0.004 suite 0.340 JSR -7.2 dB
+  N_J=1 n= 1 p=0.316228  | BER 0.0336 cnn 0.047 en 0.010 suite 0.057 JSR -22.1 dB
+  N_J=1 n= 2 p=0.316228  | BER 0.0375 cnn 0.047 en 0.002 suite 0.049 JSR -18.8 dB
+  N_J=1 n= 4 p=0.316228  | BER 0.0379 cnn 0.053 en 0.004 suite 0.057 JSR -16.2 dB
+  N_J=1 n= 8 p=0.316228  | BER 0.0447 cnn 0.090 en 0.004 suite 0.094 JSR -13.2 dB
+  N_J=1 n=16 p=0.316228  | BER 0.0623 cnn 0.146 en 0.004 suite 0.150 JSR -9.9 dB
+  N_J=1 n=32 p=0.316228  | BER 0.0893 cnn 0.342 en 0.012 suite 0.354 JSR -7.1 dB
+  N_J=1 n=52 p=0.316228  | BER 0.1149 cnn 0.520 en 0.010 suite 0.527 JSR -5.5 dB
+  N_J=1 n= 1 p=0.562341  | BER 0.0349 cnn 0.045 en 0.012 suite 0.057 JSR -19.5 dB
+  N_J=1 n= 2 p=0.562341  | BER 0.0372 cnn 0.057 en 0.008 suite 0.064 JSR -16.7 dB
+  N_J=1 n= 4 p=0.562341  | BER 0.0420 cnn 0.088 en 0.002 suite 0.090 JSR -13.7 dB
+  N_J=1 n= 8 p=0.562341  | BER 0.0540 cnn 0.129 en 0.008 suite 0.137 JSR -10.5 dB
+  N_J=1 n=16 p=0.562341  | BER 0.0756 cnn 0.295 en 0.004 suite 0.299 JSR -7.5 dB
+  N_J=1 n=32 p=0.562341  | BER 0.1134 cnn 0.498 en 0.023 suite 0.521 JSR -4.8 dB
+  N_J=1 n=52 p=0.562341  | BER 0.1735 cnn 0.764 en 0.020 suite 0.773 JSR -2.2 dB
+  N_J=1 n= 1 p=1         | BER 0.0357 cnn 0.043 en 0.008 suite 0.051 JSR -17.0 dB
+  N_J=1 n= 2 p=1         | BER 0.0403 cnn 0.068 en 0.000 suite 0.068 JSR -14.3 dB
+  N_J=1 n= 4 p=1         | BER 0.0454 cnn 0.141 en 0.006 suite 0.146 JSR -11.4 dB
+  N_J=1 n= 8 p=1         | BER 0.0610 cnn 0.254 en 0.012 suite 0.266 JSR -8.4 dB
+  N_J=1 n=16 p=1         | BER 0.0898 cnn 0.490 en 0.012 suite 0.498 JSR -5.2 dB
+  N_J=1 n=32 p=1         | BER 0.1476 cnn 0.730 en 0.037 suite 0.748 JSR -2.1 dB
+  N_J=1 n=52 p=1         | BER 0.2165 cnn 0.893 en 0.092 suite 0.900 JSR +0.0 dB
+  N_J=1 n= 1 p=1.77828   | BER 0.0388 cnn 0.096 en 0.012 suite 0.107 JSR -14.5 dB
+  N_J=1 n= 2 p=1.77828   | BER 0.0409 cnn 0.135 en 0.010 suite 0.145 JSR -11.8 dB
+  N_J=1 n= 4 p=1.77828   | BER 0.0533 cnn 0.219 en 0.006 suite 0.223 JSR -8.6 dB
+  N_J=1 n= 8 p=1.77828   | BER 0.0704 cnn 0.412 en 0.004 suite 0.416 JSR -5.5 dB
+  N_J=1 n=16 p=1.77828   | BER 0.1069 cnn 0.680 en 0.041 suite 0.705 JSR -2.5 dB
+  N_J=1 n=32 p=1.77828   | BER 0.1779 cnn 0.857 en 0.100 suite 0.867 JSR +0.3 dB
+  N_J=1 n=52 p=1.77828   | BER 0.2725 cnn 0.965 en 0.291 suite 0.971 JSR +2.6 dB
+  N_J=1 n= 1 p=3.16228   | BER 0.0375 cnn 0.141 en 0.006 suite 0.146 JSR -12.1 dB
+  N_J=1 n= 2 p=3.16228   | BER 0.0422 cnn 0.197 en 0.008 suite 0.205 JSR -9.5 dB
+  N_J=1 n= 4 p=3.16228   | BER 0.0546 cnn 0.418 en 0.008 suite 0.426 JSR -6.0 dB
+  N_J=1 n= 8 p=3.16228   | BER 0.0770 cnn 0.627 en 0.020 suite 0.639 JSR -3.3 dB
+  N_J=1 n=16 p=3.16228   | BER 0.1210 cnn 0.814 en 0.064 suite 0.820 JSR +0.2 dB
+  N_J=1 n=32 p=3.16228   | BER 0.2079 cnn 0.943 en 0.293 suite 0.955 JSR +2.8 dB
+  N_J=1 n=52 p=3.16228   | BER 0.3207 cnn 0.992 en 0.602 suite 0.994 JSR +5.1 dB
+  N_J=1 n= 1 p=5.62341   | BER 0.0399 cnn 0.246 en 0.008 suite 0.254 JSR -9.3 dB
+  N_J=1 n= 2 p=5.62341   | BER 0.0467 cnn 0.359 en 0.008 suite 0.367 JSR -6.9 dB
+  N_J=1 n= 4 p=5.62341   | BER 0.0592 cnn 0.572 en 0.014 suite 0.582 JSR -3.5 dB
+  N_J=1 n= 8 p=5.62341   | BER 0.0842 cnn 0.820 en 0.064 suite 0.836 JSR -0.7 dB
+  N_J=1 n=16 p=5.62341   | BER 0.1341 cnn 0.938 en 0.314 suite 0.949 JSR +2.4 dB
+  N_J=1 n=32 p=5.62341   | BER 0.2328 cnn 0.979 en 0.609 suite 0.984 JSR +5.3 dB
+  N_J=1 n=52 p=5.62341   | BER 0.3558 cnn 0.998 en 0.836 suite 1.000 JSR +7.3 dB
+  N_J=1 n= 1 p=10        | BER 0.0404 cnn 0.273 en 0.012 suite 0.285 JSR -7.3 dB
+  N_J=1 n= 2 p=10        | BER 0.0478 cnn 0.555 en 0.014 suite 0.564 JSR -4.2 dB
+  N_J=1 n= 4 p=10        | BER 0.0616 cnn 0.795 en 0.053 suite 0.807 JSR -1.1 dB
+  N_J=1 n= 8 p=10        | BER 0.0912 cnn 0.926 en 0.203 suite 0.932 JSR +2.0 dB
+  N_J=1 n=16 p=10        | BER 0.1413 cnn 0.977 en 0.553 suite 0.979 JSR +4.5 dB
+  N_J=1 n=32 p=10        | BER 0.2532 cnn 0.990 en 0.875 suite 0.998 JSR +8.0 dB
+  N_J=1 n=52 p=10        | BER 0.3880 cnn 1.000 en 0.967 suite 1.000 JSR +9.7 dB
+  [checkpoint] N_J=1 done, 91 rows (41s)
+  N_J=2 n= 1 p=0.01      | BER 0.0326 cnn 0.033 en 0.006 suite 0.039 JSR -37.3 dB
+  N_J=2 n= 2 p=0.01      | BER 0.0341 cnn 0.027 en 0.006 suite 0.033 JSR -34.1 dB
+  N_J=2 n= 4 p=0.01      | BER 0.0336 cnn 0.029 en 0.008 suite 0.037 JSR -31.0 dB
+  N_J=2 n= 8 p=0.01      | BER 0.0327 cnn 0.021 en 0.004 suite 0.025 JSR -27.8 dB
+  N_J=2 n=16 p=0.01      | BER 0.0333 cnn 0.041 en 0.002 suite 0.043 JSR -25.0 dB
+  N_J=2 n=32 p=0.01      | BER 0.0324 cnn 0.023 en 0.008 suite 0.031 JSR -22.3 dB
+  N_J=2 n=52 p=0.01      | BER 0.0369 cnn 0.039 en 0.006 suite 0.045 JSR -20.0 dB
+  N_J=2 n= 1 p=0.017783  | BER 0.0321 cnn 0.020 en 0.012 suite 0.031 JSR -34.7 dB
+  N_J=2 n= 2 p=0.017783  | BER 0.0320 cnn 0.023 en 0.004 suite 0.027 JSR -31.7 dB
+  N_J=2 n= 4 p=0.017783  | BER 0.0345 cnn 0.031 en 0.004 suite 0.035 JSR -28.5 dB
+  N_J=2 n= 8 p=0.017783  | BER 0.0331 cnn 0.037 en 0.002 suite 0.039 JSR -25.5 dB
+  N_J=2 n=16 p=0.017783  | BER 0.0334 cnn 0.049 en 0.006 suite 0.055 JSR -22.8 dB
+  N_J=2 n=32 p=0.017783  | BER 0.0381 cnn 0.047 en 0.004 suite 0.051 JSR -19.7 dB
+  N_J=2 n=52 p=0.017783  | BER 0.0405 cnn 0.045 en 0.004 suite 0.049 JSR -17.5 dB
+  N_J=2 n= 1 p=0.031623  | BER 0.0353 cnn 0.039 en 0.006 suite 0.045 JSR -32.0 dB
+  N_J=2 n= 2 p=0.031623  | BER 0.0333 cnn 0.031 en 0.010 suite 0.041 JSR -29.0 dB
+  N_J=2 n= 4 p=0.031623  | BER 0.0329 cnn 0.041 en 0.010 suite 0.051 JSR -26.4 dB
+  N_J=2 n= 8 p=0.031623  | BER 0.0338 cnn 0.037 en 0.004 suite 0.041 JSR -23.0 dB
+  N_J=2 n=16 p=0.031623  | BER 0.0368 cnn 0.033 en 0.006 suite 0.039 JSR -20.0 dB
+  N_J=2 n=32 p=0.031623  | BER 0.0416 cnn 0.053 en 0.008 suite 0.061 JSR -17.1 dB
+  N_J=2 n=52 p=0.031623  | BER 0.0445 cnn 0.082 en 0.006 suite 0.086 JSR -15.1 dB
+  N_J=2 n= 1 p=0.056234  | BER 0.0338 cnn 0.027 en 0.006 suite 0.033 JSR -29.7 dB
+  N_J=2 n= 2 p=0.056234  | BER 0.0342 cnn 0.045 en 0.004 suite 0.049 JSR -26.7 dB
+  N_J=2 n= 4 p=0.056234  | BER 0.0350 cnn 0.031 en 0.008 suite 0.037 JSR -23.7 dB
+  N_J=2 n= 8 p=0.056234  | BER 0.0351 cnn 0.035 en 0.004 suite 0.039 JSR -20.6 dB
+  N_J=2 n=16 p=0.056234  | BER 0.0409 cnn 0.045 en 0.008 suite 0.053 JSR -17.7 dB
+  N_J=2 n=32 p=0.056234  | BER 0.0451 cnn 0.074 en 0.006 suite 0.080 JSR -14.3 dB
+  N_J=2 n=52 p=0.056234  | BER 0.0557 cnn 0.088 en 0.006 suite 0.094 JSR -12.5 dB
+  N_J=2 n= 1 p=0.1       | BER 0.0348 cnn 0.029 en 0.004 suite 0.033 JSR -27.1 dB
+  N_J=2 n= 2 p=0.1       | BER 0.0322 cnn 0.029 en 0.000 suite 0.029 JSR -24.4 dB
+  N_J=2 n= 4 p=0.1       | BER 0.0343 cnn 0.031 en 0.010 suite 0.041 JSR -21.3 dB
+  N_J=2 n= 8 p=0.1       | BER 0.0365 cnn 0.045 en 0.002 suite 0.047 JSR -18.2 dB
+  N_J=2 n=16 p=0.1       | BER 0.0448 cnn 0.070 en 0.002 suite 0.072 JSR -15.1 dB
+  N_J=2 n=32 p=0.1       | BER 0.0544 cnn 0.090 en 0.012 suite 0.102 JSR -12.1 dB
+  N_J=2 n=52 p=0.1       | BER 0.0675 cnn 0.193 en 0.008 suite 0.201 JSR -10.0 dB
+  N_J=2 n= 1 p=0.177828  | BER 0.0329 cnn 0.033 en 0.004 suite 0.037 JSR -24.7 dB
+  N_J=2 n= 2 p=0.177828  | BER 0.0363 cnn 0.033 en 0.006 suite 0.039 JSR -21.5 dB
+  N_J=2 n= 4 p=0.177828  | BER 0.0372 cnn 0.033 en 0.006 suite 0.039 JSR -18.6 dB
+  N_J=2 n= 8 p=0.177828  | BER 0.0437 cnn 0.061 en 0.006 suite 0.066 JSR -15.5 dB
+  N_J=2 n=16 p=0.177828  | BER 0.0549 cnn 0.098 en 0.004 suite 0.102 JSR -12.3 dB
+  N_J=2 n=32 p=0.177828  | BER 0.0715 cnn 0.174 en 0.010 suite 0.184 JSR -9.5 dB
+  N_J=2 n=52 p=0.177828  | BER 0.0904 cnn 0.316 en 0.006 suite 0.320 JSR -7.5 dB
+  N_J=2 n= 1 p=0.316228  | BER 0.0367 cnn 0.039 en 0.002 suite 0.041 JSR -22.0 dB
+  N_J=2 n= 2 p=0.316228  | BER 0.0405 cnn 0.029 en 0.004 suite 0.033 JSR -19.1 dB
+  N_J=2 n= 4 p=0.316228  | BER 0.0381 cnn 0.051 en 0.004 suite 0.055 JSR -16.4 dB
+  N_J=2 n= 8 p=0.316228  | BER 0.0467 cnn 0.080 en 0.006 suite 0.086 JSR -13.2 dB
+  N_J=2 n=16 p=0.316228  | BER 0.0641 cnn 0.146 en 0.010 suite 0.156 JSR -10.1 dB
+  N_J=2 n=32 p=0.316228  | BER 0.0900 cnn 0.357 en 0.012 suite 0.369 JSR -7.3 dB
+  N_J=2 n=52 p=0.316228  | BER 0.1220 cnn 0.502 en 0.008 suite 0.508 JSR -5.2 dB
+  N_J=2 n= 1 p=0.562341  | BER 0.0349 cnn 0.041 en 0.002 suite 0.041 JSR -19.6 dB
+  N_J=2 n= 2 p=0.562341  | BER 0.0383 cnn 0.055 en 0.010 suite 0.064 JSR -16.7 dB
+  N_J=2 n= 4 p=0.562341  | BER 0.0452 cnn 0.088 en 0.008 suite 0.096 JSR -13.7 dB
+  N_J=2 n= 8 p=0.562341  | BER 0.0585 cnn 0.129 en 0.002 suite 0.131 JSR -10.6 dB
+  N_J=2 n=16 p=0.562341  | BER 0.0849 cnn 0.305 en 0.008 suite 0.312 JSR -7.5 dB
+  N_J=2 n=32 p=0.562341  | BER 0.1250 cnn 0.564 en 0.016 suite 0.578 JSR -4.5 dB
+  N_J=2 n=52 p=0.562341  | BER 0.1674 cnn 0.760 en 0.012 suite 0.764 JSR -2.5 dB
+  N_J=2 n= 1 p=1         | BER 0.0395 cnn 0.057 en 0.002 suite 0.059 JSR -17.0 dB
+  N_J=2 n= 2 p=1         | BER 0.0449 cnn 0.086 en 0.004 suite 0.090 JSR -14.1 dB
+  N_J=2 n= 4 p=1         | BER 0.0508 cnn 0.131 en 0.008 suite 0.139 JSR -11.1 dB
+  N_J=2 n= 8 p=1         | BER 0.0684 cnn 0.256 en 0.004 suite 0.260 JSR -8.2 dB
+  N_J=2 n=16 p=1         | BER 0.1033 cnn 0.480 en 0.008 suite 0.486 JSR -5.2 dB
+  N_J=2 n=32 p=1         | BER 0.1622 cnn 0.773 en 0.020 suite 0.783 JSR -2.2 dB
+  N_J=2 n=52 p=1         | BER 0.2142 cnn 0.916 en 0.043 suite 0.926 JSR -0.1 dB
+  N_J=2 n= 1 p=1.77828   | BER 0.0399 cnn 0.055 en 0.004 suite 0.059 JSR -14.7 dB
+  N_J=2 n= 2 p=1.77828   | BER 0.0451 cnn 0.137 en 0.006 suite 0.143 JSR -11.7 dB
+  N_J=2 n= 4 p=1.77828   | BER 0.0591 cnn 0.230 en 0.004 suite 0.234 JSR -8.6 dB
+  N_J=2 n= 8 p=1.77828   | BER 0.0837 cnn 0.436 en 0.010 suite 0.445 JSR -5.6 dB
+  N_J=2 n=16 p=1.77828   | BER 0.1308 cnn 0.695 en 0.002 suite 0.695 JSR -2.5 dB
+  N_J=2 n=32 p=1.77828   | BER 0.2011 cnn 0.922 en 0.082 suite 0.932 JSR +0.2 dB
+  N_J=2 n=52 p=1.77828   | BER 0.2698 cnn 0.986 en 0.246 suite 0.988 JSR +2.5 dB
+  N_J=2 n= 1 p=3.16228   | BER 0.0424 cnn 0.107 en 0.006 suite 0.113 JSR -12.0 dB
+  N_J=2 n= 2 p=3.16228   | BER 0.0543 cnn 0.229 en 0.004 suite 0.232 JSR -8.9 dB
+  N_J=2 n= 4 p=3.16228   | BER 0.0672 cnn 0.391 en 0.004 suite 0.395 JSR -6.0 dB
+  N_J=2 n= 8 p=3.16228   | BER 0.0981 cnn 0.658 en 0.020 suite 0.672 JSR -3.2 dB
+  N_J=2 n=16 p=3.16228   | BER 0.1554 cnn 0.881 en 0.064 suite 0.883 JSR -0.1 dB
+  N_J=2 n=32 p=3.16228   | BER 0.2463 cnn 0.973 en 0.305 suite 0.980 JSR +2.9 dB
+  N_J=2 n=52 p=3.16228   | BER 0.3202 cnn 0.996 en 0.654 suite 0.998 JSR +5.1 dB
+  N_J=2 n= 1 p=5.62341   | BER 0.0435 cnn 0.221 en 0.008 suite 0.229 JSR -9.8 dB
+  N_J=2 n= 2 p=5.62341   | BER 0.0542 cnn 0.357 en 0.012 suite 0.369 JSR -6.8 dB
+  N_J=2 n= 4 p=5.62341   | BER 0.0725 cnn 0.596 en 0.016 suite 0.609 JSR -3.9 dB
+  N_J=2 n= 8 p=5.62341   | BER 0.1111 cnn 0.830 en 0.033 suite 0.840 JSR -0.7 dB
+  N_J=2 n=16 p=5.62341   | BER 0.1792 cnn 0.959 en 0.279 suite 0.969 JSR +2.2 dB
+  N_J=2 n=32 p=5.62341   | BER 0.2859 cnn 0.996 en 0.762 suite 0.998 JSR +5.4 dB
+  N_J=2 n=52 p=5.62341   | BER 0.3591 cnn 0.998 en 0.936 suite 1.000 JSR +7.4 dB
+  N_J=2 n= 1 p=10        | BER 0.0435 cnn 0.336 en 0.008 suite 0.344 JSR -6.9 dB
+  N_J=2 n= 2 p=10        | BER 0.0571 cnn 0.600 en 0.016 suite 0.611 JSR -4.1 dB
+  N_J=2 n= 4 p=10        | BER 0.0779 cnn 0.789 en 0.037 suite 0.807 JSR -1.3 dB
+  N_J=2 n= 8 p=10        | BER 0.1248 cnn 0.932 en 0.199 suite 0.938 JSR +2.1 dB
+  N_J=2 n=16 p=10        | BER 0.2006 cnn 0.996 en 0.654 suite 0.998 JSR +4.7 dB
+  N_J=2 n=32 p=10        | BER 0.3178 cnn 1.000 en 0.959 suite 1.000 JSR +7.8 dB
+  N_J=2 n=52 p=10        | BER 0.3898 cnn 1.000 en 0.998 suite 1.000 JSR +9.8 dB
+  [checkpoint] N_J=2 done, 182 rows (79s)
+  N_J=4 n= 1 p=0.01      | BER 0.0331 cnn 0.043 en 0.004 suite 0.045 JSR -37.2 dB
+  N_J=4 n= 2 p=0.01      | BER 0.0334 cnn 0.027 en 0.010 suite 0.037 JSR -34.2 dB
+  N_J=4 n= 4 p=0.01      | BER 0.0333 cnn 0.037 en 0.008 suite 0.043 JSR -31.3 dB
+  N_J=4 n= 8 p=0.01      | BER 0.0311 cnn 0.041 en 0.008 suite 0.049 JSR -28.3 dB
+  N_J=4 n=16 p=0.01      | BER 0.0338 cnn 0.021 en 0.008 suite 0.029 JSR -25.1 dB
+  N_J=4 n=32 p=0.01      | BER 0.0368 cnn 0.033 en 0.004 suite 0.037 JSR -22.1 dB
+  N_J=4 n=52 p=0.01      | BER 0.0347 cnn 0.068 en 0.002 suite 0.070 JSR -19.9 dB
+  N_J=4 n= 1 p=0.017783  | BER 0.0317 cnn 0.039 en 0.010 suite 0.049 JSR -34.7 dB
+  N_J=4 n= 2 p=0.017783  | BER 0.0334 cnn 0.033 en 0.006 suite 0.039 JSR -31.7 dB
+  N_J=4 n= 4 p=0.017783  | BER 0.0354 cnn 0.020 en 0.004 suite 0.023 JSR -28.5 dB
+  N_J=4 n= 8 p=0.017783  | BER 0.0342 cnn 0.045 en 0.004 suite 0.049 JSR -25.6 dB
+  N_J=4 n=16 p=0.017783  | BER 0.0353 cnn 0.029 en 0.008 suite 0.037 JSR -22.6 dB
+  N_J=4 n=32 p=0.017783  | BER 0.0379 cnn 0.033 en 0.004 suite 0.037 JSR -19.5 dB
+  N_J=4 n=52 p=0.017783  | BER 0.0420 cnn 0.066 en 0.004 suite 0.070 JSR -17.3 dB
+  N_J=4 n= 1 p=0.031623  | BER 0.0316 cnn 0.027 en 0.006 suite 0.033 JSR -32.3 dB
+  N_J=4 n= 2 p=0.031623  | BER 0.0324 cnn 0.037 en 0.012 suite 0.049 JSR -29.2 dB
+  N_J=4 n= 4 p=0.031623  | BER 0.0325 cnn 0.039 en 0.004 suite 0.043 JSR -26.2 dB
+  N_J=4 n= 8 p=0.031623  | BER 0.0364 cnn 0.027 en 0.002 suite 0.029 JSR -23.1 dB
+  N_J=4 n=16 p=0.031623  | BER 0.0378 cnn 0.047 en 0.004 suite 0.051 JSR -20.0 dB
+  N_J=4 n=32 p=0.031623  | BER 0.0401 cnn 0.041 en 0.000 suite 0.041 JSR -17.0 dB
+  N_J=4 n=52 p=0.031623  | BER 0.0407 cnn 0.047 en 0.004 suite 0.051 JSR -15.3 dB
+  N_J=4 n= 1 p=0.056234  | BER 0.0356 cnn 0.031 en 0.010 suite 0.041 JSR -29.6 dB
+  N_J=4 n= 2 p=0.056234  | BER 0.0341 cnn 0.031 en 0.008 suite 0.039 JSR -26.7 dB
+  N_J=4 n= 4 p=0.056234  | BER 0.0369 cnn 0.037 en 0.006 suite 0.043 JSR -23.5 dB
+  N_J=4 n= 8 p=0.056234  | BER 0.0398 cnn 0.053 en 0.006 suite 0.059 JSR -20.6 dB
+  N_J=4 n=16 p=0.056234  | BER 0.0401 cnn 0.045 en 0.008 suite 0.053 JSR -17.6 dB
+  N_J=4 n=32 p=0.056234  | BER 0.0476 cnn 0.057 en 0.006 suite 0.062 JSR -14.4 dB
+  N_J=4 n=52 p=0.056234  | BER 0.0547 cnn 0.115 en 0.008 suite 0.123 JSR -12.5 dB
+  N_J=4 n= 1 p=0.1       | BER 0.0343 cnn 0.029 en 0.002 suite 0.031 JSR -27.2 dB
+  N_J=4 n= 2 p=0.1       | BER 0.0344 cnn 0.047 en 0.008 suite 0.055 JSR -24.3 dB
+  N_J=4 n= 4 p=0.1       | BER 0.0372 cnn 0.045 en 0.010 suite 0.055 JSR -21.1 dB
+  N_J=4 n= 8 p=0.1       | BER 0.0388 cnn 0.049 en 0.004 suite 0.053 JSR -18.0 dB
+  N_J=4 n=16 p=0.1       | BER 0.0454 cnn 0.072 en 0.004 suite 0.076 JSR -15.1 dB
+  N_J=4 n=32 p=0.1       | BER 0.0560 cnn 0.109 en 0.000 suite 0.109 JSR -12.1 dB
+  N_J=4 n=52 p=0.1       | BER 0.0661 cnn 0.174 en 0.010 suite 0.184 JSR -10.0 dB
+  N_J=4 n= 1 p=0.177828  | BER 0.0352 cnn 0.047 en 0.004 suite 0.051 JSR -24.4 dB
+  N_J=4 n= 2 p=0.177828  | BER 0.0330 cnn 0.041 en 0.006 suite 0.047 JSR -21.8 dB
+  N_J=4 n= 4 p=0.177828  | BER 0.0383 cnn 0.043 en 0.004 suite 0.045 JSR -18.5 dB
+  N_J=4 n= 8 p=0.177828  | BER 0.0456 cnn 0.059 en 0.002 suite 0.061 JSR -15.4 dB
+  N_J=4 n=16 p=0.177828  | BER 0.0539 cnn 0.088 en 0.006 suite 0.094 JSR -12.5 dB
+  N_J=4 n=32 p=0.177828  | BER 0.0695 cnn 0.172 en 0.008 suite 0.180 JSR -9.8 dB
+  N_J=4 n=52 p=0.177828  | BER 0.0911 cnn 0.340 en 0.006 suite 0.346 JSR -7.5 dB
+  N_J=4 n= 1 p=0.316228  | BER 0.0329 cnn 0.041 en 0.010 suite 0.051 JSR -22.3 dB
+  N_J=4 n= 2 p=0.316228  | BER 0.0357 cnn 0.045 en 0.002 suite 0.047 JSR -19.2 dB
+  N_J=4 n= 4 p=0.316228  | BER 0.0426 cnn 0.053 en 0.010 suite 0.062 JSR -16.0 dB
+  N_J=4 n= 8 p=0.316228  | BER 0.0505 cnn 0.100 en 0.016 suite 0.115 JSR -13.2 dB
+  N_J=4 n=16 p=0.316228  | BER 0.0649 cnn 0.180 en 0.002 suite 0.182 JSR -10.1 dB
+  N_J=4 n=32 p=0.316228  | BER 0.0959 cnn 0.365 en 0.008 suite 0.371 JSR -7.0 dB
+  N_J=4 n=52 p=0.316228  | BER 0.1297 cnn 0.537 en 0.020 suite 0.557 JSR -4.9 dB
+  N_J=4 n= 1 p=0.562341  | BER 0.0345 cnn 0.033 en 0.010 suite 0.043 JSR -20.0 dB
+  N_J=4 n= 2 p=0.562341  | BER 0.0420 cnn 0.037 en 0.006 suite 0.043 JSR -16.6 dB
+  N_J=4 n= 4 p=0.562341  | BER 0.0481 cnn 0.082 en 0.008 suite 0.090 JSR -13.5 dB
+  N_J=4 n= 8 p=0.562341  | BER 0.0622 cnn 0.133 en 0.010 suite 0.143 JSR -10.8 dB
+  N_J=4 n=16 p=0.562341  | BER 0.0821 cnn 0.289 en 0.008 suite 0.297 JSR -7.8 dB
+  N_J=4 n=32 p=0.562341  | BER 0.1242 cnn 0.600 en 0.010 suite 0.609 JSR -4.7 dB
+  N_J=4 n=52 p=0.562341  | BER 0.1664 cnn 0.795 en 0.016 suite 0.805 JSR -2.5 dB
+  N_J=4 n= 1 p=1         | BER 0.0406 cnn 0.047 en 0.010 suite 0.057 JSR -17.0 dB
+  N_J=4 n= 2 p=1         | BER 0.0403 cnn 0.076 en 0.008 suite 0.084 JSR -14.5 dB
+  N_J=4 n= 4 p=1         | BER 0.0536 cnn 0.152 en 0.012 suite 0.164 JSR -11.3 dB
+  N_J=4 n= 8 p=1         | BER 0.0795 cnn 0.252 en 0.006 suite 0.258 JSR -7.9 dB
+  N_J=4 n=16 p=1         | BER 0.1103 cnn 0.529 en 0.023 suite 0.551 JSR -5.3 dB
+  N_J=4 n=32 p=1         | BER 0.1654 cnn 0.781 en 0.027 suite 0.791 JSR -2.4 dB
+  N_J=4 n=52 p=1         | BER 0.2198 cnn 0.918 en 0.049 suite 0.936 JSR +0.0 dB
+  N_J=4 n= 1 p=1.77828   | BER 0.0411 cnn 0.062 en 0.006 suite 0.068 JSR -14.7 dB
+  N_J=4 n= 2 p=1.77828   | BER 0.0497 cnn 0.107 en 0.004 suite 0.111 JSR -11.4 dB
+  N_J=4 n= 4 p=1.77828   | BER 0.0667 cnn 0.227 en 0.008 suite 0.234 JSR -8.6 dB
+  N_J=4 n= 8 p=1.77828   | BER 0.0985 cnn 0.455 en 0.008 suite 0.461 JSR -5.6 dB
+  N_J=4 n=16 p=1.77828   | BER 0.1489 cnn 0.734 en 0.016 suite 0.742 JSR -2.6 dB
+  N_J=4 n=32 p=1.77828   | BER 0.2186 cnn 0.938 en 0.055 suite 0.953 JSR +0.4 dB
+  N_J=4 n=52 p=1.77828   | BER 0.2674 cnn 0.990 en 0.252 suite 0.992 JSR +2.4 dB
+  N_J=4 n= 1 p=3.16228   | BER 0.0459 cnn 0.125 en 0.004 suite 0.129 JSR -12.0 dB
+  N_J=4 n= 2 p=3.16228   | BER 0.0605 cnn 0.225 en 0.008 suite 0.232 JSR -9.0 dB
+  N_J=4 n= 4 p=3.16228   | BER 0.0783 cnn 0.377 en 0.016 suite 0.391 JSR -6.2 dB
+  N_J=4 n= 8 p=3.16228   | BER 0.1188 cnn 0.646 en 0.020 suite 0.662 JSR -3.3 dB
+  N_J=4 n=16 p=3.16228   | BER 0.1882 cnn 0.910 en 0.045 suite 0.926 JSR +0.0 dB
+  N_J=4 n=32 p=3.16228   | BER 0.2625 cnn 0.986 en 0.301 suite 0.992 JSR +2.8 dB
+  N_J=4 n=52 p=3.16228   | BER 0.3117 cnn 1.000 en 0.732 suite 1.000 JSR +4.8 dB
+  N_J=4 n= 1 p=5.62341   | BER 0.0506 cnn 0.195 en 0.010 suite 0.205 JSR -9.6 dB
+  N_J=4 n= 2 p=5.62341   | BER 0.0664 cnn 0.336 en 0.008 suite 0.344 JSR -6.7 dB
+  N_J=4 n= 4 p=5.62341   | BER 0.0924 cnn 0.615 en 0.016 suite 0.627 JSR -3.7 dB
+  N_J=4 n= 8 p=5.62341   | BER 0.1436 cnn 0.850 en 0.031 suite 0.863 JSR -0.6 dB
+  N_J=4 n=16 p=5.62341   | BER 0.2229 cnn 0.973 en 0.203 suite 0.979 JSR +2.4 dB
+  N_J=4 n=32 p=5.62341   | BER 0.3164 cnn 1.000 en 0.801 suite 1.000 JSR +5.6 dB
+  N_J=4 n=52 p=5.62341   | BER 0.3592 cnn 1.000 en 0.982 suite 1.000 JSR +7.5 dB
+  N_J=4 n= 1 p=10        | BER 0.0531 cnn 0.344 en 0.010 suite 0.352 JSR -7.2 dB
+  N_J=4 n= 2 p=10        | BER 0.0712 cnn 0.600 en 0.012 suite 0.607 JSR -4.2 dB
+  N_J=4 n= 4 p=10        | BER 0.1032 cnn 0.791 en 0.045 suite 0.816 JSR -1.6 dB
+  N_J=4 n= 8 p=10        | BER 0.1675 cnn 0.957 en 0.152 suite 0.975 JSR +1.7 dB
+  N_J=4 n=16 p=10        | BER 0.2580 cnn 0.996 en 0.738 suite 1.000 JSR +4.8 dB
+  N_J=4 n=32 p=10        | BER 0.3514 cnn 1.000 en 0.992 suite 1.000 JSR +7.9 dB
+  N_J=4 n=52 p=10        | BER 0.3957 cnn 1.000 en 1.000 suite 1.000 JSR +10.3 dB
+  [checkpoint] N_J=4 done, 273 rows (117s)
+
+ebno_10: confirmed frontier picks (fresh 4096 frames each)
+  N_J=1 cnn   budget far   (=0.0315) -> n=16 p=0.031623 | BER 0.0372 P_det 0.0356 (+1.0 sigma)
+  N_J=1 cnn   budget 0.1   (=0.1000) -> n=16 p=0.177828 | BER 0.0511 P_det 0.0945 (-1.2 sigma)
+  N_J=1 cnn   budget 0.5   (=0.5000) -> n=32 p=0.562341 | BER 0.1151 P_det 0.5205 (+2.6 sigma)  FLAGGED
+  N_J=1 suite budget far   (=0.0361) -> n=16 p=0.031623 | BER 0.0372 P_det 0.0391 (+0.7 sigma)
+  N_J=1 suite budget 0.1   (=0.1000) -> n=32 p=0.056234 | BER 0.0469 P_det 0.0776 (-5.3 sigma)
+  N_J=1 suite budget 0.5   (=0.5000) -> n=52 p=0.177828 | BER 0.0937 P_det 0.3406 (-21.5 sigma)
+  N_J=2 cnn   budget far   (=0.0315) -> n=2 p=0.316228 | BER 0.0372 P_det 0.0417 (+2.5 sigma)  FLAGGED
+  N_J=2 cnn   budget 0.1   (=0.1000) -> n=52 p=0.056234 | BER 0.0541 P_det 0.0979 (-0.5 sigma)
+  N_J=2 cnn   budget 0.5   (=0.5000) -> n=16 p=1 | BER 0.1035 P_det 0.4897 (-1.3 sigma)
+  N_J=2 suite budget far   (=0.0361) -> n=2 p=0.316228 | BER 0.0372 P_det 0.0491 (+2.9 sigma)  FLAGGED
+  N_J=2 suite budget 0.1   (=0.1000) -> n=52 p=0.056234 | BER 0.0541 P_det 0.1050 (+1.0 sigma)
+  N_J=2 suite budget 0.5   (=0.5000) -> n=16 p=1 | BER 0.1035 P_det 0.4995 (-0.1 sigma)
+  N_J=4 cnn   budget far   (=0.0315) -> n=8 p=0.031623 | BER 0.0335 P_det 0.0330 (+0.4 sigma)
+  N_J=4 cnn   budget 0.1   (=0.1000) -> n=16 p=0.177828 | BER 0.0532 P_det 0.0969 (-0.7 sigma)
+  N_J=4 cnn   budget 0.5   (=0.5000) -> n=8 p=1.77828 | BER 0.0982 P_det 0.4514 (-6.2 sigma)
+  N_J=4 suite budget far   (=0.0361) -> n=8 p=0.031623 | BER 0.0335 P_det 0.0420 (+1.4 sigma)
+  N_J=4 suite budget 0.1   (=0.1000) -> n=16 p=0.177828 | BER 0.0532 P_det 0.1011 (+0.2 sigma)
+  N_J=4 suite budget 0.5   (=0.5000) -> n=8 p=1.77828 | BER 0.0982 P_det 0.4597 (-5.2 sigma)
+wrote /home/rrahman/BT/Tabula Rasa/sim08_ablation/../artifacts/sim08_ablation/run001/sweep_ebno_10.json (156s)

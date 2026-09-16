@@ -26,7 +26,12 @@ C (engineering notes).
   ours and may be edited.
 - **`simulation00`–`simulation08` and `frontier/` are FROZEN.** They are appendix material. Do not
   extend, re-run sweeps, or "improve" them — the supervisor's standing mandate is *simplify, as much
-  as possible*. Live work happens in `m0/` and `cgan/` only.
+  as possible*. Live work happens in `m0/`, `cgan/` and `sim08_ablation/` only. **`sim08_ablation/`
+  (opened 2026-09-16, agreed with the supervisor) is the one sanctioned way to run new sweeps over the
+  sim08 stack: it imports `simulation08/` and `simulation06/` read-only and adds its own evaluate.
+  Frozen files stay untouched** — new axes go in `sim08_ablation/`, never into `frontier_channel.py`
+  (README §3.3c, §A.9). Every entry point is an `sbatch` script (Sionna); `sbatch submit_verify.sh`
+  first — it re-measures frozen job 102390's points as a regression check.
 - **Do not create new planning/status markdown files.** A 2026-09-10 consolidation deleted six
   overlapping docs into `README.md`. Add to the relevant README section instead.
 - **Never compute on the login node** — always `sbatch`. (M0 is the exception in practice: it is
