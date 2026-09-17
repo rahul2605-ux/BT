@@ -183,6 +183,10 @@ These silently break jobs rather than erroring usefully:
   while every node here runs 535.
 - `SLURM_CONF=/home/sladmitet/slurm/slurm.conf` must be exported or every slurm command fails
   (persisted in `~/.bashrc.user`).
+- **`PENDING (BadConstraints)` is a red herring** — `cpu.normal` (no GPU features) is always in the
+  partition list. Check `scontrol show node <n>` (`AllocTRES` gres/gpu and mem) before changing
+  anything. On a full cluster the blocker is often RAM on the one node with a free GPU: **size `--mem`
+  from `sacct --format=MaxRSS`**, not a habitual 16G (README §C.4). `TaskProlog failed` at 0 s = resubmit.
 - The home quota is small and **invisible until you hit it** (`df` reports the whole NFS export).
   Anything bulky goes on `net_scratch`.
 - `import sionna` fails on the login node. M0 is sionna-free so this does not affect it; **`cgan/`

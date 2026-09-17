@@ -1,16 +1,16 @@
 # Tabula Rasa — learned jamming under detection constraints
 
 **Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
-Last consolidated: 2026-09-15.
+Last consolidated: 2026-09-17.
 
 > **This file is the single entry point.** It is organised as:
-> **[1. The whole picture](#part-1-the-whole-picture)** ·
-> **[2. Goal & approach](#part-2-goal-approach)** ·
-> **[3. Current state](#part-3-current-state)** ·
-> **[4. Open questions & ideas](#part-4-open-questions-ideas)** ·
-> then **[Appendix A: experiment history](#appendix-a-experiment-history)** (what each simulation
-> falsified), **[Appendix B: supervisor record](#appendix-b-supervisor-record)**,
-> **[Appendix C: engineering notes](#appendix-c-engineering-notes)**.
+> **[1. The whole picture](#part-1--the-whole-picture)** ·
+> **[2. Goal & approach](#part-2--goal--approach)** ·
+> **[3. Current state](#part-3--current-state)** ·
+> **[4. Open questions & ideas](#part-4--open-questions--ideas)** ·
+> then **[Appendix A: experiment history](#appendix-a--experiment-history)** (what each simulation
+> falsified), **[Appendix B: supervisor record](#appendix-b--supervisor-record)**,
+> **[Appendix C: engineering notes](#appendix-c--engineering-notes)**.
 > Cluster operations live in **[`cluster/README.md`](cluster/README.md)** and are not repeated here.
 
 ---
@@ -19,12 +19,44 @@ Last consolidated: 2026-09-15.
 
 ## 1.1 What this is, in one page
 
+> **STATE 2026-09-17 — direction reframed (lit review + design), still pending the same sign-off (§4.1 #0b).**
+> A literature review on jamming-waveform synthesis (Amuru–Buehrer TIFS 2015 and the generative/learned
+> jammers: Zhou CGAN, DDPM WCNC'25, adversarial-jamming, jamming-bandits) settled two things: the
+> BER-optimal jammer against known QPSK is **closed-form (Amuru)**, and the generative papers only
+> *converge to* known optima — so a generator is an **instrument, not the finding**. The reframed,
+> buildable contribution the user chose: a **characterisation study** — map a generative jammer's
+> detectability against a **detector suite** on the matched BER–P(det) plane, with the **NP-optimal test
+> as the ceiling detector**, so the claim is the *deployed-detector-vs-optimal-warden gap* (§2.1
+> surviving item 1), not "novel stealthy jamming". Stealth returns here **as a measured axis**, so this
+> is a *second option* for the supervisor alongside the 2026-09-16 drop-stealth proposal below — the
+> same #0b email now presents both. Staged plan and design in §2.10 / §3.4. Desk work only — no code, no
+> compute; `verify.py` still valid. **Nothing folded in as settled until he replies.**
+>
+> **STATE 2026-09-16 — stealth proposed for FULL retirement, awaiting supervisor sign-off (§4.1 #0b).**
+> A session of experiments + literature search concluded stealth is not worth building on *at all*,
+> extending the 2026-09-12 headline retirement (§2.1) to the **CGAN step-2 stealth conditioning** too:
+> any undetectable-and-effective attack collapses to a trivial/genie solution, so even a method that
+> "beats" simpler attacks under a detection constraint wins only a weak region. Refined rationale in
+> §2.1 ("Sharpened 2026-09-16"). **Proposed replacement:** keep the reproduced CGAN jamming *waveform*
+> and strengthen it with **MARL multi-jammer coordination as an *effectiveness* result** — a co-located
+> detector means coordination buys coherent combining, not covertness — with detectability kept as an
+> evaluation axis and adaptation cost as a possible secondary claim. **A short email stating this was
+> drafted 2026-09-16; nothing is folded in as settled until he replies** (§2.10, §4.1 #0b).
+>
 > **STATE 2026-09-14 — exploratory track opened: [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).**
 > The findings up to 2026-09-12 were judged too weak to carry the thesis. A new direction is being
 > tried: **reproduce the CGAN jamming-waveform generator of Zhou et al. (ISSET 2025) on QPSK, then
 > condition it on stealth** and evaluate against three detectors (power threshold · a statistical
 > test, still to be chosen · the Zhang & Krunz 2023 CWT-CNN). The coordination direction described in
-> the rest of this page is **paused, not superseded**. Live code for the new track is in `cgan/`. **Step 1 (reproduce Zhou 2025 on QPSK) is done as of 2026-09-14** — the GAN's Noise/Optimal gaps at BER 1e-3 match the paper (§3.3b); next is the statistical detector for step 2 (§4.2 Q8).
+> the rest of this page is **paused, not superseded**. Live code for the new track is in `cgan/`.
+> **Step 1 is closed as a partial reproduction (user decision 2026-09-16, §2.10; results §3.3b).** The
+> GAN beats noise by 4.4–6.7 dB at BER 1e-3 (Zhou: 2–6 dB), but the first-reported gap match had scored the GAN
+> synchronised and "optimal" asynchronous; under one consistent model the GAN *beats* "optimal". run001
+> under async is step 2's reference generator. Next: the step-2 statistical detector (§4.2 Q8).
+>
+> **STATE 2026-09-16 — sim08 ablations done: [§3.3c](#33c-sim08-ablations--noise-jammer-power-number-of-jammers-2026-09-16).**
+> Agreed with the supervisor: noise, jammer power and #jammers on the frozen sim08 detector suite, from
+> read-only code in `sim08_ablation/`.
 
 A **cooperative multi-agent generative jamming attacker** is built and evaluated against a link and
 its detector. The question is what a *coordinated, learned* attacker achieves that a single or
@@ -56,7 +88,7 @@ stable-baselines3, gymnasium, zuko, numpy, matplotlib.
 ## 1.2 The arc, in one table
 
 Each row is a step of the ladder and **what it killed**. Full writeups in
-[Appendix A](#appendix-a-experiment-history).
+[Appendix A](#appendix-a--experiment-history).
 
 | Step | What it tested | Verdict |
 |---|---|---|
@@ -90,6 +122,7 @@ BT/
 │   ├── CLAUDE.md           <- operating rules for Claude Code (commands, contracts, gotchas)
 │   ├── m0/                 <- live code: the minimal model (coordination track, paused)
 │   ├── cgan/               <- live code: the CGAN exploratory track (§2.10), being built
+│   ├── sim08_ablation/     <- live code: new sweeps over the frozen sim08 stack, imported read-only (§3.3c)
 │   ├── source_papers/      <- PDFs the CGAN track reproduces/uses (IEEE-licensed; git-ignored)
 │   ├── cluster/README.md   <- cluster ops; read before submitting anything
 │   ├── artifacts/          <- all outputs, one dir per simulation
@@ -106,9 +139,9 @@ BT/
 
 > **If you meet a reference to a file that no longer exists**, it was folded into this README on
 > 2026-09-10, when six overlapping documents were consolidated to remove ~2,400 lines of duplication:
-> `SUPERVISOR_TODO.md` → [Appendix B](#appendix-b-supervisor-record) (its §§1–14 map onto B.2/B.3) ·
+> `SUPERVISOR_TODO.md` → [Appendix B](#appendix-b--supervisor-record) (its §§1–14 map onto B.2/B.3) ·
 > `artifacts/RUNS.md` → [A.0](#a0-run-index) · `simulation03/README.md`, `simulation03c/README.md` →
-> [A.2](#a2-sim0203c-what-a-policy-distribution-can-and-cannot-represent) ·
+> [A.2](#a2-sim0203c--what-a-policy-distribution-can-and-cannot-represent) ·
 > `simulation03/USECLUSTER.md` → [C.4](#c4-cluster-quick-reference) · `paper/README.md` → §4.2 Q6 and
 > `paper/Literature_Review.md`. All are recoverable from git history. Drafts in `paper_drafts/` and
 > the Overleaf document may still cite the old section numbers.
@@ -126,7 +159,7 @@ BT/
 | `m0/figures.py`, `m0/figure_geometry.py` | all figures → `artifacts/m0/*.png` |
 
 **Live code (CGAN track, `cgan/`):** being built. The planned modules and their order are in
-[§3.4](#34-the-plan-20-days-re-cut-2026-09-12-for-the-pivot) (items C0–C6); this table gets one row
+[§3.4](#34-the-plan-20-days--re-cut-2026-09-12-for-the-pivot) (items C0–C6); this table gets one row
 per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, so it runs via sbatch.**
 
 | file | what |
@@ -135,10 +168,19 @@ per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, s
 | `cgan/link.py` | Sionna QPSK waveform link (upsample → pulse → AWGN + jammer → matched filter → sign decision), closed-form Gaussian-jammer BER, `measure_ber` with an error stopping rule, paper-curve helpers |
 | `cgan/jammers.py` | `noise` (full / inband), `optimal` (locked / random_phase / async), exact JSR scaling |
 | `cgan/models.py`, `cgan/losses.py` | C3: generator + discriminator (score + auxiliary-classifier heads), `PeakScaler`; the seven loss terms |
-| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (94 checks, job 2259280) |
+| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (121 checks incl. a perfect-generator check, job 2260603; 94 at C4) |
 | `cgan/calibrate.py` + `submit_calibrate.sh` | C2: fit the unstated link parameters to Fig. 6 → `artifacts/cgan/calibration.json`, `c2_calibration.png` |
 | `cgan/train_cgan.py` + `submit_train.sh` | C5: train the CGAN → `artifacts/cgan/runNNN_G.pt`, `_losses.{json,png}` |
 | `cgan/evaluate.py` + `submit_eval.sh` | C6: BER vs JSR (noise/optimal/gan) overlaid on Fig. 6 → `artifacts/cgan/runNNN_ber_vs_jsr.{json,png}` |
+
+**Live code (sim08 ablations, `sim08_ablation/`):** imports `simulation08/` and `simulation06/`
+read-only; every entry point is an sbatch script (Sionna).
+
+| file | what |
+|---|---|
+| `sim08_ablation/verify.py` + `submit_verify.sh` | 37 checks incl. re-measuring frozen job 102390's points — **run first** (job 2261123) |
+| `sim08_ablation/ablation.py` + `submit_sweep.sh` | one noise level per array task: N_J × power × n_active sweep, then a confirmation pass on fresh frames → `artifacts/sim08_ablation/run001/sweep_*.json` |
+| `sim08_ablation/figures.py` + `submit_figures.sh` | CPU post-processing → 5 figures + `summary.json` (`--smoke` runs on a partial sweep) |
 
 **Frozen code** (sim06/07/08 + frontier) is inventoried in [A.9](#a9-frozen-code-inventory).
 
@@ -154,7 +196,7 @@ your thesis. To keep nice separation, I will create a new overleaf for paper and
 thesis."* Reinforced at L441 (*"do not throw away anything that I suggest not including in the
 paper"*). This was read as meaning ICC's ~6-page limit does not constrain the appendix — **superseded
 2026-09-15: the user writes the Experiment History to the 6-page conference budget** (§3.5); long
-forms stay in [Appendix A](#appendix-a-experiment-history) for the thesis.
+forms stay in [Appendix A](#appendix-a--experiment-history) for the thesis.
 
 ```bash
 cd /home/rrahman/BT
@@ -192,6 +234,11 @@ silently break jobs. The five facts that change how experiments are designed:
 
 All 19 submit scripts were migrated and verified end-to-end (job 2243247 reproduced the recorded m2
 numbers in 2.9 s). **M0 runs on CPU in seconds**, so compute is not currently a constraint at all.
+
+**2026-09-16: the INFK student cluster's maintenance ended and it is reachable again, but ITET/TIK
+stays the default** — it wins on every axis in `cluster/README.md`'s comparison table (unlimited
+concurrent jobs vs INFK's `MaxJobsPU=1`, 2-day walltime vs 1 h, 12 usable GPU nodes vs INFK's single
+5060 Ti). No open work depends on INFK; there is no reason to switch back.
 
 ---
 
@@ -254,6 +301,32 @@ that exists *because the thing is known not to be worth doing* cannot carry an I
 > any of items 1–4 is claimed as novel in print, read Li et al. (TIFS 2016, 2020) and Bash et al.
 > (JSAC 2013) in full** — the overlap with item 3 in particular has not been checked at the level of
 > individual claims.
+
+### Sharpened 2026-09-16 — stealth retired *entirely*, not just as headline (pending sign-off)
+
+A session of experiments + literature search extended the retirement to the CGAN step-2 stealth
+conditioning (§2.10). Three arguments, none model-specific, so they hold regardless of what a
+generator or MARL policy learns:
+- **Channel knowledge ≠ symbol knowledge.** Even a jammer with perfect CSI/geometry (monitored over
+  days, incl. other jammers' positions for MARL) still cannot know the *current* scrambled symbol
+  before it must transmit, so its signal is symbol-independent and the received law changes ⇒ the
+  square-root bound survives. CSI buys **efficiency and coordination, not covertness.**
+- **The realistic warden is co-located with the victim.** Jamming detection happens *at the receiver*
+  (Zhang & Krunz; Spuhler et al., TWC 2014); the spatially-separate "Willie" is a covert-*comms*
+  abstraction (Bash et al.), not the jamming-detection model. So multi-jammer coherent combining is an
+  **effectiveness** gain (more BER per total transmit power), **not** a stealth gain — the stealth
+  version would need a separate warden, which is not standard. *(User confirmed co-located as the only
+  realistic model, 2026-09-16.)*
+- **FEC + interleaving largely nulls covert jamming.** Covert ⇒ raw excess BER = O(√n)/n → 0, below any
+  fixed code's correcting radius; the only escape (bursting past per-codeword capacity) is exactly the
+  most detectable structure and is de-concentrated by interleaving (classic partial-band-jamming
+  result). So the covert-*optimal* jammer is non-covert — which makes FEC-out (§2.9) a **load-bearing**
+  assumption for any raw-BER stealth claim.
+
+**Consequence:** the effective attacks are the loud ones; optimising for stealth just finds weak/trivial
+solutions. This is *proposed*, not settled — folded in only after the supervisor replies (§4.1 #0b).
+The user's note: this "should have been trivial" but only became clear through the experiments, so it
+stays out of the paper as a discussion and only scopes the threat model.
 
 ### Corroboration from the supervisor, same day, independently
 
@@ -566,7 +639,7 @@ detector is in the loop it needs soft binning or a KDE. `D_NP` is differentiable
 
 ## 2.9 Supervisor mandates — settled, not up for discussion
 
-Full record and open items in [Appendix B](#appendix-b-supervisor-record).
+Full record and open items in [Appendix B](#appendix-b--supervisor-record).
 
 - **"Simplify, as much as possible."** His reasoning is blunt: *the simple simulations already do not
   work, so the complicated ones certainly will not.* sim06–08 are **frozen**. Every layer the ladder
@@ -580,7 +653,9 @@ Full record and open items in [Appendix B](#appendix-b-supervisor-record).
 - **Intro must scope out bit-error recovery** — FEC/ARQ/retransmission is out of scope, assumed
   handled by a higher layer — **and then motivate why raw BER/SER is still the right target**: it is
   the input any recovery layer receives, and pushing it past the code's correcting capability is what
-  becomes outage.
+  becomes outage. **⚠ 2026-09-16: this scoping is load-bearing for any stealth/detectability claim** —
+  with FEC+interleaving *in* scope, covert jamming (raw BER O(1/√n)) sits below the code's correcting
+  radius and is nulled (§2.1 "Sharpened"). State it as a deliberate assumption, not a convenience.
 - **"Put as much info as possible in Overleaf."** The document is the working record, not a write-up
   phase at the end. Assumption table, baseline table and ablation list go in *now*, as stubs if
   necessary.
@@ -629,7 +704,63 @@ constraint where the paper uses it, never as an instruction.
 
 ## 2.10 Exploratory track: CGAN jamming waveforms under detection
 
-**STATE: opened 2026-09-14 by the user. Step 1 (reproduction) in progress. Step 2 not started.**
+**STATE 2026-09-16: opened 2026-09-14 by the user. Step 1 closed as a partial reproduction (user
+decision, below; results §3.3b), with run001 under async as step 2's reference generator. Step 2 not
+started — it waits on the statistical-detector choice (§4.2 Q8).**
+
+**⚠ STATE 2026-09-16 — step 2 as written (stealth conditioning) is PROPOSED FOR REMOVAL, awaiting
+supervisor reply (§4.1 #0b).** After the stealth review (§2.1 "Sharpened 2026-09-16") the user proposes
+dropping stealth conditioning entirely and instead strengthening the reproduced GAN *waveform* with
+**MARL multi-jammer coordination as an effectiveness result**: decide a jamming signal, split it across
+jammers at different powers under a shared **energy budget** so it combines at the victim, then extend
+to a **zero-sum game** of jammers vs legitimate nodes and compare against the anti-jamming baselines.
+Detectability stays an evaluation axis (co-located detector); adaptation cost stays a possible secondary
+claim. Consequence if he agrees: the §4.2 Q8 statistical-detector choice and the Q10 Zhang & Krunz
+adaptation are moot. **Nothing here is folded in as settled — do not delete the step-2 plan below until
+he replies.**
+
+**⚠ STATE 2026-09-17 — reframed as a characterisation study; the direction email now offers the
+supervisor two options (§4.1 #0b).** A literature review on jamming-waveform synthesis (this session,
+desk work — no code, no compute; `verify.py` still valid as last run) reached three conclusions:
+- **Amuru & Buehrer (TIFS 2015) is the closed-form ceiling.** The BER-maximising jammer against known
+  BPSK/QPSK/QAM over AWGN is a two-level (pulsed-QPSK) distribution — our `boundary`/`counter` attacks
+  and Zhou's "optimal" are instances of it. It *also* solves the coordinated multi-jammer optimum
+  (Theorem 4): **3 dB/doubling, but only under perfect synchronisation; uncoordinated ⇒ single-jammer**
+  — the analytic twin of the sim08 §3.3c #4 null and of the desync axis. Add it as the reference.
+- **The generative papers only converge to *known* optima** (often to the *matched* jammer, which
+  Amuru proves is suboptimal — cf. §3.3b, where run001 reached neither). So a generator is an
+  **instrument, not the finding**; "a GAN found the near-optimum" is a convergence demo, and it hits a
+  certification paradox — you can only call it "near-optimum" where the optimum is computable, i.e.
+  where you did not need the GAN.
+- **The one arguably-novel angle is the deployed-detector-vs-NP-optimal-warden gap** (§2.1 surviving
+  item 1): a frozen CNN/CWT detector has a far looser false-alarm budget than the NP test, so the
+  covert headroom against a *real* detector is measurable, with the NP test as the ruler.
+
+**Chosen build (option B, staged — the user's decision this session):** report a generative jammer's
+detectability across a **detector suite** on the matched BER–P(det) plane, **with the NP-optimal test
+on the same axes as the ceiling**, framed as *characterisation of the detector gap*, effect allowed to
+be negligible — the point is to demonstrate the system, not to claim a strong attack. Plan in §3.4
+(D-series). Design constraints fixed this session, so the matrix is not another matched-config/sync
+artifact:
+1. **NP-optimal test is a detector row, non-negotiable** — else it is "our detectors missed it" again
+   (§2.6). At waveform level the NP test is exact only for the analytic jammers (barrage, pulsed-QPSK);
+   the GAN's received density needs a KDE — or run the exact-NP panel in M0.
+2. **Two panels:** an **M0** panel (energy · kurtosis · CNN-on-IQ-histogram · **exact NP**) for rigour,
+   and a **waveform** panel (energy · kurtosis · spectrogram-CNN · CWT · NP-vs-analytic) for realism —
+   the spectrogram/CWT detectors cannot run per-symbol, which forces the waveform layer and costs the
+   clean NP ceiling.
+3. **"Stealthy GAN" requires a detector-aware training term** — a GAN trained on Zhou's imitation
+   losses is not stealthy by design; without step-2 conditioning the honest title is "detectability of
+   a reproduced GAN jammer".
+4. **A multi-jammer/MARL row must be *coherent combining*, not N independent GANs** — the latter buys
+   nothing at matched detectability (Amuru Thm 4, sim08 §3.3c #4). MARL is a **gated tail** ("only if
+   the single-jammer study bites"), and there the generator is incidental — the per-agent signal can be
+   Amuru's; the coordination policy is the object with no closed form.
+
+This reframing **supersedes neither** the step-2 plan below nor option A: it *absorbs* option A's MARL
+as the gated tail and returns stealth as a measured axis. **Nothing folded in as settled until he
+replies (§4.1 #0b).**
+
 Everything else in Part 2 describes the coordination direction, which is **paused, not superseded**:
 nothing in §2.1–2.9 was re-validated when this track opened. Where this track contradicts a settled
 decision, the contradiction is spelled out below rather than silently overridden.
@@ -667,6 +798,18 @@ below ~5·10⁻⁷. So:
   not from a threshold.
 - *Superseded:* the original bar was "GAN − Optimal ≤ 1 dB and Noise − GAN ∈ [2, 6] dB". It was
   dropped because C0 showed the paper's own figure fails its first half (1.31 dB).
+
+**Step 1 closed — decided 2026-09-16 (user): a partial reproduction.** Judged from the report-only
+numbers (§3.3b):
+- **Reproduced:** the paper's headline — the GAN beats white noise at BER 1e-3 by 6.66 dB (async) /
+  4.38 dB (locked), against its "2–6 dB".
+- **Not reproduced, recorded as a finding:** the ordering Optimal ≳ GAN (ours −1.30 dB async, paper
+  +1.31) and the low-JSR curve shapes (a link property, §4.2 Q7(v)).
+- **Step 2's reference generator is `artifacts/cgan/run001_G.pt`, evaluated async**
+  (`run001_async_ber_vs_jsr.json`). run002 is not used.
+- **Trap:** `train_cgan.py`'s defaults are run002's recipe, and run001's loss definitions (MSE feature
+  matching, log1p STFT, headroom 1.0) are no longer in the code. Retraining for step 2 must first settle
+  the recipe (§4.2 Q11); the existing checkpoint can be used as is.
 
 **The link — decided 2026-09-14 at the C2 checkpoint, as stated assumptions (`cgan/link.py` `LINK`).**
 - **sps 8.** A common simulation choice, well above the Nyquist minimum (sps > 1 + β).
@@ -756,39 +899,49 @@ a loss.
 
 ## 3.1 Status line
 
-**STATE 2026-09-14: exploratory CGAN track opened — [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection).
-Step 1 (reproduce Zhou 2025 on QPSK) is DONE (§3.3b); step 2 (stealth conditioning) not started.** The user judged the
-2026-09-12 findings too weak to carry the thesis. The coordination plan below is **paused, not
-superseded**, and was not re-validated today. Whether the §4.1 #0 email to Di Maio was sent is not
-recorded after 2026-09-12, and he has not been told about this track as far as this README records.
+**STATE 2026-09-17. Two threads are live; the coordination plan below is paused, not superseded, and
+was not re-validated.**
 
-**Where it stands: C0–C6 all done (§3.3b). Step 1 is reproduced** — the GAN's BER-vs-JSR gaps
-at 1e-3 match Zhou within ~0.3 dB. **Next action: pick the step-2 statistical detector with the
-user (§4.2 Q8), then build stealth conditioning + the three-detector evaluation.** Step 2 does not start until step 1 has
-been reported against the paper's gaps (report-only, §2.10) and the statistical detector has been
-chosen together (§4.2 Q8).
+**1 · sim08 ablations — DONE ([§3.3c](#33c-sim08-ablations--noise-jammer-power-number-of-jammers-2026-09-16)).**
+Agreed with the supervisor (user, 2026-09-16) and run from `sim08_ablation/`, which imports the frozen
+sim08 stack read-only. Headlines: within the suite's own false-alarm rate the strongest jammer holds
+**BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** while the clean floor falls away (×1.4 at 15 dB → ×109 at
+40 dB); detection is set by the jammer's **total power** (not its spread); **uncoordinated
+multi-jammer buys nothing at matched detectability** — the m1 trap again, and the baseline RQ1's
+coordination must beat; *suite ≡ CNN* holds over 0–40 dB. A shareable report page with all five
+figures exists: <https://claude.ai/artifact/V3cFxTXKidDbjdqvf3yiTR> (private until shared).
 
-> **Where this session stopped (2026-09-14).** The entire CGAN track was built from nothing and step 1
-> completed: `cgan/{digitise_fig6,link,jammers,models,losses,calibrate,train_cgan,evaluate,verify}.py`
-> plus four submit scripts. C0–C6 all ran on the cluster (jobs 2259280 verify · 2259157 calibrate ·
-> 2259289 train · 2259409 eval). `cgan/verify.py` passes 94/94 as last run; rerun it via
-> `sbatch submit_verify.sh` after any change to `link.py`, `jammers.py`, `models.py` or `losses.py`.
-> **Nothing in `m0/` or the frozen stack was touched.** Result and every design decision are in §3.3b
-> and §2.10; the run is in §A.0. Nothing is committed (git state below). The step-2 detector choice
-> (§4.2 Q8) is the open decision and needs the user.
+**2 · CGAN step 1 — CLOSED 2026-09-16 as a partial reproduction ([§3.3b](#33b-cgan-step-1-result--ordering-not-reproduced-once-synchronisation-is-consistent-2026-09-15), decision in [§2.10](#210-exploratory-track-cgan-jamming-waveforms-under-detection)).**
+The 2026-09-14 "gaps match Zhou" claim scored the GAN as a synchronised jammer and Zhou's "optimal" as
+asynchronous. Under one consistent sync model the GAN *beats* "optimal" (GAN − Optimal −1.30 dB async,
+paper +1.31) while still beating noise (6.66 dB), and run002 — the recipe backed by Zhou's own
+references — is a worse imitation. The user accepted run001 under async as step 2's reference generator
+(option (a)); the ablation that would explain run002 (option (b)) is parked as §4.2 Q11.
 
-**Paper drafts (2026-09-15):** the Experiment History was cut from a 10-part appendix (~4,300 words) to a
-~1-column summary, `paper_drafts/sec_exphist.tex`, for the 6-page limit; parts 9–10 dropped. Not yet
-pasted into Overleaf; the user is still editing it (§3.5).
+**3 · Direction — TWO options for the supervisor, AWAITING REPLY ([§4.1 #0b](#41-blocking--needs-supervisor-input)).**
+Both keep the reproduced GAN *waveform* and report on the matched BER–P(det) plane; the same #0b email
+now carries both. **(A) 2026-09-16 — drop stealth, add MARL coordination as an *effectiveness* result**
+(energy-budget power split → coherent combining at a co-located detector), then a zero-sum
+jammer-vs-legitimate game vs the anti-jamming baselines. **(B) 2026-09-17 — keep stealth as a
+*characterisation* result**: a generative jammer's detectability across a detector suite vs the
+NP-optimal ceiling — the *deployed-detector-vs-optimal-warden gap* (§2.1 surviving item 1), effect
+allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward (B) with A's MARL as a
+gated tail ("only if it bites"). **Not folded into §2.10/§4.2 as settled until he replies (user
+instruction).**
 
-**STATE 2026-09-16: sim08 ablations done ([§3.3c](#33c-sim08-ablations--noise-jammer-power-number-of-jammers-2026-09-16)).**
-Agreed with the supervisor, and run on the frozen sim08 suite from new read-only code in
-`sim08_ablation/`: noise level, jammer power and #jammers, all on log grids. Headlines: the stealthy
-jammer holds **BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** while the clean floor falls away (×1.4 → ×109);
-detection is set by the jammer's **total power**, not its spread; **uncoordinated multi-jammer buys
-nothing at matched detectability** (the m1 trap again) — which is the baseline RQ1's coordination must
-beat; and *suite ≡ CNN* now holds over 0–40 dB. The CGAN step-1 decision (accept run001 as a partial
-reproduction vs one more training run) is **still open** and unaffected.
+**Single next action: send the direction email (options A/B, §4.1 #0b) and wait for his reply** — it
+gates whether the build stages toward the characterisation study (B) or the coordination result (A),
+and thus the §4.2 Q8 detector choice. Once he answers, start the shared baselines (§3.4 D0), which both
+options need. Independently, the §3.3c report page is ready to send to him.
+
+**Supervisor contact.** The sim08 ablation axes were discussed with him before 2026-09-16. Whether the
+§4.1 #0 pivot email was sent, and whether he knows about the CGAN track, is not recorded after
+2026-09-12.
+
+**Paper drafts (2026-09-15):** the Experiment History was cut from a 10-part appendix (~4,300 words) to
+a ~1-column summary, `paper_drafts/sec_exphist.tex`, for the 6-page limit; parts 9–10 dropped. Not yet
+pasted into Overleaf; the user was still editing it as of 2026-09-15 (§3.5). **It predates §3.3c** and
+does not mention the ablations.
 
 ---
 
@@ -810,14 +963,14 @@ the lead experiment from E1 (done) to E3/coordination (not started, needs the M1
 extension that does not exist yet). **The plan in §3.4 has been re-cut accordingly and is now
 front-loaded on G6.**
 
-**Blocking** — see [§4.1](#41-blocking-needs-supervisor-input): thesis **registration** (open since
+**Blocking** — see [§4.1](#41-blocking--needs-supervisor-input): thesis **registration** (open since
 2026-09-01, still the longest-running item) · and **top of the list: sign-off on the pivot** (§4.1
 #0). *Proposal feedback (#3) and the inter-jammer coordination assumption (#8) both closed on
 2026-09-12.* Do not spend the remaining 20 days building toward a headline he has not agreed to —
 though note his feedback already endorses the *direction*, so #0 is narrower than it was this
 morning: it is the literature collision and the RQ1/RQ2 tension, not the change of subject.
 
-**The single next action is [§4.1 #0](#41-blocking-needs-supervisor-input) — email Di Maio.** It is
+**The single next action is [§4.1 #0](#41-blocking--needs-supervisor-input) — email Di Maio.** It is
 half a day of writing at most, it unblocks everything, and every compute item below reads differently
 depending on his answer. Draft it around three points: (i) the literature collision, stated plainly
 with the three citations; (ii) the proposed new RQ1; (iii) the RQ1-vs-RQ2 tension he has to break
@@ -825,9 +978,8 @@ with the three citations; (ii) the proposed new RQ1; (iii) the RQ1-vs-RQ2 tensio
 the fork.
 
 > **⚠ The table and next-action just above belong to the PAUSED coordination plan (2026-09-12), NOT to
-> now.** The active track is the CGAN reproduction (top of §3.1); its next action is choosing the
-> step-2 statistical detector (§4.2 Q8). The list below is preserved so the coordination plan can be
-> resumed intact if the CGAN track is dropped — it is not this session's to-do list.
+> now.** The current state and single next action are at the top of §3.1. The list below is preserved
+> so the coordination plan can be resumed intact if the CGAN track is dropped — it is not a to-do list.
 
 **Next session of the coordination plan, in this order (paused).**
 
@@ -977,34 +1129,57 @@ transcription drift. The JSON row keys are `p_e1`, `p_e2`, `p_l`, `p_np` — **n
 > test is largest exactly where the attack is sparsest"*, not a single headline number. Reporting the
 > best row alone would repeat the m1 mistake (§2.7).
 
-## 3.3b CGAN step-1 result — Zhou 2025 reproduced on QPSK (2026-09-14)
+## 3.3b CGAN step-1 result — ordering not reproduced once synchronisation is consistent (2026-09-15)
 
-Run001 (jobs 2259289 train, 2259409 eval), on the calibrated link (§2.10: sps 8, RRC 0.35, white-noise
-jammer, async optimal jammer). SNR 30 dB, JSR −10:2:10 dB, ≥100 bit errors or 1e9 bits per point.
-Figures: `artifacts/cgan/run001_ber_vs_jsr.png` (overlaid on Zhou Fig. 6), `run001_losses.png`.
+**Superseded claim — do not quote.** On 2026-09-14 this section read "Zhou 2025 reproduced on QPSK",
+with Noise − GAN 4.34 dB and GAN − Optimal +1.01 dB against the paper's 4.44 / +1.31. That run001
+evaluation tiled G's output from frame index 0 — on the victim's symbol grid at carrier phase 0 — so it
+scored the GAN as a **locked** jammer while "optimal" was **async**. The match came from that mismatch.
 
-**What reproduces — the gaps between curves at BER 1e-3** (the paper's own claim is "GAN beats noise by
-2–6 dB", and its figure shows the ordering Optimal ≳ GAN > Noise):
+On the calibrated link (§2.10: sps 8, RRC 0.35, white noise), SNR 30 dB, JSR −10:2:10 dB, ≥ 100 bit
+errors or 10⁹ bits per point. JSR (dB) at BER 1e-3, lower = stronger jammer; GAN − Optimal > 0 means
+Optimal is stronger, as in Zhou's figure:
 
-| gap at BER 1e-3 | ours | Zhou Fig. 6 |
-|---|---|---|
-| Noise − GAN | **4.34 dB** | 4.44 dB |
-| GAN − Optimal | **1.01 dB** | 1.31 dB |
+| run / sync model | Optimal | GAN | Noise | Noise − GAN | GAN − Optimal | artifact (eval job) |
+|---|---|---|---|---|---|---|
+| **Zhou Fig. 6** | −7.06 | −5.76 | −1.32 | 4.44 | **+1.31** | `cgan/paper_fig6.json` |
+| run001 as first reported — mismatched | −6.05 | −5.03 | −0.69 | 4.34 | +1.01 | `run001_ber_vs_jsr.json` (2259409) |
+| **run001, both async** (the decided model) | −6.05 | **−7.35** | −0.69 | 6.66 | **−1.30** | `run001_async_ber_vs_jsr.json` (2260623) |
+| run001, both locked | −0.61 | −5.07 | −0.69 | 4.38 | −4.47 | same file, sensitivity row |
+| run002, both async | −6.05 | < −10 | −0.69 | > 9.3 | < −3.95 | `run002_ber_vs_jsr.json` (2260806) |
+| run002, both locked | −0.61 | < −10 | −0.69 | > 9.3 | < −9.4 | same file, sensitivity row |
 
-The ordering holds and the GAN needs 4.3 dB less JSR than white noise to force BER 1e-3, inside the
-paper's 2–6 dB. Our GAN sits marginally closer to the optimal jammer than the paper's does.
+Optimal crossings are lower bounds (zero errors at the left bracket; `jsr_at_1e3_is_lower_bound`).
 
-**What does not, and why it is not a GAN issue.** All three absolute crossings sit ~1 dB to the right
-of the paper's (ours: Optimal −6.05, GAN −5.03, Noise −0.69 dB; paper −7.06 / −5.76 / −1.32). The
-shift is the same for all three curves and equals the C2 link-calibration offset (§2.10) — no single
-sps reproduces the paper's Noise curve, and we chose stated assumptions over fitting it. Because the
-offset is common to all curves, the *gaps* — which is what the paper's contribution is about — are
-unaffected. Below −6 dB JSR the optimal/GAN curves also fall faster than the paper's (§4.2 Q7(v)),
-outside the 1e-3 region the comparison is read at.
+**1. With one sync model, our GAN beats Zhou's "optimal" jammer** — the paper's ordering Optimal ≳ GAN
+is not reproduced. What survives is the paper's headline claim: the GAN beats white noise at BER 1e-3,
+by 4.4 dB (locked) or 6.7 dB (async), against its "2–6 dB".
 
-**Training.** Stable to 10k iterations, no mode collapse (final G≈7.5, D≈0.02; the four generator loss
-terms — adversarial, feature-matching, STFT, I/Q-Wasserstein — all healthy). Zhou's "L_G, L_D → 0.5"
-is a bare-BCE-GAN statement and does not apply to the composite loss; not a concern.
+**2. Why run001 beats "optimal" (reading).** G learned only a rough QPSK: constellation EVM 0.39 at the
+symbol instants and 0.65 half a symbol off (`run001_async_iq.png`). Its irregular excursions reach the
+decision boundary sooner than a clean, bounded QPSK jammer can, which also gives the async GAN curve a
+smooth low-JSR tail more like Zhou's than our Optimal's cliff.
+
+**3. run002 — the recipe from Zhou's own references (§4.2 Q7) — is a worse imitation.** WGAN-GP with
+n_critic 5 and β (0.5, 0.9) from [7]; L1 feature matching (weight 2), log-clamped STFT loss (weight
+45) and headroom 0.95 from [5]. Train job 2260624 (80 min). Eval 2260778 lost its GPU on artongpu01;
+the rerun is 2260806. EVM is 0.70. BER is already 3.6e-3 at −10 dB, so it acts as a peaky noise-like
+jammer, and it plateaus at 0.31 at +10 dB (Zhou's GAN: 0.54). Its final I/Q-distribution loss is 0.57
+against run001's 0.09, while the ×45 STFT term fell 5.95 → 1.04. Reading: the spectrogram weight
+pulled G away from QPSK amplitudes, so Fre-GAN's weights do not transfer to this task.
+
+**4. The discriminator wins in both runs.** run001 ends with D adversarial loss 0.011 and G adversarial
+loss 5.80, i.e. D(G(z)) ≈ 0.3 %. G's QPSK-likeness came from the STFT, I/Q and feature-matching terms,
+not from fooling D. This corrects the 2026-09-14 "stable, all four terms healthy". run002's WGAN critic
+gap plateaus at ≈ 57 from iteration ~3,000 to 10,000: training stalled rather than converged.
+
+**5. The curve shapes are a link property, not a GAN problem.** Our Noise and Optimal crossings sit
+0.6–1.0 dB right of the paper's, which is the C2 calibration offset (§2.10). Zhou's smooth low-JSR tails
+versus our cliffs are explained by the implied-gain diagnostic in §4.2 Q7(v).
+
+**Closed 2026-09-16 (user): option (a)** — run001 under async is a partial reproduction and step 2's
+reference generator; the ordering failure above is the finding (decision in §2.10). Option (b), the
+ablation that would say *why* run002 failed, was not run and is parked as §4.2 Q11.
 
 **Caveat carried into step 2.** BER is in no loss term (§4.2 Q7): the GAN is effective purely by
 imitating the QPSK waveform. So "conditioning on stealth" (step 2) gets no help from the reproduced
@@ -1024,33 +1199,53 @@ uncoordinated, blind** jammers at **equal total power** (each sends `power/N_J` 
 subcarriers through its own TDL-C link) = 4,914 configs at B = 512, plus a 4,096-frame clean reference
 per level. Detectors are frozen and unchanged: the channel-valid CNN
 (`artifacts/sim08/detector/run001_best.pt`, threshold 0.5) and the 1 %-FAR energy detector, combined
-per frame as the suite. Every headline number is a **confirmation pass on 4,096 fresh frames**: picking
+per frame as the suite.
+
+- **P(detect)** is a per-frame flag rate over independent frames: each frame has fresh bits, fresh fading
+  on both links and a fresh jammer draw. It is the hit rate with the jammer on, and the false-alarm
+  rate (FAR, the stealth budget) with it off. It is not a time-to-detection.
+- **The jammer is one family only: sim08's `sparse_blind`.** It picks `n_active` in-band subcarriers
+  uniformly at random per frame and puts amplitude `√power` on each, with a random phase that is held
+  across all 14 OFDM symbols. So it is unmodulated tones through its own TDL-C link.
+- `broadband_inband` is simply `n_active = 52` of this family, so it is in the grid.
+- `sparse_channelaware` was left out: it bought ≈ 0 at matched detectability in A.7.
+- Time-domain structure is **not covered**: no hopping, no pulsing or duty cycle, no modulated
+  waveform. See §4.3. Every headline number is a **confirmation pass on 4,096 fresh frames**: picking
 the max-BER config under a noisy P(detect) favours lucky draws, so the frontier pick is re-measured,
 and picks whose confirmed P(detect) lands > 2σ above the budget are flagged. Jobs: 2261123 verify
 (37 checks, incl. reproducing job 102390 at N_J = 1) · 2261126 / 2261146 / 2261173 sweep · 2261174
-figures. Figures and `summary.json` in `artifacts/sim08_ablation/run001/`.
+figures. Figures and `summary.json` in `artifacts/sim08_ablation/run001/`; shareable report page with
+all five figures: <https://claude.ai/artifact/V3cFxTXKidDbjdqvf3yiTR> (version 2, numbers re-verified
+against `summary.json` on 2026-09-16). Its HTML source is not in the repo: to update it, read the
+artifact by URL, edit, and republish to the same URL; figures are served as `fig/*.png` from
+`artifacts/sim08_ablation/run001/`.
 
 **1. Noise changes the detector's false-alarm rate, not its hit rate.** For a fixed jammer (n = 16,
-power 1, JSR ≈ −5 dB) P(detect) is **flat at 0.40–0.60 across the whole range**, while the CNN's clean
-FAR collapses: **0.42 (0 dB) → 0.031 (10 dB) → 0.010 (20 dB) → ~0.015–0.02 (25–40 dB and noiseless)**.
-Discrimination (hit rate − FAR) therefore *grows* with SNR, 0.16 → 0.46. His predicted direction —
+power 1, JSR ≈ −5 dB) suite P(detect) is **flat at 0.42–0.60 across the whole range**, while the CNN's
+clean FAR collapses: **0.42 (0 dB) → 0.031 (10 dB) → 0.010 (20 dB) → 0.013–0.025 (25–40 dB and
+noiseless)**. Discrimination (hit rate − FAR) therefore *grows* with SNR, 0.17 → 0.48 (suite, 0 → 40 dB). His predicted direction —
 *"increase noise … less detection"* — holds **as a statement about the false-alarm rate and
 discrimination, not about the jammer's detection probability**, which noise barely moves.
 
 **2. At matched detectability the strongest stealthy jammer is SNR-independent in absolute terms.**
 Within the suite's own clean FAR, the best confirmed jammer causes **BER 0.005–0.016 at every Eb/N0
 ≥ 15 dB**, including the noiseless anchor — essentially constant — while the clean floor falls from
-1.1e-2 to 3.2e-5. Its advantage over the floor therefore grows ×1.4 (15 dB) → ×3.8 (20) → ×15 (30) →
-×109 (40 dB). Below ~12.5 dB the best stealthy jammer is within ×1.2 of the floor, i.e. it does
-nothing. This **refines** [A.7](#a7-sim08--the-realistic-channel-and-the-honest-metric): the absolute
-numbers reproduce (0.013 at 20 dB, 0.0054 at 30 dB vs A.7's 0.011 / 0.004), but "the stealthy region
-shrinks at high SNR" was the wrong reading — it holds its BER while the floor drops away beneath it.
+1.1e-2 to 4.5e-5. Its advantage over the floor therefore grows ×1.4 (15 dB) → ×2.4 (20) → ×24.5 (30)
+→ ×109 (40 dB) (best over N_J, preferring picks that passed confirmation; `summary.json`). Below
+~12.5 dB the best stealthy jammer is within ×1.2 of the floor, i.e. it does nothing. This **refines**
+[A.7](#a7-sim08--the-realistic-channel-and-the-honest-metric): restricted to one jammer as A.7 was, the
+absolute numbers reproduce (0.013 at 20 dB — a pick that failed confirmation — and 0.0054 at 30 dB, vs
+A.7's 0.011 / 0.004), but "the stealthy region shrinks at high SNR" was the wrong reading — it holds
+its BER while the floor drops away beneath it.
 
-**3. Detection is set by the jammer's TOTAL power, not by how it is spread.** The stealthy/detected
-boundary sits at **total power ≈ 1–2** (JSR ≈ −15 dB) at every noise level, across a 1000× power grid
-and a 52× spread in n_active — the diagonal frontier in `stealth_map.png`. So the attacker's only real
-lever against this detector is total power; the shape of the occupancy is free. The strongest settings
-are correspondingly varied (n = 8…52 at total power 0.9–1.6) and equally good.
+**3. Detection is set by the jammer's TOTAL power, not by how it is spread** (within this jammer
+family). At every Eb/N0 ≥ 7.5 dB the largest total power that stays indistinguishable from clean (2σ,
+one jammer) is **0.7–1.8, received JSR −18.5 to −14.5 dB**, across a 1000× power grid and a 52×
+spread in n_active — the diagonal frontier in `stealth_map.png`. At 0–5 dB it rises to 2.3–3.6,
+because there the budget itself is 14–43 % false alarms. So the attacker's only real lever against
+this detector is total power; the shape of the occupancy is free. The strongest settings are
+correspondingly varied — 1 to 52 subcarriers per jammer, one to four jammers, total power 0.5–1.6 —
+and equally good.
 
 **4. More jammers at equal total power buy nothing at matched detectability — the m1 trap again.**
 Mean over Eb/N0 ≥ 15 dB, one jammer vs two vs four at the same total power (n = 16 each):
@@ -1065,12 +1260,14 @@ the energy detector when the CNN misses them (0.5 %). A.7 established this for 5
 0–40 dB and the noiseless anchor. The expensive CNN is still the whole detector.
 
 **6. The frozen CNN degrades gently outside its training range** (Eb/N0 5–30 dB, power 0.3–8): clean
-FAR stays 1.5–3 % at 32.5–40 dB and noiseless, and it still catches jammers an order of magnitude
-below its training power. No blind spot opens up out of distribution.
+FAR stays 1.3–2.0 % at 32.5–40 dB and noiseless, and it still detects jammers down to 0.01–0.03 per
+subcarrier, 10–30× below its training minimum. No blind spot opens up out of distribution.
 
 **Caveats.** The CNN runs at threshold 0.5 (not FAR-calibrated, unlike the energy detector) — as in all
-sim08 work; the budget is each detector's *own* clean FAR, so the comparison is still matched. ~20 % of
-frontier picks failed confirmation and are drawn hollow. Our clean CNN FAR measured on 4,096 frames is
+sim08 work; the budget is each detector's *own* clean FAR, so the comparison is still matched. **35 %
+of frontier picks at the FAR budget failed confirmation** (38 / 108; 18 % over all budgets) and are
+drawn hollow — selecting under a noisy P(detect) really does favour lucky draws, so never quote an
+unconfirmed sweep max. Our clean CNN FAR measured on 4,096 frames is
 about **twice** job 102390's B = 512 estimates at 10–15 dB (0.031 vs 0.014, 0.014 vs 0.006); the dense
 sweep's estimates were noisy at that batch size — quote these. Unchanged from sim08 and still binding:
 held random-phase jammers only, perfect-CSI ZF, the jammer sits on the victim's symbol grid (§4.4), the
@@ -1093,12 +1290,30 @@ paused while this runs.
 | **C1** | **DONE 2026-09-14 (noise + optimal; `gan` lands with C3).** Verified by C4 (job 2259149). **Sionna QPSK waveform link + the three jammers.** Link: `BinarySource` → Gray QPSK `Mapper` → `Upsampling(sps)` → pulse filter → + AWGN (SNR 30 dB) + jammer → matched filter → `Downsampling` → hard decision → BER. Jammers: `noise` (white complex Gaussian), `optimal` (same modulation and filter, random symbols), `gan(G)`. JSR = mean per-sample jammer power / signal power at the RX input, imposed by a hard power projection. Includes the closed-form `ber_noise_jammer` reference. | `cgan/link.py`, `cgan/jammers.py` | — |
 | **C2** | **DONE 2026-09-14 (job 2259157, supersedes 2259150). Checkpoint passed: the link was chosen as stated assumptions, not fitted values — sps 8, RRC 0.35, white noise, async optimal (§2.10); `calibration.json`'s `selected` is deliberately `null`, the decision lives in `link.py` `LINK`.** With those assumptions: Noise crosses 1e-3 at −0.67 dB, Optimal at −6.00 dB (async rrc0.35, RMS 1.44 dec). What the calibration found: **Noise:** no link matches the paper's curve everywhere. The best constant-gain Q-function leaves RMS 0.45 decades. **sps 4** is RMS-best (0.79 dec) but crosses 1e-3 at −3.75 dB vs the paper's −1.32. **sps 8** is 1e-3-best (−0.67 dB, 0.64 dB off) but RMS 1.51 dec, too steep at low JSR. The gain that hits the paper's crossing exactly is 8.49 dB ≈ sps 7.06. The pulse is **not identified** (white noise is pulse-independent), and in-band noise fits far worse. **Optimal:** `locked` and `random_phase` produce **zero errors below −2 / −4 dB** — a geometric impossibility for the paper's low-JSR points, not a tuning problem. Only **`async`** produces errors there, via the pulse's tails at off-Nyquist instants. Best is **async, RRC β = 0.25**: crossing −6.43 dB (sps 4) / −6.35 dB (sps 8) vs the paper's −7.06, RMS 0.98 / 1.01 dec. It still falls ~1.5 decades too fast below −6 dB (paper 4.4e-5 at −10 dB; ours < 1.5e-7). **Gap at 1e-3, Noise − Optimal:** paper 5.75 dB; sps 8 gives 5.68 dB; sps 4 gives 2.69 dB. | `cgan/calibrate.py` → `artifacts/cgan/calibration.json` + `c2_calibration.png` | Checkpoint passed 2026-09-14; the bar is report-only (§2.10). **Calibrate the unstated link parameters.** (1) Fit the closed-form noise curve to the digitised Noise points (BER ≥ 1e-6) over sps ∈ {2,4,8,16} × pulse ∈ {rect, RRC β ∈ {0.25,0.35,0.5}} × noise band ∈ {full fs, in-band}. (2) On the fitted link, Monte-Carlo the `optimal` jammer under three synchronisation variants — {symbol+phase-locked, symbol-synchronous with random phase, asynchronous} — and pick the best match to the digitised Optimal curve. The same assumption then governs how the GAN training data is cut. | `cgan/calibrate.py` → `artifacts/cgan/calibration.json` + figure | **⛔ STOP: report both fits' residuals to the user before C3.** If no variant brings Optimal within ~1 dB, the success bar needs revisiting — and that is itself a finding about the paper. |
 | **C3** | **Generator, discriminator, losses** per Zhou Figs. 2–3. Every unstated choice is recorded in §4.2 Q7. | `cgan/models.py`, `cgan/losses.py` (pure torch) | **DONE 2026-09-14** (job 2259280). `models.py` + `losses.py`, plain torch. |
-| **C4** | **DONE 2026-09-14 — 94/94 checks pass, job 2259280** (link + models + losses). Two real link defects were caught and fixed at source, not by loosening a tolerance: **(a)** span-8 RRC truncation ISI of 3.6 % flipped zero-margin symbols (job 2259141) → span 32 (§4.2 Q7); **(b)** JSR was averaged over the filter tails, over-driving short frames by up to 1.76 dB (job 2259142) → power ratios defined over the symbols' active window (`Link.active`). **Test suite.** Clean BER vs the Q-function reference; noise-jammer BER vs the closed form (which validates the processing gain C2 relies on); realised JSR within 0.05 dB of the request for all three jammers; a phase-locked optimal jammer at zero noise flips exactly past the amplitude margin; model shapes (G → (B,2,1024) in [−1,1]; D features 32768; score (B,1); logits (B,n_classes)); classifier loss ≡ 0 when n_classes = 1; STFT and I/Q losses ≡ 0 on identical batches; exact normalisation round trip. The link checks are written with C1 and extended at C3. | `cgan/verify.py` + `submit_verify.sh` | exits 0; ran before C5/C6 |
-| **C5** | **DONE 2026-09-14 (run001, job 2259289, ~12 min).** Trained stably to 10k iters — no collapse (G≈7.5, D≈0.02 at the end), all four G loss terms healthy. NOTE: Zhou's "L_G, L_D → 0.5" claim is for a bare BCE GAN; our composite loss does not asymptote there, which is expected. **Train.** 10,000 iterations, batch 128, Adam 2e-4 with β = (0.5, 0.999), non-saturating loss + gradient penalty (`--adv wgan-gp` as ablation). | `cgan/train_cgan.py` + `submit_train.sh` → `artifacts/cgan/run001_G.pt`, loss log, `run001_losses.png` | done, after C4 |
-| **C6** | **DONE 2026-09-14 (run001, job 2259409). REPRODUCED on the metric that matters:** the gaps between curves at BER 1e-3 match Zhou — **Noise−GAN 4.34 dB (paper 4.44), GAN−Optimal 1.01 dB (paper 1.31)** — and the ordering Optimal ≳ GAN > Noise holds. Our GAN needs 4.3 dB less JSR than white noise to reach BER 1e-3, squarely inside Zhou's "2–6 dB" claim. Absolute crossings sit ~1 dB right of the paper (ours: Optimal −6.05, GAN −5.03, Noise −0.69 dB), which is the C2 link-calibration offset, the same for all three curves, not a GAN effect. **Evaluate against Zhou's protocol** (SNR 30 dB, JSR −10:2:10 dB — the grid of Fig. 6's markers — 10⁴ symbols × 100 trials), **extended** to ≥ 100 bit errors or 10⁹ bits so the low-BER points are real. Overlay on the digitised Fig. 6. Report JSR at BER 1e-3 for each jammer, and the two gaps next to the paper's 1.31 / 4.44 dB (report-only, §2.10). | `cgan/evaluate.py` + `submit_eval.sh` → `artifacts/cgan/run00N_ber_vs_jsr.{json,png}` | done, after C5. **Step 1 reproduced; next: choose the statistical detector (§4.2 Q8) before step 2** |
+| **C4** | **DONE 2026-09-14 — 94/94 checks pass, job 2259280** (link + models + losses); **121/121 after the 2026-09-15 revision, job 2260603** (one `desync` model for both structured jammers, a perfect-generator check, the reference-backed losses). Two real link defects were caught and fixed at source, not by loosening a tolerance: **(a)** span-8 RRC truncation ISI of 3.6 % flipped zero-margin symbols (job 2259141) → span 32 (§4.2 Q7); **(b)** JSR was averaged over the filter tails, over-driving short frames by up to 1.76 dB (job 2259142) → power ratios defined over the symbols' active window (`Link.active`). **Test suite.** Clean BER vs the Q-function reference; noise-jammer BER vs the closed form (which validates the processing gain C2 relies on); realised JSR within 0.05 dB of the request for all three jammers; a phase-locked optimal jammer at zero noise flips exactly past the amplitude margin; model shapes (G → (B,2,1024) in [−1,1]; D features 32768; score (B,1); logits (B,n_classes)); classifier loss ≡ 0 when n_classes = 1; STFT and I/Q losses ≡ 0 on identical batches; exact normalisation round trip. The link checks are written with C1 and extended at C3. | `cgan/verify.py` + `submit_verify.sh` | exits 0; ran before C5/C6 |
+| **C5** | **DONE — two runs, the discriminator wins in both (§3.3b).** **run001** (2026-09-14, job 2259289, ~12 min): non-saturating BCE + GP, n_critic 1, Adam β (0.5, 0.999), all loss weights 1, MSE feature matching, log1p STFT, peak headroom 1.0 — *the current code no longer reproduces it*. Final D(G(z)) ≈ 0.3 %. **run002** (2026-09-15, job 2260624, 80 min): the reference-backed default recipe (§4.2 Q7) — WGAN-GP, n_critic 5, β (0.5, 0.9), weights feat 2 / STFT 45, headroom 0.95; critic gap stalls at ≈ 57 from iteration ~3k. Both: 10,000 iterations, batch 128, Adam 2e-4; `--adv nsgan` selects the run001-style adversarial loss. | `cgan/train_cgan.py` + `submit_train.sh` → `artifacts/cgan/run00N_G.pt`, `_losses.{json,png}` | done |
+| **C6** | **DONE 2026-09-15 — reproduction NOT established (§3.3b).** The 2026-09-14 "match" (job 2259409: Noise−GAN 4.34, GAN−Optimal +1.01 dB vs paper 4.44 / +1.31) scored the GAN locked and Optimal async. Re-evaluated with one sync model for both (run001 job 2260623; run002 job 2260806, after 2260778 lost its GPU): run001 GAN−Optimal **−1.30 dB async / −4.47 dB locked** — the GAN beats "optimal", so the paper's ordering fails — while Noise−GAN 6.66 / 4.38 dB keeps the "GAN beats noise by 2–6 dB" claim. run002 has no 1e-3 crossing in the grid (BER 3.6e-3 already at −10 dB). **Evaluate against Zhou's protocol** (SNR 30 dB, JSR −10:2:10 dB — the grid of Fig. 6's markers — 10⁴ symbols × 100 trials), **extended** to ≥ 100 bit errors or 10⁹ bits so the low-BER points are real. Overlay on the digitised Fig. 6. Report JSR at BER 1e-3 for each jammer, and the two gaps next to the paper's 1.31 / 4.44 dB (report-only, §2.10). | `cgan/evaluate.py` + `submit_eval.sh` → `artifacts/cgan/run00N[_tag]_{ber_vs_jsr.{json,png},implied_gain.png,iq.png}` | done. **Step 1 closed 2026-09-16 as a partial reproduction, run001-async as step 2's reference (§2.10). Next: the statistical detector (§4.2 Q8)** |
 
 With no pass/fail bar, hyperparameters are iterated **only** by explicit user decision after seeing
 C6. Each run gets a row in [A.0](#a0-run-index).
+
+### Detector-suite characterisation study — PROPOSED 2026-09-17, gated on §4.1 #0b (option B)
+
+The user's chosen staging (this session). Shared spine for options A and B; MARL and CWT are gated
+"only if it bites". Same conventions as the C-series (run from `cgan/`, sbatch, matched detectability,
+NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **Not started — awaiting
+the direction email.** Build order:
+
+| # | Item | Note |
+|---|---|---|
+| **D0** | **All baselines first.** Attackers: `barrage` (noise), `pulsed-QPSK` (the Amuru near-optimum), plus the `optimal`/`counter` reference already in `m0`/`cgan`. Detectors: energy (one/two-sided), kurtosis (§4.2 Q8), **NP-optimal**. Both layers (M0 exact-NP panel; waveform panel). | The envelope must exist before any GAN row — floor (barrage), smart-classical (pulsed-QPSK), ceiling (NP detector + Amuru attacker). |
+| **D1** | **Plain GAN waveform (run001) vs the baselines** on the BER–P(det) plane. No detector-aware training yet — this measures the *reproduced* jammer's detectability, honestly titled as such. | Uses the existing `artifacts/cgan/run001_G.pt`; recipe caveat §4.2 Q11. |
+| **D2** | **GAN conditioned on stealth** — add a detector-aware term so the generator is stealthy *by design* (the only way "stealthy GAN" is a fair claim). Re-run D1's matrix. | This is the actual step-2; the statistical detector is Q8, scoped to kurtosis for D0/D1. |
+| **D3 (gated)** | **CWT detector** (Zhang & Krunz, torch — no `pywt`, §4.2 Q10) added to the suite — **only if D1/D2 show a frontier worth stressing**. | Adaptation, not a drop-in (Q10). |
+| **D4 (gated)** | **MARL coordination row** (option A's coherent combining) — **only if the single-jammer study bites**. Power/phase/timing coordination so jammers add at the victim, measured vs Amuru Thm 4 as ceiling; generator incidental (§2.10). | Biggest lift; do not build before D0–D2 land. |
+
+MVP that already makes the point: **D0 + D1** (attackers {barrage, pulsed-QPSK, GAN} × detectors
+{energy, kurtosis, CNN, NP}, single jammer, one layer). Add D2, then D3/D4 only on evidence.
 
 ### Coordination track — PAUSED 2026-09-14 (kept as written 2026-09-12)
 
@@ -1180,7 +1395,7 @@ detector). It **replaces the entire `\section{Experiment History}` in Overleaf**
 `b9620a0`), including the user-written parts 2–4, and already carries the corrections those parts owed:
 2 legitimate TX→RX pairs in the first experiment; two-agent numbers from job 99211 (**BER ≈ 0.24,
 per-agent power ≈ 0.62, det 2–8%**, not 0.33 / 0.45 / 3–10%); the gain at matched total power is ~15%,
-not 2× ([A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable)); and the
+not 2× ([A.3](#a3-sim04--sim04b--a-coordinated-solution-exists-and-is-gradient-reachable)); and the
 centralised-optimiser caveat. Header comment in the file lists the job IDs behind every number.
 
 Still valid from the old plan: **do not name simulations in the prose**; negative results are stated
@@ -1214,7 +1429,7 @@ notes. Live ref last read: `overleaf/main` @ `b9620a0`; **`git fetch overleaf` f
 
 > **What the pivot does NOT reopen.** The 2026-09-12 change of direction is a return to bet (a),
 > cooperation — **not** to bets (b) and (c) (§1.1). PPO/MAPPO over raw IQ with black-box access
-> stays falsified (sim06/06b/07, [A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)); actions
+> stays falsified (sim06/06b/07, [A.5](#a5-sim06-jammer--06b--07--the-untrainability-result)); actions
 > stay low-dimensional perturbation *parameters*; the training method stays direct/surrogate
 > gradient. "Cooperative multi-agent generative" describes the *problem*, not a licence to re-run the
 > algorithm that failed. If G6 seems to need MARL, re-read A.5 before writing any of it.
@@ -1232,6 +1447,7 @@ calibration for the m2 detector; extending the sim08 suite with more classical d
 | # | Item | Why it blocks |
 |---|---|---|
 | **0** | **⚠ 2026-09-12, TOP PRIORITY — sign-off on the pivot.** Three things in one email: (i) the literature collision (§2.1) — E1's impossibility finding is prior art in the square-root law, symmetrizability and disguised jamming, so the stealth headline cannot stand; (ii) the proposed replacement, RQ1 = the coordination gain **as a function of inter-jammer delay** (§2.3) — which is *his own* 2026-09-12 steer, so frame it as adopting his suggestion, not as a unilateral change of subject; (iii) **the RQ1/RQ2 tension he must break** — his mandated headline is *adaptation cost*, but the pivot makes *coordination* the lead, and 20 days does not fit both. | **Blocks the entire remaining plan.** G5/G6 are 4–5 days of new code committed to one branch of this fork (§3.4). Do not start them on a guess. **His proposal feedback (§B.2) already endorses the direction** — coordination/synchronisation as the novelty axis — so only (i) and (iii) are genuinely open. That makes this email easier to write and *more* urgent, not less: the cheap half is already agreed. |
+| **0b** | **⚠ 2026-09-16, gates the direction — sign-off on retiring stealth *entirely* + the GAN/MARL replacement.** A short email was drafted (this session): weeks of experiments + literature converged on stealth yielding only trivial/weak attacks under a detection constraint (§2.1 "Sharpened"), so drop it as an objective — **including CGAN step 2** — and instead strengthen the reproduced GAN *waveform* with MARL multi-jammer coordination as an *effectiveness* result (energy-budget power split → coherent combining), then a zero-sum jammer-vs-legitimate-node game vs the anti-jamming baselines. Detectability stays an eval axis; adaptation cost stays a possible secondary claim. **⚠ 2026-09-17 UPDATE — the email now offers TWO options, both keeping the reproduced GAN waveform and reporting on the matched BER–P(det) plane: (A) the drop-stealth + MARL-coordination result above; (B) keep stealth as a *characterisation* result — a generative jammer's detectability across a detector suite vs the NP-optimal ceiling, i.e. the deployed-detector-vs-optimal-warden gap (§2.1 item 1), effect allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward B with A's MARL as a gated tail. Frame B to him as the *detector-gap measurement* (the finding) with the GAN as instrument — it answers his 'don't let novelty live in the architecture' comment (§2.9).** | **Blocks folding the decision into §2.10/§4.2 and starting the D-series/step-2 code.** He has not seen the CGAN track (§3.1), so the email may need a one-line CGAN intro. Overlaps #0 — the same email can carry both the pivot and this. **User instruction 2026-09-16: wait for his reply before changing §2.10/§4.2.** |
 | 1 | **Supervisor of record for the ETH registration** | D-INFK professor requirement; may need Di Maio as co-supervisor. Needed on the myStudies form. |
 | 2 | **Title, start date, end date, task description** | All four gate registration. Open since 2026-09-01. |
 | 3 | ~~**Feedback on the proposal** (handed over 2026-09-01)~~ **RESOLVED 2026-09-12 — it arrived.** Nine inline `\adm{}` comments, transcribed in [B.2](#b2-his-verbatim-points-and-what-each-changed); consequences propagated to §2.1, §2.3, §2.4, §2.9, §3.4 and §4.3. Three prose fixes remain owed on the proposal itself (§B.3). | — |
@@ -1264,7 +1480,7 @@ reasoning does not have to be reconstructed:
    a mechanism, not a preference); the **problem formulation** itself; and whatever the attacker
    actually discovers. Comparable precedent exists at solid venues. The bar is whether the
    combination produces insight the parts alone could not — which is exactly why the negative results
-   in [Appendix A](#appendix-a-experiment-history) are load-bearing rather than embarrassing.
+   in [Appendix A](#appendix-a--experiment-history) are load-bearing rather than embarrassing.
 
 ## 4.2 Open technical questions
 
@@ -1487,6 +1703,11 @@ Not decided. Candidates to bring to that discussion:
   NP test; needs a stated jammer model;
 - **eigenvalue-based detectors** (max–min eigenvalue ratio) — blind, no noise-power knowledge needed.
 
+**Scoped 2026-09-17 (pending §4.1 #0b).** The characterisation matrix (§3.4 D-series) takes **kurtosis**
+as the statistical detector for D0/D1 (cheap, classical, the sim02–04 detector), adds the **NP-optimal
+test** as the ceiling row, and keeps the spectrogram-CNN / CWT as the learned detectors. The
+cyclostationary and GLRT options stay on this list as later additions if the frontier warrants.
+
 The power threshold (detector i) follows M0's convention: larger statistic = more suspicious,
 threshold set from the empirical (1−α) quantile of clean segments (`m0/detectors.py` `calibrate`).
 
@@ -1503,6 +1724,20 @@ those attack classes. What transfers is the **representation (Morlet CWT, f_b = 
 network (DCNN₁)**, retrained on our clean-vs-jammed segments over a mixture of JSRs. Report it as
 *"the Zhang & Krunz detector architecture, retrained"*, never as their detector. `pywt` is not in the
 venv, so the CWT will be written in torch.
+
+**Q11 — Which training recipe does step 2 retrain with? OPEN, only needed once G is retrained.**
+Step 1 closed on `run001_G.pt` (§2.10), but that recipe is no longer in the code: `train_cgan.py`
+defaults to run002's (WGAN-GP, n_critic 5, feat 2 / STFT 45, L1 feature matching, log-clamped STFT,
+headroom 0.95), which produced a worse imitation (§3.3b). `--adv nsgan --n-critic 1 --w-feat 1
+--w-stft 1` restores run001's adversarial loss and weights, **not** its MSE feature matching, log1p
+STFT or headroom 1.0. Two things are unknown:
+- **Why run002 failed** — the adversarial loss or Fre-GAN's weights. The parked ablation (option (b),
+  ~1.5 h): WGAN-GP with all weights 1.
+- **Whether the D-wins-outright state matters for step 2.** Both runs end with the discriminator
+  separating real from generated (§3.3b item 4); a stealth term added to G's loss competes with a
+  discriminator that is already not being fooled.
+Before retraining: either make run001's loss definitions selectable again or run the ablation, and
+decide with the user.
 
 ## 4.3 Ideas on the shelf — specified, not adopted
 
@@ -1538,10 +1773,24 @@ venv, so the CWT will be written in torch.
   magnitude `|d·h_tx|`. Minimizing that favours subcarriers with **small `|h_tx|`** — a *different*
   criterion from m1's `|h_jam/h_tx|`, which maximized damage per unit *transmit* power. **So the
   matched-detectability refutation killed one specific criterion, not the idea that channel knowledge
-  helps.** Parked because M0 has no subcarriers; relevant if the OFDM stack is ever revisited. Two
-  further items of his live in the same parked bucket, for the same reason: *"a well-crafted
-  adversarial signal could also disrupt multiple subcarriers simultaneously"* (a joint multi-subcarrier
-  attack) and the simpler per-subcarrier isolated problem he thought could be interesting on its own.
+  helps.** Parked because M0 has no subcarriers. **Now runnable (2026-09-16):** the OFDM stack is
+  being revisited through `sim08_ablation/`, so this is a new `sparse_*` selection rule in
+  `ablation.py`'s own `build_jams` — never in the frozen `frontier_channel.py`. §3.3c finding 3 also
+  gives it a concrete reason: detection tracks total *received* jammer energy, and received energy on
+  subcarrier n scales with `|h_jam[n]|` while damage scales with `|h_jam[n]/h_tx[n]|`. The ratio
+  damage / detectability is therefore `1/|h_tx[n]|` — rank by small `|h_tx|`, not by m1's
+  `|h_jam/h_tx|`. Still a genie (needs the victim's own channel). Two further items of his live in the
+  same bucket: *"a well-crafted adversarial signal could also disrupt multiple subcarriers
+  simultaneously"* (a joint multi-subcarrier attack) and the simpler per-subcarrier isolated problem he
+  thought could be interesting on its own.
+- **Time-domain jammer structure on the sim08 suite** (specified 2026-09-16, not run). §3.3c covered
+  exactly one jammer family — held random-phase tones — so its finding 3 ("detection is set by total
+  power, not spread") is only established *within* that family. The frozen CNN was trained on held
+  in-band jammers plus classical time-domain ones, never on duty-cycled in-band jamming. Candidates, in
+  order of expected value: **duty cycle** (active on a fraction of the 14 OFDM symbols, total energy
+  matched — the classic energy-detector evasion); per-OFDM-symbol **hopping** (`sparse_hopping` exists
+  in frozen `frontier/frontier_sweep.py` as a template); a **modulated** QPSK-like waveform per
+  resource element. Same harness, same confirmation pass, reported at matched detectability.
 
 ## 4.4 Known limitations to keep visible
 
@@ -1614,7 +1863,8 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 08 | m2-suite | CNN ∨ energy per-sample | **suite ≡ CNN**; residual stealthy region BER 0.065–0.11 | 102319 |
 | 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
 | **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
-| **cgan** | run001 | CGAN (Zhou 2025), plain torch | **step 1 reproduced**: Noise−GAN 4.34 dB, GAN−Optimal 1.01 dB at BER 1e-3 (paper 4.44 / 1.31); §3.3b | 2259289, 2259409 |
+| **cgan** | run001 | CGAN (Zhou 2025), NS-GAN+GP, weights 1 | **ordering not reproduced**: with one sync model GAN−Optimal −1.30 dB async / −4.47 locked (paper +1.31); Noise−GAN 6.66 / 4.38 dB. The first-reported 4.34 / +1.01 scored GAN locked vs Optimal async (withdrawn); §3.3b | 2259289, 2259409, 2260623 |
+| **cgan** | run002 | CGAN, reference-backed recipe (WGAN-GP, feat 2 / STFT 45) | worse imitation: EVM 0.70, no 1e-3 crossing in grid (BER 3.6e-3 at −10 dB), plateau 0.31; critic gap stalls ≈ 57; §3.3b | 2260624, 2260806 |
 | **sim08_abl** | run001 | noise × power × #jammers on the frozen sim08 suite | **stealthy BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** (×1.4→×109 the floor); detection set by *total* power; more jammers = louder, no matched-detectability gain; suite ≡ CNN (26/4914); §3.3c | 2261123, 2261126, 2261146, 2261173, 2261174 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
@@ -1635,9 +1885,9 @@ attacker. RL form `R = BER − β·D − γ·P − 0.05`; direct-gradient form `
 | **M0** | NP / CNN / energy | flagged frames, β swept | — | **hard budget, not a term** | — | `attacks.py:23` |
 
 **Two findings only visible in this table**, each recorded where it is used: the **log barrier is the
-mechanism of the untrainability result** ([A.5](#a5-sim06-jammer-06b-07-the-untrainability-result)),
+mechanism of the untrainability result** ([A.5](#a5-sim06-jammer--06b--07--the-untrainability-result)),
 and **γ = 0.02 never binds**, which is why run007's power blew up
-([A.3](#a3-sim04-sim04b-a-coordinated-solution-exists-and-is-gradient-reachable)). The M0 row is the
+([A.3](#a3-sim04--sim04b--a-coordinated-solution-exists-and-is-gradient-reachable)). The M0 row is the
 correction: the supervisor's mandate (§2.8) is precisely a verdict on this table.
 
 ## A.1 sim00–01 — the measurement chain, and the limits of a power threshold
@@ -2175,7 +2425,7 @@ Quotes preserved because the wording matters. Consequences already actioned are 
 | *"selecting the optimal subcarrier is a proxy problem on the way to the true problem of maximizing BER while minimizing detection probability"* | ✅ Independently confirms the matched-detectability verdict. |
 | *"a form of detection is to leak information on the position of the jammer(s) so that a defender can physically neutralize them"* | Out of scope; **name it in the Threat Model** as an out-of-scope defender capability + future work (§4.3). |
 | *"consider PettingZoo and BenchMARL … RLlib is famous for being too complex … I would avoid it"* | ✅ §2.8. |
-| *"I did not fully get why the MAPPO jammer can't be trained against the CNN detector … showing in what cases it is hard to beat is already a small result"* | Owed a crisp write-up as a **result, not an excuse** — [A.5](#a5-sim06-jammer-06b-07-the-untrainability-result). Still open: characterize *in which cases* it is hard to beat (which detectors/regimes). |
+| *"I did not fully get why the MAPPO jammer can't be trained against the CNN detector … showing in what cases it is hard to beat is already a small result"* | Owed a crisp write-up as a **result, not an excuse** — [A.5](#a5-sim06-jammer--06b--07--the-untrainability-result). Still open: characterize *in which cases* it is hard to beat (which detectors/regimes). |
 | *"train both attacker and defender jointly, then pick one side … if performance becomes too extreme (e.g., always stealth, high BER) then **relax assumptions** … until the performance gap between your method and the baselines increases"* | The tuning protocol, handed to us. Pick the **attacker** side, as he suggests. Also: **run the baselines** — he put it in parentheses as an assumption, so it is not optional. |
 | *"the most interesting investigation will still be the optimal multi-jammer coordination against one or more mobile victims"* | The destination: multi-agent + **victim mobility** (§4.3). **After the 2026-09-12 pivot this is no longer the distant destination but the actual next experiment** (G6/E3, §3.4) — the strongest single piece of evidence that the pivot moves *toward* his stated preference rather than away from it. Lead with it in §4.1 #0. |
 | **(mtg)** *"Priority: simplify, as much as possible — single subcarrier, one channel"* | ✅ M0. sim06–08 frozen. |
@@ -2334,3 +2584,19 @@ scancel <JOBID>                      # cancel
 
 `SLURM_CONF=/home/sladmitet/slurm/slurm.conf` must be set on the submit host or every slurm command
 fails; it is persisted in `~/.bashrc.user`. Jobs run independently — safe to close the terminal.
+
+**A job stuck in `PENDING (BadConstraints)` is usually not a constraint problem** (found 2026-09-16).
+The submit plugin adds `cpu.normal` to every job's partition list, and that partition has no GPU
+features, so this reason is shown even while GPU nodes are merely full; array tasks ran with the same
+label. Diagnose with evidence before changing the request:
+
+```bash
+scontrol show node artongpu03 | grep -E "CfgTRES|AllocTRES|State"   # gres/gpu and mem, allocated vs configured
+sacct -j <JOBID> --format=JobID,MaxRSS,Elapsed,State                 # what a finished task actually used
+```
+
+On 2026-09-16 every GPU was allocated except two on tikgpu07, which had only ~3 GB of RAM left. A 4 GB
+request could never start there; resized to 2.5 GB (measured peak 1.7 GB) it started at once. **Size
+`--mem` from `sacct MaxRSS`, not by habit** — the 16 GB in older submit scripts blocks scheduling on a
+busy cluster. `slurmstepd: error: TaskProlog failed` with 0 s elapsed is node-side: resubmit the task.
+`NVML … GPU is lost` (artongpu01, 2026-09-15) is a failing GPU: resubmit and exclude that node.
