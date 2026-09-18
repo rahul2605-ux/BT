@@ -1,0 +1,41 @@
+TypeError: int() argument must be a string, a bytes-like object or a real number, not 'UInt'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/path_solvers/paths_buffer.py", line 542, in _loop_body
+    = sample_data.get(d, active=active)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/path_solvers/sample_data.py", line 147, in get
+    data = self._local_mem.read(index, active=active)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: drjit.cuda.UInt.__init__(): Broadcast from type 'drjit.llvm.UInt' to type 'int' failed. Refused to perform an inefficient element-by-element copy.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 565, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 557, in main
+    test_baselines()
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 525, in test_baselines
+    test_scene()
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 306, in test_scene
+    g, tau = scene.path_gains(pos, return_delays=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/scene.py", line 130, in path_gains
+    paths = rt.PathSolver()(scene, max_depth=0, los=True, specular_reflection=False,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/path_solvers/path_solver.py", line 195, in __call__
+    paths_buffer = self._candidate_generator(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/path_solvers/sb_candidate_generator.py", line 127, in __call__
+    self._los(mi_scene, src_positions, tgt_positions, paths,
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/path_solvers/sb_candidate_generator.py", line 190, in _los
+    paths.add_paths(mi.UInt(0), path_ind, samples_data, valid, tgt_indices,
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/path_solvers/paths_buffer.py", line 540, in add_paths
+    while d <= depth:
+^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: dr.while_loop(): encountered an exception (see above).

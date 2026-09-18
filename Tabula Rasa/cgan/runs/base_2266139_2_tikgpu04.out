@@ -1,0 +1,4 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+  K=2 pulsed_p1      drop  0: max BER 0.181, CNN picks {"0.05": null}  (8s)
+  K=2 pulsed_p1      drop  1: max BER 0.373, CNN picks {"0.05": null}  (8s)
+wrote sweep_K2_smoke.json in 8s

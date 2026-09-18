@@ -1,0 +1,25 @@
+jit_optix_api_init(): libnvoptix.so.1 could not be loaded -- disabling OptiX backend! Set the DRJIT_LIBOPTIX_PATH environment variable to specify its path. If you are using the Windows Subsystem for Linux 2 ("WSL 2"), please follow the setup instructions at https://github.com/mitsuba-renderer/mitsuba3/blob/master/docs/src/optix_setup.rst to make OptiX availablet to WSL.
+Traceback (most recent call last):
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 565, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 557, in main
+    test_baselines()
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 525, in test_baselines
+    test_scene()
+  File "/home/rrahman/BT/Tabula Rasa/cgan/verify.py", line 306, in test_scene
+    g, tau = scene.path_gains(pos, return_delays=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/scene.py", line 122, in path_gains
+    scene = rt_scene()
+            ^^^^^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/scene.py", line 100, in rt_scene
+    scene = rt.load_scene()
+            ^^^^^^^^^^^^^^^
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/scene.py", line 1103, in load_scene
+    return Scene()
+           ^^^^^^^
+  File "/itet-stor/rrahman/net_scratch/bt_env/lib/python3.11/site-packages/sionna/rt/scene.py", line 99, in __init__
+    self._scene = mi.load_dict({ "type": "scene" })
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: [parser.cpp:1716] At dictionary node "root": failed to instantiate scene plugin of type "scene": Could not initialize OptiX!

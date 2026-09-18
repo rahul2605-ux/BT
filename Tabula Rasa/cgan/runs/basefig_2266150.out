@@ -1,0 +1,10 @@
+wrote figures + summary.json to /home/rrahman/BT/Tabula Rasa/cgan/../artifacts/cgan/baselines/run001
+{
+  "noise": 0.0,
+  "pulsed_p1": -6.0,
+  "pulsed_p0.5": -8.0,
+  "pulsed_p0.25": -10.0,
+  "pulsed_p0.1": -13.0,
+  "omniscient_e0.1": -20.0,
+  "omniscient_e1": -15.0
+}

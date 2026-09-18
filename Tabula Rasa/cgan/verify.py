@@ -12,6 +12,9 @@ Exit code 0 iff every check passes. Written to be readable as documentation:
 each check states the prediction, then tests it.
 """
 
+import mitsuba as mi
+mi.set_variant("llvm_ad_mono_polarized")   # before any Sionna import: no OptiX on the cluster (scene.py)
+
 import argparse
 import math
 import sys
@@ -23,6 +26,10 @@ import link as lk
 import jammers
 import models
 import losses
+import attacks
+import channel
+import detectors
+import scene
 
 FAILURES = []
 VERBOSE = False
@@ -265,27 +272,292 @@ def test_normalisation(L):
     check("denormalize(normalize(x)) == x", (rt - seg).abs().max().item(), 0.0, 1e-6)
 
 
+# ================================================================ BASELINES (2026-09-17)
+# The 3-D scene, the Sionna channel, the attacks and the detectors of the classical
+# baseline set (README §2.10). Only on the decided link (link.LINK).
+
+def _frame_ber(out):
+    """Per-frame BER [F] (errors are correlated within a frame: one offset/phase each)."""
+    return (out["bits"] != out["bits_hat"]).double().mean(dim=-1)
+
+
+def _same_ber(label, a, b, floor=2e-4):
+    """Two Monte-Carlo BER estimates agree within 4 sigma of their per-frame spread."""
+    fa, fb = _frame_ber(a), _frame_ber(b)
+    tol = 4 * math.sqrt(fa.var() / fa.numel() + fb.var() / fb.numel()) + floor
+    check(label, float(fa.mean() - fb.mean()), 0.0, float(tol))
+
+
+def _batches(L, n, spec, jsr, snr_db, batch=1024):
+    outs = [attacks.frames(L, min(batch, n - i), spec, jsr, snr_db) for i in range(0, n, batch)]
+    return {k: torch.cat([o[k] for o in outs]) for k in outs[0]}
+
+
+def test_scene():
+    """
+    Sionna RT in an empty scene must reproduce free space exactly; T's power control
+    must land every drop at SNR 30 dB with the cap never binding.
+    """
+    print("\n8. Scene: Sionna RT path gains, noise floor, power control")
+    pos = np.stack([scene.draw_positions(7000 + i) for i in range(12)])
+    seps = [np.linalg.norm(p[:, None] - p[None], axis=-1)[np.triu_indices(p.shape[0], 1)].min()
+            for p in pos]
+    check("min pairwise separation >= 50 m (12 drops)", float(min(seps) >= scene.MIN_SEPARATION),
+          1.0, 0)
+    check("all nodes inside the box", float(np.all((pos >= 0) & (pos <= np.array(scene.BOX)))),
+          1.0, 0)
+    g, tau = scene.path_gains(pos, return_delays=True)
+    d = np.linalg.norm(pos[:, [0] + list(range(2, pos.shape[1]))] - pos[:, [1]], axis=-1)
+    err_db = np.abs(10 * np.log10(g) - 10 * np.log10(scene.free_space_gain(d))).max()
+    check("RT LOS gain == (lambda/4 pi d)^2, max |dB error|", float(err_db), 0.0, 0.01)
+    check("RT LOS delay == d/c, max |error| [ns]", float(np.abs(tau - d / 299_792_458.0).max() * 1e9),
+          0.0, 0.01)
+    n_w = scene.noise_power_w()
+    want = 10 * math.log10(1.380649e-23 * scene.TEMPERATURE * scene.BANDWIDTH * 1e3) \
+        + scene.NOISE_FIGURE_DB
+    check("noise floor k T B NF [dBm]", float(scene.w_to_dbm(n_w)), want, 0.05)
+    p_t = scene.tx_power_w(g[:, 0], n_w)
+    snr = 10 * np.log10(p_t * g[:, 0] / n_w)
+    check("power control: realised SNR at R, max |dev from 30 dB|", float(np.abs(snr - 30).max()),
+          0.0, 0.05)
+    # the cap: the farthest possible T-R pair in the box
+    far = scene.free_space_gain(np.linalg.norm(scene.BOX))
+    check("power control cap never binds (farthest pair) [dB margin > 0]",
+          float(scene.TX_MAX_DBM - scene.w_to_dbm(n_w * 10 ** 3 / far) > 0), 1.0, 0)
+    jsr = scene.received_jsr(g[:, 1:], 20.0, 3, n_w * 1e3)
+    back = jsr * n_w * 1e3 * 3 / g[:, 1:4]
+    check("received_jsr inverts to the budget (equal split)",
+          float(np.abs(scene.w_to_dbm(back) - 20.0).max()), 0.0, 1e-6)
+
+
+def test_channel(L):
+    """
+    The Sionna one-path channel: an integer delay is an exact shift; a fractional
+    delay matches an independent FFT delay of the band-limited waveform; every
+    jammer lands at exactly its JSR; independent jammers add in power.
+    """
+    print("\n9. Channel: Sionna cir_to_time_channel + ApplyTimeChannel")
+    F, N = 64, scene.N_SYM
+    x = attacks.pulsed_tx(L, F, N, 1.0)
+    act = L.active(N)
+    zero = torch.zeros(F, device=L.device)
+    ref = channel.receive(L, x, 0.0, zero, zero)
+    y3 = channel.receive(L, x, 0.0, zero + 3, zero)
+    rel = ((y3[:, act.start + 3:act.stop] - ref[:, act.start:act.stop - 3]).abs().pow(2).mean()
+           / ref[:, act].abs().pow(2).mean()).sqrt()
+    check("integer delay 3 == 3-sample shift (relative RMS error)", float(rel), 0.0, 5e-3,
+          note="each output is re-scaled over its own window")
+    delta = 2.37
+    yd = channel.receive(L, x, 0.0, zero + delta, zero)
+    X = torch.fft.fft(x.to(torch.complex128), dim=-1)
+    f = torch.fft.fftfreq(x.shape[-1], device=L.device).double()
+    xf = torch.fft.ifft(X * torch.exp(-2j * math.pi * f * delta), dim=-1)
+    xf = xf[:, channel.PAD:channel.PAD + ref.shape[-1]]
+    xf = jammers.scale_to_jsr(xf.to(torch.complex64), L, 0.0)
+    rel = ((yd[:, act] - xf[:, act]).abs().pow(2).mean() / xf[:, act].abs().pow(2).mean()).sqrt()
+    check("fractional delay 2.37 == FFT delay (relative RMS error)", float(rel), 0.0, 0.01)
+    for jsr_db in (-17.0, -3.0, 6.0):
+        delay, phase = channel.async_draw(L, F)
+        j = channel.receive(L, x, jsr_db, delay, phase)
+        p = 10 * math.log10(float(j[:, act].abs().pow(2).mean(-1).max()) / L.p_s)
+        q = 10 * math.log10(float(j[:, act].abs().pow(2).mean(-1).min()) / L.p_s)
+        check(f"JSR {jsr_db:+.0f} dB exact per frame (worst frame, dB)",
+              max(abs(p - jsr_db), abs(q - jsr_db)), 0.0, 0.01)
+    bits, sym, _ = L.modulate(1024, N)
+    jsrs = [-3.0, -6.0, -10.0]
+    j = attacks.jammer_at_rx(L, dict(name="pulsed", p=1.0), sym, jsrs)
+    tot = 10 * math.log10(float(j[:, act].abs().pow(2).mean()) / L.p_s)
+    want = 10 * math.log10(sum(10 ** (v / 10) for v in jsrs))
+    check("3 async jammers add in power (dB)", tot, want, 0.05)
+
+
+def test_attacks_vs_references(L):
+    """
+    Noise against its closed form; async matched QPSK against step 1's
+    jammers.optimal(async); the pulsed duty cycle; the omniscient genie's exact
+    BER and its budget; and the two SIMPLIFICATIONS the model rests on.
+    """
+    print("\n10. Attacks vs references, and the simplifications")
+    snr, N = lk.SNR_DB, scene.N_SYM
+    for jsr_db in (0.0, 3.0):
+        out = _batches(L, 4096, dict(name="noise"), [jsr_db], snr)
+        e, b, _, _ = attacks.error_counts(out)
+        want = float(L.ber_noise_jammer(jsr_db, snr, band="full"))
+        check(f"noise JSR {jsr_db:+.0f} dB: BER vs closed form", e / b, want, mc_tol(want, b))
+    # async matched QPSK with INTEGER offsets == step 1's optimal(async), same law
+    for jsr_db in (-4.0, 0.0):
+        ours = []
+        for _ in range(2):
+            bits, sym, x = L.modulate(2048, N)
+            r = L.awgn(x, L.noise_var(snr))
+            delay = torch.randint(0, L.sps, (2048,), device=L.device).float()
+            _, phase = channel.async_draw(L, 2048)
+            r = r + channel.receive(L, attacks.pulsed_tx(L, 2048, N, 1.0), jsr_db, delay, phase)
+            ours.append(dict(bits=bits, bits_hat=L.decide(L.matched_filter(r, N))))
+        ours = {k: torch.cat([o[k] for o in ours]) for k in ours[0]}
+        ref = []
+        for _ in range(2):
+            bits, sym, x = L.modulate(2048, N)
+            r = L.awgn(x, L.noise_var(snr)) + jammers.make("optimal", jsr_db, sync="async")(L, 2048, N)
+            ref.append(dict(bits=bits, bits_hat=L.decide(L.matched_filter(r, N))))
+        ref = {k: torch.cat([o[k] for o in ref]) for k in ref[0]}
+        _same_ber(f"pulsed(1) integer-async == step-1 optimal(async), JSR {jsr_db:+.0f} dB",
+                  ours, ref)
+    # duty cycle: matched-filter the undelayed pulsed waveform at the symbol instants
+    for p in (0.5, 0.1):
+        x = attacks.pulsed_tx(L, 512, N, p)[:, channel.PAD:channel.PAD + L.waveform_length(N)]
+        z = L.matched_filter(x, N)
+        on = float((z.abs() > 0.5 / math.sqrt(p)).double().mean())
+        check(f"pulsed(p={p}) realised ON fraction", on, p, 4 * math.sqrt(p * (1 - p) / z.numel()))
+    # omniscient: exact BER = floor(delta N)/N, never over budget
+    act = L.active(N)
+    for eta, jsr_db in ((1.0, 10 * math.log10(4.0)), (1.0, 0.0), (0.1, -3.0)):
+        out = _batches(L, 1024, dict(name="omniscient", eta=eta), jsr_db, snr)
+        e, b, _, _ = attacks.error_counts(out)
+        delta = min(1.0, 10 ** (jsr_db / 10) / (1 + eta) ** 2)
+        want = math.floor(delta * N) / N
+        check(f"omniscient(eta={eta}) JSR {jsr_db:+.1f} dB: BER == floor(delta N)/N", e / b, want,
+              2e-3)
+        bits, sym, _ = L.modulate(256, N)
+        d = attacks.omniscient_rx(L, sym, jsr_db, eta)
+        used = float(d[:, act].abs().pow(2).mean()) / L.p_s
+        check(f"omniscient(eta={eta}) JSR {jsr_db:+.1f} dB spends <= budget (ratio)",
+              float(used <= 10 ** (jsr_db / 10) * 1.02), 1.0, 0)
+    # SIMPLIFICATION 1: a geometric delay and carrier phase on top of the async draw
+    # change nothing (law-invariance). 17.3 samples ~ 650 m of extra path.
+    F = 4096
+    outs = {}
+    for tag, extra_delay, extra_phase in (("async only", 0.0, 0.0), ("async + geometry", 17.3, 1.1)):
+        bits, sym, x = L.modulate(F, N)
+        r = L.awgn(x, L.noise_var(snr))
+        delay, phase = channel.async_draw(L, F)
+        r = r + channel.receive(L, attacks.pulsed_tx(L, F, N, 1.0), -3.0, delay + extra_delay,
+                                phase + extra_phase, l_min=-32, l_max=64)
+        outs[tag] = dict(bits=bits, bits_hat=L.decide(L.matched_filter(r, N)), r=r)
+    _same_ber("geometric delay/phase on vs off: same BER (pulsed(1), -3 dB)",
+              outs["async + geometry"], outs["async only"])
+    for name, fn in (("power", detectors.power), ("kurtosis", detectors.kurtosis)):
+        a_, b_ = fn(outs["async + geometry"]["r"]), fn(outs["async only"]["r"])
+        tol = 4 * math.sqrt(a_.var() / F + b_.var() / F)
+        check(f"geometric delay/phase on vs off: same mean {name} statistic",
+              float(a_.mean() - b_.mean()), 0.0, float(tol))
+    # SIMPLIFICATION 2: K white-noise jammers == one at the total JSR
+    two = _batches(L, 4096, dict(name="noise"), [-3.0, -6.0], snr)
+    one = _batches(L, 4096, dict(name="noise"), [10 * math.log10(10 ** -0.3 + 10 ** -0.6)], snr)
+    _same_ber("2 noise jammers == 1 at the total JSR: BER", two, one)
+
+
+def test_detectors(L):
+    """
+    Every detector honours its false-alarm rate on fresh clean frames; the
+    omniscient flip is invisible to power and kurtosis; and on the noise jammer
+    the likelihood-ratio test is at least as good as every other detector.
+    """
+    print("\n11. Detectors: calibration, invisibility of the flip, LRT optimality")
+    snr, N = lk.SNR_DB, scene.N_SYM
+    n0 = L.noise_var(snr)
+    n_cal, n_test = 16384, 16384
+
+    def stats(spec, jsr, n):
+        out = _batches(L, n, spec, jsr, snr)
+        return detectors.statistics(out["r"], out["z"])
+
+    cal = stats(None, None, n_cal)
+    test = stats(None, None, n_test)
+    pm, km = float(cal["power"].mean()), float(cal["kurtosis"].mean())
+    stat = {
+        "power (one-sided)": lambda s: s["power"],
+        "power (two-sided)": lambda s: detectors.two_sided(s["power"], pm),
+        "kurtosis (two-sided)": lambda s: detectors.two_sided(s["kurtosis"], km),
+    }
+    thr = {}
+    for a in detectors.ALPHAS:
+        for name, fn in stat.items():
+            thr[(name, a)] = detectors.calibrate(fn(cal), a)
+            far = detectors.p_detect(fn(test), thr[(name, a)])
+            check(f"{name}: realised FAR at alpha={a}", far, a, 4 * math.sqrt(a * (1 - a) / n_test))
+    flip = stats(dict(name="omniscient", eta=1.0), 10 * math.log10(4.0), 8192)
+    for name in ("power (two-sided)", "kurtosis (two-sided)"):
+        p = detectors.p_detect(stat[name](flip), thr[(name, 0.05)])
+        check(f"omniscient flip (BER 1) is invisible to {name}: P(det) == FAR", p, 0.05,
+              4 * math.sqrt(0.05 * 0.95 / 8192))
+    for jsr_db in (-45.0, -35.0, -20.0):
+        jam = stats(dict(name="noise"), [jsr_db], 4096)
+        jsr = 10 ** (jsr_db / 10)
+        llr_cal = detectors.lrt_noise(cal["lrt"], n0, jsr, L.p_s)
+        llr_jam = detectors.lrt_noise(jam["lrt"], n0, jsr, L.p_s)
+        p_lrt = detectors.p_detect(llr_jam, detectors.calibrate(llr_cal, 0.05))
+        others = {name: detectors.p_detect(fn(jam), thr[(name, 0.05)]) for name, fn in stat.items()}
+        best = max(others.values())
+        if VERBOSE:
+            print(f"      JSR {jsr_db:+.0f} dB: P_lrt {p_lrt:.4f}  " +
+                  "  ".join(f"{k} {v:.4f}" for k, v in others.items()))
+        check(f"noise JSR {jsr_db:+.0f} dB: LRT >= best other detector (P_lrt - best)",
+              float(p_lrt - best >= -4 * math.sqrt(0.25 / 4096)), 1.0, 0)
+    far_lrt = detectors.p_detect(detectors.lrt_noise(test["lrt"], n0, 10 ** -4.5, L.p_s),
+                                 detectors.calibrate(detectors.lrt_noise(cal["lrt"], n0, 10 ** -4.5,
+                                                                         L.p_s), 0.05))
+    check("LRT: realised FAR at alpha=0.05", far_lrt, 0.05, 4 * math.sqrt(0.05 * 0.95 / n_test))
+
+
+def test_spectrogram_cnn(L):
+    """Only once train_spectrogram_cnn.py has run: FAR on fresh clean frames, and it learned."""
+    import os
+    path = os.path.join(scene.ART, "detector_spec.pt")
+    print("\n12. Spectrogram CNN (Li et al., retrained)")
+    if not os.path.exists(path):
+        print("  [SKIP] no checkpoint yet (artifacts/cgan/baselines/detector_spec.pt) -- "
+              "run train_spectrogram_cnn.py, then re-run verify")
+        return
+    net, sc, ckpt = detectors.load_cnn(path, L.device)
+    snr, n = lk.SNR_DB, 8192
+    clean = _batches(L, n, None, None, snr)
+    s = detectors.cnn_statistic(net, clean["r"], sc)
+    for a in detectors.ALPHAS:
+        far = detectors.p_detect(s, ckpt["thresholds"]["cnn"][str(a)])
+        check(f"spec_cnn: realised FAR at alpha={a} (fresh clean)", far, a,
+              4 * math.sqrt(a * (1 - a) / n))
+    jam = _batches(L, 1024, dict(name="barrage"), [10.0], snr)
+    p = detectors.p_detect(detectors.cnn_statistic(net, jam["r"], sc), ckpt["thresholds"]["cnn"]["0.05"])
+    check("spec_cnn detects barrage at +10 dB (P(det) > 0.5)", float(p > 0.5), 1.0, 0,
+          note=f"P(det) = {p:.4f}")
+
+
+def test_baselines():
+    L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+    test_scene()
+    test_channel(L)
+    test_attacks_vs_references(L)
+    test_detectors(L)
+    test_spectrogram_cnn(L)
+
+
 def main():
     global VERBOSE
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", action="store_true")
-    VERBOSE = ap.parse_args().v
+    ap.add_argument("--baselines-only", action="store_true",
+                    help="run only sections 8-12 (scene, channel, attacks, detectors, CNN)")
+    args = ap.parse_args()
+    VERBOSE = args.v
 
     device = lk.setup(seed=1234)
     print(f"device: {device}")
-    for sps, pulse in [(8, "rrc0.35"), (4, "rect")]:
-        L = lk.Link(sps=sps, pulse=pulse)
-        if VERBOSE:
-            print(f"\n[{pulse}, sps={sps}] filter length {L.filt.length}, delay {L.delay}, "
-                  f"c0 {L.c0:.6f}, kappa(inband) {L.kappa('inband'):.4f}")
-        test_waveform(L)
-        test_clean_vs_theory(L)
-        test_noise_jammer_vs_closed_form(L)
-        test_jsr_is_exact(L)
-        test_optimal_geometry(L)
-        test_perfect_generator(L)
-        test_normalisation(L)
-    test_models()
+    if not args.baselines_only:
+        for sps, pulse in [(8, "rrc0.35"), (4, "rect")]:
+            L = lk.Link(sps=sps, pulse=pulse)
+            if VERBOSE:
+                print(f"\n[{pulse}, sps={sps}] filter length {L.filt.length}, delay {L.delay}, "
+                      f"c0 {L.c0:.6f}, kappa(inband) {L.kappa('inband'):.4f}")
+            test_waveform(L)
+            test_clean_vs_theory(L)
+            test_noise_jammer_vs_closed_form(L)
+            test_jsr_is_exact(L)
+            test_optimal_geometry(L)
+            test_perfect_generator(L)
+            test_normalisation(L)
+        test_models()
+    test_baselines()
 
     print("\n" + ("ALL CHECKS PASS" if not FAILURES else
                   f"{len(FAILURES)} FAILED:\n  " + "\n  ".join(FAILURES)))

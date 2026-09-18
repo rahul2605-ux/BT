@@ -1,0 +1,6 @@
+node: tikgpu05.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+device: cuda:0
+
+8. Scene: Sionna RT path gains, noise floor, power control
+  [PASS] min pairwise separation >= 50 m (12 drops)                 got=1           want=1           tol=0
+  [PASS] all nodes inside the box                                   got=1           want=1           tol=0

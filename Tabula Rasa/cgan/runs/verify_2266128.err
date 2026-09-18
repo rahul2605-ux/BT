@@ -1,0 +1,2 @@
+/home/rrahman/BT/Tabula Rasa/cgan/channel.py:50: UserWarning: ComplexHalf support is experimental and many operators don't support it yet. (Triggered internally at /pytorch/aten/src/ATen/EmptyTensor.cpp:57.)
+  a = torch.exp(1j * phase.double()).to(torch.complex32).reshape(F, 1, 1, 1, 1, 1, 1)

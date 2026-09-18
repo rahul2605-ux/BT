@@ -168,10 +168,17 @@ per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, s
 | `cgan/link.py` | Sionna QPSK waveform link (upsample → pulse → AWGN + jammer → matched filter → sign decision), closed-form Gaussian-jammer BER, `measure_ber` with an error stopping rule, paper-curve helpers |
 | `cgan/jammers.py` | `noise` (full / inband), `optimal` (locked / random_phase / async), exact JSR scaling |
 | `cgan/models.py`, `cgan/losses.py` | C3: generator + discriminator (score + auxiliary-classifier heads), `PeakScaler`; the seven loss terms |
-| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (121 checks incl. a perfect-generator check, job 2260603; 94 at C4) |
+| `cgan/verify.py` + `submit_verify.sh` | the test suite — **run first**; exit 0 = all pass (121 link checks + 43 baseline checks, `--baselines-only` to run just the latter; job 2266130) |
 | `cgan/calibrate.py` + `submit_calibrate.sh` | C2: fit the unstated link parameters to Fig. 6 → `artifacts/cgan/calibration.json`, `c2_calibration.png` |
 | `cgan/train_cgan.py` + `submit_train.sh` | C5: train the CGAN → `artifacts/cgan/runNNN_G.pt`, `_losses.{json,png}` |
 | `cgan/evaluate.py` + `submit_eval.sh` | C6: BER vs JSR (noise/optimal/gan) overlaid on Fig. 6 → `artifacts/cgan/runNNN_ber_vs_jsr.{json,png}` |
+| **`cgan/scene.py`** | baselines (§3.3d): 3-D drops, Sionna RT LOS path gains (Mitsuba **LLVM** variant — no OptiX on the cluster), `open_loop_uplink_power_control` to 30 dB SNR, received JSR; `load_test_drops()` caches `artifacts/cgan/baselines/test_drops.json` |
+| **`cgan/channel.py`** | per-jammer async delay/phase via `cir_to_time_channel` + `ApplyTimeChannel`; `torch.complex64` only (half-precision `complex32` is wrong) |
+| **`cgan/attacks.py`** | `noise` · `pulsed_qpsk(p)` · `omniscient(η)` · Li et al.'s 4 jammer types; `frames()` returns one received batch; hard power projection |
+| **`cgan/detectors.py`** | power (1/2-sided), kurtosis, exact noise LRT, fixed-scale spectrogram + EfficientNet-B0; `calibrate`/`p_detect` ported from `m0/detectors.py` |
+| **`cgan/train_spectrogram_cnn.py`** + submit | retrain Li et al. CNN + calibrate every detector → `artifacts/cgan/baselines/{detector_spec.pt, thresholds.json, clean_lrt_parts.pt, spec_cnn_training.json}` |
+| **`cgan/baselines.py`** + `submit_baselines.sh` | the sweep: `--array=1` (K=1 universal curve + test drops), `--array=2-4` (K>1 over 50 drops), `--smoke`; → `artifacts/cgan/baselines/run001/sweep_K{1..4}.json` |
+| **`cgan/baselines_figures.py`** + submit | 9 figures + `summary.json` from the sweeps |
 
 **Live code (sim08 ablations, `sim08_ablation/`):** imports `simulation08/` and `simulation06/`
 read-only; every entry point is an sbatch script (Sionna).
@@ -899,8 +906,22 @@ a loss.
 
 ## 3.1 Status line
 
-**STATE 2026-09-17. Two threads are live; the coordination plan below is paused, not superseded, and
-was not re-validated.**
+**STATE 2026-09-17 (late). The classical baselines are BUILT; the coordination plan below is paused,
+not superseded, and was not re-validated.**
+
+**0 · Classical baselines on the 3-D waveform link — DONE ([§3.3d](#33d-classical-baselines-on-the-3-d-waveform-link--the-pre-gan-envelope-2026-09-17)).**
+The user directed the GAN1/2/3 build and, as its preparation, a full classical baseline set: every
+attack (barrage · pulsed-QPSK · genie) × four separate detectors (power 1/2-sided · kurtosis ·
+spectrogram-CNN · exact noise NP test) × K = 1–4 jammers, on a new 3-D geometry (Sionna RT, LOS,
+TX power-controlled to 30 dB SNR; **no synchronisation modelled** — decided this session, checked in
+`verify.py`). New flat modules in `cgan/` (`scene`, `channel`, `attacks`, `detectors`, `baselines`,
+`train_spectrogram_cnn`, `baselines_figures`); step-1 files untouched. **Result: the M0/E1
+impossibility reproduced at waveform level** — every *realisable* attack has confirmed stealthy BER 0 at
+K = 1–4; only the genie flip (BER 1, invisible to all) and push (invisible to 1-sided power + CNN, caught
+by 2-sided power + kurtosis) reach the stealth region; uncoordinated multi-jammer buys nothing; the NP
+test flags noise ~35 dB below where it does damage; Li et al. CNN reproduced (99.94 % at +10 dB). Report
+page (9 figures): <https://claude.ai/artifact/YEEnZ7rkkNmcWuLJJe3yoy> (private until shared). **Q8 is
+resolved (kurtosis).** Not gated on the supervisor — it is the shared spine both #0b options need.
 
 **1 · sim08 ablations — DONE ([§3.3c](#33c-sim08-ablations--noise-jammer-power-number-of-jammers-2026-09-16)).**
 Agreed with the supervisor (user, 2026-09-16) and run from `sim08_ablation/`, which imports the frozen
@@ -929,10 +950,14 @@ allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward
 gated tail ("only if it bites"). **Not folded into §2.10/§4.2 as settled until he replies (user
 instruction).**
 
-**Single next action: send the direction email (options A/B, §4.1 #0b) and wait for his reply** — it
-gates whether the build stages toward the characterisation study (B) or the coordination result (A),
-and thus the §4.2 Q8 detector choice. Once he answers, start the shared baselines (§3.4 D0), which both
-options need. Independently, the §3.3c report page is ready to send to him.
+**Single next action: GAN1 — put the reproduced generator (`artifacts/cgan/run001_G.pt`, async) on the
+§3.3d BER–P(det) plane** as a new attack in `cgan/attacks.py` / `baselines.py`, measured against the same
+four detectors. It will land on the floor alongside noise and pulsed QPSK (no detector-aware training
+yet), which is the honest "detectability of a reproduced GAN jammer" result and the point from which GAN2
+(a detector-aware training term) must earn its stealth. The recipe caveat is §4.2 Q11. **Still owed to the
+supervisor in parallel:** the direction email (options A/B, §4.1 #0b) — the baselines do not need it, but
+the *framing* of the eventual GAN result (characterisation vs coordination) does. The §3.3c and §3.3d
+report pages are both ready to send him.
 
 **Supervisor contact.** The sim08 ablation axes were discussed with him before 2026-09-16. Whether the
 §4.1 #0 pivot email was sent, and whether he knows about the CGAN track, is not recorded after
@@ -1274,6 +1299,64 @@ held random-phase jammers only, perfect-CSI ZF, the jammer sits on the victim's 
 detector is frozen (no retraining round), and the multi-jammer arm is **uncoordinated** — it is not
 G6/E3.
 
+## 3.3d Classical baselines on the 3-D waveform link — the pre-GAN envelope (2026-09-17)
+
+**User-directed build (this session), preparation for the GAN1/2/3 track (§3.4).** New flat modules in
+`cgan/` (`scene.py`, `channel.py`, `attacks.py`, `detectors.py`, `baselines.py`, `train_spectrogram_cnn.py`,
+`baselines_figures.py`) extend the step-1 link into a **3-D geometry** and measure every classical attack
+against **four separate detectors** for K = 1–4 jammers, stored as the baseline set the GANs are judged
+against. Step-1 files untouched (run001's evaluation still reproduces). **Not gated on the supervisor** —
+it is the shared spine both option A and B need (§4.1 #0b); nothing in §2.10/§4.2's *direction* status is
+folded in as settled.
+
+**Model (settled with the user 2026-09-17).** LOS free-space channel from **Sionna RT** (empty scene,
+`max_depth=0`; Mitsuba **LLVM** variant — the cluster has no OptiX, job 2266119); nodes uniform in a
+1 km × 1 km × 150 m box, ≥ 50 m apart, nested drops so K = 1–4 share placements; QPSK sps 8 RRC 0.35,
+f_c 2.4 GHz, 1 MBd, NF 7 dB; **TX power-controlled to SNR 30 dB at R** (`sionna.sys`), so the clean
+received law is identical in every drop → one detector calibration serves all geometries. **No
+synchronisation is modelled** (decision this session): a jammer's timing is computable from positions but
+its carrier phase is not (λ/2π ≈ 2 cm), and async is not weaker where it matters (§3.3b), so every
+realisable jammer is asynchronous and only the genie ceiling is synced. Two simplifications are **checked
+in `verify.py`**, not assumed: geometric delay/phase on-vs-off gives the same BER and P(det); a single
+jammer depends on received JSR alone.
+
+**Detectors (four, separate, never OR-combined; each at its own clean FAR α):** one- and two-sided
+**power**, **kurtosis**, the **Li et al. spectrogram CNN** (EfficientNet-B0, retrained), and the exact
+**Neyman–Pearson test for a white-Gaussian jammer** (the optimality ceiling, noise rows only). Q8 is
+thereby **resolved: kurtosis** is the statistical detector (§4.2 Q8).
+
+**Attacks:** `noise` (barrage) · `pulsed_qpsk(p)` p ∈ {1, .5, .25, .1} (p = 1 is Zhou's "optimal"; p < 1
+is Amuru's pulsed family) · `omniscient(η)` η ∈ {.1, 1} (the genie ceiling; η = 1 is the symbol flip).
+
+**Result — the M0/E1 impossibility, reproduced at waveform level in 3-D against a SOTA detector:**
+- **No realisable attack is both effective and stealthy.** Confirmed stealthy BER (max BER with
+  P(det) ≤ α = 0.05, re-measured on fresh frames) is **0** for noise and every pulsed variant, at
+  K = 1–4. They cross BER 1e-3 only at JSR 0 / −6 / −13 dB, tens of dB after every detector already reads
+  P(det) = 1.
+- **Only the genie reaches the stealth region.** The **omniscient flip** causes BER 1.0 while every
+  detector sits at its 0.05 floor (received law ≡ clean). The **omniscient push** causes BER up to 1.0
+  invisible to one-sided power (P(det) = 0.000, the classical blind spot to power-*reducing* attacks) and
+  to the CNN, but **two-sided power and kurtosis catch it**.
+- **Uncoordinated multi-jammer buys nothing at matched detectability** — stealthy BER stays 0 for
+  K = 1/2/3/4 at equal total power; the BER-vs-budget curves overlap (the m1 trap again, §3.3c #4). This
+  is the baseline any coordination result must beat.
+- **The optimal warden has huge headroom over the deployed CNN**: the NP test flags noise at −35 dB,
+  ~35 dB below where noise does any damage — the measurable deployed-detector-vs-optimal gap (§2.1 item 1).
+- **Li et al. reproduced**: retrained EfficientNet-B0 reaches **99.94 % at JSR +10 dB** (their regime,
+  AUC 0.993); 96 % over a JSR mix down to −20 dB where jamming is below noise. **A finding for A.4:** the
+  frozen sim05/06 code stretched each spectrogram to its own 2–98 % contrast, which erases any jammer that
+  lifts the whole band evenly — a **fixed** dB scale (Li et al.'s waterfall convention) is required; this
+  is a cleaner explanation of sim05's "barrage undetected" than "spectrograms need OFDM".
+
+Jobs: 2266131 (CNN, 100 epochs) · 2266138 (K = 1) · 2266140 (K = 2–4 array) · 2266150 (figures).
+`verify.py` +43 baseline checks on top of the 121 link checks, all pass (job 2266130). Outputs in
+`artifacts/cgan/baselines/run001/` (9 figures + `summary.json` + `sweep_K{1..4}.json`);
+detector + thresholds in `artifacts/cgan/baselines/`. **Shareable report page (all 9 figures):**
+<https://claude.ai/artifact/YEEnZ7rkkNmcWuLJJe3yoy> (private until shared).
+
+**Next: GAN1** — the plain reproduced GAN (run001_G) placed on this same BER–P(det) plane; it will land
+on the floor with noise/pulsed, which is the honest "detectability of a reproduced GAN jammer" result.
+
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
 ### Exploratory CGAN track — ACTIVE since 2026-09-14
@@ -1306,7 +1389,7 @@ the direction email.** Build order:
 
 | # | Item | Note |
 |---|---|---|
-| **D0** | **All baselines first.** Attackers: `barrage` (noise), `pulsed-QPSK` (the Amuru near-optimum), plus the `optimal`/`counter` reference already in `m0`/`cgan`. Detectors: energy (one/two-sided), kurtosis (§4.2 Q8), **NP-optimal**. Both layers (M0 exact-NP panel; waveform panel). | The envelope must exist before any GAN row — floor (barrage), smart-classical (pulsed-QPSK), ceiling (NP detector + Amuru attacker). |
+| **D0 = "baselines"** | **DONE 2026-09-17 on the 3-D waveform link ([§3.3d](#33d-classical-baselines-on-the-3-d-waveform-link--the-pre-gan-envelope-2026-09-17)).** Attackers barrage / pulsed-QPSK(p) / omniscient(η); detectors power (1/2-sided), kurtosis, spectrogram-CNN, and the exact noise NP test — on the waveform layer, K = 1–4. The user built it as GAN-prep, not gated on the supervisor. *(An M0 exact-NP panel was folded into the waveform NP-on-noise row rather than run separately.)* | The envelope exists: floor (barrage), smart-classical (pulsed-QPSK), genie ceiling (omniscient), optimal warden (NP on noise). Every realisable attack is at the floor. |
 | **D1** | **Plain GAN waveform (run001) vs the baselines** on the BER–P(det) plane. No detector-aware training yet — this measures the *reproduced* jammer's detectability, honestly titled as such. | Uses the existing `artifacts/cgan/run001_G.pt`; recipe caveat §4.2 Q11. |
 | **D2** | **GAN conditioned on stealth** — add a detector-aware term so the generator is stealthy *by design* (the only way "stealthy GAN" is a fair claim). Re-run D1's matrix. | This is the actual step-2; the statistical detector is Q8, scoped to kurtosis for D0/D1. |
 | **D3 (gated)** | **CWT detector** (Zhang & Krunz, torch — no `pywt`, §4.2 Q10) added to the suite — **only if D1/D2 show a frontier worth stressing**. | Adaptation, not a drop-in (Q10). |
@@ -1703,10 +1786,11 @@ Not decided. Candidates to bring to that discussion:
   NP test; needs a stated jammer model;
 - **eigenvalue-based detectors** (max–min eigenvalue ratio) — blind, no noise-power knowledge needed.
 
-**Scoped 2026-09-17 (pending §4.1 #0b).** The characterisation matrix (§3.4 D-series) takes **kurtosis**
-as the statistical detector for D0/D1 (cheap, classical, the sim02–04 detector), adds the **NP-optimal
-test** as the ceiling row, and keeps the spectrogram-CNN / CWT as the learned detectors. The
-cyclostationary and GLRT options stay on this list as later additions if the frontier warrants.
+**RESOLVED 2026-09-17 — kurtosis, and it is built (§3.3d).** The baseline set uses **kurtosis** as the
+statistical detector (cheap, classical, the sim02–04 detector; `cgan/detectors.py`), with one- and
+two-sided **power**, the **spectrogram-CNN** (Li et al., retrained), and the exact **noise NP test** as
+the ceiling row. The cyclostationary and GLRT options stay on this list as later additions if the
+frontier warrants; the CWT-CNN (Zhang & Krunz, Q10) is the gated extension.
 
 The power threshold (detector i) follows M0's convention: larger statistic = more suspicious,
 threshold set from the empirical (1−α) quantile of clean segments (`m0/detectors.py` `calibrate`).
@@ -2060,6 +2144,14 @@ appendix A.5 should use instead of a confusion matrix):
 are indistinguishable from "QPSK at a different SNR", so the CNN only ever learned to detect spectral
 lines and periodic impulses. **Establishes that spectrograms require OFDM for the CNN detector to be
 meaningful** — which is why sim05/06/07's original roadmap was merged into one sim06.
+
+> **Refined 2026-09-17 (§3.3d).** A second cause was found when the Li et al. CNN was rebuilt for the
+> baselines: the frozen sim05/06 code stretched **each** spectrogram to its own 2–98 % contrast, which
+> removes absolute power and so blinds it to any jammer that lifts the whole band evenly (barrage in-band).
+> With a **fixed** dB colour scale anchored to clean data (Li et al.'s own waterfall convention), the
+> retrained CNN detects barrage and even a pulse-shaped QPSK jammer on the *single-carrier* link
+> (`cgan/detectors.py`). So "spectrograms need OFDM" was partly a normalisation artifact; the honest
+> statement is that a per-image stretch, not the single carrier, was hiding the wideband jammers.
 
 **sim06, phase 1** puts the same detector on a 64-subcarrier 802.11a-like OFDM chain (Sionna
 `ResourceGrid`: FFT 64, CP 16, 52 effective SCs (6+5 guard + DC null), Kronecker
