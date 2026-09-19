@@ -118,6 +118,7 @@ on GPU. A real end-to-end run of `simulation08/frontier_channel.py --smoke`
 | gymnasium | 1.3.0 |
 | zuko | 1.6.0 |
 | numpy / scipy / matplotlib | 2.4.6 / 1.17.1 / 3.11.1 |
+| cma (pycma) | 4.5.0 — added 2026-09-19 with `uv pip install` (the venv has no pip) |
 
 ### Two traps that cost real time — do not undo these
 
@@ -164,7 +165,7 @@ uv pip install --python "$VENV/bin/python" \
     --index-url https://pypi.org/simple \
     --extra-index-url https://download.pytorch.org/whl/cu128 \
     --index-strategy unsafe-best-match \
-    "sionna==2.0.1" stable-baselines3 gymnasium matplotlib scipy zuko tensorboard
+    "sionna==2.0.1" stable-baselines3 gymnasium matplotlib scipy zuko tensorboard cma   # cma: cgan/train_shaped.py (2026-09-19)
 ```
 
 System python has **no `pip` and no `ensurepip`** (Debian strips them), so `uv`

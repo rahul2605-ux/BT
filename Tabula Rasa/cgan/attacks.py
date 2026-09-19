@@ -14,6 +14,13 @@ Baselines -- the attacks, and one received frame at the victim.
                   delta = min(1, JSR/(1+e)^2) of the victim's         definition)
                   symbols, pulse-shaped on the victim's own grid
 
+    shaped(theta) D2a, the learned control tier (README §3.4): white   async
+                  Gaussian noise shaped by 32 log-PSD gains over the
+                  simulated band and a periodic 16-symbol envelope of
+                  log-power gains (own symbol clock, random offset per
+                  frame). theta = 0 is the barrage jammer. Optimised
+                  black-box by train_shaped.py.
+
 omniscient(1) flips the attacked symbols, so R receives -s: still i.i.d.
 uniform QPSK, i.e. the clean law exactly -- undetectable by ANY test, BER =
 delta. omniscient(0.1) pushes each attacked symbol just past both decision
@@ -44,6 +51,9 @@ ATTACKS = ["noise", "pulsed", "omniscient"]
 PULSED_P = [1.0, 0.5, 0.25, 0.1]
 OMNI_ETA = [0.1, 1.0]
 LI_TYPES = ["barrage", "tone", "pulse_comb", "protocol_aware"]
+SHAPED_BINS = 32            # log-PSD gains, evenly over the simulated band [-fs/2, fs/2)
+SHAPED_PERIOD = 16          # envelope period [symbols of the jammer's own clock]
+SHAPED_DIM = SHAPED_BINS + SHAPED_PERIOD
 COMB_SPACING = 64           # samples between impulses (64 lines over the simulated band)
 PROTOCOL_AWARE_P = 0.25
 
@@ -55,6 +65,8 @@ def spec_name(spec):
         return f"pulsed_p{spec['p']:g}"
     if n == "omniscient":
         return f"omniscient_e{spec['eta']:g}"
+    if n == "shaped":
+        return spec.get("tag", "shaped")
     return n
 
 
@@ -91,6 +103,39 @@ def pulsed_tx(link, n_frames, n_sym, p):
     x = link.filt(link.upsample(sym), padding="full")
     start = extra * link.sps - channel.PAD
     return x[:, start:start + _padded_length(link, n_sym)]
+
+
+def shaped_psd_db(theta, n):
+    """The shaped jammer's power gain [dB] on an n-point FFT grid (fftfreq order)."""
+    theta = torch.as_tensor(theta, dtype=torch.float64)
+    g = theta[:SHAPED_BINS]
+    centres = (torch.arange(SHAPED_BINS, dtype=torch.float64) + 0.5) / SHAPED_BINS - 0.5
+    f = torch.fft.fftfreq(n, dtype=torch.float64)
+    # piecewise-linear in log power between bin centres, flat beyond the outermost two
+    x = ((f - centres[0]) * SHAPED_BINS).clamp(0, SHAPED_BINS - 1)
+    i0 = x.floor().long().clamp(max=SHAPED_BINS - 2)
+    w = x - i0
+    return 10.0 / math.log(10.0) * ((1 - w) * g[i0] + w * g[i0 + 1])
+
+
+def shaped_tx(link, n_frames, n_sym, theta):
+    """
+    White complex Gaussian -> FFT -> x sqrt(PSD gain) -> IFFT (circular: the
+    input is stationary, so there is no edge effect), then x a periodic per-symbol
+    amplitude sqrt(exp(theta_env)) with a random circular offset per frame --
+    the jammer does not know where the victim's frame starts. The absolute level
+    is irrelevant: channel.receive scales every frame to its JSR.
+    """
+    dev = link.device
+    theta = torch.as_tensor(theta, dtype=torch.float64)
+    w = noise_tx(link, n_frames, n_sym)
+    n = w.shape[-1]
+    gain = torch.pow(10.0, shaped_psd_db(theta, n) / 20.0).to(dev)
+    x = torch.fft.ifft(torch.fft.fft(w.to(torch.complex128), dim=-1) * gain, dim=-1)
+    env = torch.exp(0.5 * theta[SHAPED_BINS:]).to(dev)
+    offset = torch.randint(0, SHAPED_PERIOD, (n_frames, 1), device=dev)
+    slot = (torch.arange(n, device=dev) // link.sps + offset) % SHAPED_PERIOD
+    return (x * env[slot]).to(torch.complex64)
 
 
 def li_tx(link, n_frames, n_sym, kind):
@@ -150,6 +195,9 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
         elif name == "pulsed":
             delay, phase = channel.async_draw(link, F)
             j = channel.receive(link, pulsed_tx(link, F, N, spec["p"]), jsr[:, k], delay, phase)
+        elif name == "shaped":
+            delay, phase = channel.async_draw(link, F)
+            j = channel.receive(link, shaped_tx(link, F, N, spec["theta"]), jsr[:, k], delay, phase)
         elif name in LI_TYPES:
             delay, phase = channel.async_draw(link, F)
             if name in ("barrage", "tone"):
@@ -161,20 +209,27 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
     return total
 
 
-def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None):
+def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
     """
     One batch of received frames: the victim's burst of n_sym symbols + AWGN at
     snr_db + the jammers at R. spec None or name 'none' -> clean.
-    Returns dict(bits, bits_hat, r [F, frame length], z [F, N] matched-filter samples).
+    Returns dict(bits, bits_hat, r [F, frame length], z [F, N] matched-filter samples),
+    plus z_nf, the matched-filter samples WITHOUT the AWGN, if noiseless (for
+    expected_ber). The random draws are the same either way.
     """
     from scene import N_SYM
     n_sym = N_SYM if n_sym is None else n_sym
     bits, sym, x = link.modulate(n_frames, n_sym)
     r = link.awgn(x, link.noise_var(snr_db))
+    r_nf = x
     if spec is not None and spec["name"] != "none":
-        r = r + jammer_at_rx(link, spec, sym, jsr_db_k)
+        j = jammer_at_rx(link, spec, sym, jsr_db_k)
+        r, r_nf = r + j, x + j
     z = link.matched_filter(r, n_sym)
-    return dict(bits=bits, bits_hat=link.decide(z), r=r, z=z)
+    out = dict(bits=bits, bits_hat=link.decide(z), r=r, z=z)
+    if noiseless:
+        out["z_nf"] = link.matched_filter(r_nf, n_sym)
+    return out
 
 
 def error_counts(out):
@@ -183,3 +238,23 @@ def error_counts(out):
     F = wrong.shape[0]
     sym_wrong = wrong.reshape(F, -1, 2).any(dim=-1)
     return (int(wrong.sum()), wrong.numel(), int(sym_wrong.sum()), sym_wrong.numel())
+
+
+def expected_ber(out, noise_var, per_frame=False, log=False):
+    """
+    Exact E[BER] over the AWGN, given everything else in the frames (bits, jammer):
+    each bit's error probability is Q(margin / sigma) at the noiseless
+    matched-filter sample, sigma^2 = noise_var / 2 per axis (unit-energy pulse).
+    Needs frames(..., noiseless=True). Float64 via log_ndtr; it underflows to 0
+    only where the Monte-Carlo BER is 0 anyway. A float, or [F] if per_frame.
+    log=True returns log E[BER] (logsumexp; never underflows, same ordering).
+    """
+    z = out["z_nf"].to(torch.complex128)
+    b = out["bits"].reshape(z.shape[0], -1, 2)
+    m = torch.stack([torch.where(b[..., 0] == 0, z.real, -z.real),
+                     torch.where(b[..., 1] == 0, z.imag, -z.imag)], dim=-1)
+    lp = torch.special.log_ndtr(-m / math.sqrt(noise_var / 2.0))
+    if log:
+        return float(torch.logsumexp(lp.flatten(), 0) - math.log(lp.numel()))
+    p = lp.exp()
+    return p.flatten(1).mean(-1) if per_frame else float(p.mean())

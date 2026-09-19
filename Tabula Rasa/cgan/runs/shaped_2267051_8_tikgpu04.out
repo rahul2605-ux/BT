@@ -1,0 +1,14 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 8 = {'target': 'spec_cnn', 'beta': 1.0}
+  spec_cnn beta 1 JSR   -40 dB: 150 gens, fitness -0.05542 (theta=0: -0.07031), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.064 power_two_sided 0.052 kurtosis 0.054 spec_cnn 0.055 lrt_noise 0.382  (339s)
+  spec_cnn beta 1 JSR   -36 dB: 150 gens, fitness -0.02905 (theta=0: -0.1157), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.085 power_two_sided 0.062 kurtosis 0.054 spec_cnn 0.029 lrt_noise 0.940  (356s)
+  spec_cnn beta 1 JSR   -32 dB: 150 gens, fitness -0.03491 (theta=0: -0.2778), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.166 power_two_sided 0.111 kurtosis 0.054 spec_cnn 0.035 lrt_noise 1.000  (356s)
+  spec_cnn beta 1 JSR   -28 dB: 150 gens, fitness -0.05469 (theta=0: -0.8677), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.428 power_two_sided 0.320 kurtosis 0.054 spec_cnn 0.055 lrt_noise 1.000  (356s)
+  spec_cnn beta 1 JSR   -24 dB: 150 gens, fitness -0.08105 (theta=0: -1), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.963 power_two_sided 0.935 kurtosis 0.057 spec_cnn 0.081 lrt_noise 1.000  (356s)
+  spec_cnn beta 1 JSR   -20 dB: 150 gens, fitness -0.09155 (theta=0: -1), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.994 power_two_sided 0.991 kurtosis 0.085 spec_cnn 0.092 lrt_noise 1.000  (356s)
+  spec_cnn beta 1 JSR   -16 dB: 150 gens, fitness -0.2874 (theta=0: -1), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.296 spec_cnn 0.287 lrt_noise 1.000  (356s)
+  spec_cnn beta 1 JSR   -12 dB: 150 gens, fitness -0.6455 (theta=0: -1), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.955 spec_cnn 0.646 lrt_noise 1.000  (359s)
+  spec_cnn beta 1 JSR    -8 dB: 150 gens, fitness -0.9763 (theta=0: -1), BER 2.37e-02 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000  (359s)
+  spec_cnn beta 1 JSR    -4 dB: 150 gens, fitness -0.9394 (theta=0: -1), BER 6.06e-02 (theta=0 4.77e-06), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000  (358s)
+  spec_cnn beta 1 JSR    +0 dB: 150 gens, fitness -0.8416 (theta=0: -0.9976), BER 1.58e-01 (theta=0 2.40e-03), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000  (342s)
+wrote ../artifacts/cgan/learned/run001/task8.json in 3906s

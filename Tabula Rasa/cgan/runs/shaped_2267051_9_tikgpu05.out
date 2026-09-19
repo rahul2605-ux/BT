@@ -1,0 +1,3 @@
+node: tikgpu05.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 9 = {'seed_check': True}
+wrote ../artifacts/cgan/learned/run001/task9.json in 1139s

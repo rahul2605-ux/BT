@@ -1,0 +1,230 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+device: cuda:0
+
+[rrc0.35, sps=8] filter length 257, delay 256, c0 1.000000, kappa(inband) 7.3001
+
+1. Waveform [rrc0.35, sps=8]
+  [PASS] Gray labels: bit0 -> sign I, bit1 -> sign Q (0 -> +)       got=0           want=0           tol=1e-06
+  [PASS] E|s|^2                                                     got=1           want=1           tol=0.005
+  [PASS] mean power per sample == 1/sps                             got=0.125       want=0.125       tol=0.00125
+  [PASS] cascade peak c0                                            got=1           want=1           tol=0.01
+  [PASS] worst-case residual ISI sum_k|c_k|/c0                      got=0.0030401   want=0           tol=0.005
+  [PASS] noiseless loopback BER                                     got=0           want=0           tol=0
+
+2. Clean link vs Q(sqrt(sps*SNR)) [rrc0.35, sps=8]
+  [PASS] BER(SNR=-12 dB)                                            got=0.23918     want=0.23871     tol=0.00117848
+  [PASS] BER(SNR=-9 dB)                                             got=0.15769     want=0.15779     tol=0.00100793
+  [PASS] BER(SNR=-6 dB)                                             got=0.078065    want=0.078158    tol=0.000742412
+
+3. Gaussian jammer vs closed form [rrc0.35, sps=8]
+  [PASS] full   noise BER(JSR=+0 dB)  kappa=1.000                   got=0.0023298   want=0.0023492   tol=0.00013472
+  [PASS] full   noise BER(JSR=+5 dB)  kappa=1.000                   got=0.055798    want=0.055885    tol=0.00063546
+  [PASS] full   noise BER(JSR=+10 dB)  kappa=1.000                  got=0.18514     want=0.18556     tol=0.00107478
+  [PASS] inband noise BER(JSR=-8 dB)  kappa=7.300                   got=0.0042963   want=0.0042892   tol=0.000181509
+  [PASS] inband noise BER(JSR=-5 dB)  kappa=7.300                   got=0.031219    want=0.03136     tol=0.000482407
+  [PASS] inband noise BER(JSR=+0 dB)  kappa=7.300                   got=0.1477      want=0.1476      tol=0.000980745
+
+4. Realised JSR [rrc0.35, sps=8]
+  [PASS] signal power over the active window == 1/sps               got=0.1241      want=0.125       tol=0.0025
+  [PASS] noise {'band': 'full'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] noise {'band': 'full'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] noise {'band': 'full'} length                              got=768         want=768         tol=0
+  [PASS] noise {'band': 'inband'} JSR=-10 dB: max |realised - target| dB got=0           want=0           tol=0.05
+  [PASS] noise {'band': 'inband'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] noise {'band': 'inband'} length                            got=768         want=768         tol=0
+  [PASS] optimal {'sync': 'locked'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'locked'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'locked'} length                          got=768         want=768         tol=0
+  [PASS] optimal {'sync': 'random_phase'} JSR=-10 dB: max |realised - target| dB got=0           want=0           tol=0.05
+  [PASS] optimal {'sync': 'random_phase'} JSR=+3 dB: max |realised - target| dB got=4.7684e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'random_phase'} length                    got=768         want=768         tol=0
+  [PASS] optimal {'sync': 'async'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'async'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'async'} length                           got=768         want=768         tol=0
+  [PASS] gan {'sync': 'locked'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'locked'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'locked'} length                              got=768         want=768         tol=0
+  [PASS] gan {'sync': 'random_phase'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'random_phase'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'random_phase'} length                        got=768         want=768         tol=0
+  [PASS] gan {'sync': 'async'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'async'} JSR=+3 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'async'} length                               got=768         want=768         tol=0
+
+5. Optimal jammer geometry at zero noise [rrc0.35, sps=8]
+  [PASS] locked BER(JSR=-0.5 dB)                                    got=0           want=0           tol=0
+  [PASS] locked BER(JSR=+0.5 dB)                                    got=0.49928     want=0.5         tol=0.00390725
+  [PASS] random_phase BER(JSR=-3.5 dB)                              got=0           want=0           tol=0
+  [PASS] random_phase BER(JSR=+0.0 dB)                              got=0.25131     want=0.25        tol=0.0283861
+  [PASS] random_phase BER(JSR=+3.0 dB)                              got=0.33885     want=0.33312     tol=0.0308094
+  [PASS] random_phase BER(JSR=+6.0 dB)                              got=0.38802     want=0.38469     tol=0.0317703
+
+5b. GAN path with a perfect generator == optimal jammer [rrc0.35, sps=8]
+  [PASS] locked JSR=+0 dB: BER gan(perfect G) - BER optimal         got=-0.033165   want=0           tol=0.0384467   optimal 0.2816
+  [PASS] locked JSR=+3 dB: BER gan(perfect G) - BER optimal         got=-0.0023457  want=0           tol=0.0416228   optimal 0.4998
+  [PASS] async  JSR=+0 dB: BER gan(perfect G) - BER optimal         got=-0.0015854  want=0           tol=0.0353147   optimal 0.2003
+  [PASS] async  JSR=+3 dB: BER gan(perfect G) - BER optimal         got=-0.00028418 want=0           tol=0.0387005   optimal 0.2901
+
+7. Peak normalisation [rrc0.35, sps=8]
+  [PASS] normalize -> max|.| == HEADROOM                            got=0.95        want=0.95        tol=1e-06
+  [PASS] denormalize(normalize(x)) == x                             got=2.9802e-08  want=0           tol=1e-06
+
+[rect, sps=4] filter length 5, delay 3, c0 1.000000, kappa(inband) 2.7500
+
+1. Waveform [rect, sps=4]
+  [PASS] Gray labels: bit0 -> sign I, bit1 -> sign Q (0 -> +)       got=0           want=0           tol=1e-06
+  [PASS] E|s|^2                                                     got=1           want=1           tol=0.005
+  [PASS] mean power per sample == 1/sps                             got=0.25        want=0.25        tol=0.0025
+  [PASS] cascade peak c0                                            got=1           want=1           tol=0.001
+  [PASS] worst-case residual ISI sum_k|c_k|/c0                      got=0           want=0           tol=0.005
+  [PASS] noiseless loopback BER                                     got=0           want=0           tol=0
+
+2. Clean link vs Q(sqrt(sps*SNR)) [rect, sps=4]
+  [PASS] BER(SNR=-12 dB)                                            got=0.30687     want=0.3077      tol=0.00127584
+  [PASS] BER(SNR=-9 dB)                                             got=0.23914     want=0.23897     tol=0.00117892
+  [PASS] BER(SNR=-6 dB)                                             got=0.15824     want=0.15808     tol=0.00100867
+
+3. Gaussian jammer vs closed form [rect, sps=4]
+  [PASS] full   noise BER(JSR=+0 dB)  kappa=1.000                   got=0.022768    want=0.022804    tol=0.000413328
+  [PASS] full   noise BER(JSR=+5 dB)  kappa=1.000                   got=0.13029     want=0.1304      tol=0.000931128
+  [PASS] full   noise BER(JSR=+10 dB)  kappa=1.000                  got=0.26359     want=0.26355     tol=0.00121789
+  [PASS] inband noise BER(JSR=-8 dB)  kappa=2.750                   got=0.0012465   want=0.0012391   tol=9.8171e-05
+  [PASS] inband noise BER(JSR=-5 dB)  kappa=2.750                   got=0.015992    want=0.016038    tol=0.000347988
+  [PASS] inband noise BER(JSR=+0 dB)  kappa=2.750                   got=0.11397     want=0.11394     tol=0.000878644
+
+4. Realised JSR [rect, sps=4]
+  [PASS] signal power over the active window == 1/sps               got=0.24805     want=0.25        tol=0.005
+  [PASS] noise {'band': 'full'} JSR=-10 dB: max |realised - target| dB got=0           want=0           tol=0.05
+  [PASS] noise {'band': 'full'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] noise {'band': 'full'} length                              got=260         want=260         tol=0
+  [PASS] noise {'band': 'inband'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] noise {'band': 'inband'} JSR=+3 dB: max |realised - target| dB got=7.1526e-07  want=0           tol=0.05
+  [PASS] noise {'band': 'inband'} length                            got=260         want=260         tol=0
+  [PASS] optimal {'sync': 'locked'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'locked'} JSR=+3 dB: max |realised - target| dB got=4.7684e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'locked'} length                          got=260         want=260         tol=0
+  [PASS] optimal {'sync': 'random_phase'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'random_phase'} JSR=+3 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'random_phase'} length                    got=260         want=260         tol=0
+  [PASS] optimal {'sync': 'async'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] optimal {'sync': 'async'} JSR=+3 dB: max |realised - target| dB got=1.6689e-06  want=0           tol=0.05
+  [PASS] optimal {'sync': 'async'} length                           got=260         want=260         tol=0
+  [PASS] gan {'sync': 'locked'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'locked'} JSR=+3 dB: max |realised - target| dB got=0           want=0           tol=0.05
+  [PASS] gan {'sync': 'locked'} length                              got=260         want=260         tol=0
+  [PASS] gan {'sync': 'random_phase'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'random_phase'} JSR=+3 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'random_phase'} length                        got=260         want=260         tol=0
+  [PASS] gan {'sync': 'async'} JSR=-10 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'async'} JSR=+3 dB: max |realised - target| dB got=9.5367e-07  want=0           tol=0.05
+  [PASS] gan {'sync': 'async'} length                               got=260         want=260         tol=0
+
+5. Optimal jammer geometry at zero noise [rect, sps=4]
+  [PASS] locked BER(JSR=-0.5 dB)                                    got=0           want=0           tol=0
+  [PASS] locked BER(JSR=+0.5 dB)                                    got=0.49869     want=0.5         tol=0.00390725
+  [PASS] random_phase BER(JSR=-3.5 dB)                              got=0           want=0           tol=0
+  [PASS] random_phase BER(JSR=+0.0 dB)                              got=0.251       want=0.25        tol=0.0283861
+  [PASS] random_phase BER(JSR=+3.0 dB)                              got=0.33717     want=0.33312     tol=0.0308094
+  [PASS] random_phase BER(JSR=+6.0 dB)                              got=0.38755     want=0.38469     tol=0.0317703
+
+5b. GAN path with a perfect generator == optimal jammer [rect, sps=4]
+  [PASS] locked JSR=+0 dB: BER gan(perfect G) - BER optimal         got=-0.024956   want=0           tol=0.0382237   optimal 0.2745
+  [PASS] locked JSR=+3 dB: BER gan(perfect G) - BER optimal         got=-0.00076953 want=0           tol=0.0416228   optimal 0.5001
+  [PASS] async  JSR=+0 dB: BER gan(perfect G) - BER optimal         got=-0.0035205  want=0           tol=0.03262   optimal 0.1506
+  [PASS] async  JSR=+3 dB: BER gan(perfect G) - BER optimal         got=7.1777e-05  want=0           tol=0.0373321   optimal 0.2485
+
+7. Peak normalisation [rect, sps=4]
+  [PASS] normalize -> max|.| == HEADROOM                            got=0.95        want=0.95        tol=1e-06
+  [PASS] denormalize(normalize(x)) == x                             got=0           want=0           tol=1e-06
+
+6. GAN models and losses
+  [PASS] [n_cls=1] G output shape (B,2,seg)                         got=1           want=1           tol=0
+  [PASS] [n_cls=1] G output in [-1,1]                               got=1           want=1           tol=0
+  [PASS] [n_cls=1] D feature length == D_CH*FEAT_LEN                got=32768       want=32768       tol=0
+  [PASS] [n_cls=1] D score shape (B,1)                              got=1           want=1           tol=0
+  [PASS] [n_cls=1] D class logits shape (B,n_cls)                   got=1           want=1           tol=0
+  [PASS] [n_cls=1] classification loss is exactly 0                 got=0           want=0           tol=0
+  [PASS] [n_cls=3] G output shape (B,2,seg)                         got=1           want=1           tol=0
+  [PASS] [n_cls=3] G output in [-1,1]                               got=1           want=1           tol=0
+  [PASS] [n_cls=3] D feature length == D_CH*FEAT_LEN                got=32768       want=32768       tol=0
+  [PASS] [n_cls=3] D score shape (B,1)                              got=1           want=1           tol=0
+  [PASS] [n_cls=3] D class logits shape (B,n_cls)                   got=1           want=1           tol=0
+  [PASS] [n_cls=3] classification loss is finite and > 0            got=1           want=1           tol=0
+  [PASS] STFT loss on identical batches                             got=0           want=0           tol=1e-06
+  [PASS] I/Q loss on identical batches                              got=0           want=0           tol=1e-06
+  [PASS] feature-matching loss on identical features                got=0           want=0           tol=1e-06
+  [PASS] STFT loss > 0 on different batches                         got=1           want=1           tol=0
+  [PASS] gradient penalty is finite and >= 0                        got=1           want=1           tol=0
+
+8. Scene: Sionna RT path gains, noise floor, power control
+  [PASS] min pairwise separation >= 50 m (12 drops)                 got=1           want=1           tol=0
+  [PASS] all nodes inside the box                                   got=1           want=1           tol=0
+  [PASS] RT LOS gain == (lambda/4 pi d)^2, max |dB error|           got=4.6542e-06  want=0           tol=0.01
+  [PASS] RT LOS delay == d/c, max |error| [ns]                      got=0.00039176  want=0           tol=0.01
+  [PASS] noise floor k T B NF [dBm]                                 got=-97.944     want=-97.944     tol=0.05
+  [PASS] power control: realised SNR at R, max |dev from 30 dB|     got=1.0003e-05  want=0           tol=0.05
+  [PASS] power control cap never binds (farthest pair) [dB margin > 0] got=1           want=1           tol=0
+  [PASS] received_jsr inverts to the budget (equal split)           got=0           want=0           tol=1e-06
+
+9. Channel: Sionna cir_to_time_channel + ApplyTimeChannel
+  [PASS] integer delay 3 == 3-sample shift (relative RMS error)     got=0.00071454  want=0           tol=0.005   each output is re-scaled over its own window
+  [PASS] fractional delay 2.37 == FFT delay (relative RMS error)    got=0.0056758   want=0           tol=0.01
+  [PASS] JSR -17 dB exact per frame (worst frame, dB)               got=8.1606e-07  want=0           tol=0.01
+  [PASS] JSR -3 dB exact per frame (worst frame, dB)                got=7.8765e-07  want=0           tol=0.01
+  [PASS] JSR +6 dB exact per frame (worst frame, dB)                got=7.8578e-07  want=0           tol=0.01
+  [PASS] 3 async jammers add in power (dB)                          got=-0.69584    want=-0.69369    tol=0.05
+
+10. Attacks vs references, and the simplifications
+  [PASS] noise JSR +0 dB: BER vs closed form                        got=0.002285    want=0.0023492   tol=0.000190108
+  [PASS] noise JSR +3 dB: BER vs closed form                        got=0.022537    want=0.022649    tol=0.000582182
+  [PASS] pulsed(1) integer-async == step-1 optimal(async), JSR -4 dB got=-0.00016594 want=0           tol=0.00188375
+  [PASS] pulsed(1) integer-async == step-1 optimal(async), JSR +0 dB got=-0.0020218  want=0           tol=0.00377204
+  [PASS] pulsed(p=0.5) realised ON fraction                         got=0.50044     want=0.5         tol=0.0078125
+  [PASS] pulsed(p=0.1) realised ON fraction                         got=0.099564    want=0.1         tol=0.0046875
+  [PASS] omniscient(eta=1.0) JSR +6.0 dB: BER == floor(delta N)/N   got=1           want=1           tol=0.002
+  [PASS] omniscient(eta=1.0) JSR +6.0 dB spends <= budget (ratio)   got=1           want=1           tol=0
+  [PASS] omniscient(eta=1.0) JSR +0.0 dB: BER == floor(delta N)/N   got=0.25        want=0.25        tol=0.002
+  [PASS] omniscient(eta=1.0) JSR +0.0 dB spends <= budget (ratio)   got=1           want=1           tol=0
+  [PASS] omniscient(eta=0.1) JSR -3.0 dB: BER == floor(delta N)/N   got=0.41406     want=0.41406     tol=0.002
+  [PASS] omniscient(eta=0.1) JSR -3.0 dB spends <= budget (ratio)   got=1           want=1           tol=0
+  [PASS] geometric delay/phase on vs off: same BER (pulsed(1), -3 dB) got=0.001214    want=0           tol=0.00295513
+  [PASS] geometric delay/phase on vs off: same mean power statistic got=3.1355e-05  want=0           tol=0.000744472
+  [PASS] geometric delay/phase on vs off: same mean kurtosis statistic got=-0.0017063  want=0           tol=0.00545146
+  [PASS] 2 noise jammers == 1 at the total JSR: BER                 got=4.7684e-06  want=0           tol=0.000326102
+
+11. Detectors: calibration, invisibility of the flip, LRT optimality
+  [PASS] power (one-sided): realised FAR at alpha=0.01              got=0.010437    want=0.01        tol=0.00310934
+  [PASS] power (two-sided): realised FAR at alpha=0.01              got=0.010315    want=0.01        tol=0.00310934
+  [PASS] kurtosis (two-sided): realised FAR at alpha=0.01           got=0.0097656   want=0.01        tol=0.00310934
+  [PASS] power (one-sided): realised FAR at alpha=0.05              got=0.051453    want=0.05        tol=0.00681078
+  [PASS] power (two-sided): realised FAR at alpha=0.05              got=0.050415    want=0.05        tol=0.00681078
+  [PASS] kurtosis (two-sided): realised FAR at alpha=0.05           got=0.049805    want=0.05        tol=0.00681078
+  [PASS] omniscient flip (BER 1) is invisible to power (two-sided): P(det) == FAR got=0.050903    want=0.05        tol=0.0096319
+  [PASS] omniscient flip (BER 1) is invisible to kurtosis (two-sided): P(det) == FAR got=0.047729    want=0.05        tol=0.0096319
+      JSR -45 dB: P_lrt 0.1128  power (one-sided) 0.0574  power (two-sided) 0.0601  kurtosis (two-sided) 0.0522
+  [PASS] noise JSR -45 dB: LRT >= best other detector (P_lrt - best) got=1           want=1           tol=0
+      JSR -35 dB: P_lrt 0.9924  power (one-sided) 0.1108  power (two-sided) 0.1013  kurtosis (two-sided) 0.0527
+  [PASS] noise JSR -35 dB: LRT >= best other detector (P_lrt - best) got=1           want=1           tol=0
+      JSR -20 dB: P_lrt 1.0000  power (one-sided) 0.9802  power (two-sided) 0.9780  kurtosis (two-sided) 0.0752
+  [PASS] noise JSR -20 dB: LRT >= best other detector (P_lrt - best) got=1           want=1           tol=0
+  [PASS] LRT: realised FAR at alpha=0.05                            got=0.051392    want=0.05        tol=0.00681078
+
+12. Spectrogram CNN (Li et al., retrained)
+  [PASS] spec_cnn: realised FAR at alpha=0.01 (fresh clean)         got=0.0084229   want=0.01        tol=0.00439726
+  [PASS] spec_cnn: realised FAR at alpha=0.05 (fresh clean)         got=0.045288    want=0.05        tol=0.0096319
+  [PASS] spec_cnn detects barrage at +10 dB (P(det) > 0.5)          got=1           want=1           tol=0   P(det) = 1.0000
+
+13. Shaped-noise jammer (D2a) and the exact expected BER
+  [PASS] shaped(theta=0) == noise: BER at JSR +0 dB                 got=3.9101e-05  want=0           tol=0.00046773
+  [PASS] shaped(theta=0) == noise: BER at JSR +3 dB                 got=0.00021076  want=0           tol=0.00101039
+  [PASS] shaped(theta=0) == noise: power (one-sided) P(det) at -27 dB got=-0.0056152  want=0           tol=0.0441942   0.547 vs 0.552
+  [PASS] shaped(theta=0) == noise: kurtosis (two-sided) P(det) at -13 dB got=-0.012207   want=0           tol=0.0441942   0.584 vs 0.596
+  [PASS] shaped(theta=0) == noise: spec_cnn P(det) at -30 dB        got=-0.011475   want=0           tol=0.0441942   0.530 vs 0.541
+  [PASS] shaped(random theta) JSR -20 dB exact per frame (worst, dB) got=1.5208e-06  want=0           tol=0.01
+  [PASS] shaped(random theta) JSR +0 dB exact per frame (worst, dB) got=1.0354e-06  want=0           tol=0.01
+  [PASS] shaped: realised PSD == requested, worst of 32 bins (dB)   got=0.054907    want=0           tol=0.2
+  [PASS] E[BER] (exact over AWGN) vs closed form, noise 0 dB        got=0.0023681   want=0.0023492   tol=0.000190108
+  [PASS] E[BER] vs Monte-Carlo BER, same frames, noise 0 dB         got=0.0023681   want=0.0023632   tol=0.000190864
+  [PASS] E[BER] vs Monte-Carlo BER, same frames, in-band shaped -6 dB got=0.011087    want=0.011092    tol=8.23315e-05   BER 1.11e-02
+
+ALL CHECKS PASS

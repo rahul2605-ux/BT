@@ -606,6 +606,12 @@ losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
   **omniscient-attacker** references drawn in. Keep the parametric **BER-vs-P(det) frontier** plot as
   the companion: the dual-axis view is what he wants to read, the frontier view is what supports
   matched-detectability comparisons. **Produce both, for the same runs.**
+- **The frontier is drawn over every budget, not read at α alone** (user, 2026-09-19). For each
+  attack, plot the most BER it reaches while flagged in at most x of frames, x = 0..1, with the FAR
+  as a dotted line and the raw sweep points faint underneath. Quote matched BER at several budgets
+  (0.05 / 0.1 / 0.25 / 0.5), not only the stealthy value at α. Attacks that are all at BER 0 under
+  α are still ordered by where they start to hurt. Implemented in `cgan/shaped_figures.py`
+  `fig_frontier` (§3.3e).
 
 ## 2.8 Settled method decisions
 
@@ -764,6 +770,25 @@ artifact:
    the single-jammer study bites"), and there the generator is incidental — the per-agent signal can be
    Amuru's; the coordination policy is the object with no closed form.
 
+**Learned control tier (D2a) — decided 2026-09-18 (user), run 2026-09-19; results
+[§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19).** A stealth-trained GAN (D2) that beats *fixed* jammers mixes up two
+effects: having a stealth objective at all, and generating raw IQ. The fair control is a structured
+jammer family trained with the **same** objective against the **same** detectors, so GAN vs control
+isolates the hypothesis class. Decided:
+- **Add, do not replace.** The fixed rows stay as the envelope (§2.5: floor, Amuru family, genie, NP).
+- **Shaped Gaussian noise only** (`attacks.shaped`: 32 log-PSD gains + a 16-slot periodic envelope,
+  48 parameters — low-dimensional parameters, within §2.8). A 1–2-parameter family (noise, pulsed(p))
+  would only rediscover the grid, which already optimises it exactly.
+- **Black-box, score-based CMA-ES**: the attacker sees the detector's per-frame scores, never its
+  gradients. Not RL, because a static waveform choice is not a sequential decision problem, and A.5
+  records scalar-reward policy gradients stalling against a CNN. RL stays reserved for D4.
+- **Reward exactly §2.8's**; power by the existing per-frame **equality** projection. A ≤ budget
+  would let a learner jam ~0.7 % of frames at full power, which hides inside the 2σ confirmation
+  tolerance.
+- **Caveat for D2:** the GAN will be trained white-box (gradients through D); this control is
+  black-box. With 48 parameters CMA-ES should reach the family's optimum either way (the seed check
+  agrees, §3.3e), so the control measures the family's best, not the optimiser's.
+
 This reframing **supersedes neither** the step-2 plan below nor option A: it *absorbs* option A's MARL
 as the gated tail and returns stealth as a measured axis. **Nothing folded in as settled until he
 replies (§4.1 #0b).**
@@ -906,8 +931,16 @@ a loss.
 
 ## 3.1 Status line
 
-**STATE 2026-09-17 (late). The classical baselines are BUILT; the coordination plan below is paused,
-not superseded, and was not re-validated.**
+**STATE 2026-09-19. The classical baselines AND the learned control tier (D2a) are BUILT; the
+coordination plan below is paused, not superseded, and was not re-validated.**
+
+**0b · Learned control tier D2a — DONE 2026-09-19 ([§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19)).**
+User decision 2026-09-18: add a *learned* structured jammer as the fair control for the stealth GAN
+(§2.10). Shaped Gaussian noise (48 parameters), CMA-ES, black-box and score-based, one jammer per
+detector, 99 runs. **Result: shaping buys effectiveness, not stealth.**
+- **Effectiveness:** shaping crosses BER 1e-3 **15.9 dB** earlier than white noise.
+- **Stealth:** the CNN is evaded completely up to −20 dB, but only by moving out of the victim's
+  band, where the jammer does nothing. **Stealthy BER stays 0 against every detector.**
 
 **0 · Classical baselines on the 3-D waveform link — DONE ([§3.3d](#33d-classical-baselines-on-the-3-d-waveform-link--the-pre-gan-envelope-2026-09-17)).**
 The user directed the GAN1/2/3 build and, as its preparation, a full classical baseline set: every
@@ -950,14 +983,18 @@ allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward
 gated tail ("only if it bites"). **Not folded into §2.10/§4.2 as settled until he replies (user
 instruction).**
 
-**Single next action: GAN1 — put the reproduced generator (`artifacts/cgan/run001_G.pt`, async) on the
+**Single next action (unchanged by D2a): GAN1 — put the reproduced generator (`artifacts/cgan/run001_G.pt`, async) on the
 §3.3d BER–P(det) plane** as a new attack in `cgan/attacks.py` / `baselines.py`, measured against the same
 four detectors. It will land on the floor alongside noise and pulsed QPSK (no detector-aware training
 yet), which is the honest "detectability of a reproduced GAN jammer" result and the point from which GAN2
 (a detector-aware training term) must earn its stealth. The recipe caveat is §4.2 Q11. **Still owed to the
 supervisor in parallel:** the direction email (options A/B, §4.1 #0b) — the baselines do not need it, but
 the *framing* of the eventual GAN result (characterisation vs coordination) does. The §3.3c and §3.3d
-report pages are both ready to send him.
+report pages are both ready to send him. **For D2, D2a already supplies two things:**
+- a tested stealth objective (`train_shaped.fitness`);
+- a prediction to beat: a stealth-trained generator should also find out-of-band evasion of the CNN,
+  which buys nothing. D2's claim therefore needs BER > 0 at P(det) ≤ α, which the control never
+  reached.
 
 **Supervisor contact.** The sim08 ablation axes were discussed with him before 2026-09-16. Whether the
 §4.1 #0 pivot email was sent, and whether he knows about the CGAN track, is not recorded after
@@ -1357,6 +1394,102 @@ detector + thresholds in `artifacts/cgan/baselines/`. **Shareable report page (a
 **Next: GAN1** — the plain reproduced GAN (run001_G) placed on this same BER–P(det) plane; it will land
 on the floor with noise/pulsed, which is the honest "detectability of a reproduced GAN jammer" result.
 
+## 3.3e Learned shaped-noise control (D2a) — shaping buys effectiveness, not stealth (2026-09-19)
+
+**The user's decision (2026-09-18, reasoning in §2.10):** the control for D2's stealth GAN. The same
+objective, the same detectors, the same link and scene as §3.3d (K = 1), with a structured family
+instead of raw IQ.
+
+**Method.**
+- **Family:** `attacks.shaped(θ)`, θ ∈ ℝ⁴⁸:
+  - white complex Gaussian noise, FFT-shaped by 32 log-PSD gains over the simulated band;
+  - times a periodic 16-symbol envelope of log-power gains, in the jammer's own clock with a random
+    offset per frame (the jammer does not know where the victim's frame starts);
+  - asynchronous through `channel.receive`, scaled to the JSR per frame with equality;
+  - θ = 0 is exactly the barrage jammer (`verify.py` §13).
+- **Optimiser:** CMA-ES (`pycma`) from θ = 0 in `train_shaped.py`. σ₀ = 1 in log-power units,
+  150 generations, 256 frames per evaluation, common random numbers per generation.
+- **Ranking:** exactly §2.8's reward, **E[BER] − β·P̂(det)**:
+  - P̂(det) is the target detector's hard flag rate at its α = 0.05 threshold;
+  - E[BER] is *exact* over the AWGN: Q(margin/σ) at the noiseless matched-filter sample
+    (`attacks.expected_ber`, checked against Monte-Carlo for white and in-band noise).
+- **Tie-break.** With hard P̂(det) alone, the first smoke run (job 2267047) was exactly flat at
+  −20 dB and CMA-ES stopped at generation 1. The CNN flagged every candidate in every frame, and at
+  SNR 30 dB a fixed jammer leaves Q(~76) per bit, which underflows — the A.5 wall again. Ties are
+  therefore broken by the detector's **score** (soft miss rate, weight 1e-6, below the reward's
+  resolution). β = 0 is ranked by log E[BER], the same order without underflow.
+- **Grid:** targets {power 1-sided, power 2-sided, kurtosis, CNN} × β ∈ {0.01, 1}, plus β = 0;
+  JSR −40:4:0 dB. The plan said β ∈ {1, 10}, but BER stays below ~0.05 on this grid, so both would
+  select the same "stealth first" point; 0.01 is the trading value.
+- **Confirmation:** every returned θ is re-measured on 4096 fresh frames against all five detectors,
+  with θ = 0 on the same frames.
+
+**Results** (`artifacts/cgan/learned/run001/`, `summary.json`). Predictions P1–P3 were written down
+before the runs:
+- **Checks pass.** The learned jammer is never worse than white noise (0 violations in 105 runs: 99 + the 6 seed-check runs). A
+  second seed at 3 JSRs × {kurtosis, CNN} agrees in all 6 pairs (largest |ΔP(det)| 0.009).
+- **P3 holds: stealthy BER is 0 for every trained jammer against every detector.** Against the two
+  power detectors no grid point is stealthy at all: at −40 dB they already read 0.06–0.11, above
+  α + 2σ = 0.057, and BER there is 0.
+- **The CNN is evadable, but only where evasion is harmless.**
+  - The CNN-trained jammer holds the CNN at **0.03–0.09 from −40 to −20 dB**; white noise reads 0.87
+    at −28 dB and 1.00 from −24 dB. At −20 dB one-sided power catches it at **1.00**.
+  - It evades by going **out of band**: 0–1 % of its power is in-band at −20 and −16 dB (β = 0.01).
+  - The matched filter rejects out-of-band noise, so BER stays **0** everywhere the CNN is fooled.
+    The first errors (−12 dB, BER 7.9e-3) come with the CNN back at 0.97.
+  - Evading the CNN and hurting the victim live in disjoint parts of the spectrum.
+- **P1 fails as written: one-sided power is not blind to waveform shape.**
+  - Near the false-alarm floor, the power-trained jammer lowers power's P(det) by moving out of band
+    (0 % in-band at −32 dB): 0.146 vs 0.208 (white) at −32 dB, 0.084 vs 0.105 at −36 dB. There is no
+    overlap with the victim, so frame power varies less.
+  - Far above the floor it goes in-band and lowers P(det) by up to 0.19 (−20 dB: 0.79 vs 0.99). A
+    larger cross term widens the spread of frame power. run001 already showed this (pulsed p = 1:
+    0.77 vs noise 0.99 at −20 dB).
+  - Neither effect buys BER at P(det) ≤ α. The 2026-09-18 chat claim that power is
+    "waveform-blind" was wrong in that literal form.
+- **Kurtosis cannot be dodged where the jammer is effective.** Every shaped jammer is invisible to
+  kurtosis up to −20 dB. The first errors (−16 dB) come with kurtosis at 0.2–0.5. Gaussian noise
+  Gaussianises the received amplitude whatever its spectrum, so this family has no way around it
+  (a constant-envelope family was offered and not chosen, §4.4).
+- **P2 exceeded: shaping buys 15.9 dB of effectiveness, not the predicted ≤ 9 dB.**
+  - At β = 0 the jammer crosses BER 1e-3 at **−16.4 dB**, against −0.5 dB for white noise.
+  - The gain is 99–100 % in-band power (up to 9 dB, the sps-8 processing gain) **plus**
+    concentration in time: effective duty 0.06, i.e. all power in one of the 16 slots.
+  - It also crosses ~3.4 dB before fixed pulsed p = 0.1 (−13 dB). But p = 1/16 is not in the fixed
+    grid, so this is not a claim that learning beats Amuru's family.
+- **At looser budgets (user request 2026-09-19: compare at every budget, not only at α).**
+  `fig1_frontier.png` plots, per detector, the most BER each attack reaches while flagged in at most
+  x of frames, for every x from 0 to 1, with the FAR dotted. `summary.json` `matched_ber` gives
+  budgets 0.05 / 0.1 / 0.25 / 0.5.
+  - **Power (either side): no attack causes an error below P(det) ≈ 0.83 (1-sided) / 0.89
+    (2-sided).** At 30 dB SNR errors need the jammer within ~15 dB of the signal, and power flags
+    half the frames from −27 dB.
+  - **CNN:** fixed **pulsed p = 0.1 is the best attack at every budget** (BER from P(det) 0.38;
+    2.6e-3 at 0.5). Gaussian shaped noise does no damage below 0.6–0.97. A structured in-band
+    jammer is less visible to the CNN than any Gaussian shape.
+  - **Kurtosis:** matched QPSK (p = 1) reaches BER 0.4 at P(det) ≈ 0.1, because a strong
+    same-modulation jammer barely changes the amplitude distribution. Shaped β = 0 beats pulsed
+    p = 0.1 below P(det) 0.9 (1.5e-3 at 0.5).
+- **Consequence for D2:** a stealth-trained generator facing the CNN should be expected to find the
+  same out-of-band evasion. "Stealthy GAN" means BER > 0 at P(det)_CNN ≤ α, which this control never
+  reached.
+
+**Jobs:**
+- verify 2267049: 178/178 pass, 11 of them new. 2267046 ran out of memory on an 11 GB 2080 Ti, so
+  `submit_verify.sh` now requires a 24 GB card.
+- smoke 2267047 (flat, stopped at generation 1) → 2267050 (after the tie-break).
+- array 2267051 (10 tasks): power and kurtosis 3–5 min each, CNN 58 and 65 min, seed check 19 min,
+  about 2 GB RAM each.
+- figures 2267090 (final; 2267087 and 2267089 were superseded renders).
+
+**Outputs:**
+- `fig1_frontier.png`: most BER at P(det) ≤ x, for x = 0..1, per detector;
+- `fig2_transfer.png`: trained-against × evaluated-by;
+- `fig3_shapes.png`: learned PSD and envelope, with in-band share and duty;
+- `fig4_convergence.png`;
+- `fig5_ber_vs_jsr.png`;
+- `task{0..9}.json` + `summary.json`.
+
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
 ### Exploratory CGAN track — ACTIVE since 2026-09-14
@@ -1380,17 +1513,24 @@ paused while this runs.
 With no pass/fail bar, hyperparameters are iterated **only** by explicit user decision after seeing
 C6. Each run gets a row in [A.0](#a0-run-index).
 
-### Detector-suite characterisation study — PROPOSED 2026-09-17, gated on §4.1 #0b (option B)
+### Detector-suite characterisation study — PROPOSED 2026-09-17; D0 and D2a BUILT, D1 next
 
-The user's chosen staging (this session). Shared spine for options A and B; MARL and CWT are gated
+The user's chosen staging (2026-09-17). Shared spine for options A and B; MARL and CWT are gated
 "only if it bites". Same conventions as the C-series (run from `cgan/`, sbatch, matched detectability,
-NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **Not started — awaiting
-the direction email.** Build order:
+NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **STATE 2026-09-19:**
+- D0 (baselines) and D2a (learned control) are built. The user directed both as preparation, not gated
+  on the supervisor.
+- **D1 is the next item.**
+- The *framing* of D2 onward still waits on the direction email (§4.1 #0b).
+
+Build order:
 
 | # | Item | Note |
 |---|---|---|
 | **D0 = "baselines"** | **DONE 2026-09-17 on the 3-D waveform link ([§3.3d](#33d-classical-baselines-on-the-3-d-waveform-link--the-pre-gan-envelope-2026-09-17)).** Attackers barrage / pulsed-QPSK(p) / omniscient(η); detectors power (1/2-sided), kurtosis, spectrogram-CNN, and the exact noise NP test — on the waveform layer, K = 1–4. The user built it as GAN-prep, not gated on the supervisor. *(An M0 exact-NP panel was folded into the waveform NP-on-noise row rather than run separately.)* | The envelope exists: floor (barrage), smart-classical (pulsed-QPSK), genie ceiling (omniscient), optimal warden (NP on noise). Every realisable attack is at the floor. |
 | **D1** | **Plain GAN waveform (run001) vs the baselines** on the BER–P(det) plane. No detector-aware training yet — this measures the *reproduced* jammer's detectability, honestly titled as such. | Uses the existing `artifacts/cgan/run001_G.pt`; recipe caveat §4.2 Q11. |
+| **D2a** | **DONE 2026-09-19 ([§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19)).** Learned control tier: shaped-noise jammer (48 parameters), CMA-ES, black-box score-based, one per detector, the same objective D2 will use. User decision 2026-09-18 (§2.10). | Stealthy BER 0 against every detector. The CNN is evaded only out of band, where nothing reaches the victim; the effectiveness gain is 15.9 dB. D2 must beat this, not the fixed rows. |
+| **D2b (later)** | **FAR ablation** (user, 2026-09-19). α = 0.05 *per frame* is arbitrary: at 1 MBd and 128-symbol frames it is about 390 false alarms per second, and a real receiver would run far lower α. Plan: α ∈ {1e-3, 1e-2, 0.05, 0.1}. **Evaluation first:** re-measure the existing fixed and learned jammers, storing per-frame statistics so any α (and the ROC) comes for free; `thresholds.json` holds only α ∈ {0.01, 0.05}, from 20k clean frames, so α = 1e-3 needs ≥ 100k. **Retrain the learned tier only if the ranking changes with α**; its objective uses the α = 0.05 threshold. | Expected: power's "first errors only at P(det) ≥ 0.83" is robust to α, because at −16 dB the mean shift is far above the clean spread. The CNN rows are the ones likely to move. |
 | **D2** | **GAN conditioned on stealth** — add a detector-aware term so the generator is stealthy *by design* (the only way "stealthy GAN" is a fair claim). Re-run D1's matrix. | This is the actual step-2; the statistical detector is Q8, scoped to kurtosis for D0/D1. |
 | **D3 (gated)** | **CWT detector** (Zhang & Krunz, torch — no `pywt`, §4.2 Q10) added to the suite — **only if D1/D2 show a frontier worth stressing**. | Adaptation, not a drop-in (Q10). |
 | **D4 (gated)** | **MARL coordination row** (option A's coherent combining) — **only if the single-jammer study bites**. Power/phase/timing coordination so jammers add at the victim, measured vs Amuru Thm 4 as ceiling; generator incidental (§2.10). | Biggest lift; do not build before D0–D2 land. |
@@ -1903,6 +2043,12 @@ decide with the user.
   not innocuous: a grid-aligned jammer cannot cause any bit error below −3 dB JSR at 30 dB SNR, while a
   time-offset one can. E1's numbers are correct *for a synchronised jammer* and must be quoted with that
   qualifier.
+- **D2a's learned family is Gaussian only** (§3.3e):
+  - it cannot hold kurtosis at the clean value, so "kurtosis catches every effective learned jammer"
+    is a statement about this family, not about all jammers. A constant-envelope (tone/noise)
+    family was offered on 2026-09-18 and not chosen;
+  - the training grid is 4 dB in JSR, at α = 0.05 only, with 256 frames per fitness evaluation;
+  - no grid point below −40 dB, so "no stealthy point against power" means ≥ −40 dB.
 - **The realistic range of inter-jammer delay is unknown to us** (§4.1 #8). RQ1's x-axis is
   therefore currently in arbitrary units — symbol periods, or radians of residual phase error. The
   decay *curve* is meaningful without it, but any sentence of the form "at realistic delays the gain
@@ -1947,6 +2093,7 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 08 | m2-suite | CNN ∨ energy per-sample | **suite ≡ CNN**; residual stealthy region BER 0.065–0.11 | 102319 |
 | 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
 | **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
+| **cgan_learned** | run001 (D2a) | shaped noise (48 params), CMA-ES, black-box score-based, per detector | **stealthy BER 0 against every detector**; CNN evaded to −20 dB only out of band (BER 0); shaping +15.9 dB effectiveness; power not waveform-blind (−0.06 near FAR, −0.19 at −20 dB); §3.3e | 2267049, 2267050, 2267051, 2267090 |
 | **cgan** | run001 | CGAN (Zhou 2025), NS-GAN+GP, weights 1 | **ordering not reproduced**: with one sync model GAN−Optimal −1.30 dB async / −4.47 locked (paper +1.31); Noise−GAN 6.66 / 4.38 dB. The first-reported 4.34 / +1.01 scored GAN locked vs Optimal async (withdrawn); §3.3b | 2259289, 2259409, 2260623 |
 | **cgan** | run002 | CGAN, reference-backed recipe (WGAN-GP, feat 2 / STFT 45) | worse imitation: EVM 0.70, no 1e-3 crossing in grid (BER 3.6e-3 at −10 dB), plateau 0.31; critic gap stalls ≈ 57; §3.3b | 2260624, 2260806 |
 | **sim08_abl** | run001 | noise × power × #jammers on the frozen sim08 suite | **stealthy BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** (×1.4→×109 the floor); detection set by *total* power; more jammers = louder, no matched-detectability gain; suite ≡ CNN (26/4914); §3.3c | 2261123, 2261126, 2261146, 2261173, 2261174 |
@@ -1967,6 +2114,7 @@ attacker. RL form `R = BER − β·D − γ·P − 0.05`; direct-gradient form `
 | 06 jam | CNN | `−log(1−p̂+ε)` | 0.3 (linear warmup) | 0.1 | MAPPO | `train_jammer.py:50,51,321` |
 | 07 | CNN | `−log(1−p̂+ε)` | 0.3 (linear warmup) | 0.05 | MAPPO | `simulation07:68,69,437` |
 | **M0** | NP / CNN / energy | flagged frames, β swept | — | **hard budget, not a term** | — | `attacks.py:23` |
+| **cgan D2a** | power 1/2-sided, kurtosis, CNN (one each) | hard flag rate (+1e-6 score tie-break) | 0 / 0.01 / 1 | **per-frame equality projection, not a term** | CMA-ES, black-box | `cgan/train_shaped.py` `fitness` |
 
 **Two findings only visible in this table**, each recorded where it is used: the **log barrier is the
 mechanism of the untrainability result** ([A.5](#a5-sim06-jammer--06b--07--the-untrainability-result)),
@@ -2692,3 +2840,5 @@ request could never start there; resized to 2.5 GB (measured peak 1.7 GB) it sta
 `--mem` from `sacct MaxRSS`, not by habit** — the 16 GB in older submit scripts blocks scheduling on a
 busy cluster. `slurmstepd: error: TaskProlog failed` with 0 s elapsed is node-side: resubmit the task.
 `NVML … GPU is lost` (artongpu01, 2026-09-15) is a failing GPU: resubmit and exclude that node.
+**`cgan/submit_verify.sh` needs a 24 GB card** (`titan_rtx|geforce_rtx_3090`). Section 10's geometry
+check holds ~9 GB at once and ran out of memory on an 11 GB 2080 Ti (job 2267046, 2026-09-19).

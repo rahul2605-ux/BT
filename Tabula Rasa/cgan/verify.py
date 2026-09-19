@@ -523,6 +523,81 @@ def test_spectrogram_cnn(L):
           note=f"P(det) = {p:.4f}")
 
 
+# ================================================================ D2a (2026-09-19)
+def _frames_nf(L, n, spec, jsr, snr_db, batch=1024):
+    outs = [attacks.frames(L, min(batch, n - i), spec, jsr, snr_db, noiseless=True)
+            for i in range(0, n, batch)]
+    return {k: torch.cat([o[k] for o in outs]) for k in outs[0]}
+
+
+def test_shaped(L):
+    """
+    The learned control tier (train_shaped.py): theta = 0 of the shaped family is
+    the barrage jammer to every detector; any theta lands at exactly its JSR; the
+    FFT shaping realises the PSD it is given; and the exact expected BER the
+    optimiser scores with agrees with the closed form and with Monte-Carlo BER on
+    the same frames, for white and for in-band-concentrated noise.
+    """
+    import os
+    print("\n13. Shaped-noise jammer (D2a) and the exact expected BER")
+    snr, N = lk.SNR_DB, scene.N_SYM
+    n0 = L.noise_var(snr)
+    shaped0 = dict(name="shaped", theta=[0.0] * attacks.SHAPED_DIM)
+    noise = dict(name="noise")
+    for jsr_db in (0.0, 3.0):
+        _same_ber(f"shaped(theta=0) == noise: BER at JSR {jsr_db:+.0f} dB",
+                  _batches(L, 4096, shaped0, [jsr_db], snr), _batches(L, 4096, noise, [jsr_db], snr))
+    cal = _batches(L, 8192, None, None, snr)["r"]
+    km = float(detectors.kurtosis(cal).mean())
+    stat = {"power (one-sided)": detectors.power,
+            "kurtosis (two-sided)": lambda r: detectors.two_sided(detectors.kurtosis(r), km)}
+    at = {"power (one-sided)": -27.0, "kurtosis (two-sided)": -13.0}     # mid-transition (§3.3d)
+    path = os.path.join(scene.ART, "detector_spec.pt")
+    if os.path.exists(path):
+        net, sc, ckpt = detectors.load_cnn(path, L.device)
+        stat["spec_cnn"] = lambda r: detectors.cnn_statistic(net, r, sc)
+        at["spec_cnn"] = -30.0
+    for name, fn in stat.items():
+        thr = detectors.calibrate(fn(cal), 0.05)
+        a = detectors.p_detect(fn(_batches(L, 4096, shaped0, [at[name]], snr)["r"]), thr)
+        b = detectors.p_detect(fn(_batches(L, 4096, noise, [at[name]], snr)["r"]), thr)
+        check(f"shaped(theta=0) == noise: {name} P(det) at {at[name]:+.0f} dB", a - b, 0.0,
+              4 * math.sqrt(2 * 0.25 / 4096), note=f"{a:.3f} vs {b:.3f}")
+    g = torch.Generator().manual_seed(5)
+    theta = (2.0 * torch.randn(attacks.SHAPED_DIM, generator=g, dtype=torch.float64)).tolist()
+    _, sym, _ = L.modulate(256, N)
+    act = L.active(N)
+    for jsr_db in (-20.0, 0.0):
+        j = attacks.jammer_at_rx(L, dict(name="shaped", theta=theta), sym, [jsr_db])
+        pw = 10 * torch.log10(j[:, act].abs().pow(2).mean(-1).double() / L.p_s)
+        check(f"shaped(random theta) JSR {jsr_db:+.0f} dB exact per frame (worst, dB)",
+              float((pw - jsr_db).abs().max()), 0.0, 0.01)
+    th = theta[:attacks.SHAPED_BINS] + [0.0] * attacks.SHAPED_PERIOD
+    x = attacks.shaped_tx(L, 512, N, th).to(torch.complex128)
+    n = x.shape[-1]
+    ratio = torch.fft.fft(x, dim=-1).abs().pow(2).mean(0).cpu() / n \
+        / torch.pow(10.0, attacks.shaped_psd_db(th, n) / 10.0)
+    b = ((torch.fft.fftfreq(n, dtype=torch.float64) + 0.5) * attacks.SHAPED_BINS).floor().long() \
+        .clamp(0, attacks.SHAPED_BINS - 1)
+    per_bin = torch.zeros(attacks.SHAPED_BINS, dtype=torch.float64).index_add_(0, b, ratio) \
+        / torch.bincount(b, minlength=attacks.SHAPED_BINS)
+    check("shaped: realised PSD == requested, worst of 32 bins (dB)",
+          float((10 * torch.log10(per_bin)).abs().max()), 0.0, 0.2)
+    out = _frames_nf(L, 4096, noise, [0.0], snr)
+    e, bits, _, _ = attacks.error_counts(out)
+    eb = attacks.expected_ber(out, n0)
+    want = float(L.ber_noise_jammer(0.0, snr, band="full"))
+    check("E[BER] (exact over AWGN) vs closed form, noise 0 dB", eb, want, mc_tol(want, bits))
+    check("E[BER] vs Monte-Carlo BER, same frames, noise 0 dB", eb, e / bits, mc_tol(eb, bits))
+    centres = (torch.arange(attacks.SHAPED_BINS) + 0.5) / attacks.SHAPED_BINS - 0.5
+    inband = torch.where(centres.abs() < 0.09, 4.0, -4.0).tolist() + [0.0] * attacks.SHAPED_PERIOD
+    out = _frames_nf(L, 4096, dict(name="shaped", theta=inband), [-6.0], snr)
+    fe, fh = attacks.expected_ber(out, n0, per_frame=True), _frame_ber(out)
+    tol = 4 * float((fh - fe).std()) / math.sqrt(fh.numel()) + 1e-6
+    check("E[BER] vs Monte-Carlo BER, same frames, in-band shaped -6 dB", float(fe.mean()),
+          float(fh.mean()), tol, note=f"BER {float(fh.mean()):.2e}")
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -530,6 +605,7 @@ def test_baselines():
     test_attacks_vs_references(L)
     test_detectors(L)
     test_spectrogram_cnn(L)
+    test_shaped(L)
 
 
 def main():
@@ -537,7 +613,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", action="store_true")
     ap.add_argument("--baselines-only", action="store_true",
-                    help="run only sections 8-12 (scene, channel, attacks, detectors, CNN)")
+                    help="run only sections 8-13 (scene, channel, attacks, detectors, CNN, shaped)")
     args = ap.parse_args()
     VERBOSE = args.v
 

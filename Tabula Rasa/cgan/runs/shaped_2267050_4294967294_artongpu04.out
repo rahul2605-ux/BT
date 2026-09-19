@@ -1,0 +1,6 @@
+node: artongpu04.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+smoke: task 0 = {'target': None, 'beta': 0.0}
+  None beta 0 JSR   -20 dB: 20 gens, fitness 1.526e-05 (theta=0: 0), BER 1.53e-05 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.840 power_two_sided 0.887 kurtosis 0.094 spec_cnn 0.699 lrt_noise 1.000  (6s)
+smoke: task 8 = {'target': 'spec_cnn', 'beta': 1.0}
+  spec_cnn beta 1 JSR   -20 dB: 20 gens, fitness -0.1523 (theta=0: -1), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.102 spec_cnn 0.152 lrt_noise 1.000  (18s)
+wrote ../artifacts/cgan/learned/run001/smoke.json in 25s

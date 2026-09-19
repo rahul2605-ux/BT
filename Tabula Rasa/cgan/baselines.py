@@ -69,15 +69,24 @@ class Defender:
             self._lrt_thr[key] = detectors.calibrate(s, alpha)
         return self._lrt_thr[key]
 
-    def statistics(self, r, z, noise_jsr_lin=None):
-        """Per-frame statistics, each already in larger-is-more-suspicious form."""
-        p, k = detectors.power(r), detectors.kurtosis(r)
-        s = dict(power_one_sided=p,
-                 power_two_sided=detectors.two_sided(p, self.thr["power_clean_mean"]),
-                 kurtosis=detectors.two_sided(k, self.thr["kurtosis_clean_mean"]),
-                 spec_cnn=detectors.cnn_statistic(self.net, r, self.scale))
-        raw = dict(power=p, kurtosis=k, cnn=s["spec_cnn"])
-        if noise_jsr_lin is not None:
+    def statistics(self, r, z, noise_jsr_lin=None, dets=None):
+        """
+        Per-frame statistics, each already in larger-is-more-suspicious form. `dets`
+        restricts them to a subset (train_shaped.py scores one detector at a time;
+        the CNN is the only expensive one).
+        """
+        want = set(DETS if dets is None else dets)
+        s, raw = {}, {}
+        if want & {"power_one_sided", "power_two_sided"}:
+            p = raw["power"] = detectors.power(r)
+            s["power_one_sided"] = p
+            s["power_two_sided"] = detectors.two_sided(p, self.thr["power_clean_mean"])
+        if "kurtosis" in want:
+            raw["kurtosis"] = detectors.kurtosis(r)
+            s["kurtosis"] = detectors.two_sided(raw["kurtosis"], self.thr["kurtosis_clean_mean"])
+        if "spec_cnn" in want:
+            s["spec_cnn"] = raw["cnn"] = detectors.cnn_statistic(self.net, r, self.scale)
+        if noise_jsr_lin is not None and "lrt_noise" in want:
             s["lrt_noise"] = detectors.lrt_noise(detectors.lrt_parts(r, z), self.n0, noise_jsr_lin, self.p_s)
         return s, raw
 
@@ -95,7 +104,7 @@ def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512):
     (a float for the omniscient aggregate). Returns a JSON-able dict.
     """
     noise_jsr = None
-    if spec is not None and spec["name"] == "noise":
+    if spec is not None and spec["name"] in ("noise", "shaped"):    # shaped: mismatched, still a valid test
         noise_jsr = float(sum(10 ** (v / 10) for v in jsr_db_k))
     counts = np.zeros(4, dtype=np.int64)
     stats, raws = {}, {}
@@ -125,8 +134,10 @@ def confirm(L, dfd, spec, points, jsr_of, n_confirm, dets, alphas):
     """
     For each detector and alpha, the max-BER point with P(det) <= alpha + 2 sigma,
     re-measured on fresh frames. `points`: list of measured dicts; `jsr_of(i)` the
-    JSR argument that produced point i.
+    JSR argument that produced point i. `spec` is one attack spec, or a function
+    i -> spec when every point is its own jammer (train_shaped.py).
     """
+    spec_of = spec if callable(spec) else (lambda i: spec)
     picks = {}
     for det in dets:
         if det not in points[0]["pdet"]:
@@ -138,7 +149,7 @@ def confirm(L, dfd, spec, points, jsr_of, n_confirm, dets, alphas):
                 picks.setdefault(det, {})[str(a)] = None
                 continue
             i = max(ok, key=lambda j: points[j]["ber"])
-            m = measure(L, dfd, spec, jsr_of(i), n_confirm)
+            m = measure(L, dfd, spec_of(i), jsr_of(i), n_confirm)
             passed = m["pdet"][det][str(a)] <= a + 2 * binom_sigma(a, n_confirm)
             picks.setdefault(det, {})[str(a)] = dict(index=i, sweep_ber=points[i]["ber"],
                                                      sweep_pdet=points[i]["pdet"][det][str(a)],

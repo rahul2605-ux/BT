@@ -1,0 +1,14 @@
+node: artongpu05.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 1 = {'target': 'power_one_sided', 'beta': 0.01}
+  power_one_sided beta 0.01 JSR   -40 dB: 150 gens, fitness -0.0006641 (theta=0: -0.0007104), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.066 power_two_sided 0.053 kurtosis 0.047 spec_cnn 0.064 lrt_noise 0.375  (22s)
+  power_one_sided beta 0.01 JSR   -36 dB: 150 gens, fitness -0.0008423 (theta=0: -0.001047), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.084 power_two_sided 0.061 kurtosis 0.048 spec_cnn 0.086 lrt_noise 0.939  (17s)
+  power_one_sided beta 0.01 JSR   -32 dB: 150 gens, fitness -0.001465 (theta=0: -0.002083), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.146 power_two_sided 0.093 kurtosis 0.049 spec_cnn 0.124 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR   -28 dB: 150 gens, fitness -0.004448 (theta=0: -0.004534), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.445 power_two_sided 0.380 kurtosis 0.049 spec_cnn 0.426 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR   -24 dB: 150 gens, fitness -0.006387 (theta=0: -0.008098), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.639 power_two_sided 0.753 kurtosis 0.054 spec_cnn 0.764 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR   -20 dB: 150 gens, fitness -0.007888 (theta=0: -0.009868), BER 0.00e+00 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.789 power_two_sided 0.892 kurtosis 0.084 spec_cnn 0.901 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR   -16 dB: 150 gens, fitness -0.007948 (theta=0: -0.009998), BER 1.49e-03 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.944 power_two_sided 0.966 kurtosis 0.491 spec_cnn 0.862 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR   -12 dB: 150 gens, fitness -0.001936 (theta=0: -0.01), BER 7.99e-03 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 0.992 power_two_sided 0.997 kurtosis 0.913 spec_cnn 0.985 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR    -8 dB: 150 gens, fitness 0.01406 (theta=0: -0.01), BER 2.41e-02 (theta=0 0.00e+00), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.999 spec_cnn 1.000 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR    -4 dB: 150 gens, fitness 0.05314 (theta=0: -0.009995), BER 6.31e-02 (theta=0 4.77e-06), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000  (17s)
+  power_one_sided beta 0.01 JSR    +0 dB: 150 gens, fitness 0.1494 (theta=0: -0.007593), BER 1.59e-01 (theta=0 2.41e-03), P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000  (17s)
+wrote ../artifacts/cgan/learned/run001/task1.json in 206s

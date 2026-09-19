@@ -1,0 +1,176 @@
+{
+  "run": "run001",
+  "learned_not_worse_than_white": {
+    "violations": [],
+    "holds": true
+  },
+  "P1_power_unmovable": {
+    "max_pdet_reduction": 0.188720703125,
+    "at_jsr": -20.0,
+    "tol": 0.009631896879639026,
+    "holds": false
+  },
+  "P2_inband_gain": {
+    "jsr_at_1e3_learned": -16.38115305754878,
+    "jsr_at_1e3_white": -0.4802167924584366,
+    "gain_db": 15.900936265090342,
+    "predicted_up_to_db": 9.030899869919436
+  },
+  "P3_stealthy_ber": {
+    "beta0": {
+      "power_one_sided": null,
+      "power_two_sided": null,
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.051025390625,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.048828125,
+        "passed": true
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    },
+    "power_one_sided_b0.01": {
+      "power_one_sided": null,
+      "power_two_sided": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.052978515625,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.055419921875,
+        "passed": true
+      },
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.047119140625,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.051025390625,
+        "passed": true
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    },
+    "power_one_sided_b1": {
+      "power_one_sided": null,
+      "power_two_sided": null,
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.0517578125,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.06005859375,
+        "passed": false
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    },
+    "power_two_sided_b0.01": {
+      "power_one_sided": null,
+      "power_two_sided": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.055908203125,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.047119140625,
+        "passed": true
+      },
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.04296875,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.048828125,
+        "passed": true
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    },
+    "power_two_sided_b1": {
+      "power_one_sided": null,
+      "power_two_sided": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.052734375,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.0537109375,
+        "passed": true
+      },
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.050048828125,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.048583984375,
+        "passed": true
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    },
+    "kurtosis_b0.01": {
+      "power_one_sided": null,
+      "power_two_sided": null,
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.05029296875,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.045166015625,
+        "passed": true
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    },
+    "kurtosis_b1": {
+      "power_one_sided": null,
+      "power_two_sided": null,
+      "kurtosis": {
+        "index": 0,
+        "sweep_ber": 0.0,
+        "sweep_pdet": 0.05126953125,
+        "confirmed_ber": 0.0,
+        "confirmed_ser": 0.0,
+        "confirmed_pdet": 0.05029296875,
+        "passed": true
+      },
+      "spec_cnn": null,
+      "lrt_noise": null
+    }
+  },
+  "seed_check": {
+    "runs": [
+      {
+        "target": "kurtosis",
+        "jsr": -32.0,
+        "d_pdet_target": -0.0009765625,
+        "d_ber": 0.0,
+        "agrees": true
+      },
+      {
+        "target": "kurtosis",
+        "jsr": -20.0,
+        "d_pdet_target": 0.00146484375,
+        "d_ber": 0.0,
+        "agrees": true
+      },
+      {
+        "target": "kurtosis",
+        "jsr": -8.0,
+        "d_pdet_target": 0.000244140625,
+        "d_ber": -0.001018524169921875,
+        "agrees": true
+      }
+    ],
+    "holds": true
+  }
+}
