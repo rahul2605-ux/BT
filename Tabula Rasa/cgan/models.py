@@ -97,6 +97,20 @@ class PeakScaler:
         return x * self.scale
 
 
+def load_generator(path, device):
+    """
+    Load a trained Generator and its peak scale from a checkpoint written by
+    train_cgan.py / train_gan.py (run001 predates the `recipe` field, so read
+    everything with defaults). Returns (G in eval mode, scale, checkpoint dict).
+    """
+    ckpt = torch.load(path, map_location=device, weights_only=False)
+    G = Generator(n_classes=ckpt.get("n_classes", 1),
+                  seg_len=ckpt.get("seg_len", SEG_LEN)).to(device)
+    G.load_state_dict(ckpt["state_dict"])
+    G.eval()
+    return G, float(ckpt.get("scale", 1.0)), ckpt
+
+
 class Discriminator(nn.Module):
     def __init__(self, n_classes=1, seg_len=SEG_LEN):
         super().__init__()

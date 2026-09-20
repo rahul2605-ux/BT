@@ -64,6 +64,16 @@ def p_detect(stat, threshold):
     return float((stat.double() > threshold).double().mean())
 
 
+def soft_pdet(stat, threshold, scale):
+    """
+    Differentiable stand-in for P(det): mean sigmoid((stat - threshold)/scale), so
+    larger stat (more suspicious) -> closer to 1, and it agrees with p_detect in the
+    hard limit (scale -> 0). `scale` is the clean-frame std of the statistic (its
+    natural width). Used only in D2 training; p_detect is what is reported.
+    """
+    return torch.sigmoid((stat.double() - threshold) / scale).mean()
+
+
 # ---------------------------------------------------------------- power, kurtosis
 def power(r):
     return r.abs().pow(2).double().mean(dim=-1)

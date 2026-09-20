@@ -67,6 +67,8 @@ def spec_name(spec):
         return f"omniscient_e{spec['eta']:g}"
     if n == "shaped":
         return spec.get("tag", "shaped")
+    if n == "gan":
+        return spec.get("tag", "gan")
     return n
 
 
@@ -138,6 +140,38 @@ def shaped_tx(link, n_frames, n_sym, theta):
     return (x * env[slot]).to(torch.complex64)
 
 
+def gan_tx(link, n_frames, n_sym, G, scale, z=None, grad=False, z_dim=400, seg_len=1024):
+    """
+    A generator jammer's transmitted (padded) waveform, aligned like pulsed_tx so
+    that padded sample PAD sits on the victim's symbol grid before the async delay.
+
+    G learned segments cropped at link.active().start (Link.real_segments), so its
+    sample 0 is on the victim's grid. Tile seg_len-sample segments to fill the
+    padded frame; crop so a grid instant lands at padded index `lead = PAD +
+    active.start`. For the RRC link `lead` is a multiple of sps (c = 0); the crop
+    offset c handles any other pulse. channel.receive applies the async delay and
+    phase, so this waveform is 'locked' -- do NOT desync it here.
+
+    grad=False (evaluation): G runs under no_grad. grad=True (D2 training): the
+    graph is kept so the loss reaches G's parameters.
+    """
+    dev = link.device
+    n = _padded_length(link, n_sym)
+    lead = channel.PAD + link.active(n_sym).start
+    c = (-lead) % link.sps
+    n_seg = -(-(c + n) // seg_len)                    # ceil
+    if z is None:
+        z = torch.randn(n_frames * n_seg, z_dim, device=dev)
+    labels = torch.zeros(n_frames * n_seg, dtype=torch.long, device=dev)
+    if grad:
+        seg = G(z, labels) * scale
+    else:
+        with torch.no_grad():
+            seg = G(z, labels) * scale
+    stream = torch.complex(seg[:, 0], seg[:, 1]).reshape(n_frames, n_seg * seg_len)
+    return stream[:, c:c + n]
+
+
 def li_tx(link, n_frames, n_sym, kind):
     """Li et al.'s jammer types, single-carrier adaptation (module docstring)."""
     n = _padded_length(link, n_sym)
@@ -198,6 +232,10 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
         elif name == "shaped":
             delay, phase = channel.async_draw(link, F)
             j = channel.receive(link, shaped_tx(link, F, N, spec["theta"]), jsr[:, k], delay, phase)
+        elif name == "gan":
+            delay, phase = channel.async_draw(link, F)
+            j = channel.receive(link, gan_tx(link, F, N, spec["G"], spec["scale"],
+                                             grad=spec.get("grad", False)), jsr[:, k], delay, phase)
         elif name in LI_TYPES:
             delay, phase = channel.async_draw(link, F)
             if name in ("barrage", "tone"):
@@ -240,20 +278,36 @@ def error_counts(out):
     return (int(wrong.sum()), wrong.numel(), int(sym_wrong.sum()), sym_wrong.numel())
 
 
-def expected_ber(out, noise_var, per_frame=False, log=False):
+def ber_logprob(out, noise_var):
     """
-    Exact E[BER] over the AWGN, given everything else in the frames (bits, jammer):
-    each bit's error probability is Q(margin / sigma) at the noiseless
-    matched-filter sample, sigma^2 = noise_var / 2 per axis (unit-energy pulse).
-    Needs frames(..., noiseless=True). Float64 via log_ndtr; it underflows to 0
-    only where the Monte-Carlo BER is 0 anyway. A float, or [F] if per_frame.
-    log=True returns log E[BER] (logsumexp; never underflows, same ordering).
+    Per-bit log P(error) over the AWGN, [F, N, 2] float64: each bit errs with
+    Q(margin / sigma) at the noiseless matched-filter sample, sigma^2 = noise_var/2
+    per axis (unit-energy pulse). Needs frames(..., noiseless=True). Differentiable
+    in z_nf, hence in a generator that produced the jammer -- the tensor D2 (and the
+    log-domain expected_ber) are both built from this.
     """
     z = out["z_nf"].to(torch.complex128)
     b = out["bits"].reshape(z.shape[0], -1, 2)
     m = torch.stack([torch.where(b[..., 0] == 0, z.real, -z.real),
                      torch.where(b[..., 1] == 0, z.imag, -z.imag)], dim=-1)
-    lp = torch.special.log_ndtr(-m / math.sqrt(noise_var / 2.0))
+    return torch.special.log_ndtr(-m / math.sqrt(noise_var / 2.0))
+
+
+def log_expected_ber(out, noise_var):
+    """log E[BER] as a scalar TENSOR (logsumexp; never underflows). D2's effectiveness term."""
+    lp = ber_logprob(out, noise_var)
+    return torch.logsumexp(lp.flatten(), 0) - math.log(lp.numel())
+
+
+def expected_ber(out, noise_var, per_frame=False, log=False):
+    """
+    Exact E[BER] over the AWGN, given everything else in the frames (bits, jammer).
+    Float64 via log_ndtr; it underflows to 0 only where the Monte-Carlo BER is 0
+    anyway. A float, or [F] if per_frame. log=True returns log E[BER] as a float
+    (logsumexp; never underflows, same ordering); use log_expected_ber for the
+    grad-carrying tensor.
+    """
+    lp = ber_logprob(out, noise_var)
     if log:
         return float(torch.logsumexp(lp.flatten(), 0) - math.log(lp.numel()))
     p = lp.exp()

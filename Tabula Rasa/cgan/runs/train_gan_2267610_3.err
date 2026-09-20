@@ -1,0 +1,3 @@
+/home/rrahman/BT/Tabula Rasa/cgan/train_gan.py:99: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  f"logE[BER] {float(log_ber):.3f}  P_det_soft {float(soft):.4f}  "

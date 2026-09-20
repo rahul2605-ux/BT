@@ -598,6 +598,69 @@ def test_shaped(L):
           float(fh.mean()), tol, note=f"BER {float(fh.mean()):.2e}")
 
 
+
+# ================================================================ 14. GAN jammer (D1/D2)
+def test_gan_jammer(L):
+    """
+    The GAN jammer on the 3-D attacks/channel path (attacks.gan_tx + channel.receive
+    async), for D1 (put run001_G on the plane) and D2 (train against a detector).
+
+      14a a perfect generator through this path == pulsed(1) async (which verify
+          already ties to the step-1 optimal jammer). Tolerance carries the same
+          +0.01 tile-boundary slack as section 5b: independent 1024-sample segments
+          lose their neighbours' pulse tails at the join.
+      14b every gan frame lands at exactly its requested JSR (hard projection).
+      14c THE D2 checkpoint: the full training loss -(log E[BER] - beta*P_det_soft)
+          reaches the generator's parameters, i.e. autograd flows through
+          channel.receive (Sionna ApplyTimeChannel), the matched filter and the
+          detector. A finite, nonzero gradient on G's weights de-risks the method.
+    """
+    print(f"\n14. GAN jammer on the 3-D link [{L.pulse}, sps={L.sps}]")
+    snr, N = lk.SNR_DB, scene.N_SYM
+    n0 = L.noise_var(snr)
+    PG = PerfectG(L)
+    gan = dict(name="gan", G=PG, scale=PG.scaler.scale)
+    pulsed = dict(name="pulsed", p=1.0)
+
+    # 14a: perfect-G gan path == pulsed(1), both async
+    for jsr_db in (0.0, 3.0):
+        _same_ber(f"gan(perfect G) == pulsed(1) async, JSR {jsr_db:+.0f} dB",
+                  _batches(L, 8000, gan, [jsr_db], snr),
+                  _batches(L, 8000, pulsed, [jsr_db], snr), floor=0.01)
+
+    # 14b: realised JSR exact per frame
+    _, sym, _ = L.modulate(256, N)
+    act = L.active(N)
+    for jsr_db in (-20.0, 0.0):
+        j = attacks.jammer_at_rx(L, gan, sym, [jsr_db])
+        pw = 10 * torch.log10(j[:, act].abs().pow(2).mean(-1).double() / L.p_s)
+        check(f"gan JSR {jsr_db:+.0f} dB exact per frame (worst, dB)",
+              float((pw - jsr_db).abs().max()), 0.0, 0.01)
+
+    # 14c: differentiability of the D2 loss w.r.t. G's parameters
+    device = L.device
+    G = models.Generator(n_classes=1).to(device)
+    for p in G.parameters():
+        p.grad = None
+    spec = dict(name="gan", G=G, scale=1.0, grad=True)
+    out = attacks.frames(L, 64, spec, [-6.0], snr, noiseless=True)
+    log_ber = attacks.log_expected_ber(out, n0)
+    stat = detectors.power(out["r"])
+    thr = float(stat.detach().mean())
+    sc = float(stat.detach().std()) + 1e-12
+    soft = detectors.soft_pdet(stat, thr, sc)
+    loss = -(log_ber - 1.0 * soft)
+    loss.backward()
+    gnorm = math.sqrt(sum(float(p.grad.detach().pow(2).sum()) for p in G.parameters()
+                          if p.grad is not None))
+    n_with_grad = sum(1 for p in G.parameters() if p.grad is not None)
+    n_params = sum(1 for _ in G.parameters())
+    check("D2 loss is finite", float(math.isfinite(float(loss.detach()))), 1.0, 0.0,
+          note=f"loss={float(loss.detach()):.4g}")
+    check("D2 gradient reaches all of G's parameter tensors", float(n_with_grad), float(n_params), 0.0)
+    check("D2 gradient on G is finite and nonzero", float(math.isfinite(gnorm) and gnorm > 0), 1.0,
+          0.0, note=f"||grad|| = {gnorm:.4g}")
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -606,6 +669,7 @@ def test_baselines():
     test_detectors(L)
     test_spectrogram_cnn(L)
     test_shaped(L)
+    test_gan_jammer(L)
 
 
 def main():
@@ -613,7 +677,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", action="store_true")
     ap.add_argument("--baselines-only", action="store_true",
-                    help="run only sections 8-13 (scene, channel, attacks, detectors, CNN, shaped)")
+                    help="run only sections 8-14 (scene, channel, attacks, detectors, CNN, shaped, GAN)")
     args = ap.parse_args()
     VERBOSE = args.v
 

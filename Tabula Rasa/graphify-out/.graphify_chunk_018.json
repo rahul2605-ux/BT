@@ -1,0 +1,351 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "label": "run001 async BER vs JSR figure (CGAN reproduction vs Zhou 2025 Fig. 6)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_zhou2025_fig6",
+      "label": "Zhou et al. 2025 Fig. 6 reference points",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_ber_vs_jsr_metric",
+      "label": "BER vs JSR (dB) evaluation metric, log-scale BER 1e-10 to 1e0, JSR -10 to +10 dB",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_qpsk_snr30_link",
+      "label": "QPSK link at SNR 30 dB (test operating point)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_noise_jammer",
+      "label": "Gaussian noise jammer baseline (ours + Zhou markers)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_optimal_jammer",
+      "label": "Optimal (matched-modulation) jammer baseline, async and locked variants",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+      "label": "CGAN-generated jammer waveform, async and locked variants",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_async_vs_locked",
+      "label": "Async vs locked jammer/victim synchronisation ablation",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_ber_1e3_reference",
+      "label": "BER = 1e-3 reference line (dashed horizontal annotation)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_ber_measurement_floor",
+      "label": "Empirical BER measurement floor (~3e-9, triangle floor markers at JSR -10/-8 dB)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_finding_gan_matches_optimal",
+      "label": "Finding: GAN jammer matches or beats the optimal jammer and dominates Gaussian noise",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_run001_async_ber_vs_jsr_finding_repro_quality",
+      "label": "Finding: reproduction ranks jammers like Zhou Fig. 6 but sits above its markers at low JSR",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_ber_vs_jsr_metric",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_qpsk_snr30_link",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_zhou2025_fig6",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_noise_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_optimal_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_ber_1e3_reference",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_async_vs_locked",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_optimal_jammer",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_async_vs_locked",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_finding_gan_matches_optimal",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_finding_gan_matches_optimal",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_finding_gan_matches_optimal",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_noise_jammer",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_finding_repro_quality",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_zhou2025_fig6",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_finding_repro_quality",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_ber_measurement_floor",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_ber_vs_jsr_metric",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_ber_measurement_floor",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_zhou2025_fig6",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_optimal_jammer",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_ber_vs_jsr_ber_1e3_reference",
+      "target": "artifacts_cgan_run001_async_ber_vs_jsr_ber_vs_jsr_metric",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "run001_async_three_jammer_comparison",
+      "label": "Three-jammer BER vs JSR comparison at QPSK / SNR 30 dB (noise, optimal, GAN) against Zhou Fig. 6",
+      "nodes": [
+        "artifacts_cgan_run001_async_ber_vs_jsr_noise_jammer",
+        "artifacts_cgan_run001_async_ber_vs_jsr_optimal_jammer",
+        "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+        "artifacts_cgan_run001_async_ber_vs_jsr_zhou2025_fig6",
+        "artifacts_cgan_run001_async_ber_vs_jsr_qpsk_snr30_link"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png"
+    },
+    {
+      "id": "run001_async_locked_ablation",
+      "label": "Async vs locked solid/dashed curve pairs isolate jammer-victim synchronisation as an effectiveness axis",
+      "nodes": [
+        "artifacts_cgan_run001_async_ber_vs_jsr_async_vs_locked",
+        "artifacts_cgan_run001_async_ber_vs_jsr_optimal_jammer",
+        "artifacts_cgan_run001_async_ber_vs_jsr_gan_jammer",
+        "artifacts_cgan_run001_async_ber_vs_jsr"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_ber_vs_jsr.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

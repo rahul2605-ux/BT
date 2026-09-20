@@ -1,0 +1,290 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "label": "Fig 5: BER vs Received JSR - what shaping buys in effectiveness alone (beta=0)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_effectiveness_curve",
+      "label": "BER vs Received JSR effectiveness curve (log BER 1e-6..1e0, JSR -50..+15 dB)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_learned_beta0",
+      "label": "Shaped jammer, beta=0 (learned) - black square curve",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "beta=0 sets the attacker reward BER - beta*detections to pure effectiveness, so this curve isolates what waveform shaping buys before any stealth penalty is applied; it is the upper bound the stealth-constrained (beta>0) runs are measured against."
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_theta0_white",
+      "label": "Shaped theta=0 (white) - untrained/control initialisation, grey dotted",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Included as the control: the same shaped-jammer parameterisation with its shaping parameters zeroed, so any separation between it and the learned curve is attributable to learning rather than to the parameterisation or the evaluation harness."
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_noise_barrage",
+      "label": "Noise (barrage) jammer baseline - blue curve",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_matched_qpsk",
+      "label": "Matched QPSK (p=1) jammer baseline - orange curve",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_pulsed_p01",
+      "label": "Pulsed jammer, duty p=0.1 - pink curve",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_jsr_advantage_finding",
+      "label": "Finding: learned shaping wins ~10-20 dB of JSR over every classical baseline at low BER",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The learned beta=0 curve leaves the 1e-6 BER floor near -24 dB JSR and reaches 1e-3 by about -20 dB, whereas matched QPSK needs roughly -8 dB and barrage noise roughly -4 dB for the same BER; pulsed p=0.1 tracks the learned curve only above about -13 dB and then saturates near 1e-1 while matched QPSK overtakes it. The white theta=0 control stays pinned at the BER floor until about -4 dB, i.e. it behaves like barrage noise, so the advantage is attributable to the learned shaping."
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_ber_saturation_ceiling",
+      "label": "High-JSR saturation ceiling: shaped and pulsed jammers plateau near BER 0.15 while matched QPSK reaches ~0.45",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The shaped curve is only measured up to 0 dB JSR and its last point sits at ~0.16, where matched QPSK is already ~0.3 and still climbing; the shaping advantage is therefore a low-JSR (power-starved) advantage, not a higher achievable maximum BER."
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_run001_learned_track",
+      "label": "cgan learned-detector track, run001 artifact set",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_effectiveness_curve",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_learned_beta0",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_theta0_white",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_noise_barrage",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_matched_qpsk",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_pulsed_p01",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_jsr_advantage_finding",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_ber_saturation_ceiling",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_run001_learned_track",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_jsr_advantage_finding",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_learned_beta0",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_theta0_white",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_noise_barrage",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_theta0_white",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_learned_beta0",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_matched_qpsk",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_pulsed_p01",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_ber_saturation_ceiling",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_effectiveness_curve",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_effectiveness_curve",
+      "target": "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_run001_learned_track",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "fig5_effectiveness_only_jammer_comparison",
+      "label": "Effectiveness-only (beta=0) jammer comparison on the BER vs JSR plane",
+      "nodes": [
+        "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_learned_beta0",
+        "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_shaped_theta0_white",
+        "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_noise_barrage",
+        "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_matched_qpsk",
+        "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_pulsed_p01",
+        "artifacts_cgan_learned_run001_fig5_ber_vs_jsr_effectiveness_curve"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig5_ber_vs_jsr.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

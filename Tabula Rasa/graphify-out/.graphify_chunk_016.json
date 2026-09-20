@@ -1,0 +1,373 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "label": "Fig 4: CMA-ES Convergence Grid (cgan learned run001)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_cma_es_search",
+      "label": "CMA-ES Jammer Parameter Search (150 generations)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_best_fitness_metric",
+      "label": "Best Fitness Minus Generation 0 (per-generation best on that generation's frames)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_beta_zero_log_ber_objective",
+      "label": "Beta=0 Panel: Delta log E[BER] in nats (pure effectiveness objective)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_beta_stealth_weighting",
+      "label": "Stealth Weight Beta (0, 0.01, 1) in Reward BER minus Beta times Detections",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_power_one_sided_detector",
+      "label": "Power Detector, One-Sided",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_power_two_sided_detector",
+      "label": "Power Detector, Two-Sided",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_kurtosis_detector",
+      "label": "Kurtosis Detector",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_spectrogram_cnn_detector",
+      "label": "Spectrogram CNN Detector (learned)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_jsr_sweep",
+      "label": "JSR Sweep 0 to -40 dB (colour axis, one curve per JSR)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_beta1_noisy_nonconvergence",
+      "label": "Finding: Beta=1 Runs Stay Noisy and Barely Improve While Beta=0.01 Converges by Generation 25",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_cnn_beta1_large_gain",
+      "label": "Finding: Spectrogram CNN at Beta=1 Yields Much Larger Fitness Gains (up to ~0.9) Than Any Handcrafted Detector",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_learned_run001_fig4_convergence_per_generation_frame_resampling",
+      "label": "Per-Generation Frame Resampling (fitness measured on that generation's own frames)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_cma_es_search",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_best_fitness_metric",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_beta_zero_log_ber_objective",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_beta_stealth_weighting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_power_one_sided_detector",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_power_two_sided_detector",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_kurtosis_detector",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_spectrogram_cnn_detector",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_jsr_sweep",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_per_generation_frame_resampling",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_beta1_noisy_nonconvergence",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_figure",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_cnn_beta1_large_gain",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_cma_es_search",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_best_fitness_metric",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_beta_stealth_weighting",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_best_fitness_metric",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_beta1_noisy_nonconvergence",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_per_generation_frame_resampling",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_beta1_noisy_nonconvergence",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_beta_stealth_weighting",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_cnn_beta1_large_gain",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_spectrogram_cnn_detector",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_kurtosis_detector",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_power_two_sided_detector",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_learned_run001_fig4_convergence_beta_zero_log_ber_objective",
+      "target": "artifacts_cgan_learned_run001_fig4_convergence_jsr_sweep",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "detector_beta_jsr_convergence_grid",
+      "label": "Nine-Panel Grid: Four Detectors x Beta in {0.01, 1} (plus beta=0 BER-only) Swept over JSR",
+      "nodes": [
+        "artifacts_cgan_learned_run001_fig4_convergence_power_one_sided_detector",
+        "artifacts_cgan_learned_run001_fig4_convergence_power_two_sided_detector",
+        "artifacts_cgan_learned_run001_fig4_convergence_kurtosis_detector",
+        "artifacts_cgan_learned_run001_fig4_convergence_spectrogram_cnn_detector",
+        "artifacts_cgan_learned_run001_fig4_convergence_beta_stealth_weighting",
+        "artifacts_cgan_learned_run001_fig4_convergence_jsr_sweep"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png"
+    },
+    {
+      "id": "cma_es_fitness_evaluation_loop",
+      "label": "CMA-ES Loop: Per-Generation Best Fitness on Freshly Sampled Frames over 150 Generations",
+      "nodes": [
+        "artifacts_cgan_learned_run001_fig4_convergence_cma_es_search",
+        "artifacts_cgan_learned_run001_fig4_convergence_best_fitness_metric",
+        "artifacts_cgan_learned_run001_fig4_convergence_per_generation_frame_resampling",
+        "artifacts_cgan_learned_run001_fig4_convergence_beta1_noisy_nonconvergence"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/learned/run001/fig4_convergence.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

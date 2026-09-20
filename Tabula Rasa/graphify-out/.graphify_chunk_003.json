@@ -1,0 +1,429 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "label": "Fig 2 — Effectiveness/Detectability Frontier (CGAN baselines run001)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_headline_genie_only_reaches_stealth",
+      "label": "Headline: only the genie attack reaches the stealth region; every realisable attack sits at the BER floor",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "plot title",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_stealth_region",
+      "label": "Stealth region — P(det) <= FAR budget alpha = 0.05",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "shaded band left of dashed line at x = 0.05",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_strongest_deployed_detector",
+      "label": "Strongest deployed detector — max over power 1-sided/2-sided, kurtosis, CNN",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "x-axis label",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_ber_axis",
+      "label": "BER axis — log scale, 1e-6 to 1e0",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "y-axis",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+      "label": "BER measurement floor at 1e-6 — dense band of points pinned at the bottom axis",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "bottom row of markers across all P(det)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_noise_barrage",
+      "label": "Noise (barrage) jammer baseline",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_matched_qpsk",
+      "label": "Matched QPSK jammer (p = 1)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_pulsed_jammer",
+      "label": "Pulsed jammer family (duty p = 0.5, 0.25, 0.1)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_push",
+      "label": "Omniscient push jammer (eta = 0.1) — symbol-aware, saturates at P(det) = 1",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend; green diamond column at x = 1.0",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_flip",
+      "label": "Omniscient flip jammer (eta = 1) — the genie; only curve entering the stealth region",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend; purple diamond column near x = 0.05",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_matched_detectability_protocol",
+      "label": "Rationale: compare jammers at matched detectability, not matched configuration",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_far_stealth_budget_rationale",
+      "label": "Rationale: the stealth budget is the detector's own clean false-alarm rate (alpha = 0.05), not a loose P(det) threshold",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "annotation '(P(det) <= FAR budget alpha=0.05)'",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig2_frontier_detector_suite_max_rule",
+      "label": "Detector suite combined by max — a jammer must evade every deployed statistic simultaneously",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "x-axis label 'strongest deployed detector'",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_headline_genie_only_reaches_stealth",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "plot title",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_stealth_region",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "shaded band and dashed threshold line",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_strongest_deployed_detector",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "x-axis label",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_ber_axis",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "y-axis label 'BER'",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_noise_barrage",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_matched_qpsk",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_pulsed_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend entries p=0.5, p=0.25, p=0.1",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_push",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_flip",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_flip",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_stealth_region",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "purple markers span BER 8e-3 to 1.0 at P(det) ~ 0.05-0.08",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_flip",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_headline_genie_only_reaches_stealth",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "only series left of the alpha=0.05 line with BER above the floor",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_noise_barrage",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "blue markers pinned at y = 1e-6 across the whole P(det) range",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_matched_qpsk",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "orange markers pinned at y = 1e-6",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_pulsed_jammer",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "green/yellow/pink markers pinned at y = 1e-6",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_push",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_strongest_deployed_detector",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "green diamonds all at P(det) = 1.0 regardless of BER",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_far_stealth_budget_rationale",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_stealth_region",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "annotation text",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_matched_detectability_protocol",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "BER plotted against P(det) rather than against jammer power/JSR",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_detector_suite_max_rule",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_strongest_deployed_detector",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "axis names three statistics joined by dots",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_ber_axis",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "log y-axis bottoms out at 1e-6, implying ~1e6 measured bits",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_pulsed_jammer",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_push",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_headline_genie_only_reaches_stealth",
+      "relation": "semantically_similar_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "unclear whether realisable attacks are truly ineffective or merely below the 1e-6 resolution",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_flip",
+      "target": "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_push",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png",
+      "source_location": "same omniscient tier, differing only by eta (1 vs 0.1)",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "cgan_baselines_run001_effectiveness_detectability_frontier",
+      "label": "Effectiveness/detectability frontier: jammer families plotted as BER against the max-combined detector suite, with the FAR stealth budget marked",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig2_frontier_figure",
+        "artifacts_cgan_baselines_run001_fig2_frontier_strongest_deployed_detector",
+        "artifacts_cgan_baselines_run001_fig2_frontier_stealth_region",
+        "artifacts_cgan_baselines_run001_fig2_frontier_ber_axis",
+        "artifacts_cgan_baselines_run001_fig2_frontier_matched_detectability_protocol"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png"
+    },
+    {
+      "id": "cgan_baselines_run001_jammer_baseline_ladder",
+      "label": "Jammer baseline ladder ordered by attacker knowledge, from blind barrage noise to the symbol-aware omniscient genie",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig2_frontier_noise_barrage",
+        "artifacts_cgan_baselines_run001_fig2_frontier_matched_qpsk",
+        "artifacts_cgan_baselines_run001_fig2_frontier_pulsed_jammer",
+        "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_push",
+        "artifacts_cgan_baselines_run001_fig2_frontier_omniscient_flip"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png"
+    },
+    {
+      "id": "cgan_baselines_run001_realisable_attacks_at_floor",
+      "label": "Every realisable (non-omniscient) attack collapses to the 1e-6 BER floor across the full P(det) range",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig2_frontier_noise_barrage",
+        "artifacts_cgan_baselines_run001_fig2_frontier_matched_qpsk",
+        "artifacts_cgan_baselines_run001_fig2_frontier_pulsed_jammer",
+        "artifacts_cgan_baselines_run001_fig2_frontier_ber_measurement_floor",
+        "artifacts_cgan_baselines_run001_fig2_frontier_headline_genie_only_reaches_stealth"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig2_frontier.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

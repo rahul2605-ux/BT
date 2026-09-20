@@ -1,0 +1,2 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 0 = {'target': None, 'beta': 0.0}  (tag eff)

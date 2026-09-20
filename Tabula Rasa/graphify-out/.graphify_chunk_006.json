@@ -1,0 +1,364 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "label": "Fig 5 — BER vs received JSR, single jammer (cgan baselines run001)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_sweep_protocol",
+      "label": "BER vs received JSR sweep (-50 to +15 dB, log BER 1e-6 to 1e0)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "x axis: Received JSR (dB); y axis: BER (log)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_barrage",
+      "label": "Noise (barrage) jammer baseline",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: Noise (barrage), blue curve",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_matched_qpsk",
+      "label": "Matched QPSK jammer (p=1) — Zhou 'optimal' baseline",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: Matched QPSK (p=1), orange curve",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_pulsed_family",
+      "label": "Pulsed jammer family (duty p = 0.5 / 0.25 / 0.1)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: Pulsed p=0.5, p=0.25, p=0.1 (green/amber/pink curves)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_push",
+      "label": "Omniscient push jammer (eta=0.1) — upper-bound baseline",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: Omniscient push (eta=0.1), dark green curve",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_flip",
+      "label": "Omniscient flip jammer (eta=1) — upper-bound baseline",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: Omniscient flip (eta=1), purple curve",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_closed_form_overlay",
+      "label": "Closed-form noise BER overlay as analytic regression check",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: Noise closed form (black dotted), tracks the blue measured curve",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_clean_ber_floor",
+      "label": "Clean BER floor reference line (unjammed link at SNR 30 dB)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend: clean BER floor (grey dotted)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_measurement_floor_1e6",
+      "label": "Measurement floor at BER 1e-6 — curves clip, no resolution below",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "all curves flatten onto the 1e-6 y-axis bottom; ragged pink spike near -18 dB",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_knowledge_tier_ordering",
+      "label": "Result: BER ordering follows attacker knowledge tier at equal JSR",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "omniscient curves saturate at BER 1 by ~1-6 dB JSR; noise barrage is weakest, ~15 dB later",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "cgan_attacks",
+      "label": "cgan/attacks.py — jammer constructors for the CGAN link",
+      "file_type": "code",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "cgan_link",
+      "label": "cgan/link.py — waveform QPSK link (Sionna), BER measurement",
+      "file_type": "code",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_hard_power_projection",
+      "label": "JSR imposed by hard power projection on the transmitted jammer waveform",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "x axis is *received* JSR, a budget swept as an environment constraint",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_sweep_protocol",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "axis labels",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_barrage",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_matched_qpsk",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_pulsed_family",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend entries p=0.5/0.25/0.1",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_push",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_flip",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_clean_ber_floor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "legend entry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_closed_form_overlay",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_barrage",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "dotted closed-form curve overlays the measured noise curve",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_knowledge_tier_ordering",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "curve ordering across the whole JSR range",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_measurement_floor_1e6",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_sweep_protocol",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "y-axis bottom clipping at 1e-6",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "cgan_attacks",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "the plotted jammer names correspond to the cgan attack constructors",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr",
+      "target": "cgan_link",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "BER and clean-floor values come from the waveform link",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_hard_power_projection",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_sweep_protocol",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "received JSR is the swept independent variable",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_pulsed_family",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_hard_power_projection",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "duty cycle concentrates the same average power into fewer symbols",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_push",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_flip",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "both are symbol-aware upper bounds differing only in the eta mixing parameter",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_pulsed_family",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_measurement_floor_1e6",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "the p=0.1 curve is visibly ragged near the floor — few hit symbols, few error events",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_matched_qpsk",
+      "target": "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_barrage",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png",
+      "source_location": "the two Zhou reference baselines plotted against each other",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "cgan_single_jammer_baseline_ladder",
+      "label": "Single-jammer baseline ladder swept on one BER vs JSR plane",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_barrage",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_matched_qpsk",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_pulsed_family",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_push",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_omniscient_flip",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_jsr_sweep_protocol"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png"
+    },
+    {
+      "id": "cgan_baseline_figure_validation_references",
+      "label": "Analytic reference lines used to validate the measured sweep",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_noise_closed_form_overlay",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_clean_ber_floor",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr_measurement_floor_1e6",
+        "artifacts_cgan_baselines_run001_fig5_ber_vs_jsr"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig5_ber_vs_jsr.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

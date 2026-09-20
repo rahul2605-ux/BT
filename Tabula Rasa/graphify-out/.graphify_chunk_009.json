@@ -1,0 +1,251 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene",
+      "label": "Fig 8 Scene Geometry and Received JSR Spread",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Two-panel research figure documenting the evaluation scene: left, a 3D scatter of 12 example test drops placing TX (blue triangles), RX (orange squares) and jammers (x markers) in a ~1000 m x 1000 m area with heights up to ~160 m; right, a histogram of the received JSR of one jammer at a +20 dBm budget across all drops. It exists to show that the drop ensemble is geometrically varied rather than a single fixed layout."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_drop_geometry_panel",
+      "label": "3D Drop Geometry Panel (TX / RX / Jammers)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Left panel: node placements for 12 shown test drops in an x/y box of 0-1000 m with z spanning roughly 0-160 m. Jammers clearly outnumber TX/RX markers, indicating several jammers per drop scattered across the area at varying altitudes."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_received_jsr_histogram",
+      "label": "Received JSR Histogram Across Drops",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Right panel, titled 'Geometry spread across drops': counts of drops (y) versus received JSR of one jammer at budget +20 dBm (x, dB). Support runs from about -43 dB to -22 dB, strongly unimodal with a mode near -38 dB (11 drops) and a thin right tail out past -25 dB, i.e. roughly a 20 dB geometry-driven spread."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_test_drops",
+      "label": "Randomized Test Drop Ensemble",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The evaluation unit is a 'drop': one randomized placement of TX, RX and jammers. The legend states only 12 are plotted, while the histogram bin counts sum to several dozen, so the full test set is larger than what the 3D panel displays."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_jammer_power_budget",
+      "label": "Jammer Power Budget of +20 dBm",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "A fixed transmit-power budget held constant across drops; the JSR actually seen at the receiver is then a pure consequence of geometry and path loss rather than of a tunable loss term, matching the project rule that power is a hard environment constraint and never a reward/loss penalty."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_geometry_induced_jsr_spread",
+      "label": "Geometry-Induced JSR Spread",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The figure's actual claim: identical jammer budget plus randomized geometry yields a ~20 dB spread in received JSR, and the whole distribution sits far below 0 dB (mode near -38 dB), so a single jammer at the nominal budget is weak at the victim receiver. Any BER-vs-JSR result must therefore be read per-drop or aggregated deliberately, not as if one JSR applied to every drop."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_baselines_run001",
+      "label": "CGAN Baselines Run001",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The run whose artifacts directory holds this figure (artifacts/cgan/baselines/run001), i.e. the baseline evaluation of the CGAN jamming track; the figure is one numbered output (fig8) of that run's plotting stage."
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig8_scene_multi_jammer_scene",
+      "label": "Multi-Jammer Scene Model",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Each drop contains one TX, one RX and multiple jammers at distinct 3D positions; the x-axis label 'Received JSR of one jammer' implies the aggregate scene contains more than one, and that the plotted statistic isolates a single contributor."
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_drop_geometry_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_received_jsr_histogram",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_drop_geometry_panel",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_test_drops",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_received_jsr_histogram",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_test_drops",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_received_jsr_histogram",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_jammer_power_budget",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_received_jsr_histogram",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_geometry_induced_jsr_spread",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_drop_geometry_panel",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_geometry_induced_jsr_spread",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_baselines_run001",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_baselines_run001",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_test_drops",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_drop_geometry_panel",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_multi_jammer_scene",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_multi_jammer_scene",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_jammer_power_budget",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_test_drops",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_multi_jammer_scene",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig8_scene_jammer_power_budget",
+      "target": "artifacts_cgan_baselines_run001_fig8_scene_geometry_induced_jsr_spread",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "fig8_scene_drop_sampling_to_jsr_distribution",
+      "label": "Randomized drop geometry under a fixed +20 dBm budget produces the received-JSR distribution",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig8_scene_test_drops",
+        "artifacts_cgan_baselines_run001_fig8_scene_multi_jammer_scene",
+        "artifacts_cgan_baselines_run001_fig8_scene_jammer_power_budget",
+        "artifacts_cgan_baselines_run001_fig8_scene_received_jsr_histogram",
+        "artifacts_cgan_baselines_run001_fig8_scene_geometry_induced_jsr_spread"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig8_scene.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

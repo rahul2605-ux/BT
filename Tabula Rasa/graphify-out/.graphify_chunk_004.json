@@ -1,0 +1,456 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq",
+      "label": "Fig 3: Matched-Filter Constellation Under Attack (cgan baselines run001)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_qpsk_iq_scatter_diagnostic",
+      "label": "QPSK IQ Scatter Diagnostic (post-matched-filter symbol cloud vs ideal reference crosses)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "six-panel row, Q vs I axes spanning -2..2, black '+' markers at the four ideal QPSK points (±0.707, ±0.707)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "label": "Six-Panel Baseline Attack Comparison (clean, noise, pulsed_p1, pulsed_p0.1, omniscient_e0.1, omniscient_e1)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel titles, left to right",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_clean_reference_panel",
+      "label": "clean@-10 Panel, BER 0 (no scatter rendered, reference crosses only)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_noise_jammer_panel",
+      "label": "noise@-10 Panel, BER 0 (tight isotropic blue clouds on all four points)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty1_panel",
+      "label": "pulsed_p1@-10 Panel, BER 0 (continuous duty, slightly wider orange clouds)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 3",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty01_panel",
+      "label": "pulsed_p0.1@-10 Panel, BER 0.019 (bimodal cloud: tight core plus sparse wide-spread halo)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 4",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps01_panel",
+      "label": "omniscient_e0.1@+0 Panel, BER 0.82 (received symbols collapsed to a tiny green cluster near the origin)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 5",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps1_panel",
+      "label": "omniscient_e1@+0 Panel, BER 0.25 (no visible displaced scatter, crosses only)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 6",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty_concentration_finding",
+      "label": "Finding: Duty Cycle Beats Continuous Power at Fixed JSR (p=0.1 gives BER 0.019 where p=1 gives BER 0)",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panels 3 vs 4, both at JSR -10 dB",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_cancellation_finding",
+      "label": "Finding: Omniscient Jammer Cancels Rather Than Scatters (constellation collapses to origin, BER 0.82 exceeds 0.5)",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 5, green cluster at approximately (0.05, 0.0)",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_ber_above_half_anomaly",
+      "label": "Anomaly: BER 0.82 Above the 0.5 Coin-Flip Floor (systematic bit inversion, not noise)",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 5 title 'BER 0.82'",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_jsr_hard_power_budget",
+      "label": "JSR as a Hard Power Constraint on the Transmitted Jammer Waveform",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "figure suptitle 'JSR as labelled'; panel labels '@-10' and '@+0'",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_cgan_baselines_run001",
+      "label": "cgan Baselines run001 (artifact set this figure belongs to)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_cgan_attacks_module",
+      "label": "cgan/attacks.py Jammer Builders (noise, pulsed, omniscient tiers rendered here)",
+      "file_type": "code",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_cgan_link_matched_filter",
+      "label": "cgan/link.py Waveform Chain (upsample, pulse filter, AWGN, jammer, matched filter, hard decision)",
+      "file_type": "code",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_gan_jammer_absent",
+      "label": "GAN Jammer Absent From This Baseline Figure (classical tiers only, no gan(G) panel)",
+      "file_type": "rationale",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel title row",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_qpsk_iq_scatter_diagnostic",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "suptitle 'Matched-filter constellation under attack'",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "six panel titles",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_clean_reference_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 1",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_noise_jammer_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 2",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty1_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 3",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty01_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 4",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps01_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 5",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps1_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 6",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty_concentration_finding",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty01_panel",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 4 title 'BER 0.019' against panel 3 title 'BER 0' at identical JSR -10 dB",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty_concentration_finding",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty1_panel",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panels 3 and 4 compared",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty_concentration_finding",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_jsr_hard_power_budget",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "duty cycle redistributes a fixed average-power budget into fewer, stronger bursts",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_cancellation_finding",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps01_panel",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 5, green cluster at the origin instead of at the four ideal points",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_ber_above_half_anomaly",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_cancellation_finding",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "a jammer that overshoots cancellation flips the sign on each axis, driving BER above 0.5",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_ber_above_half_anomaly",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps01_panel",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel 5 title",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps1_panel",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps01_panel",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "same omniscient jammer tier at two epsilon settings; the weaker-labelled e0.1 is by far the more damaging (0.82 vs 0.25), a non-monotonicity in the epsilon parameter",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_noise_jammer_panel",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_clean_reference_panel",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "at JSR -10 dB the Gaussian noise jammer is indistinguishable from clean in BER terms (both 0), making it the floor baseline",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_cgan_baselines_run001",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "artifact path artifacts/cgan/baselines/run001/",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_cgan_attacks_module",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "panel titles are jammer names with parameters (noise, pulsed_p*, omniscient_e*), the naming convention of the attack-builder registry",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_cgan_link_matched_filter",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "the plotted points are post-matched-filter symbol estimates and the BER per panel is the hard-decision error rate",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_jsr_hard_power_budget",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_cgan_attacks_module",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "every panel is labelled with its JSR, implying a power projection applied uniformly across jammer tiers",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_gan_jammer_absent",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_baseline_attack_panel_set",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "the six panels cover only clean and classical jammers, so this figure fixes the comparison floor the learned generator is later measured against",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_qpsk_iq_scatter_diagnostic",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_cancellation_finding",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "the scatter view is what makes cancellation legible as geometry; a BER number alone would not distinguish cancellation from scattering",
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps1_panel",
+      "target": "artifacts_cgan_baselines_run001_fig3_iq_clean_reference_panel",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png",
+      "source_location": "both panels render no visible scatter; unclear whether points are off-axis, fully overlapped by the reference crosses, or a plotting omission, despite the stated BER 0.25",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_jammer_tier_ladder",
+      "label": "Jammer Knowledge Ladder Rendered as Constellation Damage (blind noise to pulsed to omniscient)",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig3_iq_noise_jammer_panel",
+        "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty1_panel",
+        "artifacts_cgan_baselines_run001_fig3_iq_pulsed_duty01_panel",
+        "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps01_panel",
+        "artifacts_cgan_baselines_run001_fig3_iq_omniscient_eps1_panel"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png"
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig3_iq_visual_ber_audit_loop",
+      "label": "Visual BER Audit: Scatter Geometry Cross-Checks the Reported Error Rate",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig3_iq_qpsk_iq_scatter_diagnostic",
+        "artifacts_cgan_baselines_run001_fig3_iq_ber_above_half_anomaly",
+        "artifacts_cgan_baselines_run001_fig3_iq_omniscient_cancellation_finding",
+        "artifacts_cgan_baselines_run001_fig3_iq_cgan_link_matched_filter"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig3_iq.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

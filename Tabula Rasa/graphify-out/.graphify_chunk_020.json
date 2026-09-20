@@ -1,0 +1,360 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_run001_async_iq",
+      "label": "run001 Asynchronous Jammer IQ Figure",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Three-panel IQ scatter figure titled 'After the victim's matched filter, scaled to the signal's power (JSR 0 dB)'. Panels: victim signal (EVM 0.001, power 1.000), CGAN generator output sampled at symbol instants (EVM 0.387, power 0.924), and the same generator output sampled at a +sps/2 offset (EVM 0.654, power 0.746). Black crosses mark the ideal QPSK points at (+/-0.707, +/-0.707)."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_victim_panel",
+      "label": "Victim Signal Reference Panel (EVM 0.001)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The clean victim panel is plotted as the control: EVM 0.001 and power 1.000 confirm the matched-filter/normalisation pipeline is correct, so any spread seen in the two generator panels is attributable to the jammer and not to the measurement chain."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_gan_symbol_instants_panel",
+      "label": "Generator Output at Symbol Instants (EVM 0.387)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Generator waveform after the victim's matched filter, sampled on the symbol grid. Points cluster into four lobes centred on the QPSK crosses, i.e. the GAN has learned a roughly QPSK-like, symbol-synchronous structure, but with large per-symbol dispersion (EVM 0.387) and power 0.924 of the signal power."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_half_symbol_offset_panel",
+      "label": "Generator Output at +sps/2 Timing Offset (EVM 0.654)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Same generator waveform sampled half a symbol off the victim's timing grid. The four lobes collapse toward a diffuse cloud centred on the origin, EVM rises to 0.654 and captured power drops to 0.746 - the learned jammer's constellation structure is destroyed by a timing offset it was never trained to survive."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_timing_sensitivity",
+      "label": "Timing-Synchronisation Sensitivity of the Learned Jammer",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The figure exists to test an unstated assumption of the reproduced CGAN setup: that the jammer is symbol-synchronous with the victim. Comparing symbol-instant sampling against a +sps/2 offset quantifies how much of the generator's apparent effectiveness depends on perfect timing alignment - EVM 0.387 -> 0.654 and power 0.924 -> 0.746 show the structure is timing-bound, so an asynchronous jammer cannot be assumed equivalent."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_evm_metric",
+      "label": "EVM as Post-Matched-Filter Distortion Metric",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "Error-vector magnitude reported per panel alongside captured power, used to summarise how far the sampled IQ cloud sits from the ideal QPSK points."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_power_normalisation",
+      "label": "Power Normalisation to the Victim Signal",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Every panel is scaled to the signal's power so the three clouds are comparable on one axis pair; this follows the project's hard-power-projection contract where JSR is imposed by projection rather than by a loss term."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_jsr_0db",
+      "label": "JSR 0 dB Operating Point",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The jammer-to-signal ratio at which this diagnostic is rendered, one point inside the -10..10 dB sweep range of the CGAN track."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_matched_filter",
+      "label": "Victim Matched Filter and Symbol Sampling",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The receiver stage through which all three panels are observed: the jammer waveform is viewed only as it lands after the victim's matched filter and downsampling, not in its transmitted form."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_qpsk_constellation",
+      "label": "Ideal QPSK Constellation Reference Points",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The four unit-power QPSK points at (+/-0.707, +/-0.707), drawn as black crosses in each panel as the decision-region anchor."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_iq_generator_g",
+      "label": "CGAN Generator G (run001)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "description": "The trained waveform generator whose output the two right-hand panels visualise; run001 is the first CGAN training run of the exploratory track."
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_victim_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_gan_symbol_instants_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_half_symbol_offset_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_jsr_0db",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_matched_filter",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_power_normalisation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_evm_metric",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_qpsk_constellation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq",
+      "target": "artifacts_cgan_run001_async_iq_timing_sensitivity",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_half_symbol_offset_panel",
+      "target": "artifacts_cgan_run001_async_iq_timing_sensitivity",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_gan_symbol_instants_panel",
+      "target": "artifacts_cgan_run001_async_iq_timing_sensitivity",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_gan_symbol_instants_panel",
+      "target": "artifacts_cgan_run001_async_iq_generator_g",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_half_symbol_offset_panel",
+      "target": "artifacts_cgan_run001_async_iq_generator_g",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_victim_panel",
+      "target": "artifacts_cgan_run001_async_iq_qpsk_constellation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_evm_metric",
+      "target": "artifacts_cgan_run001_async_iq_qpsk_constellation",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_power_normalisation",
+      "target": "artifacts_cgan_run001_async_iq_jsr_0db",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_matched_filter",
+      "target": "artifacts_cgan_run001_async_iq_generator_g",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_gan_symbol_instants_panel",
+      "target": "artifacts_cgan_run001_async_iq_half_symbol_offset_panel",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_iq_timing_sensitivity",
+      "target": "artifacts_cgan_run001_async_iq_generator_g",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "async_iq_three_panel_comparison",
+      "label": "Victim vs synchronous vs half-symbol-offset generator comparison at JSR 0 dB",
+      "nodes": [
+        "artifacts_cgan_run001_async_iq_victim_panel",
+        "artifacts_cgan_run001_async_iq_gan_symbol_instants_panel",
+        "artifacts_cgan_run001_async_iq_half_symbol_offset_panel",
+        "artifacts_cgan_run001_async_iq_timing_sensitivity"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png"
+    },
+    {
+      "id": "async_iq_measurement_chain",
+      "label": "Matched filter, power normalisation and EVM against the QPSK reference",
+      "nodes": [
+        "artifacts_cgan_run001_async_iq_matched_filter",
+        "artifacts_cgan_run001_async_iq_power_normalisation",
+        "artifacts_cgan_run001_async_iq_evm_metric",
+        "artifacts_cgan_run001_async_iq_qpsk_constellation"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_iq.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

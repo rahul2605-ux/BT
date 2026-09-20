@@ -1,0 +1,381 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain",
+      "label": "Implied Gaussian Processing Gain vs JSR (run001, async)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Diagnostic line chart for the CGAN track (cgan/ run001): x = jamming-to-signal ratio (dB, -10..+10), y = implied Gaussian processing gain g (dB, 0..9). Six series in three colour-coded families, each with a solid 'ours (async)' line and a dashed 'Zhou Fig. 6' reference: Noise (orange), Optimal (blue), GAN (green). Instead of plotting BER directly it inverts a BER model to a single interpretable number per point, so our waveform-level link and Zhou's published curves can be compared on one axis despite unstated link parameters."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_ber_inversion_model",
+      "label": "BER = Q(sqrt(1/(1/(sps*SNR) + JSR/g))) Inversion",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The chart title states the model the plot inverts: BER = Q(sqrt(1/(1/(sps*SNR) + JSR/g))). Measured BER at each JSR is mapped back to the single free parameter g, the effective processing gain the receiver appears to apply to the jammer's power. This turns a family of BER curves into one scalar per operating point, which is what makes 'ours' and 'Zhou Fig. 6' commensurable."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_flatness_test",
+      "label": "Flat-g Test for Gaussian-Like Jamming",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Legend annotation in the title: 'flat = Gaussian-like'. If a jammer truly acts as extra AWGN, the inverted g must be constant across JSR; any slope or kink means the jammer's effect is not captured by an equivalent-noise model. This is the chart's actual read-out, not the absolute value of g."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_our_noise_flat_9db",
+      "label": "Our Noise Jammer: Flat g ~ 9 dB Across All JSR",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The orange solid 'Noise (ours)' series is dead flat at about 9 dB from JSR -6 dB through +10 dB, the only series in the figure that is flat. A Gaussian jammer passed through our link inverts to a constant processing gain, which is exactly the self-consistency check the inversion was built for: it validates the link model and the inversion itself before any conclusion is drawn about the other series."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency",
+      "label": "Zhou Fig. 6 Noise Baseline Is Not Gaussian-Consistent",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The orange dashed 'Noise (Zhou Fig. 6)' series is far from flat: it rises from ~6.1 dB at JSR -10 dB to a peak ~8.8 dB at JSR 0 dB, then collapses to ~5.4 dB at JSR +2 dB. Zhou's own Gaussian-noise baseline therefore cannot be explained by any single processing gain, which is evidence that the published BER curves are not reproducible under a consistent link model - consistent with the README trap that Zhou's plotted BERs (~1e-8) lie below what its own protocol can measure."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_zero_error_lower_bound",
+      "label": "Triangle Markers: Zero-Error Lower Bound on g",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Title annotation: 'triangle = lower bound (0 errors)'. Two orange triangles appear at JSR -10 dB (~5.3 dB) and -8 dB (~7.3 dB), where the measurement produced zero bit errors so BER - and hence g - can only be bounded, not resolved. Marking them separately keeps unmeasurable points from being read as data, the same measurement-floor honesty the README flags about Zhou's ~1e-8 BERs."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_our_structured_jammers_decay",
+      "label": "Our Async Optimal and GAN Jammers: g Falls to ~0 dB at JSR 0",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Both solid 'ours, async' series fall monotonically with JSR: GAN from ~4.05 dB at -10 dB to ~0.1 dB at 0 dB, Optimal from ~3.55 dB at -6 dB to ~0.35 dB at -2 dB. Vanishing implied gain means the receiver extracts essentially no processing gain against these jammers at moderate JSR - they are markedly more effective than Gaussian noise, and strongly non-Gaussian, so an equivalent-noise description of them is invalid."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_zhou_structured_flatish",
+      "label": "Zhou Fig. 6 Optimal and GAN Sit Flat-ish at 2-4 dB",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "The dashed Zhou references stay in a narrow band - GAN ~2.7-4.0 dB, Optimal ~1.9-3.1 dB - and drift mildly upward with JSR rather than decaying. Our async jammers cross them from above near JSR -8 dB and end several dB below by JSR 0 dB, so the reproduction does not merely rescale Zhou's result: the JSR dependence itself differs in sign."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_async_jammer_condition",
+      "label": "Asynchronous Jammer Condition (async)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Every 'ours' series is labelled 'async' and the filename encodes it, so this run measures the jammer without symbol/timing alignment to the victim. It is one of the unstated-parameter choices Zhou's paper leaves open (README section 4.2 Q7), isolated here so its consequence is visible as a measured curve rather than assumed."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_zhou_fig6_reproduction",
+      "label": "Zhou et al. 2025 Fig. 6 Reproduction Target",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Three of the six series are digitised from Zhou, Tan and Xu's Fig. 6 (ISSET 2025) and serve as the reproduction target for CGAN-track step 1: noise, 'optimal' same-modulation and GAN jammers evaluated on BER vs JSR."
+    },
+    {
+      "id": "artifacts_cgan_run001_async_implied_gain_jsr_power_constraint",
+      "label": "JSR as Hard Power Constraint Sweep Axis",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "JSR is the sole x-axis, swept -10 to +10 dB, reflecting the project contract that jammer power is imposed by hard projection on the transmitted waveform rather than by a loss term - so every point on this chart is a comparison at matched transmitted power."
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_ber_inversion_model",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_flatness_test",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_flatness_test",
+      "target": "artifacts_cgan_run001_async_implied_gain_ber_inversion_model",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_our_noise_flat_9db",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_our_structured_jammers_decay",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_zhou_structured_flatish",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_zero_error_lower_bound",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_jsr_power_constraint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_zhou_fig6_reproduction",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain",
+      "target": "artifacts_cgan_run001_async_implied_gain_async_jammer_condition",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_our_noise_flat_9db",
+      "target": "artifacts_cgan_run001_async_implied_gain_flatness_test",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency",
+      "target": "artifacts_cgan_run001_async_implied_gain_flatness_test",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency",
+      "target": "artifacts_cgan_run001_async_implied_gain_our_noise_flat_9db",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency",
+      "target": "artifacts_cgan_run001_async_implied_gain_zhou_fig6_reproduction",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_zhou_structured_flatish",
+      "target": "artifacts_cgan_run001_async_implied_gain_zhou_fig6_reproduction",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_our_structured_jammers_decay",
+      "target": "artifacts_cgan_run001_async_implied_gain_async_jammer_condition",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_our_structured_jammers_decay",
+      "target": "artifacts_cgan_run001_async_implied_gain_zhou_structured_flatish",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_zero_error_lower_bound",
+      "target": "artifacts_cgan_run001_async_implied_gain_ber_inversion_model",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_jsr_power_constraint",
+      "target": "artifacts_cgan_run001_async_implied_gain_ber_inversion_model",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_run001_async_implied_gain_flatness_test",
+      "target": "artifacts_cgan_run001_async_implied_gain_zero_error_lower_bound",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "implied_gain_three_jammer_comparison",
+      "label": "Noise, Optimal and GAN Jammers Compared on One Implied-Gain Plane",
+      "nodes": [
+        "artifacts_cgan_run001_async_implied_gain_our_noise_flat_9db",
+        "artifacts_cgan_run001_async_implied_gain_our_structured_jammers_decay",
+        "artifacts_cgan_run001_async_implied_gain_zhou_structured_flatish",
+        "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency",
+        "artifacts_cgan_run001_async_implied_gain_ber_inversion_model"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png"
+    },
+    {
+      "id": "implied_gain_reproduction_validity_check",
+      "label": "Reproduction-Validity Check: Flat-g Test, Zero-Error Bound, Zhou Fig. 6 Target",
+      "nodes": [
+        "artifacts_cgan_run001_async_implied_gain_flatness_test",
+        "artifacts_cgan_run001_async_implied_gain_zero_error_lower_bound",
+        "artifacts_cgan_run001_async_implied_gain_zhou_fig6_reproduction",
+        "artifacts_cgan_run001_async_implied_gain_zhou_noise_inconsistency"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/run001_async_implied_gain.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

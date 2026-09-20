@@ -1,0 +1,446 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "label": "Fig 9: Spectrogram CNN Reproduction Figure",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn",
+      "label": "Li et al. Spectrogram CNN Detector, Retrained on This Link",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_et_al_reported_va",
+      "label": "Li et al. Reported Validation Accuracy 99.91%",
+      "file_type": "paper",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_training_panel",
+      "label": "Training Panel: Train vs Val Accuracy over 100 Epochs",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_roc_panel",
+      "label": "Two-Class ROC Panel, AUC 0.993",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_reproduction_gap",
+      "label": "Reproduction Gap: Val Acc 0.960 vs 99.91%",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "label": "Per-Class Accuracy Bar Chart at JSR +10 dB",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_saturation_at_high_jsr",
+      "label": "Detector Saturates near 1.00 Accuracy at JSR +10 dB",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_clean_class",
+      "label": "Clean (Unjammed) Class",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_barrage_jammer",
+      "label": "Barrage Jammer Class",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_tone_jammer",
+      "label": "Tone Jammer Class",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_pulse_comb_jammer",
+      "label": "Pulse-Comb Jammer Class",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_protocol_aware_jammer",
+      "label": "Protocol-Aware Jammer Class",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_baselines_run001",
+      "label": "CGAN Baselines run001 Artifact Set",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_baselines_run001_fig9_cnn_repro_far_vs_detection_tradeoff",
+      "label": "Detection Rate vs False-Alarm Rate Trade-off",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_training_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_roc_panel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_reproduction_gap",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_et_al_reported_va",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_training_panel",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_et_al_reported_va",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_reproduction_gap",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_et_al_reported_va",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_reproduction_gap",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_training_panel",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_training_panel",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_roc_panel",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_roc_panel",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_far_vs_detection_tradeoff",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_clean_class",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_barrage_jammer",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_tone_jammer",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_pulse_comb_jammer",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_protocol_aware_jammer",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_saturation_at_high_jsr",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_saturation_at_high_jsr",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_figure",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_baselines_run001",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_baselines_run001",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_roc_panel",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_protocol_aware_jammer",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_pulse_comb_jammer",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_baselines_run001_fig9_cnn_repro_reproduction_gap",
+      "target": "artifacts_cgan_baselines_run001_fig9_cnn_repro_saturation_at_high_jsr",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "cnn_reproduction_assessment",
+      "label": "Three-Panel Reproduction Assessment of the Spectrogram CNN",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_training_panel",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_roc_panel",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_reproduction_gap",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_li_spectrogram_cnn"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png"
+    },
+    {
+      "id": "jammer_class_taxonomy_at_jsr10",
+      "label": "Five-Way Class Set Evaluated at JSR +10 dB",
+      "nodes": [
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_clean_class",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_barrage_jammer",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_tone_jammer",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_pulse_comb_jammer",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_protocol_aware_jammer",
+        "artifacts_cgan_baselines_run001_fig9_cnn_repro_per_class_accuracy_jsr10"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/baselines/run001/fig9_cnn_repro.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

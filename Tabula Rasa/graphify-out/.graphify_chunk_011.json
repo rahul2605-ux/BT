@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised",
+      "label": "Digitised Zhou Fig. 6 (BER vs JSR, QPSK)",
+      "file_type": "image",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_zhou_fig6",
+      "label": "Zhou et al. 2025 Figure 6 (Jamming Effectiveness Comparison for QPSK Signals)",
+      "file_type": "paper",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "label": "BER vs Jamming-to-Signal Ratio (log10 BER, JSR -10 to 10 dB)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_noise_jammer",
+      "label": "Gaussian Noise Jammer Baseline (orange curve)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_optimal_jammer",
+      "label": "Optimal Matched-Modulation Jammer Baseline (blue curve)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_gan_jammer",
+      "label": "CGAN-Generated Jamming Waveform (purple curve)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_fec_threshold",
+      "label": "FEC Threshold BER = 1e-3 (dashed reference line)",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_crossover_at_2db",
+      "label": "GAN/Optimal Crossover near JSR 0-2 dB",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_digitisation_overlay",
+      "label": "Black Cross Markers: Digitised Sample Points Overlaid on Published Curves",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_c0_calibration",
+      "label": "C0 Calibration Target for cgan/ Link Parameters",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "artifacts_cgan_c0_fig6_digitised_qpsk_link",
+      "label": "QPSK Waveform Link Under Jamming",
+      "file_type": "concept",
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised",
+      "target": "artifacts_cgan_c0_fig6_digitised_zhou_fig6",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised",
+      "target": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "target": "artifacts_cgan_c0_fig6_digitised_noise_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "target": "artifacts_cgan_c0_fig6_digitised_optimal_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "target": "artifacts_cgan_c0_fig6_digitised_gan_jammer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "target": "artifacts_cgan_c0_fig6_digitised_fec_threshold",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_gan_jammer",
+      "target": "artifacts_cgan_c0_fig6_digitised_noise_jammer",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_gan_jammer",
+      "target": "artifacts_cgan_c0_fig6_digitised_optimal_jammer",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_crossover_at_2db",
+      "target": "artifacts_cgan_c0_fig6_digitised_gan_jammer",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_crossover_at_2db",
+      "target": "artifacts_cgan_c0_fig6_digitised_optimal_jammer",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_digitisation_overlay",
+      "target": "artifacts_cgan_c0_fig6_digitised",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_digitisation_overlay",
+      "target": "artifacts_cgan_c0_fig6_digitised_zhou_fig6",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised",
+      "target": "artifacts_cgan_c0_fig6_digitised_c0_calibration",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_c0_calibration",
+      "target": "artifacts_cgan_c0_fig6_digitised_qpsk_link",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_qpsk_link",
+      "target": "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "artifacts_cgan_c0_fig6_digitised_fec_threshold",
+      "target": "artifacts_cgan_c0_fig6_digitised_noise_jammer",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.3,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "fig6_three_jammer_ber_comparison",
+      "label": "Three-jammer BER vs JSR comparison on QPSK against the FEC threshold",
+      "nodes": [
+        "artifacts_cgan_c0_fig6_digitised_noise_jammer",
+        "artifacts_cgan_c0_fig6_digitised_optimal_jammer",
+        "artifacts_cgan_c0_fig6_digitised_gan_jammer",
+        "artifacts_cgan_c0_fig6_digitised_fec_threshold",
+        "artifacts_cgan_c0_fig6_digitised_ber_vs_jsr"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png"
+    },
+    {
+      "id": "fig6_digitisation_for_calibration",
+      "label": "Digitising published curves to calibrate the local QPSK link to Zhou Fig. 6",
+      "nodes": [
+        "artifacts_cgan_c0_fig6_digitised_zhou_fig6",
+        "artifacts_cgan_c0_fig6_digitised_digitisation_overlay",
+        "artifacts_cgan_c0_fig6_digitised_c0_calibration",
+        "artifacts_cgan_c0_fig6_digitised_qpsk_link"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/rrahman/BT/Tabula Rasa/artifacts/cgan/c0_fig6_digitised.png"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
