@@ -1,7 +1,7 @@
 # Tabula Rasa — learned jamming under detection constraints
 
 **Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
-Last consolidated: 2026-09-17.
+Last consolidated: 2026-09-21.
 
 > **This file is the single entry point.** It is organised as:
 > **[1. The whole picture](#part-1--the-whole-picture)** ·
@@ -126,6 +126,7 @@ BT/
 │   ├── source_papers/      <- PDFs the CGAN track reproduces/uses (IEEE-licensed; git-ignored)
 │   ├── cluster/README.md   <- cluster ops; read before submitting anything
 │   ├── artifacts/          <- all outputs, one dir per simulation
+│   ├── graphify-out/       <- queryable knowledge graph of this repo (C.5); regenerable
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
 │   ├── proposal/           <- registration proposal; `*_reviewed_2026-09-12.tex` = his annotated copy
 │   ├── frontier/ simulation00..08/   <- FROZEN. Appendix material. Do not extend.
@@ -160,7 +161,7 @@ BT/
 
 **Live code (CGAN track, `cgan/`):** being built. The planned modules and their order are in
 [§3.4](#34-the-plan-20-days--re-cut-2026-09-12-for-the-pivot) (items C0–C6); this table gets one row
-per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, so it runs via sbatch.**
+per module as each lands. **Everything except `digitise_fig6.py` and `gan_figures.py` needs Sionna, so it runs via sbatch** (those two read JSONs/pixels only and run on the login node).
 
 | file | what |
 |---|---|
@@ -179,6 +180,10 @@ per module as each lands. **Everything except `digitise_fig6.py` needs Sionna, s
 | **`cgan/train_spectrogram_cnn.py`** + submit | retrain Li et al. CNN + calibrate every detector → `artifacts/cgan/baselines/{detector_spec.pt, thresholds.json, clean_lrt_parts.pt, spec_cnn_training.json}` |
 | **`cgan/baselines.py`** + `submit_baselines.sh` | the sweep: `--array=1` (K=1 universal curve + test drops), `--array=2-4` (K>1 over 50 drops), `--smoke`; → `artifacts/cgan/baselines/run001/sweep_K{1..4}.json` |
 | **`cgan/baselines_figures.py`** + submit | 9 figures + `summary.json` from the sweeps |
+| **`cgan/attacks.py`** (D1/D2: `gan_tx`, `gan` spec, `ber_logprob`/`log_expected_ber`) · **`detectors.py`** (`soft_pdet`) · **`models.py`** (`load_generator`) · **`verify.py`** §14 | the GAN eval path + the differentiable log-BER and soft-P(det) terms + the differentiability checkpoint |
+| **`cgan/eval_gan.py`** + `submit_eval_gan.sh` / `submit_eval_gan_array.sh` | D1: place any generator (`--task N` or `--gen`) on the D0 BER–P(det) plane, with confirmation → `artifacts/cgan/gan/run001/<tag>.json` |
+| **`cgan/train_gan.py`** + `submit_train_gan.sh` | D2: white-box detector-aware training, one generator per (target detector, β) → `artifacts/cgan/gan/run001/task{T}_G.pt` + `task{T}.json` |
+| **`cgan/gan_figures.py`** | D1/D2 figures (login node; reads eval JSONs) → `artifacts/cgan/gan/run001/fig_*.png` |
 
 **Live code (sim08 ablations, `sim08_ablation/`):** imports `simulation08/` and `simulation06/`
 read-only; every entry point is an sbatch script (Sionna).
@@ -242,10 +247,25 @@ silently break jobs. The five facts that change how experiments are designed:
 All 19 submit scripts were migrated and verified end-to-end (job 2243247 reproduced the recorded m2
 numbers in 2.9 s). **M0 runs on CPU in seconds**, so compute is not currently a constraint at all.
 
-**2026-09-16: the INFK student cluster's maintenance ended and it is reachable again, but ITET/TIK
-stays the default** — it wins on every axis in `cluster/README.md`'s comparison table (unlimited
-concurrent jobs vs INFK's `MaxJobsPU=1`, 2-day walltime vs 1 h, 12 usable GPU nodes vs INFK's single
-5060 Ti). No open work depends on INFK; there is no reason to switch back.
+**Going back to INFK has been considered and rejected three times (2026-09-16, -09-20, -09-21); do not
+re-litigate it without new evidence.** ITET wins on every axis in `cluster/README.md`'s comparison table
+(unlimited concurrent jobs vs INFK's `MaxJobsPU=1`, 2-day walltime vs 1 h, 12 usable GPU nodes vs INFK's
+single 5060 Ti), and the 2026-09-21 measurement settles it: over **107 jobs/array-tasks since 2026-09-14
+the median queue wait is 0.1 min**, mean 4.5 min, worst-ever 43.6 min; 87/107 started within 5 minutes
+(`sacct -S <date> -u rrahman --format=JobID,Submit,Start`). A migration would also cost a full venv
+rebuild — INFK storage is not mounted on `tik42x` (`/work/scratch` does not exist there), so torch cu128
++ Sionna 2.0.1 + the `llvm_ad_mono_polarized` mitsuba variant + torchvision would all have to be
+reinstalled and every artifact copied — against an **unverified Blackwell/sm_120** target (§3.3f).
+
+**The methodological reason outranks all of that:** D2's rows are only meaningful next to the D0/D2a
+rows they are compared with, and those were measured on ITET. Moving part of one study to a different
+GPU architecture introduces an uncontrolled variable into exactly the comparison the study exists to
+make (matched detectability, §2.8).
+
+**2026-09-21 was a genuine outlier, not a trend:** one user held 17 of 23 running `disco.med` jobs with
+2-day arrays, pushing our chain's estimated start ~9 h out. Note SLURM's estimate is a worst-case
+ceiling computed from other jobs' *time limits*, not a prediction. The right response is
+`--dependency=afterok:` chaining so the pipeline runs unattended, not a change of cluster.
 
 ---
 
@@ -632,6 +652,7 @@ corrections come back.
 | **PettingZoo for the multi-agent env API; BenchMARL only if an off-the-shelf MARL algorithm is genuinely needed; SB3 for single-agent baselines over the same env. Never RLlib.** | His words: *"RLlib is famous for being too complex for what we need, so I would avoid it."* Confirmed absent from the repo. Surrogate gradients stay the **primary** method; MARL is the comparison, not the default. |
 | **Actions are low-dimensional perturbation *parameters*, never raw IQ** | This is what killed sim06/07. |
 | **The detector is frozen; the arms race is round-based and offline** | His: *"this can only happen at training time: there are no ground-truth labels at execution time"*. |
+| **Report the measured gain; do not inflate a bounded result into an impossibility claim** (user, 2026-09-23) | A small measured improvement *is* a finding. At the α budget every jammer reads 0, so that cut cannot distinguish anything and must not be the headline; the reportable claim is that **at matched BER, P(det) is smaller** (§3.3f: −19.8 pp vs the CNN). The α-budget zeros bound the gain, they are not the claim. This is the retired stealth headline's error (§2.1) run in reverse — over-claiming a negative is as wrong as over-claiming a positive. Pairs with the matched-detectability rule in §2.7 and with [[show-full-frontier]]. |
 
 **Two of his items are closed by the row above, and should be written up as closed rather than left
 hanging.** (i) *"Look at the GAN literature and see whether it transfers"* — it was looked at, and the
@@ -931,8 +952,20 @@ a loss.
 
 ## 3.1 Status line
 
-**STATE 2026-09-19. The classical baselines AND the learned control tier (D2a) are BUILT; the
-coordination plan below is paused, not superseded, and was not re-validated.**
+**STATE 2026-09-23. The D-series is COMPLETE and the headline is POSITIVE, not an impossibility
+result.** D0 baselines, D2a control, D1 plain GAN and D2 (white-box detector-aware GAN) are built and
+evaluated against **all four** detectors — power 1/2-sided, kurtosis, spectrogram CNN. **At matched BER,
+detector-aware training measurably lowers P(det): −19.8 pp against the CNN, −31.2 pp against power,
+−92.7 pp against kurtosis, at 12.8 dB less power (§3.3f).** Inside the strict α budget confirmed BER is
+still 0 for every non-genie jammer — that is the *limit* of the gain, not the finding. The coordination
+plan below is paused, not superseded, and was not re-validated.
+
+**0d · D1 plain GAN + D2 detector-aware GAN, analytic detectors — DONE 2026-09-20 ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).**
+The actual step-2, built white-box (§3.3f). Plain GAN (D1) and 13 trained generators (D2: power-1s/2s,
+kurtosis × β{1,10,100,1000}) placed on the BER–P(det) plane. **Result: stealthy BER ≈ 0 against every
+detector — a 1M-parameter white-box generator does no better than D2a's 48-parameter control.** The CNN
+was not targeted then; it was closed 2026-09-23 with the same answer (§3.3f). Report:
+<https://claude.ai/artifact/PBXBr7EQQ3huK7rocvSMxX>.
 
 **0b · Learned control tier D2a — DONE 2026-09-19 ([§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19)).**
 User decision 2026-09-18: add a *learned* structured jammer as the fair control for the stealth GAN
@@ -983,18 +1016,56 @@ allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward
 gated tail ("only if it bites"). **Not folded into §2.10/§4.2 as settled until he replies (user
 instruction).**
 
-**Single next action (unchanged by D2a): GAN1 — put the reproduced generator (`artifacts/cgan/run001_G.pt`, async) on the
-§3.3d BER–P(det) plane** as a new attack in `cgan/attacks.py` / `baselines.py`, measured against the same
-four detectors. It will land on the floor alongside noise and pulsed QPSK (no detector-aware training
-yet), which is the honest "detectability of a reproduced GAN jammer" result and the point from which GAN2
-(a detector-aware training term) must earn its stealth. The recipe caveat is §4.2 Q11. **Still owed to the
-supervisor in parallel:** the direction email (options A/B, §4.1 #0b) — the baselines do not need it, but
-the *framing* of the eventual GAN result (characterisation vs coordination) does. The §3.3c and §3.3d
-report pages are both ready to send him. **For D2, D2a already supplies two things:**
-- a tested stealth objective (`train_shaped.fitness`);
-- a prediction to beat: a stealth-trained generator should also find out-of-band evasion of the CNN,
-  which buys nothing. D2's claim therefore needs BER > 0 at P(det) ≤ α, which the control never
-  reached.
+**0e · D2 vs the spectrogram CNN — DONE 2026-09-23 ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).**
+The last untested detector. **No surrogate CNN was trained** (this corrects the 2026-09-20 plan): the
+only non-differentiable step in the eval path is the 256-entry viridis LUT, a staircase with zero
+gradient, so `detectors.spectrogram_image(..., grad=True)` keeps its exact forward value and substitutes
+the colormap's local slope in the backward pass (a straight-through estimator). The attacker therefore
+differentiates the **deployed** weights — white-box like every other D2 target, no transfer gap to price,
+no retrain. **Result, in the framing the user chose 2026-09-23: at matched BER the CNN-targeted generator is
+measurably less detectable** (P(det)_CNN 1.000 → 0.802 vs the plain GAN, −19.8 pp, ~11σ) **at 12.8 dB
+less power** — a small but real finding. Its limits: the gain vanishes above BER ~1e-3, a *classical*
+Amuru pulsed jammer still evades the CNN better (0.421), β has an interior optimum at 1–10, and nothing
+reaches the α budget. Numbers and the full table: §3.3f.
+
+**Two traps were found by inspection before burning a cluster cycle, and both would have produced a
+convincing-looking null.** They are the reusable lesson of this round:
+1. **The JSR band must straddle the *target* detector's transition.** `(-32, 0)` was set for power
+   (flags from ~−27 dB); the CNN's transition is 12–16 dB lower, so every sampled JSR would have been
+   saturated-detected with `sigmoid'((stat−thr)/scale)` ~1e-11 and **no β could have recovered a
+   gradient**. `train_gan.JSR_BANDS` now gives `spec_cnn` (−48, −16). The training logs confirm the fix:
+   `P_det_soft` moves 0.99 → 0.17–0.31 instead of sitting pinned at 1.
+2. **β must be scaled to the detector, not inherited.** {1…1000} suited the analytic detectors; the CNN
+   sweep runs to 1e6 (tasks 17–19). *Secondary to the band* — the original evidence for this (a 0.041
+   detector-term gradient) was measured inside the saturated region, so it mostly measured trap 1.
+
+**Known and measured: the deployed CNN statistic runs under `autocast(fp16)` on CUDA, D2 training in
+fp32** (fp16 gradients underflow without a GradScaler). The straight-through LUT itself is *exact* —
+identical images on GPU, identical statistic on CPU where neither path autocasts. The fp16/fp32
+difference alone reaches 0.375 × clean std at its worst over 1024 clean frames, but moves only 0.6 % of
+clean decisions and no jammed P(det). `verify.py` §14d measures the two effects **separately** and
+asserts only decision-level equivalence; it prints the fp16 bias each run, so revisit only if it grows.
+
+**Single next action: the supervisor direction email (§4.1 #0b) — it is now the only thing gating the
+write-up.** Every compute item the characterisation study needs is done, and the result is stronger than
+"nothing works": a measurable matched-BER stealth gain with three stated limits. Send it with the
+2026-09-23 report page (link in §3.3f). What remains his call is whether the framing is characterisation
+(option B) or coordination (option A) — outstanding since 2026-09-17.
+
+> **How to state it** is now a settled method decision — see the last row of
+> [§2.8](#28-settled-method-decisions). In short: report the matched-BER gain; the α-budget zeros bound
+> it and are not the claim.
+
+`gan_figures.pick_cnn_tag()` chooses which CNN-targeted β the figures draw, by a stated rule: **lowest
+P(det)_CNN at matched BER 1e-3**, the operating point the headline is quoted at. It draws **β = 10**.
+The earlier rule ranked by confirmed stealthy BER at the α budget, where every row ties at 0, so its
+tie-break silently drew β = 1e5 — the *least* interesting generator; corrected 2026-09-23 and the
+figures regenerated.
+
+**Still owed to the supervisor
+in parallel:** the direction email (options A/B, §4.1 #0b) — the *framing* (characterisation vs
+coordination) depends on it. The §3.3c/§3.3d report pages and the new §3.3f report page
+(<https://claude.ai/artifact/PBXBr7EQQ3huK7rocvSMxX>) are ready to send him.
 
 **Supervisor contact.** The sim08 ablation axes were discussed with him before 2026-09-16. Whether the
 §4.1 #0 pivot email was sent, and whether he knows about the CGAN track, is not recorded after
@@ -1490,6 +1561,113 @@ before the runs:
 - `fig5_ber_vs_jsr.png`;
 - `task{0..9}.json` + `summary.json`.
 
+## 3.3f CGAN under detection — D1 plain GAN and D2 detector-aware GAN, all four detectors (2026-09-20, CNN 2026-09-23)
+
+**User-directed build (this session), the actual step-2 (§3.4 D1/D2).** New/extended flat modules in
+`cgan/`: `attacks.gan_tx` + a `gan` attack spec (the eval path on the 3-D scene link),
+`attacks.ber_logprob`/`log_expected_ber` (differentiable log-domain BER), `detectors.soft_pdet`,
+`models.load_generator`, `eval_gan.py` (places any generator on the D0 plane), `train_gan.py` (the D2
+trainer), `gan_figures.py`. `verify.py` gains section 14. Step-1 and D0/D2a files untouched.
+
+**Method (decided this session).**
+- **Generator:** the reproduced Zhou CGAN generator (`models.Generator`), warm-started from `run001_G`
+  (async). D2 does **not** re-run Zhou's adversarial losses — it fine-tunes by **direct gradient**
+  (this reframes §4.2 Q11: the "which GAN recipe" question is moot for D2).
+- **Objective (§2.8):** `−(log E[BER] − β·P_det_soft)`, power imposed by the hard equality projection
+  (never a loss term). Effectiveness is `attacks.log_expected_ber` (log domain — E[BER] underflows at
+  SNR 30 dB, the A.5/D2a wall); stealth is `detectors.soft_pdet` at the detector's calibrated α
+  threshold. Because log E[BER] runs ~1e3 in the stealth region, **β sweeps geometrically
+  {1, 10, 100, 1000}** (not D2a's {0.01, 1}); the comparison to D2a is made on the **measured**
+  BER–P(det) plane, so it is objective-agnostic.
+- **Threat model (decided this session).** Frozen, pre-trained detectors; generator frozen at
+  deployment (no test-time query). **White-box** (train against the deployed detector) = attacker upper
+  bound. Only the CNN has secret weights; power/kurtosis are analytic, so white-box ≡ black-box for
+  them. A **transfer/grey-box** row (surrogate CNN, independent seed) would price the weight assumption;
+  the black-box floor (D2a) and the NP ceiling bracket it. Transfer is a gated extension.
+- **One generator per (target detector, β)**, JSR sampled over the active band [−32, 0] dB per step,
+  Adam 2e-4, 400 steps. Placement + confirmation via `eval_gan.py` (reuses `baselines.measure`/`confirm`).
+
+**Verified (job 2267202, `--baselines-only`, all pass incl. section 14):** the perfect-generator gan
+path ≡ pulsed(1) async (14a); realised JSR exact per frame (14b); **the full D2 loss produces a finite,
+nonzero gradient on all of G's parameters** — autograd flows through Sionna's `ApplyTimeChannel`, the
+matched filter and the detector (14c, ‖grad‖ ≈ 2.7e4). This de-risked the white-box approach before
+training.
+
+**Result — the effectiveness/detectability wall holds for a 1M-parameter white-box generator too.**
+- **D1 plain GAN (`run001_G`):** confirmed stealthy BER (max BER at P(det) ≤ α = 0.05, re-measured on
+  4096 fresh frames) is **0 against every detector** — on the floor with noise/pulsed. Max BER when
+  loud 0.44. The honest "detectability of a reproduced GAN jammer" baseline.
+- **D2 (13 generators: eff + power-1s/2s + kurtosis × β{1,10,100,1000}):** confirmed stealthy BER
+  **≈ 0 against every detector** (a few ~1e-5–8e-5 vs kurtosis, at the measurement floor). Every
+  generator reaches max BER ~0.40 when loud (effectiveness-only crosses BER 1e-3 at ~−18 dB, on par
+  with D2a's shaped control), so the zero is a **real tradeoff, not a broken optimiser**. **A
+  1M-parameter neural generator with white-box gradients does no better than D2a's 48-parameter shaped
+  control** — the wall is not a hypothesis-class limit. Consistent with the square-root-law (§2.1).
+- **Cross-detector (kurtosis is the soft spot):** matched-QPSK reaches BER ≈ 0.4 at P(det)_kurtosis ≈
+  0.1 (just outside the strict budget) — a strong same-modulation jammer barely changes the amplitude
+  distribution (§3.3e). Against the CNN the Amuru pulsed jammer is the stealthiest classical attack.
+
+**The CNN closes the set (2026-09-23): same answer, and now the gap is measured.** Seven more
+generators (tasks 13–19, spec_cnn × β{1, 10, 100, 1000, 1e4, 1e5, 1e6}), trained **white-box against the
+deployed CNN** through the straight-through colour LUT (§3.1) — no surrogate, so the attacker sees the
+real weights.
+- **Confirmed stealthy BER is exactly 0 for all seven**, at α = 0.05 on 4096 fresh frames, while max BER
+  when loud is **0.377–0.433**. The generators work; they cannot be stealthy and effective at once.
+- **The optimiser was genuinely given the boundary.** `P_det_soft` falls from ~0.99 to 0.17–0.31 during
+  training (e.g. β = 1e5: 0.889 → 0.305 at comparable JSR), so this is a real tradeoff and not a dead
+  gradient — the failure mode the per-target JSR band (§3.1) was introduced to avoid.
+- **At matched BER the gain is real and is THE headline (user decision 2026-09-23).** Reporting only at
+  the α budget is the wrong cut: there everything is 0 and no jammer can be distinguished from any
+  other. Driven to the same BER = 3e-4 and compared against **D1, which shares D2's architecture,
+  warm start and eval path** — so the difference is detector-aware training alone:
+
+  | detector | D1 plain GAN | D2 vs CNN, β = 10 | Δ |
+  |---|---|---|---|
+  | spectrogram CNN | 1.000 | **0.802** | **−19.8 pp** |
+  | power (1-sided) | 1.000 | **0.688** | −31.2 pp |
+  | kurtosis | 0.987 | **0.060** (β = 1) | −92.7 pp |
+
+  It also reaches that BER at **−21.2 dB instead of −8.4 dB — 12.8 dB less power**. Binomial SE is
+  ±1.8 pp at 512 frames, so the CNN result is ~11σ; **differences below ~4 pp are not meaningful.**
+  Matched-BER points are interpolated on the 1 dB JSR grid, linearly in log BER.
+- **Three limits on that gain, all load-bearing.** (i) **It lives only at low BER** — at 3e-4 the
+  spread is 0.42–1.00, but by BER 3e-3 every detector reads 1.000 for every jammer. (ii) **A classical
+  jammer still evades the CNN better**: Amuru pulsed sits at **P(det)_CNN = 0.421**, below every
+  learned generator. The GAN wins on kurtosis and power, *not* on the detector it was trained against.
+  (iii) **β has an interior optimum** — β = 1–10 produces the gain, 100–1000 erodes it, and β ≥ 1e4
+  destroys it (those generators need *more* power for the same BER **and** are caught just as often).
+  Over-weighting stealth produces a worse jammer, not a stealthier one.
+- **The α-budget zero is the limit, not the finding.** Inside the detector's own false-alarm rate
+  confirmed BER stays 0 for all 24 non-genie jammers; the CNN's stealth edge is ~−45 dB (best
+  CNN-targeted generator −43.5 dB vs −46.7 dB for noise, i.e. ≤ 3 dB) while BER only becomes
+  measurable near −16 dB — a **~30 dB gap**. All four detectors agree there, under the attacker's best
+  case. State this as the boundary of the gain above, **not** as an impossibility headline.
+
+**Jobs:** 2267202 verify · 2267610 train array 0–12 (task 12 `TaskProlog` transient → 2267624) ·
+2267625 D1 plain eval · 2267626 eval array 0–12 (task 12 `TaskProlog` → 2267639).
+**CNN round (2026-09-23):** 2268283 verify (exit 0) · 2268338 train array 13–19 (task 19 `TaskProlog`
+→ 2269798) · 2269799 eval array 13–19 · 2269800 figures + table. Generators + eval
+JSONs + `fig_{ber_vs_jsr,pdet_vs_jsr,frontier}.png` in `artifacts/cgan/gan/run001/`.
+**Report page, matched-BER framing, all four detectors (2026-09-23, current):**
+<https://claude.ai/artifact/2fRAFrMoYAfCZWPe1KvTfV> — private, **not yet shared with the supervisor**.
+It supersedes the 2026-09-20 page <https://claude.ai/artifact/PBXBr7EQQ3huK7rocvSMxX>, which predates
+the CNN rows and leads with the α-budget framing; do not send that one.
+
+**Caveats / not yet done.**
+- The matched-BER table above is **not** stored as an artifact — it is derived from the eval JSONs.
+  `cgan/gan_figures.py` `summary()` prints the α-budget table only; regenerate the matched-BER cut by
+  interpolating `points[].ber` / `points[].pdet` per jammer (method recorded above).
+- The frontier is drawn at the fixed α threshold swept over JSR, not the full ROC over all budgets
+  ([[show-full-frontier]] wants all budgets); that needs per-frame statistics saved during eval (the
+  D2b machinery, §3.4). The qualitative wall is unchanged.
+- Single-round, frozen detectors, K = 1.
+
+**Cluster note.** A `PENDING (BadConstraints)` with a ~24 h estimate was a **CPU** mismatch — the jobs
+requested `--cpus-per-task=4` while the only node with a free GPU of the allowed type (tikgpu04, 2 free
+TITAN RTX) had 2 free CPUs; dropping to `--cpus-per-task=2` scheduled them at once
+(`submit_train_gan.sh` / `submit_eval_gan*.sh` now use 2). Migrating to INFK was re-examined and
+rejected again 2026-09-21, now with measurements — see §1.5.
+
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
 ### Exploratory CGAN track — ACTIVE since 2026-09-14
@@ -1513,14 +1691,14 @@ paused while this runs.
 With no pass/fail bar, hyperparameters are iterated **only** by explicit user decision after seeing
 C6. Each run gets a row in [A.0](#a0-run-index).
 
-### Detector-suite characterisation study — PROPOSED 2026-09-17; D0 and D2a BUILT, D1 next
+### Detector-suite characterisation study — PROPOSED 2026-09-17; D0/D1/D2a/D2 ALL BUILT AND EVALUATED (2026-09-23)
 
 The user's chosen staging (2026-09-17). Shared spine for options A and B; MARL and CWT are gated
 "only if it bites". Same conventions as the C-series (run from `cgan/`, sbatch, matched detectability,
-NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **STATE 2026-09-19:**
-- D0 (baselines) and D2a (learned control) are built. The user directed both as preparation, not gated
-  on the supervisor.
-- **D1 is the next item.**
+NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **STATE 2026-09-20:**
+- D0 (baselines), D2a (learned control), D1 (plain GAN) and D2 vs **all four** detectors are done
+  ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)). The user directed all as preparation, not gated on the supervisor.
+- **The compute is complete.** D3/D4 stay gated — D1/D2 showed no frontier worth stressing.
 - The *framing* of D2 onward still waits on the direction email (§4.1 #0b).
 
 Build order:
@@ -1528,10 +1706,10 @@ Build order:
 | # | Item | Note |
 |---|---|---|
 | **D0 = "baselines"** | **DONE 2026-09-17 on the 3-D waveform link ([§3.3d](#33d-classical-baselines-on-the-3-d-waveform-link--the-pre-gan-envelope-2026-09-17)).** Attackers barrage / pulsed-QPSK(p) / omniscient(η); detectors power (1/2-sided), kurtosis, spectrogram-CNN, and the exact noise NP test — on the waveform layer, K = 1–4. The user built it as GAN-prep, not gated on the supervisor. *(An M0 exact-NP panel was folded into the waveform NP-on-noise row rather than run separately.)* | The envelope exists: floor (barrage), smart-classical (pulsed-QPSK), genie ceiling (omniscient), optimal warden (NP on noise). Every realisable attack is at the floor. |
-| **D1** | **Plain GAN waveform (run001) vs the baselines** on the BER–P(det) plane. No detector-aware training yet — this measures the *reproduced* jammer's detectability, honestly titled as such. | Uses the existing `artifacts/cgan/run001_G.pt`; recipe caveat §4.2 Q11. |
+| **D1** | **DONE 2026-09-20 ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).** Plain GAN (`run001_G`) on the BER–P(det) plane: stealthy BER 0 against every detector — on the floor with noise/pulsed. The honest "detectability of a reproduced GAN jammer". | `eval_gan.py`; `attacks.gan_tx` + `gan` spec. |
 | **D2a** | **DONE 2026-09-19 ([§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19)).** Learned control tier: shaped-noise jammer (48 parameters), CMA-ES, black-box score-based, one per detector, the same objective D2 will use. User decision 2026-09-18 (§2.10). | Stealthy BER 0 against every detector. The CNN is evaded only out of band, where nothing reaches the victim; the effectiveness gain is 15.9 dB. D2 must beat this, not the fixed rows. |
 | **D2b (later)** | **FAR ablation** (user, 2026-09-19). α = 0.05 *per frame* is arbitrary: at 1 MBd and 128-symbol frames it is about 390 false alarms per second, and a real receiver would run far lower α. Plan: α ∈ {1e-3, 1e-2, 0.05, 0.1}. **Evaluation first:** re-measure the existing fixed and learned jammers, storing per-frame statistics so any α (and the ROC) comes for free; `thresholds.json` holds only α ∈ {0.01, 0.05}, from 20k clean frames, so α = 1e-3 needs ≥ 100k. **Retrain the learned tier only if the ranking changes with α**; its objective uses the α = 0.05 threshold. | Expected: power's "first errors only at P(det) ≥ 0.83" is robust to α, because at −16 dB the mean shift is far above the clean spread. The CNN rows are the ones likely to move. |
-| **D2** | **GAN conditioned on stealth** — add a detector-aware term so the generator is stealthy *by design* (the only way "stealthy GAN" is a fair claim). Re-run D1's matrix. | This is the actual step-2; the statistical detector is Q8, scoped to kurtosis for D0/D1. |
+| **D2** | **DONE — all four detectors ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).** Analytic 2026-09-20, CNN 2026-09-23. White-box direct-gradient generator (warm-started from `run001_G`), objective `−(log E[BER] − β·P_det_soft)`, one per (detector, β); the CNN is differentiated through a straight-through viridis LUT — the deployed weights, no surrogate. **Confirmed stealthy BER 0 against every detector**, ≤ 3 dB stealth edge over noise, ~30 dB gap to where BER bites. No better than D2a's 48-parameter control. | `train_gan.py`; per-target `JSR_BANDS` and β range matter — see §3.1 traps. |
 | **D3 (gated)** | **CWT detector** (Zhang & Krunz, torch — no `pywt`, §4.2 Q10) added to the suite — **only if D1/D2 show a frontier worth stressing**. | Adaptation, not a drop-in (Q10). |
 | **D4 (gated)** | **MARL coordination row** (option A's coherent combining) — **only if the single-jammer study bites**. Power/phase/timing coordination so jammers add at the victim, measured vs Amuru Thm 4 as ceiling; generator incidental (§2.10). | Biggest lift; do not build before D0–D2 land. |
 
@@ -1949,8 +2127,11 @@ network (DCNN₁)**, retrained on our clean-vs-jammed segments over a mixture of
 *"the Zhang & Krunz detector architecture, retrained"*, never as their detector. `pywt` is not in the
 venv, so the CWT will be written in torch.
 
-**Q11 — Which training recipe does step 2 retrain with? OPEN, only needed once G is retrained.**
-Step 1 closed on `run001_G.pt` (§2.10), but that recipe is no longer in the code: `train_cgan.py`
+**Q11 — Which training recipe does step 2 retrain with? LARGELY MOOT for D2 as built (2026-09-20, §3.3f).**
+D2 does **not** re-run Zhou's adversarial GAN training — it warm-starts `run001_G` and fine-tunes by
+**direct gradient** on the detector-aware objective, so "which GAN recipe" no longer gates it. The note
+below stands only if a *GAN-adversarial* retrain is ever wanted. Step 1 closed on `run001_G.pt` (§2.10),
+but that recipe is no longer in the code: `train_cgan.py`
 defaults to run002's (WGAN-GP, n_critic 5, feat 2 / STFT 45, L1 feature matching, log-clamped STFT,
 headroom 0.95), which produced a worse imitation (§3.3b). `--adv nsgan --n-critic 1 --w-feat 1
 --w-stft 1` restores run001's adversarial loss and weights, **not** its MSE feature matching, log1p
@@ -2115,6 +2296,7 @@ attacker. RL form `R = BER − β·D − γ·P − 0.05`; direct-gradient form `
 | 07 | CNN | `−log(1−p̂+ε)` | 0.3 (linear warmup) | 0.05 | MAPPO | `simulation07:68,69,437` |
 | **M0** | NP / CNN / energy | flagged frames, β swept | — | **hard budget, not a term** | — | `attacks.py:23` |
 | **cgan D2a** | power 1/2-sided, kurtosis, CNN (one each) | hard flag rate (+1e-6 score tie-break) | 0 / 0.01 / 1 | **per-frame equality projection, not a term** | CMA-ES, black-box | `cgan/train_shaped.py` `fitness` |
+| **cgan D2** | power 1/2-sided, kurtosis, CNN (one each) | `soft_pdet` = mean sigmoid((stat−thr)/σ_clean) at the α = 0.05 threshold | 0 · {1,10,100,1000} · CNN also {1e4,1e5,1e6} | **per-frame equality projection, not a term** | Adam, white-box direct gradient | `cgan/train_gan.py` `train` |
 
 **Two findings only visible in this table**, each recorded where it is used: the **log barrier is the
 mechanism of the untrainability result** ([A.5](#a5-sim06-jammer--06b--07--the-untrainability-result)),
@@ -2842,3 +3024,60 @@ busy cluster. `slurmstepd: error: TaskProlog failed` with 0 s elapsed is node-si
 `NVML … GPU is lost` (artongpu01, 2026-09-15) is a failing GPU: resubmit and exclude that node.
 **`cgan/submit_verify.sh` needs a 24 GB card** (`titan_rtx|geforce_rtx_3090`). Section 10's geometry
 check holds ~9 GB at once and ran out of memory on an 11 GB 2080 Ti (job 2267046, 2026-09-19).
+
+**The 48 GB cards are out of reach, so widening `--constraint` cannot rescue a full cluster**
+(2026-09-21). `tikgpu08` (rtx_a6000) and `tikgpu10` (a100) are in **`disco.all`, not `disco.med`**, and
+`sacctmgr show assoc user=rrahman` lists exactly one account — `disco-med`. The reachable GPU nodes are
+`tikgpu02–07,09` (of which `02/03` are Pascal and unusable) plus `artongpu01–07` (2080 Ti, 11 GB). Check
+partition membership before adding a feature name that looks free:
+
+```bash
+sinfo -o "%20P %25N %10T"                       # which nodes each partition actually holds
+sacctmgr -n show assoc user=rrahman format=Account,Partition
+```
+
+When `tikgpu04` shows free GPUs but `CPUAlloc == CPUTot`, lowering `--cpus-per-task` does not help
+either — zero free CPUs is zero. On such a day the queue estimate (`squeue --me -o "%S"`) is the honest
+answer; chain the pipeline with `--dependency=afterok:<jobid>` so it runs unattended when capacity
+returns, instead of waiting to submit the next stage by hand.
+
+## C.5 Knowledge graph (`graphify-out/`)
+
+A queryable graph of this repo — code symbols, prose concepts and their relations — built 2026-09-20,
+extended 2026-09-21, with [graphify](https://github.com/Graphify-Labs/graphify) (`~/.claude/skills/graphify/`, PyPI
+`graphifyy`). Ask a question about the codebase in plain English and the skill answers from
+`graphify-out/graph.json` instead of grepping; `graphify query/path/explain/affected/god-nodes` are the
+explicit forms. `GRAPH_REPORT.md` is the audit trail, `graph.html` the interactive view.
+
+**It is partial by choice.** 1809 nodes, 3403 edges, 131 communities. All 181 code files are in
+(deterministic AST), as are `README.md`, `CLAUDE.md`, `cluster/README.md` and `proposal.pdf`. Of the
+166 `artifacts/*.png` figures, 43 are vision-extracted — every `cgan/`, `frontier/`,
+`frontier_inband/` and `frontier_recheck/` plot, and 4 of 5 `m0/` — and **123 remain queued**
+(manifest-unstamped, so they re-queue rather than being skipped). The queued ones are all
+`simulation01`–`simulation08` archive figures: frozen appendix material, ~48 k tokens each to read,
+deliberately skipped. Every *live* track therefore has its code in full and `cgan/` its figures in
+full. The graph carries a health warning — 488 dangling-endpoint edges, 16 self-loops, 52 collapsed —
+from figure chunks referencing nodes the unrun chunks would have created; it does not affect querying
+and shrinks as figures are added.
+
+Community names are **hub-derived, not curated** — each is its community's highest-degree node. Blunt
+but serviceable; `graphify label` regenerates them with an LLM if that is ever worth the tokens.
+
+**Two commands, very different costs:**
+
+```bash
+graphify update .          # changed CODE only: AST, no LLM, no tokens, seconds — r2c step 6
+/graphify . --update       # also re-reads changed docs/papers/figures: subagents, expensive
+```
+
+`graphify update` is login-node-safe for the same reason M0 is: pure tree-sitter parsing, no Sionna, no
+GPU. It snapshots the old graph to `graphify-out/<date>/` and overwrites curated community names with
+hub-derived ones (cosmetic; `graphify label` restores them).
+
+`UV_TOOL_DIR`, `UV_CACHE_DIR` and the `PATH` entry are persisted in `~/.bashrc.user` — the tool venv
+lives on `net_scratch`, because without them graphify's interpreter probe reinstalls the package into
+the small, silently-enforced home quota (§1.5, C.4).
+
+**Note `graphify-out/` is tracked in git** despite the `graphify-out/` line in `BT/.gitignore` — commit
+`d139c42` added 131 of its files before the rule existed, and gitignore does not untrack. Left as-is by
+user decision 2026-09-20. `git rm -r --cached "Tabula Rasa/graphify-out"` would untrack it if wanted.

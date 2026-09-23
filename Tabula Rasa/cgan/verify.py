@@ -614,6 +614,12 @@ def test_gan_jammer(L):
           reaches the generator's parameters, i.e. autograd flows through
           channel.receive (Sionna ApplyTimeChannel), the matched filter and the
           detector. A finite, nonzero gradient on G's weights de-risks the method.
+      14d THE CNN checkpoint: the straight-through colour LUT does not change the
+          deployed CNN's statistic -- exactly, at matched precision -- and the loss
+          built on it reaches G. Without it the CNN has zero gradient everywhere and
+          cannot be a D2 target at all. The deployed path autocasts to fp16 on CUDA
+          while training runs in fp32, so that separate effect is measured on its own
+          and only has to leave the DECISIONS alone.
     """
     print(f"\n14. GAN jammer on the 3-D link [{L.pulse}, sps={L.sps}]")
     snr, N = lk.SNR_DB, scene.N_SYM
@@ -660,6 +666,75 @@ def test_gan_jammer(L):
     check("D2 gradient reaches all of G's parameter tensors", float(n_with_grad), float(n_params), 0.0)
     check("D2 gradient on G is finite and nonzero", float(math.isfinite(gnorm) and gnorm > 0), 1.0,
           0.0, note=f"||grad|| = {gnorm:.4g}")
+
+    # 14d: the CNN as a D2 target -- straight-through LUT, forward unchanged
+    import os
+    path = os.path.join(scene.ART, "detector_spec.pt")
+    if not os.path.exists(path):
+        print("  [SKIP] 14d: no detector_spec.pt -- run train_spectrogram_cnn.py first")
+        return
+    net, sc, ckpt = detectors.load_cnn(path, device)
+    thr_cnn = ckpt["thresholds"]["cnn"][str(detectors.HEADLINE_ALPHA)]
+    clean = _batches(L, 1024, None, None, snr)["r"]
+    s_dep = detectors.cnn_statistic(net, clean, sc)                            # deployed path
+    spread = float(s_dep.std())
+    with torch.no_grad():
+        s_ste = torch.cat([detectors.cnn_statistic(net, clean[i:i + 64], sc, grad=True)
+                           for i in range(0, clean.shape[0], 64)])
+
+    # (i) the LUT change ALONE, at matched precision. The deployed statistic runs under
+    # autocast(fp16) on CUDA and the training path in fp32 (fp16 grads underflow), so the
+    # two must be separated: the image is built identically either way, and on CPU -- where
+    # neither path autocasts -- the whole statistic is identical too. Job 2267938 conflated
+    # the two and charged fp16 rounding to the LUT.
+    with torch.no_grad():
+        img_h = detectors.spectrogram_image(clean[:32], sc)
+        img_s = detectors.spectrogram_image(clean[:32], sc, grad=True)
+    check("spec_cnn: straight-through LUT reproduces the deployed image exactly",
+          float((img_h - img_s).abs().max()), 0.0, 1e-6)
+    net_cpu, sc_cpu, _ = detectors.load_cnn(path, "cpu")
+    r_cpu = clean[:32].cpu()
+    with torch.no_grad():
+        c_dep = detectors.cnn_statistic(net_cpu, r_cpu, sc_cpu)
+        c_ste = detectors.cnn_statistic(net_cpu, r_cpu, sc_cpu, grad=True)
+    check("spec_cnn: STE == deployed statistic at matched precision (fp32, CPU)",
+          float((c_dep - c_ste).abs().max()), 0.0, 1e-3)
+
+    # (ii) what fp16 autocast alone costs, reported: it must not move the DECISIONS.
+    d = (s_ste - s_dep) / spread
+    print(f"  [INFO] fp32 vs deployed fp16 statistic: bias {float(d.mean()):+.4f}, "
+          f"sd {float(d.std()):.4f}, max |.| {float(d.abs().max()):.4f} (units of clean std)")
+    # reported, not asserted: no measurement exists yet to set a tolerance from, and the
+    # scientific requirement is the decision-level agreement checked next, not the raw value.
+    check("spec_cnn: straight-through LUT gives the same decisions at alpha=0.05",
+          float(((s_ste > thr_cnn) != (s_dep > thr_cnn)).double().mean()), 0.0, 0.01)
+
+    jam = _batches(L, 512, dict(name="barrage"), [-5.0], snr)["r"]
+    s_dep_j = detectors.cnn_statistic(net, jam, sc)
+    with torch.no_grad():
+        s_ste_j = torch.cat([detectors.cnn_statistic(net, jam[i:i + 64], sc, grad=True)
+                             for i in range(0, jam.shape[0], 64)])
+    check("spec_cnn: same P(det) on jammed frames, STE vs deployed",
+          detectors.p_detect(s_ste_j, thr_cnn), detectors.p_detect(s_dep_j, thr_cnn), 0.01,
+          note=f"deployed {detectors.p_detect(s_dep_j, thr_cnn):.3f}")
+
+    for p in G.parameters():
+        p.grad = None
+    out = attacks.frames(L, 16, spec, [-6.0], snr, noiseless=True)
+    stat = detectors.cnn_statistic(net, out["r"], sc, grad=True)
+    soft = detectors.soft_pdet(stat, thr_cnn, spread)
+    loss = -(attacks.log_expected_ber(out, n0) - 1.0 * soft)
+    loss.backward()
+    gnorm = math.sqrt(sum(float(p.grad.detach().pow(2).sum()) for p in G.parameters()
+                          if p.grad is not None))
+    check("spec_cnn: D2 loss gradient on G is finite and nonzero",
+          float(math.isfinite(gnorm) and gnorm > 0), 1.0, 0.0, note=f"||grad|| = {gnorm:.4g}")
+    dg = torch.autograd.grad(detectors.soft_pdet(
+        detectors.cnn_statistic(net, attacks.frames(L, 16, spec, [-6.0], snr)["r"], sc, grad=True),
+        thr_cnn, spread), list(G.parameters()), allow_unused=True)
+    gn_det = math.sqrt(sum(float(g.pow(2).sum()) for g in dg if g is not None))
+    check("spec_cnn: the DETECTOR term alone reaches G (not just the BER term)",
+          float(math.isfinite(gn_det) and gn_det > 0), 1.0, 0.0, note=f"||grad|| = {gn_det:.4g}")
 
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})

@@ -1,0 +1,10 @@
+jammer                    CNN stealth edge   BER there   BER@-16dB
+noise                             -46.7 dB    0.00e+00    0.00e+00
+pulsed_p1                         -46.7 dB    0.00e+00    0.00e+00
+pulsed_p0.1                       -47.6 dB    0.00e+00    8.39e-05
+eff                               -49.5 dB    0.00e+00    1.53e-03
+kurtosis_b1                       -49.4 dB    0.00e+00    1.18e-03
+kurtosis_b10                      -46.5 dB    0.00e+00    1.53e-03
+kurtosis_b100                     -49.1 dB    0.00e+00    1.82e-03
+kurtosis_b1000                    -49.7 dB    0.00e+00    1.08e-03
+plain_run001                      -49.6 dB    0.00e+00    0.00e+00

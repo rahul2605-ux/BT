@@ -151,11 +151,32 @@ def _viridis(device):
     return _LUT[device]
 
 
-def spectrogram_image(r, scale, normalise=True):
+def _viridis_apply(x, grad=False):
+    """
+    x in [0, 1] -> viridis RGB [..., 3]. The deployed detector quantises x onto the
+    256-entry LUT, a staircase whose gradient is zero everywhere, which is what made
+    the CNN untrainable as a D2 target. grad=True keeps that EXACT forward value and
+    substitutes the colormap's local slope in the backward pass (a straight-through
+    estimator), so the attacker trains against the deployed weights -- white-box, like
+    every other D2 target -- with no surrogate and no transfer gap to price.
+    verify.py 14d checks the two forward passes agree.
+    """
+    lut = _viridis(x.device)
+    xs = x * 255.0
+    hard = lut[xs.long().clamp(0, 255)]
+    if not grad:
+        return hard
+    i0 = xs.detach().floor().clamp(0, 254)
+    w = (xs - i0).unsqueeze(-1).to(lut.dtype)     # db is f32 here, but lerp will not promote
+    soft = torch.lerp(lut[i0.long()], lut[i0.long() + 1], w)
+    return soft + (hard - soft).detach()
+
+
+def spectrogram_image(r, scale, normalise=True, grad=False):
     """[F, 3, IMG_H, IMG_W]: fixed-scale dB -> viridis -> Li et al.'s image size."""
     db = spectrogram_db(r)
     x = ((db - scale.vmin) / (scale.vmax - scale.vmin)).clamp(0, 1)
-    rgb = _viridis(r.device)[(x * 255).long()].permute(0, 3, 1, 2)       # [F, 3, time, freq]
+    rgb = _viridis_apply(x, grad).permute(0, 3, 1, 2)                    # [F, 3, time, freq]
     img = torch.nn.functional.interpolate(rgb, size=(IMG_H, IMG_W), mode="bilinear",
                                           align_corners=False)
     if normalise:
@@ -173,15 +194,25 @@ def build_cnn(pretrained=True):
     return net
 
 
-@torch.no_grad()
-def cnn_statistic(net, r, scale, batch=256):
-    """logit(jammed) - logit(clean) per frame; larger = more suspicious."""
+def cnn_statistic(net, r, scale, batch=256, grad=False):
+    """
+    logit(jammed) - logit(clean) per frame; larger = more suspicious.
+
+    grad=True (D2 training only) keeps the graph back to whatever produced `r`: one
+    batch, fp32, no autocast -- fp16 gradients underflow without a GradScaler -- and
+    the straight-through LUT above. The measured/reported statistic is always the
+    grad=False path, unchanged since D0.
+    """
     net.eval()
+    if grad:
+        logits = net(spectrogram_image(r, scale, grad=True))
+        return (logits[:, 1] - logits[:, 0]).double()
     out = []
-    for i in range(0, r.shape[0], batch):
-        with torch.autocast("cuda", dtype=torch.float16, enabled=r.is_cuda):
-            logits = net(spectrogram_image(r[i:i + batch], scale)).float()
-        out.append((logits[:, 1] - logits[:, 0]).double())
+    with torch.no_grad():
+        for i in range(0, r.shape[0], batch):
+            with torch.autocast("cuda", dtype=torch.float16, enabled=r.is_cuda):
+                logits = net(spectrogram_image(r[i:i + batch], scale)).float()
+            out.append((logits[:, 1] - logits[:, 0]).double())
     return torch.cat(out)
 
 
@@ -190,6 +221,8 @@ def load_cnn(path, device):
     net = build_cnn(pretrained=False).to(device)
     net.load_state_dict(ckpt["state_dict"])
     net.eval()
+    for p in net.parameters():
+        p.requires_grad_(False)      # frozen detector: D2's gradient goes to the jammer, not to it
     return net, SpecScale(**ckpt["scale"]), ckpt
 
 

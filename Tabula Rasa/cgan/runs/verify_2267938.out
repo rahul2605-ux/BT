@@ -1,0 +1,90 @@
+node: tikgpu07.ee.ethz.ch | gpu: NVIDIA GeForce RTX 3090
+device: cuda:0
+
+8. Scene: Sionna RT path gains, noise floor, power control
+  [PASS] min pairwise separation >= 50 m (12 drops)                 got=1           want=1           tol=0
+  [PASS] all nodes inside the box                                   got=1           want=1           tol=0
+  [PASS] RT LOS gain == (lambda/4 pi d)^2, max |dB error|           got=4.6542e-06  want=0           tol=0.01
+  [PASS] RT LOS delay == d/c, max |error| [ns]                      got=0.00039176  want=0           tol=0.01
+  [PASS] noise floor k T B NF [dBm]                                 got=-97.944     want=-97.944     tol=0.05
+  [PASS] power control: realised SNR at R, max |dev from 30 dB|     got=1.0003e-05  want=0           tol=0.05
+  [PASS] power control cap never binds (farthest pair) [dB margin > 0] got=1           want=1           tol=0
+  [PASS] received_jsr inverts to the budget (equal split)           got=0           want=0           tol=1e-06
+
+9. Channel: Sionna cir_to_time_channel + ApplyTimeChannel
+  [PASS] integer delay 3 == 3-sample shift (relative RMS error)     got=0.00073112  want=0           tol=0.005   each output is re-scaled over its own window
+  [PASS] fractional delay 2.37 == FFT delay (relative RMS error)    got=0.0057149   want=0           tol=0.01
+  [PASS] JSR -17 dB exact per frame (worst frame, dB)               got=8.1606e-07  want=0           tol=0.01
+  [PASS] JSR -3 dB exact per frame (worst frame, dB)                got=1.2783e-06  want=0           tol=0.01
+  [PASS] JSR +6 dB exact per frame (worst frame, dB)                got=7.7476e-07  want=0           tol=0.01
+  [PASS] 3 async jammers add in power (dB)                          got=-0.69759    want=-0.69369    tol=0.05
+
+10. Attacks vs references, and the simplifications
+  [PASS] noise JSR +0 dB: BER vs closed form                        got=0.0024128   want=0.0023492   tol=0.000190108
+  [PASS] noise JSR +3 dB: BER vs closed form                        got=0.02259     want=0.022649    tol=0.000582182
+  [PASS] pulsed(1) integer-async == step-1 optimal(async), JSR -4 dB got=0.0008812   want=0           tol=0.0018783
+  [PASS] pulsed(1) integer-async == step-1 optimal(async), JSR +0 dB got=-0.00013161 want=0           tol=0.00377238
+  [PASS] pulsed(p=0.5) realised ON fraction                         got=0.50092     want=0.5         tol=0.0078125
+  [PASS] pulsed(p=0.1) realised ON fraction                         got=0.099884    want=0.1         tol=0.0046875
+  [PASS] omniscient(eta=1.0) JSR +6.0 dB: BER == floor(delta N)/N   got=1           want=1           tol=0.002
+  [PASS] omniscient(eta=1.0) JSR +6.0 dB spends <= budget (ratio)   got=1           want=1           tol=0
+  [PASS] omniscient(eta=1.0) JSR +0.0 dB: BER == floor(delta N)/N   got=0.25        want=0.25        tol=0.002
+  [PASS] omniscient(eta=1.0) JSR +0.0 dB spends <= budget (ratio)   got=1           want=1           tol=0
+  [PASS] omniscient(eta=0.1) JSR -3.0 dB: BER == floor(delta N)/N   got=0.41406     want=0.41406     tol=0.002
+  [PASS] omniscient(eta=0.1) JSR -3.0 dB spends <= budget (ratio)   got=1           want=1           tol=0
+  [PASS] geometric delay/phase on vs off: same BER (pulsed(1), -3 dB) got=0.00045395  want=0           tol=0.00292324
+  [PASS] geometric delay/phase on vs off: same mean power statistic got=0.00020091  want=0           tol=0.000756148
+  [PASS] geometric delay/phase on vs off: same mean kurtosis statistic got=-0.0019994  want=0           tol=0.00547797
+  [PASS] 2 noise jammers == 1 at the total JSR: BER                 got=6.485e-05   want=0           tol=0.000328564
+
+11. Detectors: calibration, invisibility of the flip, LRT optimality
+  [PASS] power (one-sided): realised FAR at alpha=0.01              got=0.010681    want=0.01        tol=0.00310934
+  [PASS] power (two-sided): realised FAR at alpha=0.01              got=0.01123     want=0.01        tol=0.00310934
+  [PASS] kurtosis (two-sided): realised FAR at alpha=0.01           got=0.010925    want=0.01        tol=0.00310934
+  [PASS] power (one-sided): realised FAR at alpha=0.05              got=0.052979    want=0.05        tol=0.00681078
+  [PASS] power (two-sided): realised FAR at alpha=0.05              got=0.05072     want=0.05        tol=0.00681078
+  [PASS] kurtosis (two-sided): realised FAR at alpha=0.05           got=0.052551    want=0.05        tol=0.00681078
+  [PASS] omniscient flip (BER 1) is invisible to power (two-sided): P(det) == FAR got=0.04895     want=0.05        tol=0.0096319
+  [PASS] omniscient flip (BER 1) is invisible to kurtosis (two-sided): P(det) == FAR got=0.049683    want=0.05        tol=0.0096319
+      JSR -45 dB: P_lrt 0.1096  power (one-sided) 0.0588  power (two-sided) 0.0508  kurtosis (two-sided) 0.0522
+  [PASS] noise JSR -45 dB: LRT >= best other detector (P_lrt - best) got=1           want=1           tol=0
+      JSR -35 dB: P_lrt 0.9900  power (one-sided) 0.1165  power (two-sided) 0.0967  kurtosis (two-sided) 0.0469
+  [PASS] noise JSR -35 dB: LRT >= best other detector (P_lrt - best) got=1           want=1           tol=0
+      JSR -20 dB: P_lrt 1.0000  power (one-sided) 0.9868  power (two-sided) 0.9846  kurtosis (two-sided) 0.0798
+  [PASS] noise JSR -20 dB: LRT >= best other detector (P_lrt - best) got=1           want=1           tol=0
+  [PASS] LRT: realised FAR at alpha=0.05                            got=0.048157    want=0.05        tol=0.00681078
+
+12. Spectrogram CNN (Li et al., retrained)
+  [PASS] spec_cnn: realised FAR at alpha=0.01 (fresh clean)         got=0.0078125   want=0.01        tol=0.00439726
+  [PASS] spec_cnn: realised FAR at alpha=0.05 (fresh clean)         got=0.049072    want=0.05        tol=0.0096319
+  [PASS] spec_cnn detects barrage at +10 dB (P(det) > 0.5)          got=1           want=1           tol=0   P(det) = 1.0000
+
+13. Shaped-noise jammer (D2a) and the exact expected BER
+  [PASS] shaped(theta=0) == noise: BER at JSR +0 dB                 got=-6.0081e-05 want=0           tol=0.000464044
+  [PASS] shaped(theta=0) == noise: BER at JSR +3 dB                 got=0.00019741  want=0           tol=0.00100378
+  [PASS] shaped(theta=0) == noise: power (one-sided) P(det) at -27 dB got=0.0087891   want=0           tol=0.0441942   0.540 vs 0.531
+  [PASS] shaped(theta=0) == noise: kurtosis (two-sided) P(det) at -13 dB got=0.0075684   want=0           tol=0.0441942   0.599 vs 0.592
+  [PASS] shaped(theta=0) == noise: spec_cnn P(det) at -30 dB        got=-0.03125    want=0           tol=0.0441942   0.507 vs 0.538
+  [PASS] shaped(random theta) JSR -20 dB exact per frame (worst, dB) got=1.1163e-06  want=0           tol=0.01
+  [PASS] shaped(random theta) JSR +0 dB exact per frame (worst, dB) got=1.0354e-06  want=0           tol=0.01
+  [PASS] shaped: realised PSD == requested, worst of 32 bins (dB)   got=0.062539    want=0           tol=0.2
+  [PASS] E[BER] (exact over AWGN) vs closed form, noise 0 dB        got=0.0023535   want=0.0023492   tol=0.000190108
+  [PASS] E[BER] vs Monte-Carlo BER, same frames, noise 0 dB         got=0.0023535   want=0.0023651   tol=0.00019028
+  [PASS] E[BER] vs Monte-Carlo BER, same frames, in-band shaped -6 dB got=0.01093     want=0.010899    tol=8.05895e-05   BER 1.09e-02
+
+14. GAN jammer on the 3-D link [rrc0.35, sps=8]
+  [PASS] gan(perfect G) == pulsed(1) async, JSR +0 dB               got=-0.00057617 want=0           tol=0.012527
+  [PASS] gan(perfect G) == pulsed(1) async, JSR +3 dB               got=-0.0011504  want=0           tol=0.014636
+  [PASS] gan JSR -20 dB exact per frame (worst, dB)                 got=1.5208e-06  want=0           tol=0.01
+  [PASS] gan JSR +0 dB exact per frame (worst, dB)                  got=1.0354e-06  want=0           tol=0.01
+  [PASS] D2 loss is finite                                          got=1           want=1           tol=0   loss=200.1
+  [PASS] D2 gradient reaches all of G's parameter tensors           got=15          want=15          tol=0
+  [PASS] D2 gradient on G is finite and nonzero                     got=1           want=1           tol=0   ||grad|| = 2.655e+04
+  [FAIL] spec_cnn: straight-through LUT == deployed statistic (max |diff| / clean std) got=0.37518     want=0           tol=0.05   clean std 0.9733
+  [PASS] spec_cnn: straight-through LUT gives the same decisions at alpha=0.05 got=0.0058594   want=0           tol=0.01
+  [PASS] spec_cnn: same P(det) on jammed frames, STE vs deployed    got=1           want=1           tol=0.01   deployed 1.000
+  [PASS] spec_cnn: D2 loss gradient on G is finite and nonzero      got=1           want=1           tol=0   ||grad|| = 4.091e+04
+  [PASS] spec_cnn: the DETECTOR term alone reaches G (not just the BER term) got=1           want=1           tol=0   ||grad|| = 0.04107
+
+1 FAILED:
+  spec_cnn: straight-through LUT == deployed statistic (max |diff| / clean std)

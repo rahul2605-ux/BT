@@ -248,9 +248,22 @@ Work through all of it, in order:
    that restates an old one means the old one goes.
 5. **Re-validate mechanically:** internal anchors resolve, referenced file paths exist on disk,
    numbers/job IDs match the artifacts they cite. Do not trust prose that was carried forward.
-6. **Report the git working-tree state** — staged, unstaged, untracked — and say plainly what is
+6. **Refresh the knowledge graph:** `graphify update .` from inside `Tabula Rasa/`. This is the
+   cheap path — deterministic tree-sitter AST re-extraction of only the code files that changed,
+   no LLM, no tokens, seconds on the login node, so it is exempt from the `sbatch` rule for the
+   same reason M0 is. It keeps `graphify-out/graph.json` in step with the code. **It does not
+   re-read `README.md`** — prose, papers and figures need semantic re-extraction, which costs
+   tokens and dispatches subagents. Do that with `/graphify . --update` only when deliberately
+   asked; it is not part of r2c. Note that 123 `artifacts/*.png` figures (the `simulation01`–`08`
+   archive plots) are still queued unextracted, so a `--update` will try to process all of them at
+   roughly 48 k tokens each — deliberately skipped 2026-09-21, see README C.5.
+   Expect two side effects each time: it snapshots the previous graph into `graphify-out/<date>/`,
+   and it **overwrites curated community names with hub-derived ones** — that is cosmetic, affects
+   only the report's section headings, and is undone by `graphify label` (which needs an LLM
+   backend). Do not hand-relabel during r2c.
+7. **Report the git working-tree state** — staged, unstaged, untracked — and say plainly what is
    uncommitted. Do not commit unless asked.
-7. **Close with a short handoff note in chat:** what changed, what the single next action is, what is
+8. **Close with a short handoff note in chat:** what changed, what the single next action is, what is
    blocked and on whom.
 
 **Do not add a changelog, session log, or "recent changes" section to the README.** That is how the

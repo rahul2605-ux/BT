@@ -2,7 +2,7 @@
 D2 -- a detector-aware generative jammer, trained WHITE-BOX by direct gradient
 against a frozen detector (README §3.4, threat model in the plan).
 
-    sbatch --array=0-6 submit_train_gan.sh            # one task per (target, beta)
+    sbatch --array=0-16 submit_train_gan.sh           # one task per (target, beta)
     sbatch submit_train_gan.sh --smoke                # task 0 + one power task, few steps
 
 The neural counterpart of the shaped-noise control D2a (train_shaped.py): the SAME
@@ -28,8 +28,9 @@ This script trains and saves each generator. eval_gan.py then puts it on the D0/
 BER-P(det) plane against all detectors, with the confirmation pass -- the same code
 path as D1, so the numbers are directly comparable.
 
-TARGETS are the differentiable analytic detectors; spec_cnn is added once the
-differentiable surrogate lands (plan). Outputs:
+Every TARGET is differentiated white-box: power and kurtosis analytically, and
+spec_cnn through the straight-through colour LUT of detectors.spectrogram_image
+(grad=True), which leaves the deployed CNN's forward statistic untouched. Outputs:
 artifacts/cgan/gan/run001/task{T}_G.pt (+ scale, target, beta, recipe) and task{T}.json.
 """
 
@@ -53,12 +54,35 @@ import scene
 
 RUN = "run001"
 OUT = os.path.join(scene.ART, "..", "gan", RUN)
-TARGETS = ["power_one_sided", "power_two_sided", "kurtosis"]   # spec_cnn: add with the surrogate
+# spec_cnn is appended, never inserted: task ids 0-12 must keep meaning what the
+# 2026-09-20 artifacts say they mean (§3.3f). The CNN is white-box like the rest --
+# detectors.cnn_statistic(grad=True) differentiates the DEPLOYED weights through a
+# straight-through colour LUT, so no surrogate is trained and no transfer gap is priced.
+TARGETS = ["power_one_sided", "power_two_sided", "kurtosis", "spec_cnn"]
 BETAS = [1.0, 10.0, 100.0, 1000.0]   # geometric: log E[BER] runs ~1e3, so beta spans orders
+# The CNN needs a wider beta range than the analytic detectors, and the reason is
+# measured (job 2267938 §14d): at equal beta the detector term reaches G with
+# ||grad|| ~ 4e-2 while the full loss carries ~4e4 -- a CNN logit depends on the
+# waveform far less directly than mean power does, so beta must climb further before
+# stealth bites. Appended, so tasks 0-16 keep their meaning.
+EXTRA_CNN_BETAS = [1e4, 1e5, 1e6]
 TASKS = ([dict(target=None, beta=0.0)]
-         + [dict(target=t, beta=b) for t in TARGETS for b in BETAS])
+         + [dict(target=t, beta=b) for t in TARGETS for b in BETAS]
+         + [dict(target="spec_cnn", beta=b) for b in EXTRA_CNN_BETAS])
 ALPHA = detectors.HEADLINE_ALPHA
-JSR_BAND = (-32.0, 0.0)        # active region: power flags from ~-27, BER crosses ~-16 (§3.3e)
+# The band JSR is sampled from during training. The rule is "straddle the target
+# detector's own transition, starting ~5 dB below where it begins to flag": power
+# flags from ~-27 dB and BER crosses ~-16 (§3.3e), hence (-32, 0). The CNN's
+# transition sits 12-16 dB LOWER -- measured on the D0 sweep, it already flags noise
+# at P(det) 0.28 at -32 dB and 0.84 at -28, and only falls to alpha near -40 -- so on
+# (-32, 0) every sampled JSR would be saturated-detected, sigmoid'((stat-thr)/scale)
+# would be ~1e-11, and no beta could recover a gradient. Per-target band instead.
+JSR_BAND = (-32.0, 0.0)
+JSR_BANDS = {"spec_cnn": (-48.0, -16.0)}
+# Frames per gradient step. The CNN keeps a full EfficientNet-B0 graph per frame, so
+# its batch is smaller; the analytic detectors keep the 2026-09-20 value.
+FRAMES = {None: 128, "power_one_sided": 128, "power_two_sided": 128, "kurtosis": 128,
+          "spec_cnn": 32}
 
 
 def clean_scale(L, dfd, target, n=4096, seed=1):
@@ -74,6 +98,9 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed):
     n0 = L.noise_var(lk.SNR_DB)
     thr = dfd.threshold(target, ALPHA) if target else None
     sc = clean_scale(L, dfd, target) if target else None
+    if target is not None:
+        print(f"  target {target}: threshold {thr:.6g}, clean-frame std {sc:.6g} "
+              f"(soft_pdet width)", flush=True)
     opt = torch.optim.Adam(G.parameters(), lr=2e-4, betas=(0.5, 0.999))
     spec = dict(name="gan", G=G, scale=scale, grad=True)
     lo, hi = jsr_band
@@ -86,7 +113,7 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed):
         if target is None:
             soft = torch.zeros((), device=L.device)
         else:
-            s, _ = dfd.statistics(out["r"], out["z"], dets=[target])
+            s, _ = dfd.statistics(out["r"], out["z"], dets=[target], grad=True)
             soft = detectors.soft_pdet(s[target], thr, sc)
         loss = -(log_ber - beta * soft)
         opt.zero_grad(set_to_none=True)
@@ -101,10 +128,10 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed):
     return G, hist
 
 
-def run_task(L, dfd, task, gen0, steps, frames, seed):
+def run_task(L, dfd, task, gen0, steps, frames, seed, band=JSR_BAND):
     G, scale, _ = models.load_generator(gen0, L.device)      # warm start from run001_G
     G.train()
-    G, hist = train(L, dfd, G, scale, task["target"], task["beta"], steps, frames, JSR_BAND, seed)
+    G, hist = train(L, dfd, G, scale, task["target"], task["beta"], steps, frames, band, seed)
     return G, scale, hist
 
 
@@ -113,7 +140,8 @@ def main():
     ap.add_argument("--task", type=int, default=int(os.environ.get("SLURM_ARRAY_TASK_ID", 0)))
     ap.add_argument("--gen0", default=os.path.join(scene.ART, "..", "run001_G.pt"))
     ap.add_argument("--steps", type=int, default=400)
-    ap.add_argument("--frames", type=int, default=128, help="frames per gradient step")
+    ap.add_argument("--frames", type=int, default=None,
+                    help="frames per gradient step (default: FRAMES[target])")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
@@ -122,25 +150,32 @@ def main():
     dfd = baselines.Defender(L)
 
     if args.smoke:
-        tasks = [(0, TASKS[0]), (1, TASKS[1])]
-        steps, frames = 20, 64
+        cnn0 = next(i for i, t in enumerate(TASKS) if t["target"] == "spec_cnn")
+        tasks = [(0, TASKS[0]), (1, TASKS[1]), (cnn0, TASKS[cnn0])]
+        steps = 20
     else:
         tasks = [(args.task, TASKS[args.task])]
-        steps, frames = args.steps, args.frames
+        steps = args.steps
 
+    sfx = "_smoke" if args.smoke else ""       # never overwrite a real generator
     for tid, task in tasks:
         tag = "eff" if task["target"] is None else f"{task['target']}_b{task['beta']:g}"
-        print(f"task {tid} = {task}  (tag {tag})", flush=True)
-        G, scale, hist = run_task(L, dfd, task, args.gen0, steps, frames, seed=4000 + tid)
+        frames = args.frames if args.frames is not None else FRAMES[task["target"]]
+        if args.smoke:
+            frames = min(frames, 32)
+        print(f"task {tid} = {task}  (tag {tag}, {frames} frames/step, "
+              f"JSR band {JSR_BANDS.get(task['target'], JSR_BAND)})", flush=True)
+        band = JSR_BANDS.get(task["target"], JSR_BAND)
+        G, scale, hist = run_task(L, dfd, task, args.gen0, steps, frames, seed=4000 + tid, band=band)
         recipe = dict(target=task["target"], beta=task["beta"], steps=steps, frames=frames,
-                      lr=2e-4, jsr_band=JSR_BAND, alpha=ALPHA, warm_start=os.path.relpath(args.gen0))
+                      lr=2e-4, jsr_band=band, alpha=ALPHA, warm_start=os.path.relpath(args.gen0))
         torch.save({"state_dict": G.state_dict(), "n_classes": 1, "seg_len": models.SEG_LEN,
                     "scale": scale, "target": task["target"], "beta": task["beta"],
                     "tag": tag, "recipe": recipe},
-                   os.path.join(OUT, f"task{tid}_G.pt"))
-        with open(os.path.join(OUT, f"task{tid}.json"), "w") as f:
+                   os.path.join(OUT, f"task{tid}{sfx}_G.pt"))
+        with open(os.path.join(OUT, f"task{tid}{sfx}.json"), "w") as f:
             json.dump(dict(run=RUN, task=task, tid=tid, tag=tag, recipe=recipe, history=hist), f)
-        print(f"wrote task{tid}_G.pt, task{tid}.json  (tag {tag})", flush=True)
+        print(f"wrote task{tid}{sfx}_G.pt, task{tid}{sfx}.json  (tag {tag})", flush=True)
 
 
 if __name__ == "__main__":

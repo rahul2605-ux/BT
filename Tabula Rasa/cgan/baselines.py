@@ -69,11 +69,14 @@ class Defender:
             self._lrt_thr[key] = detectors.calibrate(s, alpha)
         return self._lrt_thr[key]
 
-    def statistics(self, r, z, noise_jsr_lin=None, dets=None):
+    def statistics(self, r, z, noise_jsr_lin=None, dets=None, grad=False):
         """
         Per-frame statistics, each already in larger-is-more-suspicious form. `dets`
         restricts them to a subset (train_shaped.py scores one detector at a time;
-        the CNN is the only expensive one).
+        the CNN is the only expensive one). `grad` only reaches the CNN: power,
+        kurtosis and the LRT are differentiable as written, the CNN needs the
+        straight-through image path (detectors.cnn_statistic) and one un-batched
+        forward pass, so it is off unless D2 is training against it.
         """
         want = set(DETS if dets is None else dets)
         s, raw = {}, {}
@@ -85,7 +88,7 @@ class Defender:
             raw["kurtosis"] = detectors.kurtosis(r)
             s["kurtosis"] = detectors.two_sided(raw["kurtosis"], self.thr["kurtosis_clean_mean"])
         if "spec_cnn" in want:
-            s["spec_cnn"] = raw["cnn"] = detectors.cnn_statistic(self.net, r, self.scale)
+            s["spec_cnn"] = raw["cnn"] = detectors.cnn_statistic(self.net, r, self.scale, grad=grad)
         if noise_jsr_lin is not None and "lrt_noise" in want:
             s["lrt_noise"] = detectors.lrt_noise(detectors.lrt_parts(r, z), self.n0, noise_jsr_lin, self.p_s)
         return s, raw
