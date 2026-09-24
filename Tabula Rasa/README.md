@@ -1,7 +1,7 @@
 # Tabula Rasa — learned jamming under detection constraints
 
 **Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
-Last consolidated: 2026-09-21.
+Last consolidated: 2026-09-24.
 
 > **This file is the single entry point.** It is organised as:
 > **[1. The whole picture](#part-1--the-whole-picture)** ·
@@ -130,7 +130,8 @@ BT/
 │   ├── sim08_ablation/     <- live code: new sweeps over the frozen sim08 stack, imported read-only (§3.3c)
 │   ├── source_papers/      <- PDFs the CGAN track reproduces/uses (IEEE-licensed; git-ignored)
 │   ├── cluster/README.md   <- cluster ops; read before submitting anything
-│   ├── artifacts/          <- all outputs, one dir per simulation
+│   ├── artifacts/          <- all outputs, one dir per simulation; only m0, cgan, sim08, sim08_ablation
+│   │                          are on the cluster — see the note below the tree
 │   ├── graphify-out/       <- queryable knowledge graph of this repo (C.5); regenerable
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
 │   ├── proposal/           <- registration proposal; `*_reviewed_2026-09-12.tex` = his annotated copy
@@ -142,6 +143,16 @@ BT/
     ├── Sources_And_Evaluation.md   <- the reference database + refs.bib surgery plan
     └── Research_Landscape_2026.md  <- literature currency check, Aug 2026
 ```
+
+> **Frozen-stack artifacts are off the cluster (2026-09-24, home quota).** `artifacts/{sim01, sim02,
+> sim03, sim03b, sim03c, sim04, sim04b, sim05, sim06, sim06b, sim07, frontier, frontier_inband,
+> frontier_recheck}` (187 files, 428 MB) were moved to **`BT/archive/`**: outside the repo tree,
+> excluded from git by the local `.git/info/exclude`, with a `MANIFEST.txt`. The user copies it off
+> and then deletes it from the cluster. That is not urgent once the VS Code cleanup (§3.1) is done.
+> It also holds the pre-archive knowledge graph (C.5). Every artifact in it is also in
+> git at `0fe1d6d`: `git checkout 0fe1d6d -- "Tabula Rasa/artifacts/sim04"` restores a directory.
+> Appendix A and A.9 still cite these paths; they mean *in git*, not *on disk*. `sim08/` stays because
+> `sim08_ablation/` loads its detector and `frontier_dense/results.json`.
 
 > **If you meet a reference to a file that no longer exists**, it was folded into this README on
 > 2026-09-10, when six overlapping documents were consolidated to remove ~2,400 lines of duplication:
@@ -250,8 +261,9 @@ silently break jobs. The five facts that change how experiments are designed:
 - Submit host `tik42x.ee.ethz.ch`, account **`disco-med`**. **Do not set `--partition`** (a lua
   plugin overrides it). `--gres=gpu:1`, never `--gpus=1`, plus the mandatory Pascal-exclusion
   `--constraint`.
-- Env: `/itet-stor/rrahman/net_scratch/bt_env`. The home quota is small and invisible until you hit
-  it; keep bulky things on net_scratch.
+- Env: `/itet-stor/rrahman/net_scratch/bt_env`. The home quota (soft limit **6.8 G**, 5-day grace) is
+  invisible until you hit it; keep bulky things on net_scratch. It was hit 2026-09-23, mostly by
+  stale VS Code server builds (`cluster/README.md`, Storage).
 - Workflow unchanged: `cd` into a sim dir and `sbatch submit.sh`. Never compute on the login node.
 
 All 19 submit scripts were migrated and verified end-to-end (job 2243247 reproduced the recorded m2
@@ -980,6 +992,16 @@ detector-aware training measurably lowers P(det): −19.8 pp against the CNN, �
 still 0 for every non-genie jammer — that is the *limit* of the gain, not the finding. The coordination
 plan below is paused, not superseded, and was not re-validated.
 
+> **⚠ Cluster home is over quota. The fix is waiting on the user; delete this block once `~/.over_quota`
+> is gone.** Home is ~6.9 G against a **6.8 G soft limit** (ISG warning 2026-09-23). The 5-day grace ends
+> **~2026-09-28**, and after that home is unwritable, which kills every job, since `artifacts/` lives
+> there. 4.2 G of it is `~/.vscode-server`, mostly three stale server builds that nothing uses
+> (checked 2026-09-24). Deleting them lands home at ~4.3 G even with `BT/archive/` still in place:
+> `cd ~/.vscode-server && rm -rf cli/servers/Stable-a44adf7f* cli/servers/Stable-88e44fa0*
+> cli/servers/Stable-645f29cc* code-a44adf7f* code-88e44fa0* extensions/anthropic.claude-code-2.1.280-linux-x64
+> data/CachedExtensionVSIXs/*`. The procedure is in `cluster/README.md` (Storage). Claude's safety check
+> will not run this `rm -rf`, so the user runs it.
+
 > **⚠ Those CNN numbers are correct but were measured at the WORST end of the range (E2, §3.3g,
 > 2026-09-23).** SNR 30 dB is Zhou's protocol value, inherited rather than chosen, and the whole
 > D-series sat there. Swept over SNR the same gain is **−53.5 pp at 10 dB and −85.1 pp at 15 dB**
@@ -1123,6 +1145,19 @@ first, §3.3g). None has been shared yet.
 a ~1-column summary, `paper_drafts/sec_exphist.tex`, for the 6-page limit; parts 9–10 dropped. Not yet
 pasted into Overleaf; the user was still editing it as of 2026-09-15 (§3.5). **It predates §3.3c** and
 does not mention the ablations.
+
+**System Model draft (2026-09-24):** the "document all findings" write-up began this session with the
+System Model. `paper_drafts/sec_system_model_waveform.tex` (new) describes the BUILT waveform system —
+single-carrier QPSK, LOS + power control, JSR + async, four *separate* detectors + the NP-optimal
+ceiling, matched-detectability reporting — in seven IEEEtran parts (intro + Legitimate Link · Channel &
+Received Signal · Attacker Model · Detector Model · Threat Model · Problem Formulation), ~1.5–2 columns,
+one-sentence-per-line, with a comment header holding the measured constants (sps 8, RRC 0.35/span 32,
+SNR 30 dB, box, α, the shaped-jammer 48 params) and the cite keys still owed. **This is the System Model
+matching the D-series direction; the older `paper_drafts/sec_system_model.tex` is the M0 single-symbol,
+h₀-equalised draft (coordination framing) and does not describe the built waveform system.** Neither is
+in Overleaf, and `main.tex` §System Model still carries the OFDM/TDL/N_J setting no experiment supports.
+Which becomes the paper's model follows the M0-vs-waveform framing decision — not reconciled with the
+user yet.
 
 ---
 
@@ -1950,7 +1985,12 @@ days of work to one branch of that fork and **must not start before his reply.**
 - **Experiment History: the sim00–08 record** — condensed to one ~1-column summary,
   `paper_drafts/sec_exphist.tex`, **not yet pasted** (§3.5).
 - Repair `paper_drafts/sec_system_model.tex` (§Cooperative — the CLT argument, see §4.2); fold the
-  §2.8 decisions into §Defender Model and §Generative Attack Policy.
+  §2.8 decisions into §Defender Model and §Generative Attack Policy. **This is the M0 draft.**
+- **NEW 2026-09-24: `paper_drafts/sec_system_model_waveform.tex`** — a System Model for the BUILT
+  waveform system (D0/D1/D2/D2a): single-carrier QPSK, LOS + power control, JSR + async, four separate
+  detectors + the NP-optimal ceiling, matched-detectability reporting. Seven IEEEtran parts, ~1.5–2
+  columns, comment header with measured constants + cite keys. Distinct from the M0 draft above; **pick
+  one when the M0-vs-waveform framing is settled** (§3.1 Paper drafts). Not in Overleaf.
 - Related Work is drafted (`paper_drafts/sec_related.tex`, 1081 words ≈ 1.93 columns; the
   1253-word thesis version is `sec_related_long.tex`). **Not yet pasted into Overleaf** — `main.tex`
   still carries all three legacy blocks (`Related Works` L72, `Literature Review` L233,
@@ -3013,7 +3053,8 @@ Kept for provenance; **do not extend any of it.**
 jammer list), a noiseless anchor, and the received JSR. Its `verify.py` re-measures frozen dense-sweep
 points (job 102390) as a regression check. Results: §3.3c.
 
-**Detector checkpoints on disk** — note which spectrogram representation each was trained on:
+**Detector checkpoints** — note which spectrogram representation each was trained on. Only the sim08
+and m0 rows are on the cluster; the sim06 and frontier rows are in git only (§1.3 note):
 
 | Path | What |
 |---|---|
@@ -3123,8 +3164,10 @@ coordination against mobile victims as the destination — **the July email stil
 Everything not already covered by Part 2 (settled) or §4.1 (needs his input).
 
 **Written deliverables**
-- [ ] **System & Threat Model into Overleaf.** Drafted (`paper_drafts/sec_system_model.tex`) but not
-      pasted. Must pin down: where detection happens (victim RX, composite pre-equalization frame);
+- [ ] **System & Threat Model into Overleaf.** Two drafts on disk, neither pasted: the M0
+      `paper_drafts/sec_system_model.tex`, and the waveform `paper_drafts/sec_system_model_waveform.tex`
+      (2026-09-24, matches the built D-series — see §3.4 / §3.1). Pick one per the framing decision.
+      Must pin down: where detection happens (victim RX, composite pre-equalization frame);
       what the detector observes (STFT spectrogram + mean frame power; no CSI, no runtime labels); the
       **assumption tiers** (genie / realistic / blind) for the attacker *and* for the honest policy;
       the **CTDE split**; **inter-jammer coordination** and what it costs in hardware; the power budget
@@ -3283,16 +3326,19 @@ extended 2026-09-21, with [graphify](https://github.com/Graphify-Labs/graphify) 
 `graphify-out/graph.json` instead of grepping; `graphify query/path/explain/affected/god-nodes` are the
 explicit forms. `GRAPH_REPORT.md` is the audit trail, `graph.html` the interactive view.
 
-**It is partial by choice.** 1809 nodes, 3403 edges, 131 communities. All 181 code files are in
-(deterministic AST), as are `README.md`, `CLAUDE.md`, `cluster/README.md` and `proposal.pdf`. Of the
-166 `artifacts/*.png` figures, 43 are vision-extracted — every `cgan/`, `frontier/`,
-`frontier_inband/` and `frontier_recheck/` plot, and 4 of 5 `m0/` — and **123 remain queued**
-(manifest-unstamped, so they re-queue rather than being skipped). The queued ones are all
-`simulation01`–`simulation08` archive figures: frozen appendix material, ~48 k tokens each to read,
-deliberately skipped. Every *live* track therefore has its code in full and `cgan/` its figures in
-full. The graph carries a health warning — 488 dangling-endpoint edges, 16 self-loops, 52 collapsed —
-from figure chunks referencing nodes the unrun chunks would have created; it does not affect querying
-and shrinks as figures are added.
+**It is partial by choice.** 1786 nodes, 3473 edges, 141 communities (2026-09-24). All code files are
+in (deterministic AST), as are `README.md`, `CLAUDE.md`, `cluster/README.md` and `proposal.pdf`. Of
+the 57 `artifacts/*.png` figures on disk, 32 are vision-extracted (28 `cgan/`, 4 `m0/`) and **25
+remain queued** (11 `sim08/`, 8 newer `cgan/`, 5 `sim08_ablation/`, 1 `m0/`). They are
+manifest-unstamped, so they re-queue rather than being skipped, at ~48 k tokens each. Every live track
+has its code in full. The graph has 0 dangling edges and 16 self-loops (measured 2026-09-24).
+
+**`graphify update` evicts the nodes of any non-code source that is no longer on disk**, and the CLI's
+shrink guard does not stop it. On 2026-09-24 that removed the **129 nodes** from the vision-extracted
+`frontier/`, `frontier_inband/` and `frontier_recheck/` figures, once they were archived (§1.3 note).
+The sim01–07 figures were never extracted, so nothing was lost for them. The pre-eviction graph (1915
+nodes) is kept in `BT/archive/graphify-out_pre-archive/`; `graphify-out/2026-09-24/` has a copy until
+another update runs that day. To get the nodes back, restore those figures from git and that `graph.json`.
 
 Community names are **hub-derived, not curated** — each is its community's highest-degree node. Blunt
 but serviceable; `graphify label` regenerates them with an LLM if that is ever worth the tokens.

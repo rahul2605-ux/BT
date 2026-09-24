@@ -187,7 +187,8 @@ These silently break jobs rather than erroring usefully:
   partition list. Check `scontrol show node <n>` (`AllocTRES` gres/gpu and mem) before changing
   anything. On a full cluster the blocker is often RAM on the one node with a free GPU: **size `--mem`
   from `sacct --format=MaxRSS`**, not a habitual 16G (README §C.4). `TaskProlog failed` at 0 s = resubmit.
-- The home quota is small and **invisible until you hit it** (`df` reports the whole NFS export).
+- The home quota (**6.8 G soft limit**, 5-day grace) is **invisible until you hit it** (`df` reports
+  the whole NFS export). The usual culprit is `~/.vscode-server`, which keeps every old server build.
   Anything bulky goes on `net_scratch`.
 - `import sionna` fails on the login node. M0 is sionna-free so this does not affect it; **`cgan/`
   is not**, so all of it — tests included — goes through `sbatch`.
@@ -254,9 +255,11 @@ Work through all of it, in order:
    same reason M0 is. It keeps `graphify-out/graph.json` in step with the code. **It does not
    re-read `README.md`** — prose, papers and figures need semantic re-extraction, which costs
    tokens and dispatches subagents. Do that with `/graphify . --update` only when deliberately
-   asked; it is not part of r2c. Note that 123 `artifacts/*.png` figures (the `simulation01`–`08`
-   archive plots) are still queued unextracted, so a `--update` will try to process all of them at
-   roughly 48 k tokens each — deliberately skipped 2026-09-21, see README C.5.
+   asked; it is not part of r2c. Note that 25 `artifacts/*.png` figures (sim08, sim08_ablation,
+   the newer cgan ones) are still queued unextracted, so a `--update` will try to process all of them
+   at roughly 48 k tokens each (README C.5). `graphify update` also **evicts the nodes of any non-code
+   file that is gone from disk**. Archiving artifacts therefore removes their figure nodes; save
+   `graphify-out/<date>/` before a second same-day run overwrites it.
    Expect two side effects each time: it snapshots the previous graph into `graphify-out/<date>/`,
    and it **overwrites curated community names with hub-derived ones** — that is cosmetic, affects
    only the report's section headings, and is undone by `graphify label` (which needs an LLM

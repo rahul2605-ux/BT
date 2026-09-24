@@ -75,10 +75,17 @@ free (the smoke test landed on a TITAN Xp after ~20 s queueing).
 quota.** The first venv build died mid-install with `Disk quota exceeded
 (os error 122)`.
 
-Measured: home held **1.8 G** (1.1 G `.vscode-server`, 754 M the repo) and the
-build hit the wall after adding ~6.7 G (1.4 G venv + 5.3 G uv cache), so the
-ceiling sits somewhere under ~8.5 G. Home was **not** cluttered — the venv alone
-is 7.3 G and simply does not fit. There is nothing to clean up; put it elsewhere.
+**The soft limit is 6.8 G**, with a 5-day grace period before home becomes
+unwritable (ISG warning, 2026-09-23; an empty `~/.over_quota` file appears). The
+first venv build died because the venv alone is 7.3 G; it lives on net_scratch.
+
+Home then **filled up again on its own by 2026-09-23**, at ~6.9 G: 4.1 G
+`.vscode-server`, 2.6 G the repo (1.0 G `.git`, 1.5 G `artifacts/`). The VS Code
+server keeps **every** server build it ever downloaded (~650 M each, five by
+then) under `~/.vscode-server/cli/servers/`, plus old extension versions and a
+VSIX cache. Only the builds in `cli/servers/lru.json`'s first entries and the one
+running (`ps -u $USER | grep Stable-`) are needed; delete the rest — VS Code
+re-downloads on demand. Check `du -sh ~/.vscode-server` whenever VS Code updates.
 
 Note `quota -s` reports `none` and the RPC quota service is unreachable from
 tik42x, so **the limit is invisible until you hit it**. Anything large goes on
