@@ -112,6 +112,11 @@ Each row is a step of the ladder and **what it killed**. Full writeups in
 | sim08 dense | matched-detectability re-sweep | **refutes "channel-aware > blind"** — the gain was a matched-*config* artifact |
 | **M0 / E1** | minimal model + NP-optimal detector | **no realizable attack achieves stealthy jamming** (§3.3) |
 | **Lit check** | is E1's headline novel? (2026-09-12, desk work) | **no** — the impossibility half is known three times over (§2.1). **Kills stealth as the objective**; the learned-vs-NP gap survives |
+| CGAN step 1 | reproduce Zhou 2025's CGAN jammer on a QPSK waveform link | **partial**: beats noise, but not Zhou's ordering once sync is consistent (§3.3b) |
+| D0 | classical attacks × 4 detectors on a 3-D waveform link, SNR 30 dB | **the M0/E1 impossibility reproduced at waveform level**; uncoordinated jammers buy nothing (§3.3d) |
+| D2a | learned shaped noise (48 params, CMA-ES) | **shaping buys effectiveness, not stealth** (§3.3e) |
+| D1 / D2 | plain GAN vs white-box detector-aware GAN, 4 detectors, SNR 30 dB | **at matched BER, −19.8 pp P(det) vs the CNN at 12.8 dB less power**; nothing reaches the α budget (§3.3f) |
+| **E2** | the noise ablation of D1/D2 over SNR 0–40 dB | **30 dB was near the worst place to measure it: the gain peaks at −85 pp at 15 dB**; detectors sharpen with SNR, the damage threshold does not (§3.3g) |
 
 ## 1.3 Where everything lives
 
@@ -184,6 +189,11 @@ per module as each lands. **Everything except `digitise_fig6.py` and `gan_figure
 | **`cgan/eval_gan.py`** + `submit_eval_gan.sh` / `submit_eval_gan_array.sh` | D1: place any generator (`--task N` or `--gen`) on the D0 BER–P(det) plane, with confirmation → `artifacts/cgan/gan/run001/<tag>.json` |
 | **`cgan/train_gan.py`** + `submit_train_gan.sh` | D2: white-box detector-aware training, one generator per (target detector, β) → `artifacts/cgan/gan/run001/task{T}_G.pt` + `task{T}.json` |
 | **`cgan/gan_figures.py`** | D1/D2 figures (login node; reads eval JSONs) → `artifacts/cgan/gan/run001/fig_*.png` |
+| **`cgan/calibrate_snr.py`** | E2 (§3.3g): re-calibrate every detector at any SNR — re-fit the CNN's colour scale + all thresholds on clean frames at that level, **CNN weights frozen at 30 dB**; caches `artifacts/cgan/baselines/snr/<tag>/{thresholds.json, clean_lrt_parts.pt}`. `defender_at(L, snr)` returns the deployed defender unchanged at 30 dB |
+| **`cgan/snr_ablation.py`** + `submit_snr_ablation.sh` | E2 driver: one SNR level per array task (`--array=0-9`, 0–40 dB in 5 dB steps + a noiseless anchor), classical envelope + all 21 generators, reusing `baselines.measure/confirm` and `eval_gan.sweep` → `artifacts/cgan/snr_ablation/run001/snr_<tag>.json`. **Task 6 = 30 dB is the regression check: it must reproduce §3.3f** |
+| **`cgan/regress_snr30.py`** | E2 regression gate (login node): the 30 dB level vs the deployed §3.3d/§3.3f artifacts — **run before spending the array**. Uses a different noise model per quantity, which is load-bearing: BER must be compared in the ERROR COUNT capped at the frame count (bursty jammers concentrate errors in few frames, `verify.mc_tol`'s `n_eff`), never as a fixed log10 band, or the measurement floor is flagged as a regression |
+| **`cgan/snr_examples.py`** + `submit_snr_examples.sh` | E2 example frames (Sionna, ~10 s): the spectrogram images the CNN receives at 0/15/30 dB and noiseless, clean vs D1 vs D2 at matched BER, with P(det) on fresh frames → `artifacts/cgan/snr_ablation/run001/examples.npz` (drawn by `snr_figures.py`) |
+| **`cgan/snr_figures.py`** + `submit_snr_figures.sh` | E2 figures + summary table (login node; reads the ablation JSONs) → `artifacts/cgan/snr_ablation/run001/fig_*.png` |
 
 **Live code (sim08 ablations, `sim08_ablation/`):** imports `simulation08/` and `simulation06/`
 read-only; every entry point is an sbatch script (Sionna).
@@ -612,11 +622,19 @@ losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
 
 ## 2.7 Metrics and figure conventions
 
-- **BER and SER** (he asked for SER by name), P(detect) at a fixed FAR.
-- **The stealth budget is the detector's own clean false-alarm rate**, not a loose convention. The
-  project has already been burned once by reporting BER at `P(det) ≤ 0.5`: a jammer caught half of
-  every frame is caught within a few frames. Report the **whole frontier curve**, not a single
-  threshold.
+- **BER and SER** (he asked for SER by name), P(detect) at a fixed FAR. In `cgan/` SER is stored per
+  sweep point and is a fixed transform of BER except for jammers that hit I and Q together (§3.3g
+  finding 8) — report it as a column. PER, SINR/JNR axes and AUC are specified, parked follow-ons (§4.3).
+- **The FAR is the detector's operating point, not a filter on the results** (user, 2026-09-24:
+  *"we just want to study the trade-off of how much damage per Pdet, so it makes sense to show
+  everything, not just < FAR"*). Every P(det) is read at one threshold, calibrated to the detector's
+  own clean false-alarm rate α so detectors are comparable, and α is drawn as the dotted floor (P(det)
+  below it is noise). The object of study is the **whole damage-vs-P(det) curve**; a "stealthy BER at
+  α" number is at most its left edge, never a result of its own. *This bullet used to read "the stealth
+  budget is the detector's own clean FAR". That was written while stealth was the attacker's objective,
+  after BER at `P(det) ≤ 0.5` had been passed off as stealthy — a jammer caught in half of all frames
+  is caught within a few frames. The argument still holds for any claim of covert operation, which the
+  project stopped making on 2026-09-16 (§2.1).*
 - **Compare at matched detectability, not matched configuration. Non-negotiable.** This is the one
   trap the project has already fallen into: sim08-m1's "+70% channel-aware" evaporated entirely once
   BER was compared at matched P(detect) instead of matched jammer *config*. Report both ways; if a
@@ -631,7 +649,9 @@ losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
   as a dotted line and the raw sweep points faint underneath. Quote matched BER at several budgets
   (0.05 / 0.1 / 0.25 / 0.5), not only the stealthy value at α. Attacks that are all at BER 0 under
   α are still ordered by where they start to hurt. Implemented in `cgan/shaped_figures.py`
-  `fig_frontier` (§3.3e).
+  `fig_frontier` (§3.3e) and `cgan/gan_figures.py` `fig_frontier` (§3.3f). **The FAR stays fixed while
+  x sweeps**: a figure whose budget axis also moves the threshold — E2's `fig_frontier_by_snr`
+  (§3.3g) — is the ≤ FAR filter in disguise and is to be replaced (§4.3).
 
 ## 2.8 Settled method decisions
 
@@ -726,7 +746,7 @@ instructions but were filed as decisions. They are listed first here so this tab
 | Omniscient jammer in **every** results figure | `m0/figures.py` | **PARTIAL — 2 of 4.** `fig_tradeoff` (L92) and `fig_frontier` (L135) carry `counter_flip`; **`fig_detectors` (L162) and `fig_stealth_vs_sigma` (L202) do not** — their attack lists omit `counter_null`/`counter_flip` |
 | Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3) | **not started** |
 | Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
-| Noise sweep = primary ablation, log grid | G2 (M0) · §3.3c (sim08) | **done on the sim08 stack 2026-09-16** (18 levels + noiseless anchor, §3.3c); **still not started for M0/E2** — needs the σ=0 anchor + a proper log grid (§3.2) |
+| Noise sweep = primary ablation, log grid | G2 (M0) · §3.3c (sim08) · **E2 (§3.3g)** | **done on the live CGAN models 2026-09-23** (SNR 0–40 dB + noiseless anchor, all 21 generators, §3.3g) and on the sim08 stack 2026-09-16 (§3.3c). M0/E1's σ grid is still not log-spaced throughout (§3.2) — not selected for E2 |
 | Untrainability written up as a *result* | Experiment History summary (§3.5) | **drafted, not pasted** — one paragraph in `sec_exphist.tex`; the long write-up was cut 2026-09-15 for the page limit |
 | Novelty in coordination/synchronisation, not architecture (2026-09-12) | §2.3 RQ1's delay-decay curve; G6 (§3.4) | **not started** — this is the paper's contribution now |
 | Inter-jammer delay + desync modelled and swept (2026-09-12) | M1 spec (§2.4); G6 | **not started** — M1 does not exist yet |
@@ -952,13 +972,23 @@ a loss.
 
 ## 3.1 Status line
 
-**STATE 2026-09-23. The D-series is COMPLETE and the headline is POSITIVE, not an impossibility
-result.** D0 baselines, D2a control, D1 plain GAN and D2 (white-box detector-aware GAN) are built and
+**STATE 2026-09-24. The D-series and E2 (the noise ablation) are COMPLETE; the next step is documenting
+all findings (user, 2026-09-24).** The headline is POSITIVE, not an impossibility result. D0 baselines, D2a control, D1 plain GAN and D2 (white-box detector-aware GAN) are built and
 evaluated against **all four** detectors — power 1/2-sided, kurtosis, spectrogram CNN. **At matched BER,
 detector-aware training measurably lowers P(det): −19.8 pp against the CNN, −31.2 pp against power,
 −92.7 pp against kurtosis, at 12.8 dB less power (§3.3f).** Inside the strict α budget confirmed BER is
 still 0 for every non-genie jammer — that is the *limit* of the gain, not the finding. The coordination
 plan below is paused, not superseded, and was not re-validated.
+
+> **⚠ Those CNN numbers are correct but were measured at the WORST end of the range (E2, §3.3g,
+> 2026-09-23).** SNR 30 dB is Zhou's protocol value, inherited rather than chosen, and the whole
+> D-series sat there. Swept over SNR the same gain is **−53.5 pp at 10 dB and −85.1 pp at 15 dB**
+> against the CNN, versus −16.2 pp at 30 dB and nothing at 40 dB (all at matched excess BER 3e-4; the
+> 30 dB row re-measures −16.2 pp against §3.3f's −19.8 pp, inside its own ±4 pp resolution). **Quote
+> the gain with its SNR from now on.** The 12.8 dB power saving is SNR-invariant and needs no
+> qualifier. At 0–10 dB SNR a stealthy frontier exists, **against the CNN only** — at 5–10 dB on an
+> error-free link, but one-sided power still catches every point that does measurable damage, and the
+> CNN is off-design there (§3.3g finding 5). That is the boundary of the gain, not a stealth result.
 
 **0d · D1 plain GAN + D2 detector-aware GAN, analytic detectors — DONE 2026-09-20 ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).**
 The actual step-2, built white-box (§3.3f). Plain GAN (D1) and 13 trained generators (D2: power-1s/2s,
@@ -966,6 +996,20 @@ kurtosis × β{1,10,100,1000}) placed on the BER–P(det) plane. **Result: steal
 detector — a 1M-parameter white-box generator does no better than D2a's 48-parameter control.** The CNN
 was not targeted then; it was closed 2026-09-23 with the same answer (§3.3f). Report:
 <https://claude.ai/artifact/PBXBr7EQQ3huK7rocvSMxX>.
+
+**0f · E2, the noise ablation on the live models — DONE 2026-09-23 ([§3.3g](#33g-e2--the-noise-ablation-on-the-live-models-30-db-is-near-the-worst-place-to-measure-the-gain-2026-09-23)).**
+The supervisor's *mandated primary ablation* (§B.2), which until now existed only on the frozen sim08
+stack (§3.3c). 10 levels (SNR 0:5:40 dB + a noiseless anchor) × 7 classical attacks × all 21
+generators, every detector re-calibrated per level, CNN weights frozen at 30 dB. **The 30 dB level
+reproduces §3.3f** (regression gate: 0/264 P(det) points outside 4σ in all 28 rows; BER deviations
+unbiased scatter). **Headline: the matched-BER gain peaks at −85.1 pp at 15 dB SNR, 5× the 30 dB
+value, and vanishes by 40 dB.** Mechanism: the *stealth edge* falls ~0.7 dB per dB of SNR — the
+detector sharpens as the link cleans — while the BER onset is flat, so the gap grows with SNR. This
+**refutes the mechanism proposed when the ablation was specified** (the edge was expected to be flat
+in JSR). Its `fig_frontier_by_snr.png` moves the FAR with the budget — the ≤ FAR view the user
+rejected on 2026-09-24 (§2.7) — and is to be replaced by fixed-α trade-off curves (parked, §4.3). **Tier 1 is evaluation only — it measures transfer, not achievability; Tier 2
+(retrain per level) is gated on this.** Report page, 8 figures:
+<https://claude.ai/artifact/PonQqobu2xpk52oWYfyoAB> (private, not yet shared).
 
 **0b · Learned control tier D2a — DONE 2026-09-19 ([§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19)).**
 User decision 2026-09-18: add a *learned* structured jammer as the fair control for the stealth GAN
@@ -1025,8 +1069,9 @@ differentiates the **deployed** weights — white-box like every other D2 target
 no retrain. **Result, in the framing the user chose 2026-09-23: at matched BER the CNN-targeted generator is
 measurably less detectable** (P(det)_CNN 1.000 → 0.802 vs the plain GAN, −19.8 pp, ~11σ) **at 12.8 dB
 less power** — a small but real finding. Its limits: the gain vanishes above BER ~1e-3, a *classical*
-Amuru pulsed jammer still evades the CNN better (0.421), β has an interior optimum at 1–10, and nothing
-reaches the α budget. Numbers and the full table: §3.3f.
+Amuru pulsed jammer still evades the CNN better (0.421 — at 30 dB only; below ~22 dB SNR the learned
+generator is the stealthier one, §3.3g 1b), β has an interior optimum at 1–10, and nothing reaches the α
+budget. Numbers and the full table: §3.3f.
 
 **Two traps were found by inspection before burning a cluster cycle, and both would have produced a
 convincing-looking null.** They are the reusable lesson of this round:
@@ -1046,11 +1091,12 @@ difference alone reaches 0.375 × clean std at its worst over 1024 clean frames,
 clean decisions and no jammed P(det). `verify.py` §14d measures the two effects **separately** and
 asserts only decision-level equivalence; it prints the fp16 bias each run, so revisit only if it grows.
 
-**Single next action: the supervisor direction email (§4.1 #0b) — it is now the only thing gating the
-write-up.** Every compute item the characterisation study needs is done, and the result is stronger than
-"nothing works": a measurable matched-BER stealth gain with three stated limits. Send it with the
-2026-09-23 report page (link in §3.3f). What remains his call is whether the framing is characterisation
-(option B) or coordination (option A) — outstanding since 2026-09-17.
+**Single next action: document all findings** (user, 2026-09-24) — the write-up of the D-series and
+E2 for the paper/thesis: `paper_drafts/*.tex` for the user to paste into Overleaf (§1.4), with the
+figures in `artifacts/cgan/`. **Only after that: decide whether to extend or to move on to MARL.**
+"Extend" = the parked E2 follow-ons (§4.3: one rerun for PER / effective SINR / AUC, the fixed-α
+trade-off figures, Tier 2 retraining); "MARL" = option A's coordination row (§3.4 D4). That is the same
+fork the direction email to the supervisor (§4.1 #0b) puts to him, and it is still unsent.
 
 > **How to state it** is now a settled method decision — see the last row of
 > [§2.8](#28-settled-method-decisions). In short: report the matched-BER gain; the α-budget zeros bound
@@ -1064,8 +1110,10 @@ figures regenerated.
 
 **Still owed to the supervisor
 in parallel:** the direction email (options A/B, §4.1 #0b) — the *framing* (characterisation vs
-coordination) depends on it. The §3.3c/§3.3d report pages and the new §3.3f report page
-(<https://claude.ai/artifact/PBXBr7EQQ3huK7rocvSMxX>) are ready to send him.
+coordination) depends on it. Ready to send him: the §3.3c/§3.3d report pages, the §3.3f page
+(<https://claude.ai/artifact/2fRAFrMoYAfCZWPe1KvTfV>, 2026-09-23 — **not** the superseded 2026-09-20 one)
+and the E2 page (<https://claude.ai/artifact/PonQqobu2xpk52oWYfyoAB>, whose Fig. 6 should be replaced
+first, §3.3g). None has been shared yet.
 
 **Supervisor contact.** The sim08 ablation axes were discussed with him before 2026-09-16. Whether the
 §4.1 #0 pivot email was sent, and whether he knows about the CGAN track, is not recorded after
@@ -1158,11 +1206,14 @@ Ignore 2243871; it is kept only as the SLURM log.)* Grid: **σ ∈ {0.02, 0.05, 
 dB), **13 power values** 0.001–2.0, duty-cycle variants, α = 0.05, 4000 frames × 256 symbols.
 Outputs `artifacts/m0/frontier/results_sigma*.json` + `e1_{frontier,tradeoff,detectors,stealth_vs_sigma}.png`.
 
-> **Gap vs the stated design: σ = 0 is NOT in the sweep.** The design (§2.4, and his mandate) calls
-> for σ = 0 as an explicit anchor point, and the grid above starts at 0.02. The grid is also only
-> log-spaced at the low end (0.02, 0.05, 0.1) and roughly linear above (0.15, 0.2, 0.3, 0.4, 0.5),
-> where he asked for exponential spacing throughout. Both are cheap to fix and should be, before E1
-> is quoted as answering the noise ablation. **Two things are lost by omitting σ = 0:** the cleanest
+> **Gap vs the stated design: the σ grid is not log-spaced throughout.** It is log-spaced at the low
+> end (0.02, 0.05, 0.1) and roughly linear above (0.15, 0.2, 0.3, 0.4, 0.5), where he asked for
+> exponential spacing throughout — a `--sigmas` string and a detector retrain, minutes on CPU; not
+> selected for E2. **σ = 0 is not simulated by design, and that is correct:** `m0/frontier_m0.py`
+> documents that the Gaussian densities degenerate there (any perturbation is detected with
+> probability one) and states the anchor analytically, BER*(P) = min(P, 0.5). So σ = 0 is a sentence
+> in the write-up, not a sweep point. *(Corrected 2026-09-24: this note used to call σ = 0 a missing
+> sweep point "cheap to fix".)* **Two things are lost by omitting σ = 0:** the cleanest
 > possible demonstration that *stealth is a noise phenomenon* (at σ = 0 the "less detected" half of
 > the claim cannot hold for **anyone**, so the comparison collapses to BER/SER at matched power —
 > say that explicitly), and a **free calibration point for RQ2**, since any gap between the learned
@@ -1633,14 +1684,16 @@ real weights.
 - **Three limits on that gain, all load-bearing.** (i) **It lives only at low BER** — at 3e-4 the
   spread is 0.42–1.00, but by BER 3e-3 every detector reads 1.000 for every jammer. (ii) **A classical
   jammer still evades the CNN better**: Amuru pulsed sits at **P(det)_CNN = 0.421**, below every
-  learned generator. The GAN wins on kurtosis and power, *not* on the detector it was trained against.
+  learned generator. **At SNR 30 dB only** — E2 found this limit holds from ~22 dB up; at 10–20 dB the
+  CNN-targeted generator is the stealthier one (§3.3g 1b). The GAN wins on kurtosis and power, *not* on the detector it was trained against.
   (iii) **β has an interior optimum** — β = 1–10 produces the gain, 100–1000 erodes it, and β ≥ 1e4
   destroys it (those generators need *more* power for the same BER **and** are caught just as often).
   Over-weighting stealth produces a worse jammer, not a stealthier one.
 - **The α-budget zero is the limit, not the finding.** Inside the detector's own false-alarm rate
   confirmed BER stays 0 for all 24 non-genie jammers; the CNN's stealth edge is ~−45 dB (best
   CNN-targeted generator −43.5 dB vs −46.7 dB for noise, i.e. ≤ 3 dB) while BER only becomes
-  measurable near −16 dB — a **~30 dB gap**. All four detectors agree there, under the attacker's best
+  measurable near −16 dB — a **~30 dB gap** (at SNR 30 dB; the gap grows with SNR at ~0.8 dB per dB,
+  §3.3g finding 4). All four detectors agree there, under the attacker's best
   case. State this as the boundary of the gain above, **not** as an impossibility headline.
 
 **Jobs:** 2267202 verify · 2267610 train array 0–12 (task 12 `TaskProlog` transient → 2267624) ·
@@ -1654,12 +1707,15 @@ It supersedes the 2026-09-20 page <https://claude.ai/artifact/PBXBr7EQQ3huK7rocv
 the CNN rows and leads with the α-budget framing; do not send that one.
 
 **Caveats / not yet done.**
-- The matched-BER table above is **not** stored as an artifact — it is derived from the eval JSONs.
-  `cgan/gan_figures.py` `summary()` prints the α-budget table only; regenerate the matched-BER cut by
-  interpolating `points[].ber` / `points[].pdet` per jammer (method recorded above).
-- The frontier is drawn at the fixed α threshold swept over JSR, not the full ROC over all budgets
-  ([[show-full-frontier]] wants all budgets); that needs per-frame statistics saved during eval (the
-  D2b machinery, §3.4). The qualitative wall is unchanged.
+- The matched-BER table above is derived from the eval JSONs. `cgan/snr_figures.py` `summary()` prints
+  it at every SNR including 30 dB, from E2's re-measurement (§3.3g); `gan_figures.py` `summary()` prints
+  only the α-budget table, and its `BER_REF` is 1e-3 while this table is quoted at 3e-4.
+- ~~The frontier is drawn at the fixed α threshold swept over JSR, not the full ROC over all budgets.~~
+  **Withdrawn 2026-09-24:** a fixed α with P(det) swept over [0, 1] *is* the view §2.7 asks for; moving
+  α is the separate question D2b answers.
+- `fig_frontier` / `fig_pdet_vs_jsr` draw Amuru in `#7a5195`, which fails the palette's normal-vision
+  check against the CNN-targeted `#882255` (ΔE 12.6 < 15, §3.3g figures) — the two series the CNN story
+  compares. E2's figures use orange; these are not yet redrawn.
 - Single-round, frozen detectors, K = 1.
 
 **Cluster note.** A `PENDING (BadConstraints)` with a ~24 h estimate was a **CPU** mismatch — the jobs
@@ -1667,6 +1723,155 @@ requested `--cpus-per-task=4` while the only node with a free GPU of the allowed
 TITAN RTX) had 2 free CPUs; dropping to `--cpus-per-task=2` scheduled them at once
 (`submit_train_gan.sh` / `submit_eval_gan*.sh` now use 2). Migrating to INFK was re-examined and
 rejected again 2026-09-21, now with measurements — see §1.5.
+
+## 3.3g E2 — the noise ablation on the live models: 30 dB is near the WORST place to measure the gain (2026-09-23)
+
+**The supervisor's mandated primary ablation** (§B.2: *"Ablation: parameter study, increase noise and
+see what happens"* + *"Noise level, ε, change exponentially"*), finally run on the models the paper
+leads with. It had been discharged only on the frozen sim08 OFDM stack (§3.3c) while the whole
+D-series sat at the single pinned level `link.SNR_DB = 30` — Zhou's protocol value, which §3.3d then
+made load-bearing by power-controlling T to 30 dB at R so one detector calibration serves every drop.
+
+**Setup.** 10 levels — SNR **0:5:40 dB plus a noiseless anchor** (linear in dB *is* exponential in
+noise power, which is the literal mandate; the range overlaps sim08's 5–30 dB so §3.3c stays
+comparable). Per level: **every detector re-calibrated on 20 000 clean frames at that level**
+(`calibrate_snr.py`) — thresholds are quantiles of clean frames, so without this α stops being α and
+the comparison stops being matched. **The CNN's weights stay the deployed 30 dB ones** and only its
+colour scale and threshold are re-fitted (user decision; framing and limits below). Then the full
+classical envelope (7 attacks) and **all 21 generators** (D1 + the 20 D2 checkpoints) over the same
+66-point JSR grid, 512 frames per point, confirmation on 4096 — `baselines.measure/confirm` and
+`eval_gan.sweep` reused unchanged. **Tier 1 is EVALUATION ONLY**: generators trained at 30 dB are
+*evaluated* elsewhere, so this measures **transfer**, not achievability (Tier 2 gated, §3.4).
+Jobs: 2270447 / 2270448 verify (incl. new §15) · 2270449 task 6 · 2270556 array 0–5,7–9 (~15–30 min
+each, all parallel). Outputs `artifacts/cgan/snr_ablation/run001/` (10 JSONs + 4 figures).
+
+**0. The 30 dB level reproduces §3.3f — the regression gate passed** (`regress_snr30.py`). P(det):
+**0 of 264 points outside a 4σ binomial band in every one of the 28 rows** (7392 comparisons). BER
+deviations are **unbiased scatter** (389 positive / 492 negative, mean −0.004 band-units), which is the
+test that matters — a regression is one-signed. At §3.3f's own operating point (BER 3e-4) the CNN row
+re-measures **1.000 → 0.838 (−16.2 pp) at 12.9 dB less power** against §3.3f's −19.8 pp at 12.8 dB: the
+power saving reproduces exactly and 3.6 pp is inside the ±4 pp resolution §3.3f itself states.
+
+**1. THE RESULT — the matched-BER stealth gain is far larger off 30 dB, and 30 dB is near its worst
+end.** P(det) against the CNN at matched excess BER 3e-4, D1 plain GAN vs D2 CNN-targeted β = 10:
+
+| SNR [dB] | 0 | 5 | 10 | 15 | 20 | 25 | **30** | 35 | 40 |
+|---|---|---|---|---|---|---|---|---|---|
+| D1 plain GAN | 0.045 | 0.122 | 0.590 | 0.936 | 0.998 | 1.000 | **1.000** | 1.000 | 1.000 |
+| D2 vs CNN, β = 10 | 0.039 | 0.059 | **0.055** | **0.084** | 0.226 | 0.487 | **0.838** | 0.965 | 1.000 |
+| Δ [pp] | −0.6 | −6.3 | **−53.5** | **−85.1** | −77.2 | −51.3 | **−16.2** | −3.5 | 0.0 |
+| JSR D2 needs [dB] | −40.0 | −21.9 | −21.4 | −21.2 | −21.2 | −21.0 | −21.1 | −21.1 | −20.9 |
+
+**The gain peaks at −85.1 pp at 15 dB SNR, five times the 30 dB value, and is gone by 40 dB.** (A
+reduction in detectability, not undetectability: at 15 dB D2 is still caught 8.4 % of the time against
+α = 5 % — finding 5 is the strict version.) At
+realistic link SNRs (10–20 dB) detector-aware training cuts P(det) from 0.59–1.00 to 0.06–0.23 at
+matched BER. **The D-series measured its headline where it is nearly weakest**, because Zhou's protocol
+fixes SNR 30 dB — the one number in the whole setup that was inherited rather than chosen.
+**The power saving is SNR-invariant: 12.3–12.9 dB across 10–40 dB**, so §3.3f's "12.8 dB less power"
+is robust as stated.
+
+**1b. §3.3f limit (ii) holds only above ~22 dB.** §3.3f carried "a classical jammer still evades the
+CNN better" (Amuru pulsed 0.421 vs the CNN-targeted GAN). Across SNR at matched excess BER 3e-4:
+Amuru 0.092 / 0.158 / 0.297 / 0.387 / 0.429 at 10 / 15 / 20 / 25 / 30 dB, against D2 0.055 / 0.084 /
+0.226 / 0.487 / 0.838. **At 10–20 dB the learned generator is the stealthier of the two — against the
+very detector it was trained on — while needing ~6 dB less power**; Amuru wins from 25 dB up; at 0–5 dB
+they are within noise. One of §3.3f's three load-bearing limits is therefore a high-SNR statement.
+
+**2. The stealth edge is NOT SNR-independent — the detector sharpens as the link cleans.** The loudest
+JSR still inside α falls **−21 → −49 dB (power 1-sided) and −16 → −48 dB (CNN) over SNR 0 → 40 dB**,
+about **−0.7 dB per dB**. This **refutes the mechanism proposed when the ablation was specified**: the
+clean statistic was expected to be signal-dominated and therefore flat in JSR. It is noise-dominated —
+the clean statistic's variance falls with N₀, so a cleaner link buys the *defender* precision. The
+attacker's problem gets harder with SNR for a reason that has nothing to do with the victim's BER.
+
+**3. The measured BER onset IS flat**: −2.0 to −3.1 dB at every SNR ≥ 10 dB and at the noiseless
+anchor (−6.0 dB at 5 dB, −47.0 at 0 dB, where the clean floor does the work).
+Above ~10 dB the clean floor is negligible, so the jammer must supply essentially the whole variance the
+target BER needs, which pins the onset regardless of SNR.
+
+**4. So the gap grows with SNR (~0.8 dB per dB) — but "the 30 dB gap IS the 30 dB SNR" is false as a
+mechanism.** CNN gap: **+13.0 (5 dB) → 19.9 → 24.5 → 29.7 → 35.4 → 37.7 → 41.0 → +45.5 (40 dB)**. It is
+driven by the **stealth edge** moving, not by the damage threshold moving, and it is not the diagonal.
+**Two onsets have to be reported, not one** (`fig_gap_vs_snr.png` draws both): *noise parity*
+(JSR = −SNR, where jammer power equals the noise floor) moves 1 dB per dB **by construction**, so a gap
+measured against it tracks SNR trivially and proves nothing. Quoting one without its definition is how
+the retracted "+70 % channel-aware" happened (§2.7).
+
+**5. The ≤ α edge of the curve: open at 0–10 dB, and there only against the CNN.** *(An α-budget
+statement — the left edge of the trade-off curve, not a result of its own, §2.7.)* At SNR 0 dB the
+jammer costs measurable excess BER from −47 dB JSR, 26 dB below where the most sensitive detector
+(one-sided power, −21 dB) first flags it. With P(det) held at the budget, stealthy damage exists at
+0–10 dB and nowhere from 15 dB up: at 5 dB D2 reaches 2.9e-3 excess BER against the CNN where D1
+manages one bit error. At 5–10 dB the clean link makes no errors, so this damage is real — **but
+against the CNN only**, which is off-design there: per detector, D2's best damage within α at 5 dB is
+2.9e-3 (CNN) / 2.3e-5 (kurtosis) / 7.6e-6 (two-sided power) / **none (one-sided power)**, and at
+10 dB 4.2e-4 / 2.0e-4 / none / none. The classical power detector closes what the SOTA detector leaves
+open — the §3.3d pattern again. At 0 dB the clean BER is already 2.3e-3 (§3.3c #2). Budgets below
+**0.005** are not resolvable from the stored 257-point CDFs and 2048 clean frames (`B_MIN`); the
+figure starts there.
+
+**6. Kurtosis is the one detector that does not sharpen.** Its edge saturates at −20 dB from SNR 10
+upward — it is a *shape* statistic, not a power one — so its gap to noise parity falls 1:1 and goes
+negative above 20 dB. Against kurtosis the D2 gain is large and flat across SNR (D1 0.82–0.99 vs D2
+0.07–0.11 at matched excess BER 3e-4, SNR 10–40 dB) — the one detector the GAN beats at every level.
+
+**7. Damage follows SINR, detection follows JNR.** Re-expressed as JNR (= JSR + SNR), the stealth edges
+barely move: CNN −16 → −8 dB and one-sided power −21 → −9 dB over SNR 0–40 dB (against −16 → −48 and
+−21 → −49 in JSR), while the BER onset is (nearly) fixed in SINR. The two thresholds live on different
+axes — findings 2–4 in one line. These are *nominal* ratios from existing data; the effective
+decision-point SINR of a structured jammer needs one stored number per point (§4.3).
+
+**8. SER adds information only where a jammer hits I and Q together.** Measured SER over the SER that
+BER implies with independent axes, at points with ≥ 200 bit errors: noise 1.00, plain GAN 1.01, D2
+generators 0.96–0.99, Amuru p = 0.1 0.87, genie 0.52 (a flip costs two bits per symbol error) —
+identical at 15 and 30 dB. So SER is a table column, not an axis. **PER is not stored:** for uncoded
+256-bit frames it would be 1 − (1 − 3·10⁻⁴)²⁵⁶ ≈ **7.4 %** at the matched point if errors were
+independent — which makes "BER 3e-4" land as packet loss — and errors are known to cluster within
+frames for bursty jammers (`regress_snr30.py`), so PER could reorder jammers at equal BER (§4.3).
+
+**Figures** (`artifacts/cgan/snr_ablation/run001/`, all from `snr_figures.py` on the login node):
+`fig_headline_gain_vs_snr.png` (the CNN row of the table, both halves, Amuru for reference) ·
+`fig_matched_ber_vs_snr.png` (all four detectors, plus the JSR each jammer needs) · `fig_mechanism.png`
+(the four stealth edges and the BER onset on one axis) · `fig_gap_vs_snr.png` (the two onsets and both
+gaps vs the diagonal) · `fig_far_vs_snr.png` (FAR held at α by re-calibration; the hit rate on a fixed
+jammer rising with SNR) · `fig_frontier_by_snr.png` (achievable excess BER per budget ≥ 0.005, one panel
+per level — **the budget moves the FAR threshold too, so this is the ≤ FAR view §2.7 rejects**; kept
+for the α question, to be replaced by fixed-α trade-off curves, §4.3) ·
+`fig_spectrograms_by_snr.png` (what the CNN receives at 0/15/30 dB/noiseless; from `snr_examples.py`,
+job 2271314, which re-measures the headline cells on fresh seeds: 15 dB D2 0.078, 30 dB 0.857) ·
+`fig_regression_30db.png` (the gate, drawn). Palettes pass `validate_palette` (light, all pairs);
+Amuru is orange here, not `gan_figures.py`'s purple, which fails the normal-vision floor against the
+CNN-targeted maroon — **the §3.3f figures still carry that failing pair.**
+
+**Report page (8 figures, 2026-09-24):** <https://claude.ai/artifact/PonQqobu2xpk52oWYfyoAB> — private,
+**not yet shared with the supervisor**. Its Fig. 6 is `fig_frontier_by_snr.png` (the ≤ FAR view) —
+replace it before sharing if the trade-off figures exist by then. Its HTML source is not in the repo;
+to update it, read the artifact by URL, edit, and republish to the same URL; figures are served as
+`fig/*.png`.
+
+**Caveats, all load-bearing.**
+- **The CNN is out of distribution off 30 dB.** Weights frozen there by decision; only the colour scale
+  and threshold are re-fitted, and the scale's `vmin` moves **−14.7 dB (SNR 0) → −44.2 (30) → −80.7
+  (noiseless)**. Reported as *"a detector trained at 30 dB, deployed off-design"* (§3.3c #6 precedent),
+  and it is why **the noiseless anchor is unusable for the CNN**: its edge reads **+15 dB**, i.e. it
+  detects almost nothing, which is an OOD artifact and not a property of any jammer. Retraining per
+  level is Tier 2 and is gated.
+- **At the noiseless anchor both power detectors flag every JSR on the grid** (no edge exists). With
+  N₀ = 0 the clean power is deterministic and the hard JSR projection makes any jammer an exact,
+  detectable shift. Correct behaviour, not a bug — and the reason the anchor is an anchor, not a result.
+- **Tier 1 measures transfer, not achievability.** The 10–20 dB peak could be larger still with
+  per-SNR retraining, and the +1.0 pp at 0 dB is a 30 dB-trained generator working off-design.
+- Single round, frozen detectors, K = 1, and the whole sweep is the `noise` row for edges.
+- **Measurement traps found and fixed here; each would have produced confident nonsense** (the code
+  carries the reasoning in comments). The **stealth edge** must be the *last* JSR inside α + 2σ, not the
+  first crossing of α — at low JSR P(det) sits *at* α by construction, so a crossing rule fires on noise
+  (`snr_figures.stealth_edge`). And: a BER
+  comparison must use the **error count capped at the frame count**, never a fixed log10 band — at
+  131 072 bits/point a BER of 7.6e-6 is ONE error, and bursty jammers make the frame, not the bit, the
+  independent unit; and a BER **onset** must be taken at the first grid point above target when the
+  left bracket is zero, or whether a one-error point happens to land below it silently deletes whole
+  levels (35 dB vanished from the figure exactly this way).
 
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
@@ -1691,14 +1896,15 @@ paused while this runs.
 With no pass/fail bar, hyperparameters are iterated **only** by explicit user decision after seeing
 C6. Each run gets a row in [A.0](#a0-run-index).
 
-### Detector-suite characterisation study — PROPOSED 2026-09-17; D0/D1/D2a/D2 ALL BUILT AND EVALUATED (2026-09-23)
+### Detector-suite characterisation study — PROPOSED 2026-09-17; D0/D1/D2a/D2 + E2 ALL BUILT AND EVALUATED (2026-09-24)
 
 The user's chosen staging (2026-09-17). Shared spine for options A and B; MARL and CWT are gated
 "only if it bites". Same conventions as the C-series (run from `cgan/`, sbatch, matched detectability,
-NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **STATE 2026-09-20:**
+NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **STATE 2026-09-24:**
 - D0 (baselines), D2a (learned control), D1 (plain GAN) and D2 vs **all four** detectors are done
-  ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)). The user directed all as preparation, not gated on the supervisor.
-- **The compute is complete.** D3/D4 stay gated — D1/D2 showed no frontier worth stressing.
+  ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)), and so is E2, the noise ablation of D1/D2 ([§3.3g](#33g-e2--the-noise-ablation-on-the-live-models-30-db-is-near-the-worst-place-to-measure-the-gain-2026-09-23)). The user directed all as preparation, not gated on the supervisor.
+- **The compute is complete.** Next is documenting the findings (user, 2026-09-24); then extend (E2
+  follow-ons, §4.3) or move to MARL (D4). D3 stays gated.
 - The *framing* of D2 onward still waits on the direction email (§4.1 #0b).
 
 Build order:
@@ -1708,8 +1914,9 @@ Build order:
 | **D0 = "baselines"** | **DONE 2026-09-17 on the 3-D waveform link ([§3.3d](#33d-classical-baselines-on-the-3-d-waveform-link--the-pre-gan-envelope-2026-09-17)).** Attackers barrage / pulsed-QPSK(p) / omniscient(η); detectors power (1/2-sided), kurtosis, spectrogram-CNN, and the exact noise NP test — on the waveform layer, K = 1–4. The user built it as GAN-prep, not gated on the supervisor. *(An M0 exact-NP panel was folded into the waveform NP-on-noise row rather than run separately.)* | The envelope exists: floor (barrage), smart-classical (pulsed-QPSK), genie ceiling (omniscient), optimal warden (NP on noise). Every realisable attack is at the floor. |
 | **D1** | **DONE 2026-09-20 ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).** Plain GAN (`run001_G`) on the BER–P(det) plane: stealthy BER 0 against every detector — on the floor with noise/pulsed. The honest "detectability of a reproduced GAN jammer". | `eval_gan.py`; `attacks.gan_tx` + `gan` spec. |
 | **D2a** | **DONE 2026-09-19 ([§3.3e](#33e-learned-shaped-noise-control-d2a--shaping-buys-effectiveness-not-stealth-2026-09-19)).** Learned control tier: shaped-noise jammer (48 parameters), CMA-ES, black-box score-based, one per detector, the same objective D2 will use. User decision 2026-09-18 (§2.10). | Stealthy BER 0 against every detector. The CNN is evaded only out of band, where nothing reaches the victim; the effectiveness gain is 15.9 dB. D2 must beat this, not the fixed rows. |
-| **D2b (later)** | **FAR ablation** (user, 2026-09-19). α = 0.05 *per frame* is arbitrary: at 1 MBd and 128-symbol frames it is about 390 false alarms per second, and a real receiver would run far lower α. Plan: α ∈ {1e-3, 1e-2, 0.05, 0.1}. **Evaluation first:** re-measure the existing fixed and learned jammers, storing per-frame statistics so any α (and the ROC) comes for free; `thresholds.json` holds only α ∈ {0.01, 0.05}, from 20k clean frames, so α = 1e-3 needs ≥ 100k. **Retrain the learned tier only if the ranking changes with α**; its objective uses the α = 0.05 threshold. | Expected: power's "first errors only at P(det) ≥ 0.83" is robust to α, because at −16 dB the mean shift is far above the clean spread. The CNN rows are the ones likely to move. |
-| **D2** | **DONE — all four detectors ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).** Analytic 2026-09-20, CNN 2026-09-23. White-box direct-gradient generator (warm-started from `run001_G`), objective `−(log E[BER] − β·P_det_soft)`, one per (detector, β); the CNN is differentiated through a straight-through viridis LUT — the deployed weights, no surrogate. **Confirmed stealthy BER 0 against every detector**, ≤ 3 dB stealth edge over noise, ~30 dB gap to where BER bites. No better than D2a's 48-parameter control. | `train_gan.py`; per-target `JSR_BANDS` and β range matter — see §3.1 traps. |
+| **D2b (later)** | **FAR ablation** (user, 2026-09-19). α = 0.05 *per frame* is arbitrary: at 1 MBd and 128-symbol frames it is about 390 false alarms per second, and a real receiver would run far lower α. Plan: α ∈ {1e-3, 1e-2, 0.05, 0.1}. **Evaluation first:** re-measure the existing fixed and learned jammers, storing per-frame statistics so any α (and the ROC) comes for free; `thresholds.json` holds only α ∈ {0.01, 0.05}, from 20k clean frames, so α = 1e-3 needs ≥ 100k. **Retrain the learned tier only if the ranking changes with α**; its objective uses the α = 0.05 threshold. **Half-built by E2 (2026-09-23):** `detectors.stat_quantiles` + `baselines.measure(..., keep_stats=True)` store each statistic's 257-point CDF, which yields P(det) at ANY α without per-frame dumps (tens of KB, not hundreds of MB); `snr_figures.fig_frontier` already reads the full ROC off it. E2 stores it for two tags only — widening the tag list is the rest of D2b. | Expected: power's "first errors only at P(det) ≥ 0.83" is robust to α, because at −16 dB the mean shift is far above the clean spread. The CNN rows are the ones likely to move. |
+| **D2** | **DONE — all four detectors ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).** Analytic 2026-09-20, CNN 2026-09-23. White-box direct-gradient generator (warm-started from `run001_G`), objective `−(log E[BER] − β·P_det_soft)`, one per (detector, β); the CNN is differentiated through a straight-through viridis LUT — the deployed weights, no surrogate. **Confirmed stealthy BER 0 against every detector**, ≤ 3 dB stealth edge over noise, ~30 dB gap to where BER bites (at 30 dB SNR; it grows with SNR, §3.3g). No better than D2a's 48-parameter control. | `train_gan.py`; per-target `JSR_BANDS` and β range matter — see §3.1 traps. |
+| **E2 = the noise ablation** | **DONE 2026-09-23 ([§3.3g](#33g-e2--the-noise-ablation-on-the-live-models-30-db-is-near-the-worst-place-to-measure-the-gain-2026-09-23)).** The supervisor's mandated primary ablation (§B.2), run on the live models: SNR 0–40 dB + noiseless, all 21 generators, detectors re-calibrated per level, CNN weights frozen at 30 dB, generators evaluated not retrained (transfer, not achievability). The gain peaks at −85.1 pp at 15 dB vs −16.2 pp at 30 dB. **Follow-ons (one rerun for PER / SINR / AUC, fixed-α trade-off figures, Tier 2 retraining) parked by the user 2026-09-24 — §4.3.** | `calibrate_snr.py`, `snr_ablation.py`, `regress_snr30.py`, `snr_examples.py`, `snr_figures.py`, `verify.py` §15. An eval is 35 s; the grid runs in ~20–30 min wall as a 10-task array. Setup, traps and caveats: §3.3g. |
 | **D3 (gated)** | **CWT detector** (Zhang & Krunz, torch — no `pywt`, §4.2 Q10) added to the suite — **only if D1/D2 show a frontier worth stressing**. | Adaptation, not a drop-in (Q10). |
 | **D4 (gated)** | **MARL coordination row** (option A's coherent combining) — **only if the single-jammer study bites**. Power/phase/timing coordination so jammers add at the victim, measured vs Amuru Thm 4 as ceiling; generator incidental (§2.10). | Biggest lift; do not build before D0–D2 land. |
 
@@ -1848,11 +2055,11 @@ calibration for the m2 detector; extending the sim08 suite with more classical d
 | # | Item | Why it blocks |
 |---|---|---|
 | **0** | **⚠ 2026-09-12, TOP PRIORITY — sign-off on the pivot.** Three things in one email: (i) the literature collision (§2.1) — E1's impossibility finding is prior art in the square-root law, symmetrizability and disguised jamming, so the stealth headline cannot stand; (ii) the proposed replacement, RQ1 = the coordination gain **as a function of inter-jammer delay** (§2.3) — which is *his own* 2026-09-12 steer, so frame it as adopting his suggestion, not as a unilateral change of subject; (iii) **the RQ1/RQ2 tension he must break** — his mandated headline is *adaptation cost*, but the pivot makes *coordination* the lead, and 20 days does not fit both. | **Blocks the entire remaining plan.** G5/G6 are 4–5 days of new code committed to one branch of this fork (§3.4). Do not start them on a guess. **His proposal feedback (§B.2) already endorses the direction** — coordination/synchronisation as the novelty axis — so only (i) and (iii) are genuinely open. That makes this email easier to write and *more* urgent, not less: the cheap half is already agreed. |
-| **0b** | **⚠ 2026-09-16, gates the direction — sign-off on retiring stealth *entirely* + the GAN/MARL replacement.** A short email was drafted (this session): weeks of experiments + literature converged on stealth yielding only trivial/weak attacks under a detection constraint (§2.1 "Sharpened"), so drop it as an objective — **including CGAN step 2** — and instead strengthen the reproduced GAN *waveform* with MARL multi-jammer coordination as an *effectiveness* result (energy-budget power split → coherent combining), then a zero-sum jammer-vs-legitimate-node game vs the anti-jamming baselines. Detectability stays an eval axis; adaptation cost stays a possible secondary claim. **⚠ 2026-09-17 UPDATE — the email now offers TWO options, both keeping the reproduced GAN waveform and reporting on the matched BER–P(det) plane: (A) the drop-stealth + MARL-coordination result above; (B) keep stealth as a *characterisation* result — a generative jammer's detectability across a detector suite vs the NP-optimal ceiling, i.e. the deployed-detector-vs-optimal-warden gap (§2.1 item 1), effect allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward B with A's MARL as a gated tail. Frame B to him as the *detector-gap measurement* (the finding) with the GAN as instrument — it answers his 'don't let novelty live in the architecture' comment (§2.9).** | **Blocks folding the decision into §2.10/§4.2 and starting the D-series/step-2 code.** He has not seen the CGAN track (§3.1), so the email may need a one-line CGAN intro. Overlaps #0 — the same email can carry both the pivot and this. **User instruction 2026-09-16: wait for his reply before changing §2.10/§4.2.** |
+| **0b** | **⚠ 2026-09-16, gates the direction — sign-off on retiring stealth *entirely* + the GAN/MARL replacement.** A short email was drafted (this session): weeks of experiments + literature converged on stealth yielding only trivial/weak attacks under a detection constraint (§2.1 "Sharpened"), so drop it as an objective — **including CGAN step 2** — and instead strengthen the reproduced GAN *waveform* with MARL multi-jammer coordination as an *effectiveness* result (energy-budget power split → coherent combining), then a zero-sum jammer-vs-legitimate-node game vs the anti-jamming baselines. Detectability stays an eval axis; adaptation cost stays a possible secondary claim. **⚠ 2026-09-17 UPDATE — the email now offers TWO options, both keeping the reproduced GAN waveform and reporting on the matched BER–P(det) plane: (A) the drop-stealth + MARL-coordination result above; (B) keep stealth as a *characterisation* result — a generative jammer's detectability across a detector suite vs the NP-optimal ceiling, i.e. the deployed-detector-vs-optimal-warden gap (§2.1 item 1), effect allowed to be negligible. The user's chosen build (§3.4 D-series) stages toward B with A's MARL as a gated tail. Frame B to him as the *detector-gap measurement* (the finding) with the GAN as instrument — it answers his 'don't let novelty live in the architecture' comment (§2.9).** | **Blocks folding the decision into §2.10/§4.2 and starting the D-series/step-2 code.** He has not seen the CGAN track (§3.1), so the email may need a one-line CGAN intro. Overlaps #0 — the same email can carry both the pivot and this. **User instruction 2026-09-16: wait for his reply before changing §2.10/§4.2.** **2026-09-24:** the user's order is now *document all findings first*, then decide extend-vs-MARL — which is this email's A/B fork; it is still unsent. |
 | 1 | **Supervisor of record for the ETH registration** | D-INFK professor requirement; may need Di Maio as co-supervisor. Needed on the myStudies form. |
 | 2 | **Title, start date, end date, task description** | All four gate registration. Open since 2026-09-01. |
 | 3 | ~~**Feedback on the proposal** (handed over 2026-09-01)~~ **RESOLVED 2026-09-12 — it arrived.** Nine inline `\adm{}` comments, transcribed in [B.2](#b2-his-verbatim-points-and-what-each-changed); consequences propagated to §2.1, §2.3, §2.4, §2.9, §3.4 and §4.3. Three prose fixes remain owed on the proposal itself (§B.3). | — |
-| 4 | **Which 2–3 experiments go in the main paper** | His call. Candidates **changed 2026-09-12**: E3 (coordination) now leads, E2 (noise ablation) is his mandated primary ablation, E1 demoted to calibration/appendix (§3.3). Ask as part of #0. |
+| 4 | **Which 2–3 experiments go in the main paper** | His call. Candidates **changed 2026-09-12**: E3 (coordination) now leads, E2 (noise ablation) is his mandated primary ablation, E1 demoted to calibration/appendix (§3.3). Ask as part of #0. **E2 is now DONE on the live models (§3.3g, 2026-09-23)** — and it is a stronger candidate than when it was proposed, because it does not merely ablate: it relocates the headline (the matched-BER gain is 5× larger at 15 dB SNR than at the 30 dB the D-series reported) and supplies the mechanism (the stealth edge falls with SNR). |
 | 5 | **Single-round evasion on a frozen detector, or fully co-adaptive?** | His 2026-08-03 phrasing leans co-adaptive (*"one can always fine-tune a defender on an attacker and vice versa"*) but was never a direct answer. RQ2 assumes round-based-and-offline. |
 | 6 | ~~**Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension?~~ **MOOT as posed, 2026-09-12.** The pivot answers it the other way round: the cooperative jammer *is* the core and characterisation is appendix. Still worth flagging in #0 that this is a reversal of the mid-July proposal he never answered. |
 | 7 | **His September availability / feedback cadence** | Asked twice, still unanswered. Short frequent rounds >> one large end-of-block review. |
@@ -2146,6 +2353,23 @@ decide with the user.
 
 ## 4.3 Ideas on the shelf — specified, not adopted
 
+- **E2 follow-ons — parked by the user 2026-09-24 ("keep in mind for future"; §3.3g).** In order of
+  cost:
+  1. **One rerun of `snr_ablation.py` (~30 min wall, same array)** storing three more scalars per sweep
+     point: the frame-error count plus a per-frame error histogram (**PER** for uncoded 256-bit frames —
+     FEC is out of scope per §2.9, the histogram leaves "PER under a t-error code" open without a
+     rerun); the **effective decision-point SINR** E|s|²/E|z−s|² (how much of a structured jammer
+     survives the matched filter); and **AUC per detector** from the stored clean CDF — a
+     threshold-free detectability that removes α altogether. `regress_snr30.py` gates it as before.
+  2. **The trade-off figures §2.7 asks for:** per level and detector, the whole BER-vs-P(det) curve
+     over [0, 1] at fixed α, the envelope, FAR dotted, matched BER at P(det) 0.05 / 0.1 / 0.25 / 0.5;
+     BER against SINR (Gaussian rows collapse onto the closed form; each structured jammer's offset is
+     its damage per unit interference) and P(det) against JNR; SER as a column. Replaces the E2
+     report's Fig. 6. Items 2's non-PER/AUC parts need no rerun.
+  3. **Tier 2** — retrain D1 and the headline D2 generators (ideally the CNN too) at 10 / 15 / 20 dB
+     to turn transfer into achievability; re-check `train_gan.JSR_BANDS` at each level first (§3.1 trap 1).
+  4. Housekeeping: `gan_figures.py`'s failing Amuru colour and its `BER_REF` 1e-3 vs §3.3f's 3e-4
+     (§3.3f caveats).
 - **Time-to-first-detection.** The cheap countermeasure-facing result: measure the **trigger**
   instead of the reaction. Computable from the per-frame P(det) we already produce — no
   countermeasure, no mobility, no throughput model. It also fixes a known weakness of our own
@@ -2224,6 +2448,15 @@ decide with the user.
   not innocuous: a grid-aligned jammer cannot cause any bit error below −3 dB JSR at 30 dB SNR, while a
   time-offset one can. E1's numbers are correct *for a synchronised jammer* and must be quoted with that
   qualifier.
+- **E2's detector is out of distribution off 30 dB** (§3.3g). The spectrogram CNN's weights are frozen
+  at the level it was trained on and only its colour scale and threshold are re-calibrated per SNR, so
+  every E2 row except 30 dB is *"a detector trained at 30 dB, deployed off-design"*. The scale's `vmin`
+  moves −14.7 dB (SNR 0) → −44.2 (30) → −80.7 (noiseless), and at the **noiseless anchor the CNN is
+  effectively blind** (edge +15 dB) — an OOD artifact that must not be read as a jammer property.
+  Retraining per level is the fix (Tier 2, §3.4). The analytic detectors carry no such caveat.
+- **E2 Tier 1 measures transfer, not achievability** (§3.3g): the generators were trained at 30 dB and
+  evaluated elsewhere, so "−85.1 pp at 15 dB" is what a 30 dB-trained attacker achieves off-design. Per-SNR
+  retraining could only raise it, but that is an argument, not a measurement.
 - **D2a's learned family is Gaussian only** (§3.3e):
   - it cannot hold kurtosis at the clean value, so "kurtosis catches every effective learned jammer"
     is a statement about this family, not about all jammers. A constant-envelope (tone/noise)
@@ -2277,6 +2510,7 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | **cgan_learned** | run001 (D2a) | shaped noise (48 params), CMA-ES, black-box score-based, per detector | **stealthy BER 0 against every detector**; CNN evaded to −20 dB only out of band (BER 0); shaping +15.9 dB effectiveness; power not waveform-blind (−0.06 near FAR, −0.19 at −20 dB); §3.3e | 2267049, 2267050, 2267051, 2267090 |
 | **cgan** | run001 | CGAN (Zhou 2025), NS-GAN+GP, weights 1 | **ordering not reproduced**: with one sync model GAN−Optimal −1.30 dB async / −4.47 locked (paper +1.31); Noise−GAN 6.66 / 4.38 dB. The first-reported 4.34 / +1.01 scored GAN locked vs Optimal async (withdrawn); §3.3b | 2259289, 2259409, 2260623 |
 | **cgan** | run002 | CGAN, reference-backed recipe (WGAN-GP, feat 2 / STFT 45) | worse imitation: EVM 0.70, no 1e-3 crossing in grid (BER 3.6e-3 at −10 dB), plateau 0.31; critic gap stalls ≈ 57; §3.3b | 2260624, 2260806 |
+| **cgan_snr** | run001 | **E2**: SNR 0:5:40 dB + noiseless anchor × 7 classical attacks × all 21 generators, detectors re-calibrated per level (CNN weights frozen at 30 dB) | **matched-BER gain vs the CNN peaks at −85.1 pp at 15 dB SNR, 5× the −16.2 pp at 30 dB, gone by 40 dB**; stealth edge falls ~0.7 dB per dB while the BER onset is flat, so the gap grows with SNR; 30 dB reproduces §3.3f; power saving SNR-invariant at 12.3–12.9 dB; §3.3g | 2270447, 2270448, 2270449, 2270556, 2271314 |
 | **sim08_abl** | run001 | noise × power × #jammers on the frozen sim08 suite | **stealthy BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** (×1.4→×109 the floor); detection set by *total* power; more jammers = louder, no matched-detectability gain; suite ≡ CNN (26/4914); §3.3c | 2261123, 2261126, 2261146, 2261173, 2261174 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf

@@ -736,6 +736,104 @@ def test_gan_jammer(L):
     check("spec_cnn: the DETECTOR term alone reaches G (not just the BER term)",
           float(math.isfinite(gn_det) and gn_det > 0), 1.0, 0.0, note=f"||grad|| = {gn_det:.4g}")
 
+# ================================================================ E2 noise ablation (2026-09-23)
+def test_snr_ablation(L):
+    """
+    The E2 noise ablation (README §3.3g) sweeps the one parameter every other
+    cgan/ result holds fixed, so three things have to hold before its numbers mean
+    anything: `snr_db` really reaches the channel on the MEASUREMENT path (not just
+    link.run); the JSR axis does NOT move when the noise does, or the x-axis is not
+    comparable across the grid; and every detector still honours its alpha after
+    re-calibration, since that is what makes the BER-P(det) comparison matched.
+    The 30 dB level must also still be the deployed §3.3f configuration -- it is the
+    regression check of the sweep.
+    """
+    import os
+    import baselines
+    import calibrate_snr
+    print("\n15. E2 noise ablation: SNR plumbing, JSR invariance, re-calibration")
+    N = scene.N_SYM
+
+    # (a) the measurement path honours snr_db -- attacks.frames, not link.run.
+    for snr_db, jsr_db in [(10.0, 0.0), (20.0, 3.0), (0.0, -6.0)]:
+        out = _batches(L, 4096, dict(name="noise"), [jsr_db], snr_db)
+        e, b, _, _ = attacks.error_counts(out)
+        want = float(L.ber_noise_jammer(jsr_db, snr_db, band="full"))
+        check(f"attacks.frames honours SNR={snr_db:+.0f} dB (noise JSR {jsr_db:+.0f})",
+              e / b, want, mc_tol(want, b))
+
+    # (b) the clean floor follows the closed form where it is measurable at all.
+    for snr_db in (-3.0, 0.0):
+        out = _batches(L, 4096, None, None, snr_db)
+        e, b, _, _ = attacks.error_counts(out)
+        want = float(L.ber_clean(snr_db))
+        check(f"clean BER at SNR={snr_db:+.0f} dB vs closed form", e / b, want, mc_tol(want, b))
+
+    # (c) The JSR axis must not move when the noise does, or points at different
+    #     levels are not comparable. That holds STRUCTURALLY -- the jammer scaling is
+    #     signal-relative and never sees N0 -- so assert the structure, which is what
+    #     a later edit could break, and then that the projection is still exact.
+    import inspect
+    for fn in (jammers.scale_to_jsr, attacks.jammer_at_rx):
+        params = set(inspect.signature(fn).parameters)
+        check(f"{fn.__name__} takes no noise argument (JSR stays signal-relative)",
+              float(not (params & {"snr_db", "n0", "noise_var", "sigma"})), 1.0, 0)
+    _, sym, _ = L.modulate(256, N)
+    for jsr_db in (-30.0, -6.0):
+        j = attacks.jammer_at_rx(L, dict(name="noise"), sym, [jsr_db])
+        p = j[..., L.active(N)].abs().pow(2).mean(dim=-1) / L.p_s
+        got = (10 * torch.log10(p) - jsr_db).abs().max().item()
+        check(f"realised JSR {jsr_db:+.0f} dB: max |realised - target| dB", got, 0.0, 0.05)
+
+    path = os.path.join(scene.ART, "detector_spec.pt")
+    if not os.path.exists(path):
+        print("  [SKIP] 15d-f need artifacts/cgan/baselines/detector_spec.pt")
+        return
+    net, deployed_scale, _ = detectors.load_cnn(path, L.device)
+
+    # (d) re-calibration honours alpha off-design. This is the contract the whole
+    #     matched comparison rests on: a threshold quantised at 30 dB is not alpha
+    #     anywhere else.
+    n_cal, n_test = 4096, 4096
+    for snr_db in (0.0, 10.0):
+        thr, _ = calibrate_snr.calibrate_at(L, net, snr_db, n_cal=n_cal, force=True, verbose=VERBOSE)
+        sc = detectors.SpecScale(**thr["spec_scale"])
+        fresh = _batches(L, n_test, None, None, snr_db)
+        s = detectors.statistics(fresh["r"], fresh["z"], net, sc)
+        got = {"power_one_sided": s["power"],
+               "power_two_sided": detectors.two_sided(s["power"], thr["power_clean_mean"]),
+               "kurtosis": detectors.two_sided(s["kurtosis"], thr["kurtosis_clean_mean"]),
+               "cnn": s["cnn"]}
+        for det, stat in got.items():
+            a = detectors.HEADLINE_ALPHA
+            far = detectors.p_detect(stat, thr[det][str(a)])
+            check(f"SNR={snr_db:+.0f} dB {det}: realised FAR at alpha={a}", far, a,
+                  4 * math.sqrt(a * (1 - a) / n_test) + 0.01)
+
+    # (e) the 30 dB level IS the deployed configuration -- the sweep's regression check.
+    dfd = calibrate_snr.defender_at(L, lk.SNR_DB)
+    check("defender_at(30 dB) keeps the deployed snr_db", dfd.snr_db, lk.SNR_DB, 0)
+    check("defender_at(30 dB) keeps all five detector rows", len(dfd.dets), len(baselines.DETS), 0)
+    check("defender_at(30 dB) keeps the deployed colour scale (vmin, dB)",
+          dfd.scale.vmin, deployed_scale.vmin, 1e-6)
+    re30, _ = calibrate_snr.calibrate_at(L, net, lk.SNR_DB, n_cal=n_cal, force=True, verbose=VERBOSE)
+    check("re-fitted colour scale at 30 dB matches the deployed one (vmax, dB)",
+          re30["spec_scale"]["vmax"], deployed_scale.vmax, 2.0)
+    check("the dynamic-range guard is INACTIVE at 30 dB",
+          float(re30["spec_scale"]["vmax"] - re30["spec_scale"]["vmin"] < calibrate_snr.MAX_RANGE_DB),
+          1.0, 0)
+
+    # (f) the noiseless anchor: log(s1/s0) has no finite form at n0 = 0, so the LRT
+    #     row is DROPPED there rather than faked.
+    thr_nl, _ = calibrate_snr.calibrate_at(L, net, None, n_cal=1024, force=True, verbose=VERBOSE)
+    check("noiseless anchor: LRT row is dropped, not faked",
+          float(thr_nl["lrt_usable"] is False), 1.0, 0)
+    rng = thr_nl["spec_scale"]["vmax"] - thr_nl["spec_scale"]["vmin"]
+    check("noiseless anchor: colour scale range is finite and capped",
+          float(math.isfinite(rng) and 0.0 < rng <= calibrate_snr.MAX_RANGE_DB + 1e-6), 1.0, 0,
+          note=f"range = {rng:.1f} dB")
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -745,6 +843,7 @@ def test_baselines():
     test_spectrogram_cnn(L)
     test_shaped(L)
     test_gan_jammer(L)
+    test_snr_ablation(L)
 
 
 def main():

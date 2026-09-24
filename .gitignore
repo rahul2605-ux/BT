@@ -211,3 +211,8 @@ __marimo__/
 
 # graphify knowledge-graph output (regenerable; graph.json + graph.html are MB-scale)
 graphify-out/
+
+# E2 noise-ablation calibration cache (README §3.3g): one 20 MB clean-LRT tensor per
+# SNR level, ~200 MB total, regenerated on demand by calibrate_snr.calibrate_at.
+# The thresholds.json beside it IS kept -- it is the calibration itself and is small.
+Tabula Rasa/artifacts/cgan/baselines/snr/*/clean_lrt_parts.pt

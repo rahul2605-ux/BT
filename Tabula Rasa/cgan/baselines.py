@@ -52,14 +52,35 @@ DETS = ["power_one_sided", "power_two_sided", "kurtosis", "spec_cnn", "lrt_noise
 
 # ---------------------------------------------------------------- the defender, loaded once
 class Defender:
-    def __init__(self, L):
-        with open(os.path.join(scene.ART, "thresholds.json")) as f:
+    """
+    The calibrated detector suite at one noise level.
+
+    `snr_db` / `thr_dir` exist for the E2 noise ablation (README §3.3g). Every
+    threshold is a quantile of CLEAN frames, so it is a function of the noise level;
+    calibrate_snr.calibrate_at writes one thresholds.json + clean_lrt_parts.pt per
+    level and `thr_dir` points at it. The CNN's WEIGHTS are always the deployed 30 dB
+    ones -- only its colour scale and threshold are re-fitted -- so an off-30 dB
+    defender is a detector trained at 30 dB and deployed off-design, which is what
+    the ablation reports. Both default to the 30 dB deployed set, so every caller
+    that predates the ablation is unchanged.
+    """
+
+    def __init__(self, L, snr_db=lk.SNR_DB, thr_dir=None):
+        thr_dir = scene.ART if thr_dir is None else thr_dir
+        with open(os.path.join(thr_dir, "thresholds.json")) as f:
             self.thr = json.load(f)
-        self.net, self.scale, _ = detectors.load_cnn(os.path.join(scene.ART, "detector_spec.pt"), L.device)
-        parts = torch.load(os.path.join(scene.ART, "clean_lrt_parts.pt"), weights_only=False)
+        self.net, scale, _ = detectors.load_cnn(os.path.join(scene.ART, "detector_spec.pt"), L.device)
+        # thresholds.json and the checkpoint carry the same scale at 30 dB (both written
+        # from one SpecScale by train_spectrogram_cnn.py); off-design only the former moves.
+        self.scale = detectors.SpecScale(**self.thr["spec_scale"]) if "spec_scale" in self.thr else scale
+        parts = torch.load(os.path.join(thr_dir, "clean_lrt_parts.pt"), weights_only=False)
         self.clean_lrt = (parts["z"].to(L.device).to(torch.complex128),
                           parts["e_perp"].to(L.device).double(), parts["D"])
-        self.n0, self.p_s = L.noise_var(lk.SNR_DB), L.p_s
+        self.snr_db = snr_db
+        self.n0, self.p_s = L.noise_var(snr_db), L.p_s
+        # the noise LRT is log(s1/s0) with s0 = n0: it has no finite form at the
+        # noiseless anchor, so drop the row there rather than fake it (calibrate_snr).
+        self.dets = [d for d in DETS if d != "lrt_noise" or self.thr.get("lrt_usable", True)]
         self._lrt_thr = {}
 
     def lrt_threshold(self, jsr_lin, alpha):
@@ -78,7 +99,7 @@ class Defender:
         straight-through image path (detectors.cnn_statistic) and one un-batched
         forward pass, so it is off unless D2 is training against it.
         """
-        want = set(DETS if dets is None else dets)
+        want = set(self.dets if dets is None else dets)
         s, raw = {}, {}
         if want & {"power_one_sided", "power_two_sided"}:
             p = raw["power"] = detectors.power(r)
@@ -101,7 +122,7 @@ class Defender:
         return self.thr[key[det]][str(alpha)]
 
 
-def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512):
+def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512, keep_stats=False):
     """
     One sweep point. spec None = clean. jsr_db_k: list of K per-jammer JSRs [dB]
     (a float for the omniscient aggregate). Returns a JSON-able dict.
@@ -113,7 +134,7 @@ def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512):
     stats, raws = {}, {}
     for i in range(0, n_frames, batch):
         n = min(batch, n_frames - i)
-        out = attacks.frames(L, n, spec, jsr_db_k, lk.SNR_DB)
+        out = attacks.frames(L, n, spec, jsr_db_k, dfd.snr_db)
         counts += np.array(attacks.error_counts(out))
         s, raw = dfd.statistics(out["r"], out["z"], noise_jsr)
         for k, v in s.items():
@@ -125,8 +146,11 @@ def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512):
     for det, s in stats.items():
         pdet[det] = {str(a): detectors.p_detect(s, dfd.threshold(det, a, noise_jsr)) for a in detectors.ALPHAS}
     e, b, se, sb = (int(c) for c in counts)
-    return dict(ber=e / b, ser=se / sb, errors=e, bits=b, sym_errors=se, symbols=sb, frames=n_frames,
-                pdet=pdet, mean_stat={k: float(torch.cat(v).mean()) for k, v in raws.items()})
+    res = dict(ber=e / b, ser=se / sb, errors=e, bits=b, sym_errors=se, symbols=sb, frames=n_frames,
+               pdet=pdet, mean_stat={k: float(torch.cat(v).mean()) for k, v in raws.items()})
+    if keep_stats:
+        res["stat_q"] = {det: detectors.stat_quantiles(s) for det, s in stats.items()}
+    return res
 
 
 def binom_sigma(alpha, n):
@@ -173,7 +197,7 @@ def examples(L, dfd, jsr_list=(-10.0, 0.0)):
             if spec is None and jsr != jsr_list[0]:
                 continue
             arg = None if spec is None else (jsr if spec["name"] == "omniscient" else [jsr])
-            out = attacks.frames(L, 64, spec, arg, lk.SNR_DB)
+            out = attacks.frames(L, 64, spec, arg, dfd.snr_db)
             s, raw = dfd.statistics(out["r"], out["z"])
             ex[f"{name}@{jsr:+.0f}"] = dict(
                 r=out["r"][:2].cpu(), z=out["z"].flatten()[:8192].cpu(),
@@ -207,7 +231,7 @@ def run_k1(L, dfd, n_frames, n_confirm):
                   " ".join(f"{d} {p['pdet'][d]['0.05']:.3f}" for d in p["pdet"]) +
                   f"  ({time.time() - t0:.0f}s)", flush=True)
         result["attacks"][name] = pts
-        result["confirmed"][name] = confirm(L, dfd, spec, pts, jsr_of, n_confirm, DETS, detectors.ALPHAS)
+        result["confirmed"][name] = confirm(L, dfd, spec, pts, jsr_of, n_confirm, dfd.dets, detectors.ALPHAS)
         print(f"  {name} confirmed picks: {json.dumps(result['confirmed'][name])}", flush=True)
     torch.save(examples(L, dfd), os.path.join(OUT, "examples.pt"))
     result["runtime_s"] = time.time() - t0

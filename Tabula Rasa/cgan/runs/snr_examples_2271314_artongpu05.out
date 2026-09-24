@@ -1,0 +1,14 @@
+node: artongpu05.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+       snr_0 clean          JSR   +nan dB  P(det)_CNN 0.039  (5s)
+       snr_0 plain_run001   JSR  -37.0 dB  P(det)_CNN 0.043  (6s)
+       snr_0 spec_cnn_b10   JSR  -40.0 dB  P(det)_CNN 0.039  (6s)
+      snr_15 clean          JSR   +nan dB  P(det)_CNN 0.045  (7s)
+      snr_15 plain_run001   JSR   -8.5 dB  P(det)_CNN 0.936  (7s)
+      snr_15 spec_cnn_b10   JSR  -21.2 dB  P(det)_CNN 0.078  (7s)
+      snr_30 clean          JSR   +nan dB  P(det)_CNN 0.035  (8s)
+      snr_30 plain_run001   JSR   -8.2 dB  P(det)_CNN 1.000  (8s)
+      snr_30 spec_cnn_b10   JSR  -21.1 dB  P(det)_CNN 0.857  (9s)
+   noiseless clean          JSR   +nan dB  P(det)_CNN 0.053  (9s)
+   noiseless plain_run001   JSR   -8.2 dB  P(det)_CNN 1.000  (10s)
+   noiseless spec_cnn_b10   JSR  -21.1 dB  P(det)_CNN 1.000  (10s)
+wrote ../artifacts/cgan/snr_ablation/run001/examples.npz in 10s

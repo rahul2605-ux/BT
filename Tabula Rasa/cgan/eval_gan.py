@@ -29,6 +29,7 @@ import torch
 
 import attacks
 import baselines
+import calibrate_snr
 import detectors
 import link as lk
 import models
@@ -49,7 +50,7 @@ def sweep(L, dfd, spec, jsr_grid, n_frames, n_confirm):
               f"  ({time.time() - t0:.0f}s)", flush=True)
     jsr_of = lambda i: [jsr_grid[i]]
     confirmed = baselines.confirm(L, dfd, spec, pts, jsr_of, n_confirm,
-                                  baselines.DETS, detectors.ALPHAS)
+                                  dfd.dets, detectors.ALPHAS)
     return pts, confirmed
 
 
@@ -61,9 +62,14 @@ def main():
                     help="evaluate a trained generator gan/<run>/task{T}_G.pt (tag from its checkpoint)")
     ap.add_argument("--frames", type=int, default=512)
     ap.add_argument("--confirm", type=int, default=4096)
+    ap.add_argument("--snr-db", type=float, default=lk.SNR_DB,
+                    help="noise level (README §3.3g); off 30 dB re-calibrates every detector "
+                         "and writes to a per-level subdirectory")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
-    os.makedirs(OUT, exist_ok=True)
+    out_dir = OUT if calibrate_snr.is_baseline(args.snr_db) else \
+        os.path.join(OUT, calibrate_snr.level_tag(args.snr_db))
+    os.makedirs(out_dir, exist_ok=True)
     if args.task is not None:
         args.gen = os.path.join(OUT, f"task{args.task}_G.pt")
         import torch as _t
@@ -71,7 +77,7 @@ def main():
 
     device = lk.setup(seed=3000)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
-    dfd = baselines.Defender(L)
+    dfd = calibrate_snr.defender_at(L, args.snr_db)
     G, scale, ckpt = models.load_generator(args.gen, device)
     print(f"device {device} | generator {os.path.relpath(args.gen)} | scale {scale:.4f} "
           f"| n_classes {ckpt.get('n_classes', 1)}", flush=True)
@@ -87,10 +93,10 @@ def main():
     pts, confirmed = sweep(L, dfd, spec, jsr_grid, frames, confirm)
 
     res = dict(run=RUN, tag=args.tag, generator=os.path.relpath(args.gen), scale=scale,
-               K=1, jsr_db=jsr_grid, n_frames=frames, n_confirm=confirm,
+               K=1, snr_db=args.snr_db, jsr_db=jsr_grid, n_frames=frames, n_confirm=confirm,
                alphas=detectors.ALPHAS, clean=clean, points=pts, confirmed=confirmed,
                runtime_s=time.time() - t0)
-    path = os.path.join(OUT, f"{args.tag}{'_smoke' if args.smoke else ''}.json")
+    path = os.path.join(out_dir, f"{args.tag}{'_smoke' if args.smoke else ''}.json")
     with open(path, "w") as f:
         json.dump(res, f)
     print(f"confirmed picks: {json.dumps(confirmed)}")

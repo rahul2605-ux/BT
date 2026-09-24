@@ -64,6 +64,21 @@ def p_detect(stat, threshold):
     return float((stat.double() > threshold).double().mean())
 
 
+N_Q = 257
+
+
+def stat_quantiles(stat, n=N_Q):
+    """
+    The statistic's empirical CDF on a fixed grid. P(det) at ANY budget is a lookup
+    into this pair (clean quantiles -> threshold, jammed quantiles -> P(det)), so a
+    sweep that stores it can be drawn as a frontier over ALL budgets instead of only
+    at alpha -- the standing §3.3f caveat. 257 points keeps a whole sweep in tens of
+    KB, where per-frame statistics would be hundreds of MB.
+    """
+    q = torch.linspace(0.0, 1.0, n, dtype=torch.float64, device=stat.device)
+    return torch.quantile(stat.double().flatten(), q).cpu().tolist()
+
+
 def soft_pdet(stat, threshold, scale):
     """
     Differentiable stand-in for P(det): mean sigmoid((stat - threshold)/scale), so
