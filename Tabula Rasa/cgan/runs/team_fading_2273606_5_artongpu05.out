@@ -1,0 +1,25 @@
+node: artongpu05.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 5 | SNR 30 dB | channel rayleigh (K-factor 0.0) | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.04248046875, "power_two_sided": 0.04345703125, "kurtosis": 0.0576171875, "spec_cnn": 0.04833984375}
+  noise          K=1 aligned  max BER 2.484e-01  CNN P(det) at max JSR 1.000  (18s)
+  noise          K=2 aligned  max BER 2.718e-01  CNN P(det) at max JSR 1.000  (36s)
+  noise          K=4 aligned  max BER 2.940e-01  CNN P(det) at max JSR 1.000  (55s)
+  pulsed_p0.1    K=1 aligned  max BER 1.277e-01  CNN P(det) at max JSR 0.996  (74s)
+  pulsed_p0.1    K=2 aligned  max BER 1.971e-01  CNN P(det) at max JSR 1.000  (93s)
+  pulsed_p0.1    K=4 aligned  max BER 2.775e-01  CNN P(det) at max JSR 1.000  (113s)
+  plain_run001   K=1 aligned  max BER 3.854e-01  CNN P(det) at max JSR 1.000  (133s)
+  plain_run001   K=2 aligned  max BER 4.059e-01  CNN P(det) at max JSR 1.000  (154s)
+  plain_run001   K=2 shifted  max BER 4.126e-01  CNN P(det) at max JSR 1.000  (176s)
+  plain_run001   K=4 aligned  max BER 4.090e-01  CNN P(det) at max JSR 1.000  (199s)
+  plain_run001   K=4 shifted  max BER 4.190e-01  CNN P(det) at max JSR 1.000  (224s)
+  spec_cnn_b10   K=1 aligned  max BER 3.224e-01  CNN P(det) at max JSR 1.000  (244s)
+  spec_cnn_b10   K=2 aligned  max BER 3.423e-01  CNN P(det) at max JSR 1.000  (265s)
+  spec_cnn_b10   K=2 shifted  max BER 3.536e-01  CNN P(det) at max JSR 1.000  (287s)
+  spec_cnn_b10   K=4 aligned  max BER 3.560e-01  CNN P(det) at max JSR 1.000  (310s)
+  spec_cnn_b10   K=4 shifted  max BER 3.646e-01  CNN P(det) at max JSR 1.000  (335s)
+  kurtosis_b1    K=1 aligned  max BER 3.479e-01  CNN P(det) at max JSR 1.000  (355s)
+  kurtosis_b1    K=2 aligned  max BER 3.773e-01  CNN P(det) at max JSR 1.000  (376s)
+  kurtosis_b1    K=2 shifted  max BER 3.815e-01  CNN P(det) at max JSR 1.000  (398s)
+  kurtosis_b1    K=4 aligned  max BER 3.909e-01  CNN P(det) at max JSR 1.000  (421s)
+  kurtosis_b1    K=4 shifted  max BER 4.002e-01  CNN P(det) at max JSR 1.000  (446s)
+wrote ../artifacts/cgan/team_fading/run001/snr_30_rayleigh.json in 446s

@@ -1,0 +1,25 @@
+node: artongpu03.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 5 | SNR 30 dB | channel rayleigh (K-factor 0.0) | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.04296875, "power_two_sided": 0.0546875, "kurtosis": 0.04296875, "spec_cnn": 0.0703125}
+  noise          K=1 aligned  max BER 1.172e-02  CNN P(det) at max JSR 1.000  (4s)
+  noise          K=2 aligned  max BER 5.676e-03  CNN P(det) at max JSR 1.000  (4s)
+  noise          K=4 aligned  max BER 5.737e-03  CNN P(det) at max JSR 1.000  (4s)
+  pulsed_p0.1    K=1 aligned  max BER 4.547e-02  CNN P(det) at max JSR 0.922  (4s)
+  pulsed_p0.1    K=2 aligned  max BER 7.239e-02  CNN P(det) at max JSR 1.000  (4s)
+  pulsed_p0.1    K=4 aligned  max BER 9.442e-02  CNN P(det) at max JSR 0.984  (5s)
+  plain_run001   K=1 aligned  max BER 1.409e-01  CNN P(det) at max JSR 1.000  (5s)
+  plain_run001   K=2 aligned  max BER 1.176e-01  CNN P(det) at max JSR 1.000  (5s)
+  plain_run001   K=2 shifted  max BER 1.335e-01  CNN P(det) at max JSR 1.000  (5s)
+  plain_run001   K=4 aligned  max BER 1.076e-01  CNN P(det) at max JSR 1.000  (5s)
+  plain_run001   K=4 shifted  max BER 1.331e-01  CNN P(det) at max JSR 1.000  (5s)
+  spec_cnn_b10   K=1 aligned  max BER 5.164e-02  CNN P(det) at max JSR 1.000  (6s)
+  spec_cnn_b10   K=2 aligned  max BER 6.055e-02  CNN P(det) at max JSR 1.000  (6s)
+  spec_cnn_b10   K=2 shifted  max BER 5.322e-02  CNN P(det) at max JSR 1.000  (6s)
+  spec_cnn_b10   K=4 aligned  max BER 3.522e-02  CNN P(det) at max JSR 1.000  (6s)
+  spec_cnn_b10   K=4 shifted  max BER 6.812e-02  CNN P(det) at max JSR 1.000  (6s)
+  kurtosis_b1    K=1 aligned  max BER 5.792e-02  CNN P(det) at max JSR 1.000  (6s)
+  kurtosis_b1    K=2 aligned  max BER 7.428e-02  CNN P(det) at max JSR 1.000  (6s)
+  kurtosis_b1    K=2 shifted  max BER 9.210e-02  CNN P(det) at max JSR 1.000  (7s)
+  kurtosis_b1    K=4 aligned  max BER 9.344e-02  CNN P(det) at max JSR 1.000  (7s)
+  kurtosis_b1    K=4 shifted  max BER 1.025e-01  CNN P(det) at max JSR 1.000  (7s)
+wrote ../artifacts/cgan/team_fading/run001/snr_30_rayleigh_smoke.json in 7s

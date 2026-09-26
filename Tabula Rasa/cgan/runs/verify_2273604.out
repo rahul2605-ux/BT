@@ -1,0 +1,23 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+device: cuda:0
+
+16. E3 team under fading: reference path, fading law, mean JSR, diversity, shift
+  [PASS] team K=1 lossless == jammer_at_rx draw for draw (noise)    got=0           want=0           tol=1e-06
+  [PASS] team K=1 lossless == jammer_at_rx draw for draw (pulsed)   got=0           want=0           tol=1e-06
+  [PASS] team K=1 lossless == jammer_at_rx draw for draw (gan)      got=0           want=0           tol=1e-06
+  [PASS] rician10: E|h|^2                                           got=1.0006      want=1           tol=0.01
+  [PASS] rician10: Var|h|^2 vs Rician law                           got=0.17362     want=0.17355     tol=0.02
+  [PASS] rayleigh: E|h|^2                                           got=0.9977      want=1           tol=0.01
+  [PASS] rayleigh: Var|h|^2 vs Rician law                           got=0.99444     want=1           tol=0.02
+  [PASS] lossless K=1: mean received JSR [dB]                       got=-10         want=-10         tol=0.05
+  [PASS] lossless K=2: mean received JSR [dB]                       got=-10.004     want=-10         tol=0.05
+  [PASS] lossless K=4: mean received JSR [dB]                       got=-10.004     want=-10         tol=0.05
+  [PASS] rayleigh K=1: mean received JSR [dB]                       got=-9.9667     want=-10         tol=0.35
+  [PASS] rayleigh K=2: mean received JSR [dB]                       got=-9.9552     want=-10         tol=0.35
+  [PASS] rayleigh K=4: mean received JSR [dB]                       got=-10.03      want=-10         tol=0.35
+  [PASS] rayleigh: frame-power spread K=2 / K=1 (diversity, want 1/K) got=0.51233     want=0.5         tol=0.125
+  [PASS] rayleigh: frame-power spread K=4 / K=1 (diversity, want 1/K) got=0.26338     want=0.25        tol=0.0625
+  [PASS] perfect G shifted == aligned (on-grid crop), JSR +0 dB     got=-0.00071436 want=0           tol=0.0125381
+  [PASS] perfect G shifted == aligned (on-grid crop), JSR +3 dB     got=0.0014043   want=0           tol=0.0146542
+
+ALL CHECKS PASS

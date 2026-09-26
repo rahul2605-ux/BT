@@ -1,43 +1,66 @@
 % =============================================================================
 %  \section{System Model}  --  PAPER VERSION, IEEEtran conference, 6 pages
-%  Drafted 2026-09-24.  Reference copy: consult this when a modelling question
-%  comes up -- every non-obvious choice carries an inline % note with its source
-%  (a cgan/ module and/or a README section).
+%  Drafted 2026-09-24; checked line by line against cgan/ and the README the
+%  same day.  Reference copy: consult this when a modelling question comes up --
+%  every non-obvious choice carries an inline % note with its source (a cgan/
+%  module and/or a README section).
 %
 %  WHAT THIS DESCRIBES
 %  -------------------
-%  The BUILT, live system: the waveform-level QPSK detector-gap characterisation
-%  study (README Sec. 2.10 option B; baselines Sec. 3.3d; shaped-jammer tier
-%  Sec. 3.4 D2a). Code: cgan/{link,scene,channel,attacks,detectors,baselines,
-%  train_shaped}.py. The contribution is the deployed-detector-vs-NP-optimal
-%  gap on the matched BER--P(det) plane; the generative/shaped jammers are the
-%  instrument, not the headline.
+%  ONLY the system the method works in (user, 2026-09-24): link, channel,
+%  attackers, detectors, threat model, problem. NOT metrics, reporting
+%  conventions, training procedure, experiment values, scope or future work --
+%  those are parked at the END of this file, sorted by the main.tex section
+%  they belong to (Methodology / Experiment Setup / Introduction / Conclusion &
+%  Future Work). Code: cgan/{link,scene,channel,attacks,detectors,baselines,
+%  train_shaped,train_gan}.py; README Sec. 2.10, 3.3d-g.
+%  The headline it must carry (README Sec. 3.1): at matched BER, detector-aware
+%  training lowers P(det), quoted WITH its SNR. The characterisation vs
+%  coordination framing still waits on the direction email (README Sec. 4.1
+%  #0b); nothing below commits to either.
+%  GEOMETRY-FREE (user, 2026-09-24): no 3-D placement, path loss or power
+%  control in the text; links are characterized by received SNR/JSR. The
+%  geometry layer the experiments ran on is parked at the end as a ready-to-add
+%  extension (for MARL / 3-D / mobility, after the findings are documented).
 %
 %  WHAT IT REPLACES / DIFFERS FROM  (do not merge blindly)
 %  ------------------------------------------------------
 %   * Overleaf main.tex "System Model" -- OFDM / TDL fading / ZF / energy-OR-CNN
 %     suite. That is the FROZEN sim06-08 stack (appendix material); no live
-%     experiment supports it. This file replaces it.
+%     experiment supports it. This file replaces it, including its
+%     "Performance Metrics" subsection (-> Experiment Setup, parked below).
 %   * paper_drafts/sec_system_model.tex -- the M0 draft (one symbol at a time,
 %     h_0-equalised, minimum-energy boundary ladder, CLT coordination). Same
 %     spirit, different model. Kept separate on purpose.
 %
-%  MEASURED CONSTANTS  (so a "what did we use?" question is answered here)
+%  MEASURED CONSTANTS  (so a "what did we use?" question is answered here;
+%  all of them belong in Experiment Setup, none in this section's text)
 %  ---------------------------------------------------------------------
-%   link (cgan/link.py LINK):  L = 8 samples/symbol; RRC pulse beta = 0.35,
+%   link (cgan/link.py LINK):  L = 8 samples/symbol; RRC pulse roll-off 0.35,
 %        span 32 symbols; N = 128 QPSK symbols per frame (scene.N_SYM).
+%   SNR:  30 dB nominal (Zhou's protocol value, inherited, not chosen); the
+%        ablation sweeps 0:5:40 dB + a noiseless anchor, every detector
+%        re-calibrated per level, CNN weights frozen at 30 dB (README Sec. 3.3g).
+%        Quote every gain WITH its SNR.
 %   geometry (cgan/scene.py):  f_c = 2.4 GHz, symbol rate 1 MBd => band 8 MHz,
 %        noise figure 7 dB, T = 290 K; box 1000 x 1000 x 150 m, >= 50 m apart,
-%        nested drops, K_max = 4 jammers, 50 fixed test drops; SNR = 30 dB at R
-%        held by open-loop full-path-loss power control (one detector calibration
-%        serves every drop).
+%        nested drops, N_J max = 4 jammers, 50 fixed test drops.
+%   team sizes run:  N_J = 2..4 simulated for matched QPSK (pulsed p = 1) only;
+%        barrage teams follow analytically, the genie team is one coherent
+%        aggregate; every LEARNED jammer is N_J = 1 (baselines.py).
 %   detectors (cgan/detectors.py):  alpha in {0.01, 0.05}, headline 0.05;
 %        spectrogram = complex two-sided STFT on a FIXED dB scale (20 dB headroom
-%        over clean); CNN = EfficientNet-B0 retrained.
+%        over clean); CNN = EfficientNet-B0, trained on clean frames + Li et
+%        al.'s four jammer types adapted to single carrier (barrage, tone, pulse
+%        comb, protocol-aware = pulsed 0.25), received JSR uniform in dB over
+%        [-20, +10] (train_spectrogram_cnn.py).
 %   attacks (cgan/attacks.py, jammers.py):  pulsed p in {1, .5, .25, .1};
-%        omniscient eta in {.1, 1}, fraction delta = min(1, JSR/(1+eta)^2);
-%        shaped(theta) = 32 log-PSD band gains + 16-symbol log-envelope = 48
-%        params, black-box CMA-ES vs one detector at a time (train_shaped.py).
+%        omniscient eta in {.1, 1}; shaped(theta) = 32 log-PSD band gains +
+%        16-symbol log-envelope = 48 params (theta = 0 is barrage).
+%   learned recipes:  shaped = CMA-ES, 150 generations, beta in {0, 0.01, 1},
+%        hard flag rate + 1e-6 score tie-break (train_shaped.py); generator =
+%        warm start from run001_G, Adam 2e-4, 400 steps, beta in {1, ..., 1e3}
+%        (CNN up to 1e6), per-target JSR band (train_gan.py).
 %
 %  SYMBOL / STYLE NOTES
 %  --------------------
@@ -45,138 +68,173 @@
 %   * L = samples per symbol (oversampling); N = symbols per frame. The old OFDM
 %     draft's K (subcarriers) and L (OFDM symbols) are gone -- grep the rest of
 %     main.tex for stray K/L before pasting.
+%   * g = the RRC pulse, used at BOTH ends: it is real and even, so its matched
+%     filter g*[-n] is g itself. rho_{iR} = line-of-sight power gain, used only
+%     in the parked geometry layer (was g_{iR}; renamed to clear the clash).
+%   * beta = detection weight in Eq. (problem) ONLY (the roll-off gets no
+%     symbol); epsilon = P(det) budget on the frontier; alpha = clean
+%     false-alarm rate, i.e. the threshold.
+%   * T0/T1/T2 = information tiers, defined in Sec.~\ref{sec:attacker}. They are
+%     new to this draft: the README's M0 ladder (Sec. 2.5) has no tier labels.
+%   * Generative jammer (Sec.~\ref{sec:attacker}): G = generator, z = latent,
+%     M = segment length (1024), u_j = segment stream, a_j / tau_j / phi_j =
+%     amplitude / offset / phase. \mathrm{j} = imaginary unit (plain j is the
+%     jammer index).
+%   * Sec.~\ref{sec:attacker} gives ONLY the generative jammer's SIGNAL MODEL
+%     (abstract G, Eq. eq:gan, tier T1). Zhou's architecture and both training
+%     stages are in sec_methodology.tex (user, 2026-09-24: System Model = what
+%     the jammer can transmit; Methodology = how G is chosen). The baseline
+%     attacks + ladder table are parked for Experiment Setup. Detectors stay
+%     here: they define how detection is measured.
 %   * Di Maio style: one sentence per line; \cite before punctuation with a ~
 %     tie; text must read correctly with the brackets removed.
-%   * Target length ~1.5-2 columns. If over budget, cut in this order: the
-%     multi-jammer sentence in Sec.~\ref{sec:channel}; the NP sufficient-stat
-%     sentence in Sec.~\ref{sec:detector}; the per-strategy prose after the
-%     ladder table (the table carries it).
+%   * Target length ~1.5 columns. If over budget, cut in this order: the
+%     multi-jammer sentence (Sec.~\ref{sec:channel}); the NP sufficient-stat
+%     clause in Sec.~\ref{sec:detector}; the tier sentence's T2 clause.
 %
 %  CITE KEYS NEEDED (README Sec. 4.2 Q6 -- several NOT yet in live refs.bib):
-%     zhou2025cgan, amuru2015optimal, bash2013limits, li2022jamming_ofdm,
-%     urkowitz1967energy, sionna, lowe2017maddpg
+%     here: zhou2025cgan, amuru2015optimal, li2022jamming_ofdm,
+%     urkowitz1967energy.  parked text: hoydis2022sionna.
+%     zhou2025cgan is the drafts' key; live refs.bib calls it 11184988 --
+%     rename one side before pasting.
 % =============================================================================
 
 \section{System Model}
 \label{sec:system}
 
 We consider a single-carrier link on which a legitimate node transmits QPSK to a second legitimate node; the receiving node monitors the link for interference.
-A team $\mathcal{J}=\{1,\ldots,N_J\}$ of jammers seeks to raise the receiver's error rate while remaining below its detector.
-The transmitter, receiver, and detector form one fixed target: only the jammer team is optimized, against a static detection rule and a fixed demodulation chain.
-% future work, accurate scope statements -- keep both.
-\rar{Legitimate nodes take fixed TX/RX roles; symmetric transceivers, as in a multi-node network, are future work.}
-\rar{A co-adaptive defender is future work; the fixed-defender setting isolates the jammer-side problem, and adaptation is treated as round-based and offline.}
+A team $\mathcal{J}=\{1,\ldots,N_J\}$ of jammers seeks to raise the receiver's error rate at as little detectability as possible.
+The transmitter, receiver, and detector form one fixed target: only the jammer team is optimized.
 
 \subsection{Legitimate Link}
 \label{sec:link}
 % Single carrier -- NOT OFDM. cgan/link.py. This is the core correction to the
 % Overleaf draft.
-The transmitter sends frames of $N$ unit-energy QPSK symbols $s[k]\in\mathcal{Q}=\{\tfrac{1}{\sqrt2}(\pm1\pm j)\}$, drawn independently and uniformly.
+The transmitter sends frames of $N$ unit-energy QPSK symbols $s[k]\in\mathcal{Q}=\{\tfrac{1}{\sqrt2}(\pm1\pm\mathrm{j})\}$, drawn independently and uniformly.
 % i.i.d. uniform matters: a scrambled payload has no structure to exploit, so the
 % single-link minimum-energy attack is closed form (README Sec. 2.5, 4.2 Q2).
-Each frame is upsampled by $L$ samples per symbol and shaped by a unit-energy root-raised-cosine pulse $g$ with roll-off $\beta$, giving the transmit waveform
+Each frame is upsampled by $L$ samples per symbol and shaped by a unit-energy root-raised-cosine (RRC) pulse $g$, giving the transmit waveform
 \begin{equation}
 x[n]=\sum_{k=1}^{N} s[k]\,g[n-kL].
 \label{eq:tx}
 \end{equation}
-The receiver applies the matched filter $g$, samples at the symbol instants, and makes a per-axis hard decision; the pulse is root-Nyquist, so the cascade is inter-symbol-interference-free up to filter truncation.
+The receiver applies the matched filter, samples at the symbol instants, and makes a per-axis hard decision.
+Because $g$ is real and even, its matched filter is $g$ itself, and because it is root-Nyquist, the cascade $g*g$ is free of inter-symbol interference up to filter truncation.
 % span 32 (not 8): truncation ISI 3.6% -> 0.3%, else it flips zero-margin symbols
 % the paper's model does not have (cgan/link.py RRC_SPAN; verify job 2259141).
-Bit and symbol error rate under this chain are the effectiveness metrics.
-Bit-error recovery is out of scope: we assume forward error correction and retransmission are handled by a higher layer, and report the raw error rate because it is the input that layer receives, and because pushing it past the code's correcting capability is what becomes outage.
-% FEC-out is load-bearing for any stealth claim (README Sec. 2.9): state it as a
-% deliberate assumption, not a convenience.
 
 \subsection{Channel Model and Received Signal}
 \label{sec:channel}
-% LOS + power control, NO fading, NO ZF. cgan/scene.py, cgan/channel.py.
-Nodes are placed in a three-dimensional region and the transmitter--receiver and jammer--receiver links are line-of-sight, so each is a single path with a free-space power gain $g_{iR}=(\lambda/4\pi d_{iR})^2$ obtained by ray tracing~\cite{sionna}.
+% GEOMETRY-FREE by decision (user, 2026-09-24): every link is characterized at
+% the receiver. The 3-D scene / path loss / power control the experiments ran on
+% is parked at the end of the file as the extension layer -- it maps positions to
+% exactly the received quantities used here (cgan/scene.py, channel.py).
 The received frame is the composite
 \begin{equation}
 r[n]=x[n]+\sum_{j\in\mathcal{J}} c_j[n]+w[n],\qquad w[n]\sim\mathcal{CN}(0,N_0),
 \label{eq:rx}
 \end{equation}
 where $c_j$ is jammer $j$'s waveform as it arrives at the receiver and $N_0$ fixes the signal-to-noise ratio.
-The transmitter applies open-loop power control with full path-loss compensation to a target $\mathrm{SNR}$ at the receiver, so the clean received law is identical in every geometry and one detector calibration (Sec.~\ref{sec:detector}) serves them all.
-% This is why there is no per-drop retraining and no equalization term.
-SNR and jamming-to-signal ratio (JSR) are defined as mean power per sample at the receiver input over the simulated band; a single jammer is then fully described at the receiver by its received $\mathrm{JSR}_j=P_j\,g_{jR}/P_{\mathrm{rx}}$, with $P_j$ its transmit power and $P_{\mathrm{rx}}$ the controlled received signal power.
+Each link is a single path without small-scale fading, and the receiver is synchronized to its transmitter and knows that link's gain and phase, so no equalization is needed and the clean received law depends on the SNR alone.
+% Perfect-CSI, no-fading receiver: the attacker's worst case on BER and the
+% defender's best case on P(det) (tightest clean law). Parked note -> Setup.
+All powers are means per sample at the receiver input over the simulated band: with $P_{\mathrm{rx}}$ the received signal power, $\mathrm{SNR}=P_{\mathrm{rx}}/N_0$, so that $E_s/N_0=L\,\mathrm{SNR}$.
+Each jammer is characterized by its jamming-to-signal ratio $\mathrm{JSR}_j$, its received power relative to $P_{\mathrm{rx}}$.
+% link.noise_var: N_0 = p_s / SNR with p_s the per-sample signal power over the
+% active window; unit-energy symbols and pulse => E_s/N_0 = L * SNR (link.py L223).
 % white noise is suppressed by the full processing gain L at the matched filter;
 % a matched-modulation jammer is not -- this spread is what the ladder spans.
-Every realizable jammer is asynchronous: its timing offset is uniform over one symbol and its carrier phase uniform over $[0,2\pi)$, drawn per frame, and a geometric delay or phase adds nothing in law on top of these.
-% checked in cgan/verify.py, not assumed (README Sec. 3.3d): on/off geometric
-% delay+phase give the same BER and P(det). Only the genie (T0) is synchronous.
-A single line-of-sight, power-controlled link needs no equalization, so geometry enters the model only through $\mathrm{JSR}_j$ and this asynchronism.
-For $N_J\!\ge\!2$, jammers split a total budget equally and their independent contributions sum at the receiver; a phase-aligned team that concentrates the split on the strongest links is the coherent genie reference of Sec.~\ref{sec:attacker}.
-% uncoordinated K>1 buys nothing at matched detectability (README Sec. 3.3c #4,
+Every realizable jammer is asynchronous: its timing offset is uniform over one symbol and its carrier phase uniform over $[0,2\pi)$, drawn per frame.
+% Only the genie (T0) is synchronous. Checked in cgan/verify.py (README
+% Sec. 3.3d): a geometric delay+phase on top of this draw changes neither BER nor
+% P(det), and a single jammer depends on its received JSR alone -- which is why
+% a geometry layer can be added later without changing anything in this section.
+For $N_J\!\ge\!2$, each jammer has its own $\mathrm{JSR}_j$, offset, and phase, and their contributions add at the receiver.
+% uncoordinated N_J>1 buys nothing at matched detectability (README Sec. 3.3c #4,
 % 3.3d) -- it is the baseline any coordination result must beat, not a result.
 
 \subsection{Attacker Model}
 \label{sec:attacker}
 % Was "Cooperative Jammer Team". Renamed: coordination is future/gated, so the
-% old header over-promised. cgan/attacks.py, jammers.py, train_shaped.py.
+% old header over-promised. cgan/attacks.py, jammers.py, train_shaped.py,
+% train_gan.py.
 Every attacker, closed-form or learned, is a conditional law $c_j\sim\pi_j(\cdot\mid\xi_j)$, where $\xi_j$ is the information available when it forms its signal; attacks differ only in $\xi_j$ and in the family $\pi_j$ ranges over.
 % the central abstraction: it puts closed-form and learned attacks on one axis.
-The power budget is a hard constraint: each transmitted frame is projected onto its target JSR,
+The power budget is a hard constraint: each jammer's frame is scaled so that its power at the receiver, over the victim's $NL$-sample frame, meets its target,
 \begin{equation}
 \frac{1}{N L}\sum_{n}|c_j[n]|^2 \;=\; \mathrm{JSR}_j\,P_{\mathrm{rx}},
 \label{eq:power}
 \end{equation}
 so no attacker can trade effectiveness against a soft power penalty.
-% equality here (the sweep imposes a JSR); the <= budget form is for a learned
-% jammer that may choose to spend less. Never a loss term (README Sec. 2.8).
-Three knowledge tiers define $\xi_j$ and results are reported per tier: a genie (T0) that knows the current symbol and is synchronous; a realistic attacker (T1) that is asynchronous and has only link statistics; and a blind attacker (T2) that has neither.
-Five strategies instantiate $\pi_j$ and every one appears in every results figure, so each curve is read between a floor and a ceiling.
+% imposed at R over the victim's active window (channel.receive ->
+% jammers.scale_to_jsr; link.active). Equality here (the sweep imposes a JSR);
+% the <= budget form is for a jammer that may choose to spend less. Never a loss
+% term (README Sec. 2.8).
+Three information tiers define $\xi_j$: a genie (T0) that knows the victim's current symbols and arrives synchronously; an informed attacker (T1) that is asynchronous and knows the victim's modulation, pulse, and symbol rate but not its symbols; and a blind attacker (T2) that is asynchronous and knows none of these.
+Learned attackers additionally have training-time access to a simulation of the link and the detector (Sec.~\ref{sec:threat}), which places them in T1.
 
-\begin{table}[t]\centering\small
-\caption{The attacker ladder. Every strategy appears in every results figure.}
-\label{tab:ladder}
-\begin{tabular}{@{}llll@{}}
-\toprule
-Strategy & Received signal & Tier & Role \\ \midrule
-Barrage        & white Gaussian              & T2            & naive floor \\
-Pulsed$(p)$    & matched QPSK, duty $p$       & T1            & matched~\cite{zhou2025cgan}/pulsed~\cite{amuru2015optimal} \\
-Shaped$(\theta)$ & shaped noise              & T2, learned   & structured control \\
-GAN$(G)$       & generator I/Q               & T2, learned   & generative jammer~\cite{zhou2025cgan} \\
-Omniscient$(\eta)$ & $-(1{+}\eta)s$, fraction $\delta$ & T0 genie & unbeatable ceiling \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The pulsed jammer transmits the victim's own modulation at duty cycle $p$; $p{=}1$ is the matched-modulation optimum of~\cite{zhou2025cgan} and $p{<}1$ the pulsed family that is BER-optimal at low JSR~\cite{amuru2015optimal}.
-The shaped and GAN strategies are the learned tiers, optimized against the detector's own decisions under the objective of Sec.~\ref{sec:objective}: the shaped jammer over a low-dimensional spectral-and-envelope parameter $\theta$, the generator over its output samples through a differentiable critic.
-% shaped vs. GAN is the ablation that isolates the hypothesis class (low-dim
-% params vs. raw IQ) from the objective -- both carry the same reward + detectors.
-The omniscient strategy needs the current symbol and a receiver-synchronous arrival, so it is unrealizable and serves only as an upper bound: at $\eta{=}1$ it inverts attacked symbols, leaving the received law unchanged from clean, and at $\eta{<}1$ it pushes just past the decision boundary, which lowers received power.
-% eta=1: received law == clean => undetectable by ANY test, BER = delta.
-% eta<1: power drops => blind to the one-sided energy test (the classical
-% blind spot). delta = min(1, JSR/(1+eta)^2) (cgan/attacks.omniscient_rx).
+% The baseline attacks (barrage, pulsed, shaped control, genie) and the ladder
+% table moved to Experiment Setup (user, 2026-09-24): they exist already; the
+% system model describes the generative jammer. Parked verbatim at the end.
+% SPLIT (user, 2026-09-24): this section says WHAT the generative jammer can
+% transmit; HOW G is built and trained (Zhou's architecture, plain adversarial
+% training, detector-aware fine-tuning) is Methodology, sec_methodology.tex.
+% Test: a sentence that would change if G were built or trained differently
+% belongs there, not here.
+The jammer studied here is generative: a neural network $G$ with trainable weights maps a latent vector $\mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ to one segment $G(\mathbf{z})\in\mathbb{C}^{M}$ of $M$ complex baseband samples.
+A jammer frame is a stream of independent segments, delayed and rotated asynchronously and scaled to its budget,
+\begin{equation}
+u_j=\bigl[G(\mathbf{z}_1),\,G(\mathbf{z}_2),\,\ldots\bigr],\qquad c_j[n]=a_j\,e^{\mathrm{j}\phi_j}\,u_j[n-\tau_j],
+\label{eq:gan}
+\end{equation}
+with $(\tau_j,\phi_j)$ the offset and phase of Sec.~\ref{sec:channel} and $a_j>0$ the amplitude that meets Eq.~\eqref{eq:power}.
+% attacks.gan_tx tiles segments (cropped so sample 0 sits on the victim's grid
+% before the delay), channel.receive applies the fractional delay (sinc taps)
+% and phase, then scale_to_jsr. The inverse peak normalisation Zhou applies is
+% absorbed into a_j.
+Its weights are learned in simulation (Sec.~\ref{sec:method}), either to imitate the victim's clean waveform, which gives a detector-agnostic jammer, or on the objective of Sec.~\ref{sec:objective}, which makes it detector-aware.
+Either way, the generator learns the victim's modulation but never its symbols.
+% plain = run001_G (Zhou's CGAN, adversarial imitation); detector-aware = D2,
+% warm-started from it. Both: sec_methodology.tex Sec. method:plain / aware.
+The classical and reference jammers it is compared against are defined in Sec.~\ref{sec:setup}.
 
 \subsection{Detector Model}
 \label{sec:detector}
-% Four SEPARATE detectors + NP ceiling. NOT an energy-OR-CNN suite (that was the
-% frozen sim08 stack). cgan/detectors.py, baselines.py.
+% Four SEPARATE detectors + NP reference. NOT an energy-OR-CNN suite (that was
+% the frozen sim08 stack). cgan/detectors.py, baselines.py.
 Detection is at the receiver, on one received frame $r$, with no channel state information and no run-time labels.
 The defender is a bank of detectors, each reduced to a scalar statistic built so that larger is more suspicious and each thresholded at its own false-alarm rate $\alpha$, set from the empirical $(1{-}\alpha)$ quantile of clean frames so the rate holds by construction.
-They are reported separately, never combined, so that a per-detector blind spot stays visible.
+Each detector decides alone.
 % deliberate change from the OR-suite: OR-combining hides which detector fails.
-An energy detector thresholds mean frame power, in a one-sided form, blind to power-reducing attacks, and a two-sided form~\cite{urkowitz1967energy}.
-A kurtosis detector thresholds $\mathbb{E}|r|^4/(\mathbb{E}|r|^2)^2$, which is scale-free and sees the amplitude shape that energy cannot.
-A learned detector applies a convolutional network to the two-sided complex spectrogram of $r$ on a fixed decibel scale, the single-carrier counterpart of the spectrogram classifiers that define the state of the art~\cite{li2022jamming_ofdm}.
+An energy detector thresholds mean frame power~\cite{urkowitz1967energy} in two forms: a one-sided form, which is blind to power-reducing attacks, and a two-sided form, which is not.
+A kurtosis detector thresholds the deviation of $\kappa(r)=\mathbb{E}|r|^4/(\mathbb{E}|r|^2)^2$ from its clean mean; $\kappa$ is scale-free, so it measures the shape of the amplitude distribution, which energy cannot, and the test is two-sided because a jammer can make that distribution either more or less peaked.
+% two_sided(kurtosis, clean mean): baselines.Defender.statistics.
+A learned detector applies a convolutional network to the two-sided complex spectrogram of $r$ on a fixed decibel scale.
+It is the single-carrier counterpart of the spectrogram classifier of Li et al.~\cite{li2022jamming_ofdm} and is trained on this link with their jammer types.
 % fixed dB scale (not per-image contrast stretch): the stretch erases a jammer
 % that lifts the whole band evenly (README Sec. 3.3d, A.4 refinement).
-Finally, the Neyman--Pearson likelihood-ratio test for a white-Gaussian jammer of known received power is included as the optimal reference; the single-carrier model makes it available in closed form from the matched-filter samples and the residual out-of-band energy.
-% NP applies exactly to the analytic (noise/shaped) rows; the GAN's density needs
-% a KDE. This is the whole reason to reduce to single carrier.
-This reference is what the model is reduced for: it turns every claim of the form ``the trained detector misses this'' into ``no detector does better'', and the gap between it and the deployed detectors is a measured quantity.
-By construction $P_{\mathrm{det}}^{\mathrm{NP}}\ge P_{\mathrm{det}}^{\mathrm{CNN}}\ge P_{\mathrm{det}}^{\mathrm{energy}}$.
+Finally, the Neyman--Pearson likelihood-ratio test for a white-Gaussian jammer of known received power is the optimal reference; the single-carrier model gives it in closed form from the matched-filter samples and the residual energy outside the pulses' span.
+Against a white-Gaussian jammer it is the most powerful test at every $\alpha$, so it bounds every detector's detection probability; against any other jammer no such bound is available, and the deployed detectors are not ordered, since a jammer invisible to one can be flagged by another.
+% NP is exact for barrage only; it is evaluated as a mismatched (still valid)
+% test on the shaped rows and not at all for pulsed/GAN/genie (baselines.measure).
+% verify.py checks P_NP >= best deployed detector on the barrage row only. The M0
+% ordering P_NP >= P_learned >= P_energy does NOT carry over: the CNN-trained
+% shaped jammer at -20 dB reads CNN 0.03-0.09 vs one-sided power 1.00 (README
+% Sec. 3.3e); the genie push is invisible to the CNN and caught by two-sided
+% power (Sec. 3.3d).
 
 \subsection{Threat Model}
 \label{sec:threat}
-% Kept from the old draft with light edits (scalar -> per-frame score).
-A learned jammer observes each detector only through its per-frame score at the calibrated threshold; detector weights, gradients, and architecture are not observed, and the detector is frozen, so any adaptation is round-based and offline.
-\rar{A grey-box surrogate-gradient transfer attack is a possible relaxation, future work.}
-A flagged jammer forfeits future effectiveness --- localization, frequency reallocation, or spatial nulling neutralize it --- which is what motivates the detection constraint below.
-Physical-layer localization is itself a defender capability but is out of scope, since it needs distributed infrastructure the baseband model does not represent.
+% Rewritten 2026-09-24: the old text said the jammer never sees weights or
+% gradients, which contradicts D2 (white-box). README Sec. 3.3f threat model.
+The detectors are calibrated, and the network trained, before any attack; they are then frozen, and a trained jammer is frozen at deployment, so any adaptation is round-based and offline.
+We consider two levels of detector access.
+A black-box jammer observes each detector only through its per-frame score and decision at the calibrated threshold.
+A white-box jammer also differentiates the detector's statistic, including the network's weights; the detector-aware generator is trained with this access, which makes it the attacker's upper bound.
+For detectors without trainable parameters the two levels coincide.
+% black-box = the shaped control (train_shaped.py), now in Experiment Setup.
+Learned jammers see the victim's error rate only in training, through simulation; a deployed jammer cannot measure it.
+% README Sec. 2.8 (CTDE row): BER is a training-time construct.
 
 \subsection{Problem Formulation}
 \label{sec:objective}
@@ -185,16 +243,141 @@ The jammer team maximizes the induced error rate penalized by detection,
 \max_{\{\pi_j\}}\;\mathbb{E}[\mathrm{BER}]-\beta\,P_{\mathrm{det}}(\alpha)\quad\text{s.t. Eq.~\eqref{eq:power}},
 \label{eq:problem}
 \end{equation}
-with no further terms, and results are read as the achievable frontier $\mathrm{BER}^\star(\beta)=\max\{\mathbb{E}[\mathrm{BER}]:P_{\mathrm{det}}\le\beta\}$ for each detector, equivalent to the constrained form $\max\mathbb{E}[\mathrm{BER}]$ subject to $P_{\mathrm{det}}\le\varepsilon$.
-% Lagrangian form is what the code optimizes; the constrained/frontier form is
-% what is reported. State both so a reviewer sees no mismatch.
-Two reporting conventions are fixed.
-Strategies are compared at matched detectability rather than at matched power or configuration, since an attack that raises the error rate by raising its own signature is not an improvement.
-% the project already lost a "+70%" headline to matched-config vs matched-P(det)
-% (README Sec. 2.7).
-The stealth budget is the detector's own clean false-alarm rate, not a loose threshold such as $P_{\mathrm{det}}\le\tfrac12$, because a jammer caught in half of every frame is caught within a few frames.
-We therefore report the full BER-versus-$P_{\mathrm{det}}$ frontier over all budgets, with the clean false-alarm rate marked, alongside the dual-axis view of error rate and detection probability against the swept parameter, with the no-attacker floor and the omniscient ceiling drawn in.
-% never quote only the value at alpha (memory: show-full-frontier). Report the
-% measured effect size at matched BER, not just the bound (memory:
-% report-measured-gain-not-impossibility).
-Whether any realizable strategy reaches a jointly effective-and-undetected regime, and how far the deployed detectors fall short of the optimal test, is the paper's central question.
+where $P_{\mathrm{det}}(\alpha)$ is the probability that the detector flags a jammed frame at its threshold for false-alarm rate $\alpha$, $\beta\ge0$ weighs detection against damage, and power enters only through the hard constraint.
+% The surrogate the generator actually trains on (log E[BER], sigmoid P_det) is
+% Methodology -- parked below.
+Each $\beta$ reaches only the upper concave envelope of the achievable set, so the object of study is the whole frontier $\mathrm{BER}^\star(\varepsilon)=\max\{\mathbb{E}[\mathrm{BER}]:P_{\mathrm{det}}(\alpha)\le\varepsilon\}$, $\varepsilon\in[0,1]$, for each detector.
+% The old "equivalent to the constrained form" was dropped: the Lagrangian only
+% reaches the concave hull, and D2's interior optimum in beta (README Sec. 3.3f
+% limit iii) shows the two are not interchangeable in practice.
+
+% =============================================================================
+%  PARKED FOR OTHER SECTIONS  (moved out 2026-09-24 -- the system model holds
+%  only the system; paste these where they belong, do not re-add them above)
+% =============================================================================
+%
+% ---- Methodology ------------------------------------------------------------
+% MOVED 2026-09-24 into paper_drafts/sec_methodology.tex (written out in full
+% there: surrogates, straight-through estimator, CMA-ES control, comparison
+% design). Do not re-add it here.
+%
+% ---- Experiment Setup / Performance Metrics ---------------------------------
+% Bit and symbol error rate under this chain are the effectiveness metrics.
+%   [README Sec. 2.7: SER is a column, not an axis (Sec. 3.3g finding 8).]
+% Strategies are compared at matched detectability rather than at matched power
+% or configuration, since an attack that raises the error rate by raising its
+% own signature is not an improvement; equivalently, at matched error rate the
+% strategy with lower $P_{\mathrm{det}}$ is the better one.
+% The false-alarm rate $\alpha$ is each detector's operating point, not a filter
+% on the results: every $P_{\mathrm{det}}$ is read at the one threshold
+% calibrated to $\alpha$, so that detectors are comparable, and the whole
+% trade-off is reported, with $\alpha$ marked as the level below which
+% $P_{\mathrm{det}}$ cannot be told apart from false alarms.
+% We show it both as the frontier and as the dual-axis view of error rate and
+% detection probability against the swept parameter, with the no-attacker floor
+% and the omniscient ceiling drawn in.
+%   [README Sec. 2.7; memories show-full-frontier,
+%   report-measured-gain-not-impossibility.] Plus the MEASURED CONSTANTS above.
+% The receiver model is conservative in both directions: perfect
+% synchronization and channel knowledge with no fading is the attacker's worst
+% case on error rate, and the resulting fixed clean law is the defender's best
+% case on detection.
+%   [Fading would widen the clean-frame spread and let a jammer hide in it;
+%   estimation would open preamble/pilot attacks (README Sec. 4.2 Q2, 4.4).]
+% Team results ($N_J\ge2$): the per-jammer JSRs come from random placements --
+%   [50 drops, 1 km x 1 km x 150 m box, free-space LOS gains, equal transmit
+%   split of P_J; see the geometry layer below and MEASURED CONSTANTS.]
+%
+% ---- Experiment Setup / Baseline attackers  (moved out of Sec. attacker
+%      2026-09-24, user: existing attacks belong with the experiments) ------
+% Five strategies instantiate $\pi_j$ (Table~\ref{tab:ladder}); the barrage
+% floor and the genie ceiling bracket every other one.
+%   [Supervisor mandate: the omniscient reference in every results figure
+%   (README Sec. 2.9). Not every strategy is in every figure -- do not claim it.]
+% \begin{table}[t]\centering\small
+% \caption{The attacker ladder, ordered by the information each strategy uses.}
+% \label{tab:ladder}
+% \begin{tabular}{@{}llll@{}}
+% \toprule
+% Strategy & Received signal & Tier & Role \\ \midrule
+% Barrage        & white Gaussian              & T2            & naive floor \\
+% Pulsed$(p)$    & victim's QPSK, on w.p.\ $p$ & T1            & matched~\cite{zhou2025cgan}/pulsed~\cite{amuru2015optimal} \\
+% Shaped$(\theta)$ & shaped Gaussian           & T1, learned   & low-dim.\ control \\
+% GAN$(G)$       & generator I/Q               & T1, learned   & generative jammer~\cite{zhou2025cgan} \\
+% Omniscient$(\eta)$ & $-(1{+}\eta)s$ on a fraction $\delta$ & T0 & unbeatable ceiling \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+% The pulsed jammer transmits the victim's modulation and pulse with its own
+% random symbols, each on with probability $p$ at amplitude $1/\sqrt{p}$ so that
+% its mean power does not depend on $p$; $p{=}1$ is the matched jammer
+% that~\cite{zhou2025cgan} call optimal, and $p{<}1$ spans the pulsed family to
+% which the BER-maximizing jammer of~\cite{amuru2015optimal} belongs.
+%   [Zhou's "optimal" is not the Amuru-Buehrer optimum -- Amuru shows the
+%   matched jammer is suboptimal (README Sec. 2.10, 4.2 Q9). p is swept.]
+% The shaped jammer is white Gaussian noise filtered by a piecewise-linear
+% log-spectral gain and modulated by a periodic per-symbol power envelope, both
+% set by a low-dimensional parameter $\theta$ that is learned black-box under the
+% objective of Sec.~\ref{sec:objective}, with $\theta{=}0$ recovering the barrage
+% jammer.
+%   [32 band gains + 16-slot envelope = 48 params; envelope in the jammer's own
+%   clock with a random offset per frame (attacks.shaped_tx). It is the
+%   black-box learned control; the plain GAN is the detector-agnostic one.]
+% The omniscient strategy needs the victim's current symbols and a
+% receiver-synchronous arrival, so it is unrealizable and serves only as an
+% upper bound.
+% It attacks a fraction $\delta=\min\{1,\mathrm{JSR}/(1{+}\eta)^2\}$ of the
+% symbols, the most its budget allows: at $\eta{=}1$ it inverts them, leaving
+% the received law unchanged from clean, and at $\eta{<}1$ it pushes them just
+% past the decision boundaries, which lowers the received power.
+%   [eta=1: received law == clean => undetectable by ANY test, BER = delta.
+%   eta<1: power drops => blind to the one-sided energy test.
+%   cgan/attacks.omniscient_rx.]
+% A team of genies is phase-aligned, so their amplitudes add coherently and the
+% team acts as one genie at $\mathrm{JSR}=\bigl(\sum_{j}\sqrt{\mathrm{JSR}_j}\bigr)^2$.
+%   [scene.omniscient_jsr = P_J sum_j rho_jR / P_rx is exactly this with the
+%   budget split that maximizes it, P_j ~ rho_jR (geometry layer below).]
+%
+% ---- Extension layer: geometry  (re-add as a subsection "Geometry" before
+%      Sec.~\ref{sec:channel} if MARL / 3-D / mobility goes in) --------------
+% Nodes are placed in a three-dimensional region and the transmitter--receiver
+% and jammer--receiver links are line-of-sight, so each is a single path with a
+% free-space power gain $\rho_{iR}=(\lambda/4\pi d_{iR})^2$, obtained by ray
+% tracing~\cite{hoydis2022sionna}.
+% The transmitter applies open-loop power control with full path-loss
+% compensation to a target SNR at the receiver, so the clean received law is
+% identical in every geometry and one detector calibration per SNR serves them
+% all.
+% A jammer's received $\mathrm{JSR}_j=P_j\,\rho_{jR}/P_{\mathrm{rx}}$, with
+% $P_j$ its transmit power; a team splits a total budget $P_J$, and the genie
+% team's optimal split $P_j\propto\rho_{jR}$ gives
+% $\mathrm{JSR}=P_J\sum_j\rho_{jR}/P_{\mathrm{rx}}$.
+% A geometric delay or phase adds nothing in law on top of the asynchronous
+% draw of Sec.~\ref{sec:channel}.
+%   [All checked in cgan/verify.py; code in scene.py, channel.py. With fixed
+%   positions and a co-located detector, geometry enters ONLY as the gain
+%   vector {rho_jR} (+ delays). It becomes irreducible only if (1) the detector
+%   is not at the victim / there are several receivers or detectors, (2)
+%   positions are decisions (mobile jammers), or (3) the scene is not empty
+%   (shadowing, multipath) -- the design space for a MARL extension.]
+%
+% ---- Introduction (motivation) ----------------------------------------------
+% A flagged jammer forfeits future effectiveness --- localization, frequency
+% reallocation, or spatial nulling neutralize it --- which is what motivates the
+% detection term.
+%
+% ---- Conclusion & Future Work (scope) ---------------------------------------
+% Bit-error recovery is out of scope: we assume forward error correction and
+% retransmission are handled by a higher layer, and report the raw error rate
+% because it is the input that layer receives, and because pushing it past the
+% code's correcting capability is what becomes outage.
+%   [FEC-out is load-bearing for any stealth claim (README Sec. 2.9).]
+% Legitimate nodes take fixed TX/RX roles; symmetric transceivers, as in a
+% multi-node network, are future work.
+% A co-adaptive defender is future work; the fixed-defender setting isolates the
+% jammer-side problem, and adaptation is treated as round-based and offline.
+% A grey-box transfer attack through a surrogate detector lies between the two
+% access levels and is future work.
+% Physical-layer localization is itself a defender capability but is out of
+% scope, since it needs distributed infrastructure the baseband model does not
+% represent.

@@ -834,6 +834,99 @@ def test_snr_ablation(L):
           note=f"range = {rng:.1f} dB")
 
 
+# ================================================================ E3 team under fading (2026-09-26)
+def test_team_fading(L):
+    """
+    team_fading.py compares K jammers under jammer-link fading against the D-series
+    single jammer, so: (a) its K = 1 lossless path IS the D-series jammer, draw for
+    draw; (b) the fading has the stated law; (c) the nominal total JSR is the MEAN
+    received JSR; (d) independent content really gives diversity -- the per-frame
+    received power's spread falls as 1/K -- which is the property the whole check
+    is about; (e) the random-shift crop keeps generator bursts on the victim's grid.
+    """
+    import team_fading as tf
+    print("\n16. E3 team under fading: reference path, fading law, mean JSR, diversity, shift")
+    snr, N = lk.SNR_DB, scene.N_SYM
+    act = L.active(N)
+    PG = PerfectG(L)
+    gan = dict(name="gan", G=PG, scale=PG.scaler.scale)
+
+    # (a) K = 1, lossless, aligned == attacks.jammer_at_rx, same seed -> same samples.
+    #     Reseed through lk.setup: BinarySource draws from Sionna's OWN generator
+    #     (config.torch_rng), which torch.manual_seed does not reset.
+    _, sym, _ = L.modulate(128, N)
+    for spec in (dict(name="noise"), dict(name="pulsed", p=0.1), gan):
+        lk.setup(L.device, seed=77)
+        ref = attacks.jammer_at_rx(L, spec, sym, [-12.0])
+        lk.setup(L.device, seed=77)
+        got = attacks.jammer_at_rx(L, tf.team_spec(spec, 1, "lossless"), sym, [-12.0])
+        check(f"team K=1 lossless == jammer_at_rx draw for draw ({spec['name']})",
+              float((ref - got).abs().max() / ref.abs().max()), 0.0, 1e-6)
+
+    # (b) E|h|^2 = 1 and Var|h|^2 = (1 + 2K)/(1 + K)^2 (Rician, linear K)
+    n = 400_000
+    for chan in ("rician10", "rayleigh"):
+        kf = tf.CHANNELS[chan]
+        g = tf.fading_amp(n, kf, L.device).double().pow(2)
+        check(f"{chan}: E|h|^2", float(g.mean()), 1.0, 0.01)
+        check(f"{chan}: Var|h|^2 vs Rician law", float(g.var()), (1 + 2 * kf) / (1 + kf) ** 2, 0.02)
+
+    # (c) + (d) mean received total JSR is the nominal one; the frame-power spread falls as 1/K
+    F, jsr_db = 4096, -10.0
+    _, sym, _ = L.modulate(F, N)
+    rel_var = {}
+    for chan in ("lossless", "rayleigh"):
+        for K in (1, 2, 4):
+            j = attacks.jammer_at_rx(L, tf.team_spec(dict(name="pulsed", p=1.0), K, chan), sym, [jsr_db])
+            pw = j[:, act].abs().pow(2).mean(-1).double() / L.p_s
+            check(f"{chan} K={K}: mean received JSR [dB]", float(10 * torch.log10(pw.mean())), jsr_db,
+                  0.05 if chan == "lossless" else 0.35)
+            rel_var[(chan, K)] = float(pw.var() / pw.mean() ** 2)
+    for K in (2, 4):
+        check(f"rayleigh: frame-power spread K={K} / K=1 (diversity, want 1/K)",
+              rel_var[("rayleigh", K)] / rel_var[("rayleigh", 1)], 1.0 / K, 0.25 / K)
+
+    # (e) shifting a perfect generator by whole symbols keeps it on the grid: same BER as aligned
+    for jsr_db in (0.0, 3.0):
+        _same_ber(f"perfect G shifted == aligned (on-grid crop), JSR {jsr_db:+.0f} dB",
+                  _batches(L, 8000, tf.team_spec(gan, 1, "lossless", "shifted"), [jsr_db], snr),
+                  _batches(L, 8000, tf.team_spec(gan, 1, "lossless", "aligned"), [jsr_db], snr),
+                  floor=0.01)
+
+
+def test_team_timing(L):
+    """
+    D4a sweeps the inter-jammer timing error sigma through team_fading.team_rx, so:
+    (a) sigma = 0 IS 'aligned', draw for draw -- the curve's left end is E3's
+    aligned team; (b) the leader is never shifted -- at K = 1 any sigma is the
+    D-series jammer; (c) the followers' offset has the stated law, N(0, sigma^2)
+    symbols at sample resolution, wrapped to the burst period.
+    """
+    import team_fading as tf
+    print("\n17. D4a timing error: sigma 0 == aligned, leader exact, offset law")
+    N = scene.N_SYM
+    PG = PerfectG(L)
+    gan = dict(name="gan", G=PG, scale=PG.scaler.scale)
+    _, sym, _ = L.modulate(128, N)
+    for K, sigma, ref_t in ((2, 0.0, "aligned"), (1, 16.0, "aligned")):
+        lk.setup(L.device, seed=78)
+        ref = attacks.jammer_at_rx(L, tf.team_spec(gan, K, "lossless", ref_t), sym, [-12.0])
+        lk.setup(L.device, seed=78)
+        got = attacks.jammer_at_rx(L, tf.team_spec(gan, K, "lossless", sigma), sym, [-12.0])
+        check(f"team K={K} sigma={sigma:g} == aligned draw for draw",
+              float((ref - got).abs().max() / ref.abs().max()), 0.0, 1e-6)
+
+    period = tf.SHIFT_SYM * L.sps
+    for sigma in (0.5, 2.0, 8.0):
+        start = tf.shift_start(sigma, 200_000, L)
+        check(f"sigma={sigma:g}: offset in [0, period)", float((start.min() >= 0) & (start.max() < period)),
+              1.0, 0.0)
+        eps = ((start + period // 2) % period - period // 2).double() / L.sps     # unwrap, [symbols]
+        check(f"sigma={sigma:g}: offset mean [symbols]", float(eps.mean()), 0.0, 0.02 * sigma + 0.01)
+        check(f"sigma={sigma:g}: offset std [symbols]", float(eps.std()),
+              math.sqrt(sigma ** 2 + 1 / (12 * L.sps ** 2)), 0.02 * sigma)
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -844,6 +937,8 @@ def test_baselines():
     test_shaped(L)
     test_gan_jammer(L)
     test_snr_ablation(L)
+    test_team_fading(L)
+    test_team_timing(L)
 
 
 def main():
@@ -851,13 +946,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", action="store_true")
     ap.add_argument("--baselines-only", action="store_true",
-                    help="run only sections 8-14 (scene, channel, attacks, detectors, CNN, shaped, GAN)")
+                    help="run only sections 8-17 (scene, channel, attacks, detectors, CNN, shaped, GAN, E2, E3, D4a)")
+    ap.add_argument("--team-only", action="store_true", help="run only sections 16-17 (E3 team, D4a timing)")
     args = ap.parse_args()
     VERBOSE = args.v
 
     device = lk.setup(seed=1234)
     print(f"device: {device}")
-    if not args.baselines_only:
+    if args.team_only:
+        L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+        test_team_fading(L)
+        test_team_timing(L)
+    elif not args.baselines_only:
         for sps, pulse in [(8, "rrc0.35"), (4, "rect")]:
             L = lk.Link(sps=sps, pulse=pulse)
             if VERBOSE:
@@ -871,7 +971,8 @@ def main():
             test_perfect_generator(L)
             test_normalisation(L)
         test_models()
-    test_baselines()
+    if not args.team_only:
+        test_baselines()
 
     print("\n" + ("ALL CHECKS PASS" if not FAILURES else
                   f"{len(FAILURES)} FAILED:\n  " + "\n  ".join(FAILURES)))

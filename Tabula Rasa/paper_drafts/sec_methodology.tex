@@ -1,0 +1,177 @@
+% =============================================================================
+%  \section{Methodology}  --  PAPER VERSION, IEEEtran conference, 6 pages
+%  Drafted 2026-09-24, from the block parked at the end of
+%  sec_system_model_waveform.tex, checked against cgan/{train_gan,
+%  train_shaped,attacks,detectors,channel}.py and README Sec. 2.10, 3.1,
+%  3.3e, 3.3f. Pairs with sec_system_model_waveform.tex and uses its labels
+%  sec:system, sec:attacker, sec:threat, eq:power, eq:problem, eq:gan.
+%
+%  WHAT THIS DESCRIBES
+%  -------------------
+%  ONLY the method: how the generator G of Sec. attacker is built and trained
+%  -- Zhou's architecture and plain adversarial training (Sec. method:plain),
+%  then detector-aware fine-tuning -- and what the comparison with the plain
+%  generator and the shaped control isolates. The 2026-09-24 split (user):
+%    * System Model = WHAT the jammer can transmit (abstract G, Eq. eq:gan,
+%      tier T1); Methodology = HOW G is chosen. A sentence that would change
+%      if G were built or trained differently belongs here;
+%    * the baseline attacks (barrage, pulsed, shaped control, genie) and the
+%      ladder table are in Experiment Setup -- so the shaped control's CMA-ES
+%      recipe is parked below for Experiment Setup, next to its definition.
+%  NOT values, NOT the evaluation protocol, NOT results (all parked below).
+%  Refers to Sec.~\ref{sec:setup}: add \label{sec:setup} to Overleaf's
+%  \section{Experiment Setup} when pasting.
+%
+%  VALUES  (for Experiment Setup; none belong in this section's text, except
+%  the dimensions Zhou states: z 400, label 16, M 1024)
+%  ------------------------------------------------------------------
+%   plain G (run001_G, train_cgan.py): channels 64/128/256, kernel 5, dropout
+%        0.3, pool-to-16; nsgan + GP 10, n_critic 1, Adam 2e-4 (0.5, 0.999),
+%        all loss weights 1, 10 000 iterations, batch 128.
+%   detector-aware G (train_gan.py): warm start run001_G; Adam 2e-4
+%        (0.5, 0.999); 400 steps; 128 frames/step (32 for the CNN); JSR band
+%        (-32, 0) dB for power/kurtosis, (-48, -16) dB for the CNN;
+%        beta in {1, 10, 100, 1000}, CNN also {1e4, 1e5, 1e6}; thresholds at
+%        alpha = 0.05; soft-P_det width = clean std over 4096 frames.
+%        20 generators + the beta = 0 effectiveness-only one.
+%   parameter count: G ~1e6 (README Sec. 3.3f) vs the control's 48.
+%
+%  NOTATION  (kept clear of the System Model's symbols)
+%  --------
+%   psi(r) = a detector's scalar statistic (T is taken by the tiers T0-T2,
+%   sigma by the noise std); tau_alpha = its threshold; s_psi = its clean std.
+%   beta keeps its System Model meaning, but on the log-BER scale of
+%   Eq. (loss) its numerical range differs -- the text says so.
+%
+%  CITE KEYS: zhou2025cgan (Overleaf key 11184988 -- rename one side),
+%  bengio2013estimating (NEW, in paper_drafts/refs_new.bib).
+%  Parked text: hansen2016cma (NEW, same file).
+%
+%  LENGTH: ~680 words of text, about 1.1 column (the System Model is ~1,050,
+%  ~1.6 columns). If over budget, cut in this order: the discriminator
+%  sentence of Sec. method:plain (the citation carries it); the
+%  one-generator-per-target sentence (can move to Experiment Setup); only then
+%  touch the surrogates.
+% =============================================================================
+
+\section{Methodology}
+\label{sec:method}
+The generator $G$ of Sec.~\ref{sec:attacker} is obtained in two stages: it is first trained to imitate the victim's waveform, and then fine-tuned to be detector-aware.
+
+\subsection{Generator and Plain Training}
+\label{sec:method:plain}
+% Moved here from the System Model 2026-09-24 (user: System Model = what the
+% jammer can transmit; Methodology = how G is built and trained).
+We adopt the conditional generative adversarial network (GAN) of~\cite{zhou2025cgan}.
+Its generator concatenates the latent vector $\mathbf{z}\in\mathbb{R}^{400}$ with a learned 16-dimensional embedding of the modulation label, fixed to QPSK, and maps the result through three one-dimensional convolutional blocks (convolution, batch normalization, leaky ReLU, dropout, max-pooling) and a dense layer with $\tanh$ output to the I and Q components of a segment of $M=1024$ samples.
+% cgan/models.py Generator. Zhou states z 400, label 16, 3 blocks, 1024 I + 1024 Q;
+% channels 64/128/256, kernel 5, dropout 0.3, pool-to-16 are ours (README Q7)
+% -> Experiment Setup. With one class the label is constant.
+It is trained adversarially to imitate segments of the victim's clean transmit waveform, divided by a global peak scale so that they fit the $\tanh$ range.
+% models.PeakScaler; the inverse scaling is absorbed by the power projection
+% (a_j in Eq. eq:gan).
+The discriminator reads a segment as a two-channel (I, Q) one-row image through three two-dimensional convolutional blocks and outputs a real/fake score and a modulation class; it is trained with an adversarial loss, a gradient penalty, and a classification loss.
+The generator minimizes an adversarial loss plus three imitation terms: feature matching on the discriminator's features, a time--frequency distance between short-time Fourier transforms, and a distance between the I/Q sample distributions.
+% run001_G, the generator every D-series result uses: non-saturating BCE + GP,
+% n_critic 1, all weights 1, MSE feature matching, log1p STFT, peak headroom 1.0,
+% 10k iterations, batch 128, Adam 2e-4 (README Sec. 3.4 C5, Q7). The current
+% train_cgan.py default (WGAN-GP, Fre-GAN weights) is run002, NOT used downstream.
+No term involves the error rate or any detector: the plain generator hurts the victim only by imitating its modulation, and it is detector-agnostic.
+% README Q7 (i): BER appears in no loss term of Zhou's.
+
+\subsection{Detector-Aware Fine-Tuning}
+\label{sec:method:objective}
+We make the generator detector-aware by initializing it with the plain generator's weights and fine-tuning it by direct gradient of Eq.~\eqref{eq:problem} through the link of Eq.~\eqref{eq:gan} and the frozen detector; the discriminator and the imitation losses are not used in this stage.
+% D2 does NOT re-run Zhou's adversarial losses (README Sec. 3.3f).
+% Heading was "Differentiable Objective" (label kept: the parked Setup text
+% refers to it for the exact E[BER]).
+Two quantities in Eq.~\eqref{eq:problem} are replaced by differentiable surrogates.
+First, $\mathbb{E}[\mathrm{BER}]$ is numerically zero wherever the jammer is weak, so we maximize $\log\mathbb{E}[\mathrm{BER}]$, computed exactly over the receiver noise: a bit whose noiseless matched-filter sample lies at signed distance $m_b$ from its decision boundary is in error with probability $Q(m_b/\sigma)$, with $\sigma^2=N_0/2$ the per-axis noise variance, and the logarithm of the mean over bits is evaluated with a log-sum-exp, so it never underflows.
+% attacks.ber_logprob / log_expected_ber: log_ndtr(-m / sqrt(N0/2)), float64.
+% E[BER] at SNR 30 dB underflows for a weak jammer (Q(~76) per bit) -- the
+% wall that stalled the scalar-reward attempts (README A.5, 3.3e).
+Second, with $\psi(r)$ the target detector's statistic, $\tau_\alpha$ its threshold, and $s_\psi$ the standard deviation of $\psi$ on clean frames, $P_{\mathrm{det}}$ is replaced by
+\begin{equation}
+\tilde P_{\mathrm{det}}=\mathbb{E}\Bigl[\bigl(1+e^{-(\psi(r)-\tau_\alpha)/s_\psi}\bigr)^{-1}\Bigr],
+\label{eq:softpdet}
+\end{equation}
+which tends to the hard detection probability as $s_\psi\to0$.
+% detectors.soft_pdet.
+The generator $G$ minimizes
+\begin{equation}
+\mathcal{L}(G)=-\log\mathbb{E}[\mathrm{BER}]+\beta\,\tilde P_{\mathrm{det}},
+\label{eq:loss}
+\end{equation}
+which is the objective of Eq.~\eqref{eq:problem} with effectiveness on a logarithmic scale, so $\beta$ takes a different numerical range here.
+The power constraint of Eq.~\eqref{eq:power} is applied inside the forward pass: it removes the generator's overall gain, so the gradient acts only on the shape of the waveform, and power never enters the loss.
+% channel.receive -> jammers.scale_to_jsr; verify.py 14b/14c (finite, nonzero
+% gradient on all of G's parameters through Sionna's ApplyTimeChannel, the
+% matched filter and the detector).
+At each step the received JSR is drawn uniformly from a band that starts just below the JSR at which the target detector begins to flag, because where the detector flags every frame the logistic function in Eq.~\eqref{eq:softpdet} is flat and the detection term carries no gradient.
+% The per-target band is load-bearing: on the power band the CNN's sigmoid'
+% is ~1e-11 and no beta recovers a gradient (README Sec. 3.1 trap 1).
+
+\subsection{White-Box Gradients Through the Learned Detector}
+\label{sec:method:ste}
+The energy and kurtosis statistics are differentiable as they stand.
+The learned detector is not: its input image maps the spectrogram onto a 256-level colour map, a staircase whose gradient is zero.
+We therefore use a straight-through estimator~\cite{bengio2013estimating}: the forward pass keeps the exact quantized image, so the deployed statistic is unchanged, and the backward pass substitutes the colour map's local slope.
+The attacker thus differentiates the deployed network's weights, with no surrogate network and no transfer gap.
+% detectors._viridis_apply(grad=True); verify.py 14d checks the forward values
+% agree. Known and measured: the deployed CNN runs under fp16 autocast, D2
+% trains in fp32; decision-level equivalence asserted (README Sec. 3.1).
+One generator is trained per target detector and value of $\beta$, and every reported number is measured with the deployed detector's hard decisions, not with the surrogate.
+
+\subsection{What the Comparisons Isolate}
+\label{sec:method:design}
+% README Sec. 2.10 (D2a rationale), 3.3f; memory report-measured-gain.
+The plain and detector-aware generators share architecture, initial weights, and evaluation path, so their difference is the effect of detector-aware training alone.
+The shaped-noise control (Sec.~\ref{sec:setup}) is trained on the same objective against the same detectors, but black-box and over 48 parameters instead of raw I/Q from a network of about $10^6$ parameters, so its difference from the detector-aware generator is the effect of the signal family.
+The fixed baselines bracket both, from the barrage floor to the unrealizable omniscient ceiling.
+
+% =============================================================================
+%  PARKED FOR OTHER SECTIONS  (the methodology holds only the method)
+% =============================================================================
+%
+% ---- Experiment Setup / Baseline attackers: how the shaped control is trained
+%      (goes right after the shaped jammer's definition, which is parked at the
+%      end of sec_system_model_waveform.tex) -------------------------------
+% The shaped jammer's parameter $\theta\in\mathbb{R}^{48}$ is optimized
+% black-box by the covariance matrix adaptation evolution strategy
+% (CMA-ES)~\cite{hansen2016cma}, started at $\theta=0$, the barrage jammer.
+% It observes the target detector only through per-frame scores and decisions.
+% Candidates are ranked by the objective of Eq.~\eqref{eq:problem} itself, with
+% $\mathbb{E}[\mathrm{BER}]$ computed exactly as in Sec.~\ref{sec:method:objective}
+% and $P_{\mathrm{det}}$ the hard fraction of flagged frames; ties, which occur
+% wherever every candidate is flagged in every frame, are broken by the
+% detector's mean score, weighted below the objective's resolution.
+% One $\theta$ is optimized per target detector, value of $\beta$, and JSR, and
+% a second, independent seed reaches the same operating points, so the control
+% measures the family rather than the optimizer.
+%   [train_shaped.py: pycma, sigma0 = 1 in log-power units, 150 generations,
+%   256 frames/evaluation, common random numbers per generation; beta in
+%   {0, 0.01, 1}; JSR -40:4:0 dB; tie weight 1e-6 on a monotone map of the
+%   soft miss rate; seed check 6/6 pairs agree, |dP_det| <= 0.009 (README
+%   Sec. 3.3e). Not RL: a static parameter vector is not a sequential decision.]
+%
+% ---- Experiment Setup (evaluation protocol) ---------------------------------
+% Each attacker is swept over received JSR; at every point BER and each
+% detector's P_det are measured on independent frames (fresh bits, jammer draw
+% and noise per frame). A point selected from the sweep is re-measured on fresh
+% frames before it is reported, because picking a maximum under a noisy P_det
+% favours lucky draws.
+%   [512 frames/point (binomial SE +-1.8 pp; differences < ~4 pp are not
+%   meaningful), confirmation on 4096 fresh frames, pass = P_det <= alpha +
+%   2 sigma (baselines.confirm). Matched-BER points interpolated on the 1 dB
+%   JSR grid, linear in log BER; headline at BER 3e-4 (README Sec. 3.3f).]
+% Noise ablation: SNR 0:5:40 dB plus a noiseless anchor; every threshold
+% re-calibrated on clean frames at each level; the CNN keeps its 30 dB weights
+% and only its colour scale is re-fitted; generators are evaluated, not
+% retrained, so the ablation measures transfer.
+%   [20 000 clean frames per level; README Sec. 3.3g setup + caveats; the
+%   noiseless anchor is unusable for the CNN (OOD) and saturates both power
+%   detectors -- an anchor, not a result.]
+% Learned detector: EfficientNet-B0 as in~\cite{li2022jamming_ofdm}, their
+% architecture retrained on this link with their four jammer types adapted to a
+% single carrier, received JSR uniform in dB over [-20, +10]; 99.94 % accuracy
+% at +10 dB.  [train_spectrogram_cnn.py; job 2266131, 100 epochs.]

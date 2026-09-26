@@ -1,0 +1,25 @@
+node: artongpu03.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 3 | SNR 30 dB | channel lossless (K-factor None) | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.0595703125, "power_two_sided": 0.0556640625, "kurtosis": 0.046875, "spec_cnn": 0.05224609375}
+  noise          K=1 aligned  max BER 3.059e-01  CNN P(det) at max JSR 1.000  (18s)
+  noise          K=2 aligned  max BER 3.061e-01  CNN P(det) at max JSR 1.000  (39s)
+  noise          K=4 aligned  max BER 3.086e-01  CNN P(det) at max JSR 1.000  (62s)
+  pulsed_p0.1    K=1 aligned  max BER 1.456e-01  CNN P(det) at max JSR 1.000  (87s)
+  pulsed_p0.1    K=2 aligned  max BER 2.096e-01  CNN P(det) at max JSR 1.000  (113s)
+  pulsed_p0.1    K=4 aligned  max BER 2.945e-01  CNN P(det) at max JSR 1.000  (140s)
+  plain_run001   K=1 aligned  max BER 4.345e-01  CNN P(det) at max JSR 1.000  (168s)
+  plain_run001   K=2 aligned  max BER 4.180e-01  CNN P(det) at max JSR 1.000  (197s)
+  plain_run001   K=2 shifted  max BER 4.266e-01  CNN P(det) at max JSR 1.000  (227s)
+  plain_run001   K=4 aligned  max BER 4.175e-01  CNN P(det) at max JSR 1.000  (260s)
+  plain_run001   K=4 shifted  max BER 4.245e-01  CNN P(det) at max JSR 1.000  (294s)
+  spec_cnn_b10   K=1 aligned  max BER 3.709e-01  CNN P(det) at max JSR 1.000  (322s)
+  spec_cnn_b10   K=2 aligned  max BER 3.721e-01  CNN P(det) at max JSR 1.000  (352s)
+  spec_cnn_b10   K=2 shifted  max BER 3.811e-01  CNN P(det) at max JSR 1.000  (382s)
+  spec_cnn_b10   K=4 aligned  max BER 3.682e-01  CNN P(det) at max JSR 1.000  (415s)
+  spec_cnn_b10   K=4 shifted  max BER 3.804e-01  CNN P(det) at max JSR 1.000  (450s)
+  kurtosis_b1    K=1 aligned  max BER 4.044e-01  CNN P(det) at max JSR 1.000  (478s)
+  kurtosis_b1    K=2 aligned  max BER 3.978e-01  CNN P(det) at max JSR 1.000  (508s)
+  kurtosis_b1    K=2 shifted  max BER 4.068e-01  CNN P(det) at max JSR 1.000  (539s)
+  kurtosis_b1    K=4 aligned  max BER 3.975e-01  CNN P(det) at max JSR 1.000  (571s)
+  kurtosis_b1    K=4 shifted  max BER 4.090e-01  CNN P(det) at max JSR 1.000  (606s)
+wrote ../artifacts/cgan/team_fading/run001/snr_30_lossless.json in 606s

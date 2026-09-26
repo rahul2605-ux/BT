@@ -215,6 +215,8 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
     so it takes a single JSR.
     """
     F, N = sym.shape
+    if "rx" in spec:            # a spec may bring its own receive model (team_fading.py)
+        return spec["rx"](link, sym, jsr_db_k)
     name = spec["name"]
     if name == "omniscient":
         jsr = jsr_db_k if isinstance(jsr_db_k, (int, float)) else float(jsr_db_k[0])
