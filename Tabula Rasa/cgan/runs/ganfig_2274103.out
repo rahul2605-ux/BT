@@ -1,0 +1,42 @@
+CNN-targeted D2 row drawn: spec_cnn_b1  (rule: lowest P(det)_CNN at matched BER 0.001)
+wrote fig_ber_vs_jsr.png, fig_pdet_vs_jsr.png, fig_frontier.png to ../artifacts/cgan/gan/run002
+  noise (barrage)                    max BER 0.309
+  matched QPSK / optimal (p=1)       max BER 0.443
+  Amuru pulsed (p=0.1)               max BER 0.144
+  genie flip (ceiling)               max BER 1.000
+  plain GAN — D1 (run001)            max BER 0.432
+  GAN eff, β=0 — D2                  max BER 0.336
+  GAN vs power, β=1000 — D2          max BER 0.388
+  GAN vs kurtosis, β=100 — D2        max BER 0.337
+  GAN vs CNN, β=1 — D2               max BER 0.284
+  shaped control vs kurtosis — D2a   max BER 0.159
+  shaped control vs CNN — D2a        max BER 0.158
+
+Confirmed stealthy BER at alpha=0.05 (max BER with P(det) <= alpha, fresh frames)
+jammer                   power (1-sided)    power (2-sided)           kurtosis    spectrogram CNN  max BER loud
+noise                          0.00e+00           0.00e+00           0.00e+00           0.00e+00          0.309
+pulsed_p1                      0.00e+00           0.00e+00!          0.00e+00           0.00e+00          0.443
+pulsed_p0.1                    0.00e+00!          0.00e+00!          0.00e+00           0.00e+00          0.144
+omniscient_e1                  1.00e+00           1.00e+00           1.00e+00           1.00e+00          1.000
+eff                            0.00e+00           0.00e+00!          5.44e-05!          0.00e+00          0.336
+kurtosis_b1                    0.00e+00           0.00e+00           2.91e-04!          0.00e+00          0.354
+kurtosis_b10                   0.00e+00!          0.00e+00           0.00e+00           0.00e+00          0.349
+kurtosis_b100                  0.00e+00           0.00e+00!          4.29e-05!          0.00e+00          0.337
+kurtosis_b1000                 0.00e+00!          0.00e+00           5.72e-05!          0.00e+00          0.397
+plain_run001                   0.00e+00!          0.00e+00!          0.00e+00           0.00e+00          0.432
+power_one_sided_b1             0.00e+00           0.00e+00           5.15e-05!          0.00e+00          0.337
+power_one_sided_b10            0.00e+00           0.00e+00           4.10e-05!          0.00e+00          0.346
+power_one_sided_b100           0.00e+00           0.00e+00!          5.82e-05!          0.00e+00          0.335
+power_one_sided_b1000          0.00e+00           0.00e+00           7.63e-06!          0.00e+00          0.388
+power_two_sided_b1             0.00e+00           0.00e+00!          6.29e-05!          0.00e+00          0.335
+power_two_sided_b10            0.00e+00           0.00e+00!          3.62e-05!          0.00e+00          0.344
+power_two_sided_b100           0.00e+00           0.00e+00!          2.57e-05!          0.00e+00          0.345
+power_two_sided_b1000          0.00e+00!          0.00e+00!          1.35e-04!          0.00e+00          0.403
+spec_cnn_b1                    0.00e+00!          0.00e+00!          2.23e-04!          0.00e+00          0.284
+spec_cnn_b10                   0.00e+00!          0.00e+00!          0.00e+00           0.00e+00          0.331
+spec_cnn_b100                  0.00e+00!          0.00e+00           0.00e+00           0.00e+00          0.341
+spec_cnn_b1000                 0.00e+00!          0.00e+00           1.34e-05!          0.00e+00          0.366
+spec_cnn_b10000                0.00e+00!          0.00e+00           0.00e+00           0.00e+00          0.393
+spec_cnn_b100000               0.00e+00!          0.00e+00           0.00e+00           0.00e+00          0.399
+spec_cnn_b1e+06                0.00e+00!          0.00e+00           0.00e+00           0.00e+00          0.411
+  '--' = no point met the budget;  '!' = the confirmation pass missed the budget

@@ -6,7 +6,7 @@ against a frozen detector (README §3.4, threat model in the plan).
     sbatch submit_train_gan.sh --smoke                # task 0 + one power task, few steps
 
 The neural counterpart of the shaped-noise control D2a (train_shaped.py): the SAME
-objective and the SAME detectors, but a ~1 M-parameter generator over raw IQ
+objective and the SAME detectors, but an 8.6 M-parameter generator over raw IQ
 instead of a 48-parameter family, so GAN vs shaped isolates the hypothesis class.
 
 Per task (target detector, beta):
@@ -128,8 +128,14 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed):
     return G, hist
 
 
-def run_task(L, dfd, task, gen0, steps, frames, seed, band=JSR_BAND):
-    G, scale, _ = models.load_generator(gen0, L.device)      # warm start from run001_G
+def run_task(L, dfd, task, gen0, steps, frames, seed, band=JSR_BAND, init="warm"):
+    if init == "warm":
+        G, scale, _ = models.load_generator(gen0, L.device)  # warm start from run001_G
+    else:
+        # Cold start (README §3.3f ablation, 2026-09-26): Zhou's architecture with
+        # fresh weights, no imitation stage. The scale is irrelevant: channel.receive
+        # rescales every frame to its JSR.
+        G, scale = models.Generator(n_classes=1).to(L.device), 1.0
     G.train()
     G, hist = train(L, dfd, G, scale, task["target"], task["beta"], steps, frames, band, seed)
     return G, scale, hist
@@ -139,13 +145,27 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--task", type=int, default=int(os.environ.get("SLURM_ARRAY_TASK_ID", 0)))
     ap.add_argument("--gen0", default=os.path.join(scene.ART, "..", "run001_G.pt"))
+    ap.add_argument("--init", choices=["warm", "random"], default="warm",
+                    help="warm = start from --gen0 (every reported D2 result); random = "
+                         "fresh weights, the no-imitation ablation")
+    ap.add_argument("--run", default=RUN, help="output folder under artifacts/cgan/gan/")
+    ap.add_argument("--band", type=float, nargs=2, default=None, metavar=("LO", "HI"),
+                    help="override the per-target JSR band [dB] (default JSR_BANDS / JSR_BAND); "
+                         "the wide-band ablation for damage when loud, README §4.3")
+    ap.add_argument("--rep", type=int, default=0,
+                    help="seed replicate: 0 = the original seeds; r > 0 shifts every seed by 1000 r "
+                         "(fresh init for --init random, fresh frames either way)")
     ap.add_argument("--steps", type=int, default=400)
     ap.add_argument("--frames", type=int, default=None,
                     help="frames per gradient step (default: FRAMES[target])")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
-    os.makedirs(OUT, exist_ok=True)
-    device = lk.setup(seed=4000 + args.task)
+    out = os.path.join(scene.ART, "..", "gan", args.run)
+    if args.run == RUN and (args.init != "warm" or args.rep != 0 or args.steps != 400 or args.band):
+        raise SystemExit("run001 holds the original recipe (warm, 400 steps, rep 0); "
+                         "write any variant to its own --run folder")
+    os.makedirs(out, exist_ok=True)
+    device = lk.setup(seed=4000 + args.task + 1000 * args.rep)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     dfd = baselines.Defender(L)
 
@@ -164,17 +184,20 @@ def main():
         if args.smoke:
             frames = min(frames, 32)
         print(f"task {tid} = {task}  (tag {tag}, {frames} frames/step, "
-              f"JSR band {JSR_BANDS.get(task['target'], JSR_BAND)})", flush=True)
-        band = JSR_BANDS.get(task["target"], JSR_BAND)
-        G, scale, hist = run_task(L, dfd, task, args.gen0, steps, frames, seed=4000 + tid, band=band)
+              f"JSR band {tuple(args.band) if args.band else JSR_BANDS.get(task['target'], JSR_BAND)})",
+              flush=True)
+        band = tuple(args.band) if args.band else JSR_BANDS.get(task["target"], JSR_BAND)
+        G, scale, hist = run_task(L, dfd, task, args.gen0, steps, frames, seed=4000 + tid + 1000 * args.rep,
+                                  band=band, init=args.init)
         recipe = dict(target=task["target"], beta=task["beta"], steps=steps, frames=frames,
-                      lr=2e-4, jsr_band=band, alpha=ALPHA, warm_start=os.path.relpath(args.gen0))
+                      lr=2e-4, jsr_band=band, alpha=ALPHA, init=args.init, rep=args.rep,
+                      warm_start=os.path.relpath(args.gen0) if args.init == "warm" else None)
         torch.save({"state_dict": G.state_dict(), "n_classes": 1, "seg_len": models.SEG_LEN,
                     "scale": scale, "target": task["target"], "beta": task["beta"],
                     "tag": tag, "recipe": recipe},
-                   os.path.join(OUT, f"task{tid}{sfx}_G.pt"))
-        with open(os.path.join(OUT, f"task{tid}{sfx}.json"), "w") as f:
-            json.dump(dict(run=RUN, task=task, tid=tid, tag=tag, recipe=recipe, history=hist), f)
+                   os.path.join(out, f"task{tid}{sfx}_G.pt"))
+        with open(os.path.join(out, f"task{tid}{sfx}.json"), "w") as f:
+            json.dump(dict(run=args.run, task=task, tid=tid, tag=tag, recipe=recipe, history=hist), f)
         print(f"wrote task{tid}{sfx}_G.pt, task{tid}{sfx}.json  (tag {tag})", flush=True)
 
 

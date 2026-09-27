@@ -4,6 +4,7 @@ E3 summary (login node; reads the team_fading.py JSONs, no Sionna).
     python team_figures.py              # matched-BER tables
     python team_figures.py --smoke      # the same on the *_smoke.json files
     python team_figures.py --timing     # D4a: the delay-decay tables (team_timing/run001)
+    python team_figures.py --policy     # D4b: the learned-vs-heuristic tables (team_policy/run001)
 
 Per (SNR, channel) and series (jammer | K | timing): the nominal total JSR the
 series needs for EXCESS BER 3e-4 (README §3.3f's operating point) and each
@@ -33,6 +34,7 @@ import snr_figures as sf
 
 AD = "../artifacts/cgan/team_fading/run001"
 AD_TIMING = "../artifacts/cgan/team_timing/run001"
+AD_POLICY = "../artifacts/cgan/team_policy/run001"
 DETS = ["spec_cnn", "power_one_sided", "kurtosis"]
 CHANS = ["lossless", "rician10", "rayleigh"]
 
@@ -79,12 +81,42 @@ def timing_tables(data, ber):
                                                      for det in DETS))
 
 
+def load_policy(smoke=False, ad=AD_POLICY):
+    out = {}
+    for f in sorted(glob.glob(os.path.join(ad, "*.json"))):
+        if f.endswith("_smoke.json") != smoke:
+            continue
+        d = json.load(open(f))
+        out[(d["meta"]["snr_db"], d["meta"]["beta"])] = d
+    return out
+
+
+def policy_tables(data, ber):
+    """D4b: rows = arm (ceiling, uncoordinated, heuristic, learned), one block per sigma."""
+    for (snr, beta), d in sorted(data.items()):
+        print(f"\nSNR {snr:g} dB | beta {beta:g} | P(det) @ full-power total JSR [dB] at excess BER {ber:g}")
+        for sigma in d["meta"]["sigmas"]:
+            print(f"  sigma {sigma:g} [symbols]")
+            print(f"    {'arm':<16}" + "".join(f"{det:>18}" for det in DETS))
+            rows = [("ceiling", "single (ceiling)"), ("uncoordinated", "uncoordinated"),
+                    (f"heuristic|sigma{sigma:g}", "heuristic"), (f"learned|sigma{sigma:g}", "learned")]
+            for key, label in rows:
+                print(f"    {label:<16}" + "".join(f"{fmt(*matched(d, key, det, ber)):>18}" for det in DETS))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--timing", action="store_true", help="D4a delay-decay tables")
+    ap.add_argument("--policy", action="store_true", help="D4b learned-vs-heuristic tables")
     ap.add_argument("--ber", type=float, default=sf.BER_REF)
     args = ap.parse_args()
+    if args.policy:
+        data = load_policy(args.smoke)
+        if not data:
+            print("no team_policy JSONs yet")
+        policy_tables(data, args.ber)
+        return
     if args.timing:
         data = load(args.smoke, AD_TIMING)
         if not data:

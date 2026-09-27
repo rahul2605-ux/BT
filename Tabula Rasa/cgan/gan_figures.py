@@ -20,7 +20,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-GD="../artifacts/cgan/gan/run001"; BD="../artifacts/cgan/baselines/run001"; LD="../artifacts/cgan/learned/run001"
+RUN=os.environ.get("CGAN_RUN","run001")   # run002 = 4000-step re-run (README §3.3f)
+GD=f"../artifacts/cgan/gan/{RUN}"; BD="../artifacts/cgan/baselines/run001"; LD="../artifacts/cgan/learned/run001"
 DETS=["power_one_sided","power_two_sided","kurtosis","spec_cnn"]
 DET_LABEL={"power_one_sided":"power (1-sided)","power_two_sided":"power (2-sided)",
            "kurtosis":"kurtosis","spec_cnn":"spectrogram CNN"}
@@ -87,7 +88,8 @@ def load():
     addp("optimal","matched QPSK / optimal (p=1)",j0,d0["attacks"]["pulsed_p1"])
     addp("amuru","Amuru pulsed (p=0.1)",j0,d0["attacks"]["pulsed_p0.1"])
     addp("genie","genie flip (ceiling)",j0,d0["attacks"]["omniscient_e1"],dash=True,lw=1.4)
-    p1=json.load(open(f"{GD}/plain_run001.json")); addp("plain","plain GAN — D1 (run001)",p1["jsr_db"],p1["points"],lw=2.4)
+    if os.environ.get("CGAN_NO_PLAIN") != "1":   # 2026-09-27: D1 (imitation) is appendix material
+        p1=json.load(open(f"{GD}/plain_run001.json")); addp("plain","plain GAN — D1 (run001)",p1["jsr_db"],p1["points"],lw=2.4)
     series=[("eff","eff","GAN eff, β=0 — D2"),
             ("g_p1","power_one_sided_b1000","GAN vs power, β=1000 — D2"),
             ("g_kurt","kurtosis_b100","GAN vs kurtosis, β=100 — D2")]

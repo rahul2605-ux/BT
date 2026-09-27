@@ -59,7 +59,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-AD = "../artifacts/cgan/snr_ablation/run001"
+RUN = os.environ.get("CGAN_RUN", "run001")   # run002 = E2 on the 4000-step generators
+AD = f"../artifacts/cgan/snr_ablation/{RUN}"
 DETS = ["power_one_sided", "power_two_sided", "kurtosis", "spec_cnn"]
 DET_LABEL = {"power_one_sided": "power (1-sided)", "power_two_sided": "power (2-sided)",
              "kurtosis": "kurtosis", "spec_cnn": "spectrogram CNN"}
@@ -587,6 +588,63 @@ def fig_headline(levels, ber_ref=BER_REF):
     save(fig, "fig_headline_gain_vs_snr.png")
 
 
+def fig_headline_control(levels, ber_ref=BER_REF, aware=None):
+    """
+    The headline as the paper states it since 2026-09-27 (README §3.3f/§3.3g): the
+    detector-aware generator against its CONTROL, the β = 0 generator trained on the
+    same damage term with no detection term -- not against the imitation-trained D1,
+    which also lacks the damage term (that comparison is Experiment History material).
+    Every annotation is computed from the data, so it stays true for any run.
+    `aware` = the CNN-targeted tag (env HEADLINE_TAG, default spec_cnn_b10).
+    """
+    aware = aware or os.environ.get("HEADLINE_TAG", "spec_cnn_b10")
+    beta = aware.rsplit("_b", 1)[-1]
+    rows = [("eff", "eff", "trained on damage only, β=0 (control)"),
+            ("g_cnn", aware, f"trained against the CNN, β={beta}"),
+            ("amuru", "pulsed_p0.1", "Amuru pulsed (p=0.1), classical")]
+    cur = {k: _curve(levels, t, "spec_cnn", ber_ref) for k, t, _ in rows}
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.5, 5.0), gridspec_kw=dict(width_ratios=[1.35, 1]))
+    style(ax1); style(ax2)
+    x, p0, j0 = cur["eff"]; _, p1, j1 = cur["g_cnn"]
+    ok = ~np.isnan(p0) & ~np.isnan(p1)
+    ax1.fill_between(x[ok], p1[ok], p0[ok], color=C["g_cnn"], alpha=0.10, lw=0)
+    for key, tag, lab in rows:
+        xs, p, j = cur[key]
+        kw = dict(color=C[key], lw=2.6 if key != "amuru" else 1.6, marker=MARK[key], ms=6,
+                  label=lab, zorder=3, ls="-" if key != "amuru" else (0, (4, 2)))
+        ax1.plot(xs, p, **kw); ax2.plot(xs, j, **kw)
+    ax1.axhline(ALPHA, color=INK2, lw=1.0, ls=(0, (2, 2)))
+    ax1.text(40.5, ALPHA, "α", color=INK2, fontsize=9, va="center")
+    gain = np.where(ok, p1 - p0, np.nan)
+    if np.any(ok):
+        i = int(np.nanargmin(gain))
+        ax1.annotate(f"largest effect of the detection term:\n{100 * gain[i]:+.1f} pp at {x[i]:g} dB SNR",
+                     xy=(x[i], (p0[i] + p1[i]) / 2), xytext=(0.6, 0.80), fontsize=9, color=INK,
+                     ha="left", arrowprops=dict(arrowstyle="-", color=INK2, lw=0.9))
+    ax1.set_ylim(-0.03, 1.05)
+    ax1.set_xlabel("SNR [dB]", color=INK2, fontsize=9)
+    ax1.set_ylabel(f"P(det) of the spectrogram CNN at matched excess BER {ber_ref:g}",
+                   color=INK2, fontsize=9)
+    ax1.set_title("detectability at matched damage (lower is stealthier)",
+                  color=INK, fontsize=10.5, loc="left")
+    d = j0 - j1                                  # > 0: the detector-aware one needs less power
+    dv = d[(x >= 10) & ~np.isnan(d)]
+    if len(dv):
+        ax2.text(0.97, 0.10, f"power saving from the detection term:\n{dv.min():+.1f} to {dv.max():+.1f} dB at SNR ≥ 10 dB",
+                 transform=ax2.transAxes, fontsize=9, color=INK, ha="right",
+                 bbox=dict(boxstyle="round,pad=0.35", fc="white", ec=GRID))
+    ax2.set_xlabel("SNR [dB]", color=INK2, fontsize=9)
+    ax2.set_ylabel("received JSR needed for that damage [dB]", color=INK2, fontsize=9)
+    ax2.set_title("the power it takes", color=INK, fontsize=10.5, loc="left")
+    fig.suptitle("E2 — what the detection term adds, over the whole SNR range",
+                 color=INK, fontsize=12, x=0.012, ha="left")
+    h, l = ax1.get_legend_handles_labels()
+    fig.legend(h, l, frameon=False, fontsize=9, labelcolor=INK2, ncol=3, loc="upper center",
+               bbox_to_anchor=(0.5, 0.94))
+    fig.tight_layout(rect=(0, 0, 1, 0.87))
+    save(fig, "fig_headline_vs_control.png")
+
+
 # ---------------------------------------------------------------- 6. the mechanism, in one panel
 def fig_mechanism(levels, onset_target=BER_ONSET):
     """
@@ -813,6 +871,7 @@ def main():
     fig_far(levels)
     fig_frontier(levels, [r for r in rows if r[0] in ("plain", "g_cnn")], args.frontier_det)
     fig_headline(levels, args.ber_ref)
+    fig_headline_control(levels, args.ber_ref)
     fig_mechanism(levels, args.onset)
     fig_regression()
     fig_spectrograms()

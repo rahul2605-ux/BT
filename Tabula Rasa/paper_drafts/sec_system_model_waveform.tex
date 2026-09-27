@@ -59,8 +59,9 @@
 %        16-symbol log-envelope = 48 params (theta = 0 is barrage).
 %   learned recipes:  shaped = CMA-ES, 150 generations, beta in {0, 0.01, 1},
 %        hard flag rate + 1e-6 score tie-break (train_shaped.py); generator =
-%        warm start from run001_G, Adam 2e-4, 400 steps, beta in {1, ..., 1e3}
-%        (CNN up to 1e6), per-target JSR band (train_gan.py).
+%        random init, Adam 2e-4, 4000 steps (run003, since 2026-09-27; the
+%        run001 warm start / 400 steps is appendix material), beta in
+%        {1, ..., 1e3} (CNN up to 1e6), per-target JSR band (train_gan.py).
 %
 %  SYMBOL / STYLE NOTES
 %  --------------------
@@ -192,10 +193,11 @@ with $(\tau_j,\phi_j)$ the offset and phase of Sec.~\ref{sec:channel} and $a_j>0
 % before the delay), channel.receive applies the fractional delay (sinc taps)
 % and phase, then scale_to_jsr. The inverse peak normalisation Zhou applies is
 % absorbed into a_j.
-Its weights are learned in simulation (Sec.~\ref{sec:method}), either to imitate the victim's clean waveform, which gives a detector-agnostic jammer, or on the objective of Sec.~\ref{sec:objective}, which makes it detector-aware.
-Either way, the generator learns the victim's modulation but never its symbols.
-% plain = run001_G (Zhou's CGAN, adversarial imitation); detector-aware = D2,
-% warm-started from it. Both: sec_methodology.tex Sec. method:plain / aware.
+Its weights are learned in simulation on the objective of Sec.~\ref{sec:objective} (Sec.~\ref{sec:method}); the generator never sees the victim's symbols.
+% Changed 2026-09-27 with the method: G is trained from random weights, so it
+% no longer "learns the victim's modulation" -- the CNN-targeted one learns a
+% pulsed jammer (README Sec. 3.3f). The imitation-trained plain generator is
+% appendix material (sec_exphist.tex).
 The classical and reference jammers it is compared against are defined in Sec.~\ref{sec:setup}.
 
 \subsection{Detector Model}

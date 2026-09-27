@@ -1,0 +1,21 @@
+node: artongpu03.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 1 | train | SNR 15 dB | beta 10 | device cuda:0
+  CNN threshold -2.18555, clean std 0.86911; budget band (-30.0, -10.0) dB
+  step    0  sig  8.00  T  -22.2  loss 37.531  logE[BER] -35.17  P_soft 0.236  (0s)
+  step   25  sig  1.00  T  -17.9  loss 10.355  logE[BER] -8.11  P_soft 0.225  (3s)
+  step   50  sig  0.00  T  -27.9  loss 61.244  logE[BER] -59.74  P_soft 0.151  (5s)
+  step   75  sig  0.00  T  -27.0  loss 48.814  logE[BER] -46.82  P_soft 0.199  (8s)
+  step  100  sig 32.00  T  -12.2  loss 9.780  logE[BER] -5.51  P_soft 0.427  (10s)
+  step  125  sig  1.00  T  -22.1  loss 27.579  logE[BER] -24.20  P_soft 0.338  (12s)
+  step  150  sig  0.00  T  -13.2  loss 9.664  logE[BER] -5.71  P_soft 0.396  (15s)
+  step  175  sig  0.00  T  -20.9  loss 11.405  logE[BER] -9.71  P_soft 0.169  (17s)
+  step  200  sig  0.00  T  -26.7  loss 43.557  logE[BER] -41.57  P_soft 0.198  (20s)
+  step  225  sig  8.00  T  -26.3  loss 41.731  logE[BER] -39.34  P_soft 0.239  (22s)
+  step  250  sig  2.00  T  -15.9  loss 9.757  logE[BER] -6.58  P_soft 0.317  (24s)
+  step  275  sig  1.00  T  -29.6  loss 64.131  logE[BER] -61.73  P_soft 0.240  (27s)
+  step  300  sig  2.00  T  -21.5  loss 18.039  logE[BER] -15.83  P_soft 0.221  (29s)
+  step  325  sig 32.00  T  -21.6  loss 14.149  logE[BER] -12.06  P_soft 0.209  (32s)
+  step  350  sig  4.00  T  -22.7  loss 23.072  logE[BER] -20.92  P_soft 0.216  (34s)
+  step  375  sig 32.00  T  -20.7  loss 17.209  logE[BER] -14.57  P_soft 0.264  (37s)
+  step  399  sig  1.00  T  -24.8  loss 41.776  logE[BER] -40.00  P_soft 0.178  (39s)
+wrote ../artifacts/cgan/team_policy/run001/snr15_b10_policy.pt

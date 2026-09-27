@@ -1,0 +1,24 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 3 | diag | SNR 30 dB | beta 10 | device cuda:0
+delta landscape: SNR 30 dB, beta 10, sigma 0, T_full -20 dB, 4096 drops (tau mean ~1.7, max ~4.1 symbols)
+  offsetting ALL drones (common shift off the victim grid) then FOLLOWER 1 only (relative misalignment, others exact):
+      mode Delta[sym]   logE[BER]  soft_pdet      loss  hardP(det)_CNN
+       all      -2.00      -7.139     0.8190    15.329           0.862
+       all      -1.00      -7.148     0.8189    15.337           0.856
+       all      -0.50      -7.272     0.8279    15.552           0.863
+       all       0.00      -7.256     0.8309    15.565           0.867
+       all       0.50      -7.275     0.8235    15.510           0.860
+       all       1.00      -7.205     0.8287    15.492           0.869
+       all       2.00      -7.175     0.8212    15.387           0.860
+       all       4.00      -7.160     0.8088    15.248           0.847
+     foll1      -4.00      -7.478     0.8396    15.875           0.882
+     foll1      -2.00      -7.558     0.8379    15.937           0.876
+     foll1      -1.00      -7.440     0.8399    15.839           0.881
+     foll1      -0.50      -7.225     0.8311    15.536           0.876
+     foll1      -0.25      -7.221     0.8207    15.428           0.859
+     foll1       0.00      -7.151     0.8214    15.365           0.856
+     foll1       0.25      -7.231     0.8240    15.472           0.864
+     foll1       0.50      -7.274     0.8216    15.489           0.857
+     foll1       1.00      -7.310     0.8367    15.677           0.877
+     foll1       2.00      -7.519     0.8404    15.923           0.880
+     foll1       4.00      -7.551     0.8413    15.964           0.880

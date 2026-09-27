@@ -1,0 +1,14 @@
+node: artongpu06.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 3 | eval | SNR 30 dB | beta 10 | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.04638671875, "power_two_sided": 0.04443359375, "kurtosis": 0.04296875, "spec_cnn": 0.044921875}
+  ceiling                  max BER 6.355e-03  CNN P(det) at max T 1.000  (10s)
+  uncoordinated            max BER 1.031e-02  CNN P(det) at max T 1.000  (20s)
+  heuristic|sigma0         max BER 6.699e-03  CNN P(det) at max T 1.000  (31s)
+  learned|sigma0           max BER 8.400e-03  CNN P(det) at max T 1.000  (42s)
+  heuristic|sigma1         max BER 8.438e-03  CNN P(det) at max T 1.000  (53s)
+  learned|sigma1           max BER 1.030e-02  CNN P(det) at max T 1.000  (64s)
+  heuristic|sigma4         max BER 1.112e-02  CNN P(det) at max T 1.000  (76s)
+  learned|sigma4           max BER 1.162e-02  CNN P(det) at max T 1.000  (87s)
+  heuristic|sigma16        max BER 1.143e-02  CNN P(det) at max T 1.000  (98s)
+  learned|sigma16          max BER 1.213e-02  CNN P(det) at max T 1.000  (109s)
+wrote ../artifacts/cgan/team_policy/run001/snr30_b10.json in 109s

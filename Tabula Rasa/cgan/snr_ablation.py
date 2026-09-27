@@ -91,10 +91,10 @@ def task_level(task):
     return SNR_GRID_DB[task] if task < len(SNR_GRID_DB) else None
 
 
-def generators():
+def generators(gan_dir=GAN_DIR):
     """[(tag, path)] for D1 and every D2 checkpoint, D1 first, D2 in task order."""
     out = [("plain_run001", PLAIN_G)]
-    paths = sorted(glob.glob(os.path.join(GAN_DIR, "task*_G.pt")),
+    paths = sorted(glob.glob(os.path.join(gan_dir, "task*_G.pt")),
                    key=lambda p: int(re.search(r"task(\d+)_G", p).group(1)))
     for p in paths:
         ckpt = torch.load(p, map_location="cpu", weights_only=False)
@@ -123,6 +123,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--task", type=int, required=True, help=f"0..{N_TASKS - 1}")
     ap.add_argument("--run", default="run001")
+    ap.add_argument("--gan-run", default="run001",
+                    help="D2 generator folder under artifacts/cgan/gan/ (run002 = 4000 steps)")
     ap.add_argument("--frames", type=int, default=512, help="frames per sweep point")
     ap.add_argument("--confirm", type=int, default=4096, help="frames for the confirmation pass")
     ap.add_argument("--n-cal", type=int, default=calibrate_snr.N_CALIBRATION,
@@ -193,7 +195,7 @@ def main():
 
     # ---- 2. the 21 generators ----------------------------------------------------
     gwant = None if args.gens is None else set(g for g in args.gens.split(",") if g)
-    gens = [(t, p) for t, p in generators() if gwant is None or t in gwant]
+    gens = [(t, p) for t, p in generators(os.path.join(scene.ART, "..", "gan", args.gan_run)) if gwant is None or t in gwant]
     for gtag, gpath in gens:
         G, scale, _ = models.load_generator(gpath, device)
         spec = dict(name="gan", G=G, scale=scale, tag=gtag)

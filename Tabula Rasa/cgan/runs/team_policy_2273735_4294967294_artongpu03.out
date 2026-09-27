@@ -1,0 +1,6 @@
+node: artongpu03.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 0 | train | SNR 15 dB | beta 0 | device cuda:0
+  CNN threshold -2.18555, clean std 0.86911; budget band (-30.0, -10.0) dB
+  step    0  sig  0.50  T  -23.5  loss 41.630  logE[BER] -41.63  P_soft 0.237  (1s)
+  step   19  sig  0.25  T  -22.8  loss 15.876  logE[BER] -15.88  P_soft 0.197  (3s)
+wrote ../artifacts/cgan/team_policy/run001/snr15_b0_smoke_policy.pt

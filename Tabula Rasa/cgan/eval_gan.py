@@ -65,8 +65,11 @@ def main():
     ap.add_argument("--snr-db", type=float, default=lk.SNR_DB,
                     help="noise level (README §3.3g); off 30 dB re-calibrates every detector "
                          "and writes to a per-level subdirectory")
+    ap.add_argument("--run", default=RUN,
+                    help="generator folder under artifacts/cgan/gan/ for --task, and output folder")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
+    OUT = os.path.join(scene.ART, "..", "gan", args.run)
     out_dir = OUT if calibrate_snr.is_baseline(args.snr_db) else \
         os.path.join(OUT, calibrate_snr.level_tag(args.snr_db))
     os.makedirs(out_dir, exist_ok=True)
@@ -92,7 +95,7 @@ def main():
     t0 = time.time()
     pts, confirmed = sweep(L, dfd, spec, jsr_grid, frames, confirm)
 
-    res = dict(run=RUN, tag=args.tag, generator=os.path.relpath(args.gen), scale=scale,
+    res = dict(run=args.run, tag=args.tag, generator=os.path.relpath(args.gen), scale=scale,
                K=1, snr_db=args.snr_db, jsr_db=jsr_grid, n_frames=frames, n_confirm=confirm,
                alphas=detectors.ALPHAS, clean=clean, points=pts, confirmed=confirmed,
                runtime_s=time.time() - t0)

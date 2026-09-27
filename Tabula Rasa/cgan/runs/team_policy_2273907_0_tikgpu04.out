@@ -1,0 +1,14 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 0 | eval | SNR 15 dB | beta 0 | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.04736328125, "power_two_sided": 0.04833984375, "kurtosis": 0.052734375, "spec_cnn": 0.0419921875}
+  ceiling                  max BER 6.493e-03  CNN P(det) at max T 0.965  (9s)
+  uncoordinated            max BER 1.077e-02  CNN P(det) at max T 0.971  (18s)
+  heuristic|sigma0         max BER 6.538e-03  CNN P(det) at max T 0.922  (28s)
+  learned|sigma0           max BER 1.086e-02  CNN P(det) at max T 0.922  (37s)
+  heuristic|sigma1         max BER 8.659e-03  CNN P(det) at max T 0.934  (47s)
+  learned|sigma1           max BER 1.128e-02  CNN P(det) at max T 0.939  (57s)
+  heuristic|sigma4         max BER 1.123e-02  CNN P(det) at max T 0.947  (66s)
+  learned|sigma4           max BER 1.158e-02  CNN P(det) at max T 0.947  (76s)
+  heuristic|sigma16        max BER 1.156e-02  CNN P(det) at max T 0.957  (86s)
+  learned|sigma16          max BER 9.102e-03  CNN P(det) at max T 0.980  (95s)
+wrote ../artifacts/cgan/team_policy/run001/snr15_b0.json in 95s

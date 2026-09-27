@@ -19,6 +19,11 @@ Last consolidated: 2026-09-26.
 
 ## 1.1 What this is, in one page
 
+> **STATE 2026-09-26 — the current state is in [§3.1](#31-status-line); the blocks below are older and
+> kept as history.** In short: the single-jammer D-series is being re-measured after the GAN rework found
+> the D2 headline under-trained (§3.3f). The MARL coordination track (E3 → D4a → a D4b first cut) is paused
+> behind it (§3.3j), because all of it froze the old generator.
+>
 > **STATE 2026-09-17 — direction reframed (lit review + design), still pending the same sign-off (§4.1 #0b).**
 > A literature review on jamming-waveform synthesis (Amuru–Buehrer TIFS 2015 and the generative/learned
 > jammers: Zhou CGAN, DDPM WCNC'25, adversarial-jamming, jamming-bandits) settled two things: the
@@ -117,6 +122,9 @@ Each row is a step of the ladder and **what it killed**. Full writeups in
 | D2a | learned shaped noise (48 params, CMA-ES) | **shaping buys effectiveness, not stealth** (§3.3e) |
 | D1 / D2 | plain GAN vs white-box detector-aware GAN, 4 detectors, SNR 30 dB | **at matched BER, −19.8 pp P(det) vs the CNN at 12.8 dB less power**; nothing reaches the α budget (§3.3f) |
 | **E2** | the noise ablation of D1/D2 over SNR 0–40 dB | **30 dB was near the worst place to measure it: the gain peaks at −85 pp at 15 dB**; detectors sharpen with SNR, the damage threshold does not (§3.3g) |
+| E3 | K = 1/2/4 jammers under fading, aligned vs random timing (transfer) | **fading helps a single jammer, so a team has nothing to recover; the only team lever is timing** (§3.3h) |
+| D4a | the delay-decay curve: follower timing error σ (transfer) | **coordination is worth ~1 symbol of timing accuracy**; the floor is reached by σ ≈ 8–16 (§3.3i) |
+| D4b | a learned per-drone (power, transmit advance) policy, direct gradient | **learns the power lever (full power), not delay compensation**; loses to δ = τ at σ = 0, matches it for σ ≥ 1. Paused; E3/D4 all froze the under-trained generator (§3.3j) |
 
 ## 1.3 Where everything lives
 
@@ -207,6 +215,7 @@ per module as each lands. **Everything except `digitise_fig6.py` and `gan_figure
 | **`cgan/snr_examples.py`** + `submit_snr_examples.sh` | E2 example frames (Sionna, ~10 s): the spectrogram images the CNN receives at 0/15/30 dB and noiseless, clean vs D1 vs D2 at matched BER, with P(det) on fresh frames → `artifacts/cgan/snr_ablation/run001/examples.npz` (drawn by `snr_figures.py`) |
 | **`cgan/snr_figures.py`** + `submit_snr_figures.sh` | E2 figures + summary table (login node; reads the ablation JSONs) → `artifacts/cgan/snr_ablation/run001/fig_*.png` |
 | **`cgan/email_figures.py`** | two jargon-free D1/D2 figures for the supervisor (login node; reuses `snr_figures` loaders): the 15 dB CNN trade-off curve, and P(det) at matched BER + power vs SNR → `artifacts/cgan/snr_ablation/run001/email/` |
+| **`cgan/team_fading.py`**, **`team_policy.py`** + submits, **`team_figures.py`** | the multi-jammer track, **PAUSED 2026-09-26**. `team_fading`: E3 (K jammers under fading, §3.3h) and D4a (`--sigmas`, the delay-decay curve, §3.3i), by transfer. `team_policy`: D4b, the learned per-drone (u_k, δ_k) policy — `--mode train/eval/diag`, differentiable `frac_delay`, four evaluation arms (§3.3j). `team_figures` (login node): `--timing`, `--policy` tables. All three freeze `run001/task14_G.pt` |
 
 **Live code (sim08 ablations, `sim08_ablation/`):** imports `simulation08/` and `simulation06/`
 read-only; every entry point is an sbatch script (Sionna).
@@ -762,8 +771,8 @@ instructions but were filed as decisions. They are listed first here so this tab
 | Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
 | Noise sweep = primary ablation, log grid | G2 (M0) · §3.3c (sim08) · **E2 (§3.3g)** | **done on the live CGAN models 2026-09-23** (SNR 0–40 dB + noiseless anchor, all 21 generators, §3.3g) and on the sim08 stack 2026-09-16 (§3.3c). M0/E1's σ grid is still not log-spaced throughout (§3.2) — not selected for E2 |
 | Untrainability written up as a *result* | Experiment History summary (§3.5) | **drafted, not pasted** — one paragraph in `sec_exphist.tex`; the long write-up was cut 2026-09-15 for the page limit |
-| Novelty in coordination/synchronisation, not architecture (2026-09-12) | §2.3 RQ1's delay-decay curve; G6 (§3.4) | **not started** — this is the paper's contribution now |
-| Inter-jammer delay + desync modelled and swept (2026-09-12) | M1 spec (§2.4); G6 | **not started** — M1 does not exist yet |
+| Novelty in coordination/synchronisation, not architecture (2026-09-12; user re-raised it 2026-09-26) | §2.3 RQ1's delay-decay curve; G6 / D4 (§3.4) | **PARTIAL 2026-09-26.** *Interaction:* the Methodology draft is reframed to lead with training through the deployed detector, and the architecture is one cited sentence (`paper_drafts/sec_methodology.tex`). *Attacker-side sync:* the delay-decay curve is **measured by transfer, not learned** (D4a, §3.3i: ~1 symbol of timing accuracy, bounded by containment §3.3h). The learned policy D4b has a first cut and is **paused** until the GAN rework settles (§3.3j). It learns the power lever but not delay compensation. Sync enters the paper only if time allows (user); until then it is parked as Future Work. *Defender-side coordination:* none; detectors decide alone by design |
+| Inter-jammer delay + desync modelled and swept (2026-09-12) | M1 spec (§2.4); G6; D4a | **PARTIAL 2026-09-26** — swept on the CGAN link as leader–follower timing error σ ∈ [0, 16] symbols (D4a, §3.3i). The delay's effect on the *defender*, which he also flagged, is not modelled. M1 does not exist |
 | Intro shows single→multi transition (2026-09-12) | Intro rewrite (§B.3) | **not started** |
 
 The paper-side home for these mandates was a closing "What the History Determines" subsection; it was
@@ -986,18 +995,64 @@ a loss.
 
 ## 3.1 Status line
 
-**STATE 2026-09-26. The single-jammer study is COMPLETE and the paper draft is being finished (user, due
-Sunday 2026-09-27). Two tracks run in parallel now: (1) finish the paper; (2) build the MARL coordination
-experiment in the background (D4), which is the first live experimental work since E2.** The single-jammer
-headline is POSITIVE, not an impossibility result. D0 baselines, D2a control, D1 plain GAN and D2 (white-box
-detector-aware GAN) are built and evaluated against **all four** detectors — power 1/2-sided, kurtosis,
-spectrogram CNN. **At matched BER, detector-aware training measurably lowers P(det): −19.8 pp against the
-CNN, −31.2 pp against power, −92.7 pp against kurtosis, at 12.8 dB less power (§3.3f).** Inside the strict α
+**METHOD CHANGED 2026-09-27 (user: "change headline figures, methodology to new and better method … we
+want best results").** The generator is trained **from random weights, 4000 steps** — no imitation stage;
+Zhou is cited for the architecture only. The imitation start and the 400-step budget go to the
+Experiment History appendix (`paper_drafts/sec_exphist.tex`, "Imitation as initialization"),
+promotable to the main text if space allows (user). Drafts updated: `sec_methodology.tex` (§ Generator),
+`sec_system_model_waveform.tex` (the generator no longer "learns the victim's modulation"). **Paper
+numbers = run003** (`train_gan.py --init random --steps 4000`, all 20 tasks; jobs 2274753 verify ·
+2274754 train · 2274755 eval · 2274756 D1 · 2274757 E2 · 2274758/2274759 wide-band arm, CNN β 1/10 with
+JSR band (−48, +10) dB — the "damage when loud" test, §4.3). Headline figure = `snr_figures.py`
+`fig_headline_control` (detector-aware vs the β = 0 control, D1 left out; `HEADLINE_TAG` picks the CNN
+β); `gan_figures.py` with `CGAN_NO_PLAIN=1` drops D1. Task 19 train, eval task 18 and E2's noiseless task
+hit `TaskProlog` and were resubmitted (2274789, 2274822, 2274823).
+
+**THE HEADLINE (run003, 2026-09-27; §3.3f "run003", §3.3g "E2 on run003").** At matched BER 3e-4 the
+CNN-targeted generator trained from random weights (β = 10, picked by the stated `pick_cnn_tag` rule;
+β = 1 is indistinguishable) is flagged by the CNN on **≤ 0.11 of frames from 0 to 30 dB SNR** (0.21 at
+35, 0.36 at 40), against its **β = 0 control's 1.00 at 30 dB** (−89 pp) and 0.45 for the classical Amuru
+pulsed jammer, and it needs **2.4–2.7 dB less power** than the control. It is also the best generator on
+one-sided power at every SNR (0.13 at 10 dB, 0.61 at 30 dB, still well above α — power at matched BER is
+set by JSR). **Boundary:** its confirmed picks against the CNN reach BER 4e-4–3.9e-3 at P(det)
+0.065–0.075 (FAR 0.05) at 5–25 dB and narrowly FAIL the α + 2σ confirmation, so strictly the stealthy
+BER is still 0 — it works just above the false-alarm rate, not inside it. Its BER saturates near 2 %
+when loud (pulsed jammer); a wider training band does not fix that (§4.3). Power/kurtosis-targeted
+generators gain nothing from random init. 30 dB regression: 5544 pairs, none beyond |z| 4. Figures:
+`artifacts/cgan/snr_ablation/run003/fig_headline_vs_control.png` (the paper figure) and
+`artifacts/cgan/gan/run003/fig_*.png`. **The run002 paragraph below is the imitation-start record —
+Experiment History material now, not the headline.**
+
+**[Imitation-start record, superseded as headline 2026-09-27] STATE 2026-09-26 (late evening). The single-jammer headline is RE-MEASURED at 4000 steps (run002 +
+E2 on run002, all jobs done, §3.3f/§3.3g) and RE-ATTRIBUTED. The paper draft is due Sunday 2026-09-27
+(user). MARL (D4) is PAUSED behind the rework (§3.3j), because every team result froze the old
+generator.** D0 baselines, D2a control, D1 plain GAN and D2 (white-box detector-aware GAN) are built and
+evaluated against **all four** detectors — power 1/2-sided, kurtosis, spectrogram CNN.
+**The headline now: training the generator on the damage it does, instead of on imitation, buys
+almost everything.** At matched BER 3e-4 the β = 0 generator (BER term only, 4000 steps) needs **13.9 dB
+less power than D1** (−22.1 vs −8.2 dB) and the CNN flags it on **0.09 of frames at 15 dB SNR (D1 0.94)**,
+0.14 at 20 dB, 0.59 at 30 dB. **The detector term adds a smaller gain, against the CNN only:** CNN β = 1
+vs β = 0 is −8 pp at 25 dB, −20 pp at 30 dB, −18 pp at 35 dB, and nothing at ≤ 20 dB (both near the
+floor). Power- and kurtosis-targeted generators are no better than β = 0 on their own detector — power
+at matched BER is set by JSR, which no shaping hides — and one-sided power still flags 0.25–0.81 of
+frames at matched BER over 10–30 dB. **Quote every number with its SNR and against β = 0, not D1.** The
+400-step numbers (−19.8 / −31.2 / −92.7 pp at 30 dB; −85.1 pp at 15 dB) are superseded and were
+mis-attributed to detector awareness (§3.3f "CORRECTED"). **Without the imitation start** the
+CNN-targeted generator learns pulsed jamming (97 % of power in 5 % of symbols) that the CNN barely
+sees — P(det) 0.146 ± 0.024 over 4 seeds at 30 dB vs 0.480 ± 0.074 warm — and does as much or more
+damage at every P(det) < 1, but its BER saturates near 3 % because it was never trained above −16 dB
+(§3.3f "Imitation start and training budget"). Inside the strict α
 budget confirmed BER is still 0 for every non-genie jammer — that is the *limit* of the gain, not the
 finding. **The E3 pre-check (§3.3h, 2026-09-26) bounds the MARL problem: with the detector at the victim
 receiver the only coordination levers are timing alignment and the power split, not stealth; a team cannot
 beat the best single jammer (containment). MARL's job is to discover those levers itself with minimal
-inductive bias (user); nothing MARL enters the paper until it produces results.** The older coordination
+inductive bias (user); nothing MARL enters the paper until it produces results.** **D4a (§3.3i, 2026-09-26)
+measured the non-learned delay-decay curve: a K = 4 team matches one jammer only while the inter-jammer
+timing error stays below σ ≈ 0.5–1 symbol, and it falls to the uncoordinated floor by σ ≈ 8–16. The D4
+design is settled (§4.2 Q12).** **D4b (§3.3j): the first cut is done and the track is PAUSED by the user
+until the GAN rework settles, because D4a/D4b/E3 all froze the under-trained `run001/task14_G.pt`. The
+learned policy finds the power lever (u → 1) but not delay compensation, so it loses to the δ = τ
+heuristic at σ = 0 (−9 pp at 30 dB) and matches it for σ ≥ 1. Why δ is not learned is open.** The older coordination
 plan below is paused, not superseded, and was not re-validated.
 
 > **Cluster home is back under quota; delete this block once `~/.over_quota` is gone.** The stale VS Code
@@ -1006,20 +1061,17 @@ plan below is paused, not superseded, and was not re-validated.
 > warning is still there; whether ISG clears it on its own is not known. If it survives the end of the
 > grace period (~2026-09-28) with home still under 6.8 G, ask ISG. Procedure: `cluster/README.md` (Storage).
 
-> **⚠ Those CNN numbers are correct but were measured at the WORST end of the range (E2, §3.3g,
-> 2026-09-23).** SNR 30 dB is Zhou's protocol value, inherited rather than chosen, and the whole
-> D-series sat there. Swept over SNR the same gain is **−53.5 pp at 10 dB and −85.1 pp at 15 dB**
-> against the CNN, versus −16.2 pp at 30 dB and nothing at 40 dB (all at matched excess BER 3e-4; the
-> 30 dB row re-measures −16.2 pp against §3.3f's −19.8 pp, inside its own ±4 pp resolution). **Quote
-> the gain with its SNR from now on.** The 12.8 dB power saving is SNR-invariant and needs no
-> qualifier. At 0–10 dB SNR a stealthy frontier exists, **against the CNN only** — at 5–10 dB on an
-> error-free link, but one-sided power still catches every point that does measurable damage, and the
-> CNN is off-design there (§3.3g finding 5). That is the boundary of the gain, not a stealth result.
+> **SNR still decides the numbers (E2 on run002, §3.3g).** At matched BER the β = 0 generator's CNN
+> P(det) climbs from ~α at ≤ 15 dB to 0.59 at 30 dB and 0.96 at 40 dB, and the detector term's own
+> gain lives at 25–35 dB. The 13.9 dB power saving over D1 is SNR-invariant. At ≤ 15 dB the CNN barely
+> sees any BER-trained generator, but one-sided power still catches 0.25–0.45 of frames at matched
+> BER — the boundary of the result, not stealth. The 2026-09-23 version of this note (−85.1 pp at
+> 15 dB) compared 400-step generators against D1 and is superseded.
 
 **0d · D1 plain GAN + D2 detector-aware GAN, analytic detectors — DONE 2026-09-20 ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).**
 The actual step-2, built white-box (§3.3f). Plain GAN (D1) and 13 trained generators (D2: power-1s/2s,
 kurtosis × β{1,10,100,1000}) placed on the BER–P(det) plane. **Result: stealthy BER ≈ 0 against every
-detector — a 1M-parameter white-box generator does no better than D2a's 48-parameter control.** The CNN
+detector — an 8.6M-parameter white-box generator does no better than D2a's 48-parameter control.** The CNN
 was not targeted then; it was closed 2026-09-23 with the same answer (§3.3f). Report:
 <https://claude.ai/artifact/PBXBr7EQQ3huK7rocvSMxX>.
 
@@ -1028,8 +1080,8 @@ The supervisor's *mandated primary ablation* (§B.2), which until now existed on
 stack (§3.3c). 10 levels (SNR 0:5:40 dB + a noiseless anchor) × 7 classical attacks × all 21
 generators, every detector re-calibrated per level, CNN weights frozen at 30 dB. **The 30 dB level
 reproduces §3.3f** (regression gate: 0/264 P(det) points outside 4σ in all 28 rows; BER deviations
-unbiased scatter). **Headline: the matched-BER gain peaks at −85.1 pp at 15 dB SNR, 5× the 30 dB
-value, and vanishes by 40 dB.** Mechanism: the *stealth edge* falls ~0.7 dB per dB of SNR — the
+unbiased scatter). **Headline (2026-09-23, 400 steps, vs D1 — superseded by E2 on run002, §3.3g):
+the matched-BER gain peaks at −85.1 pp at 15 dB SNR, 5× the 30 dB value, and vanishes by 40 dB.** Mechanism: the *stealth edge* falls ~0.7 dB per dB of SNR — the
 detector sharpens as the link cleans — while the BER onset is flat, so the gap grows with SNR. This
 **refutes the mechanism proposed when the ablation was specified** (the edge was expected to be flat
 in JSR). Its `fig_frontier_by_snr.png` moves the FAR with the budget — the ≤ FAR view the user
@@ -1131,8 +1183,9 @@ asserts only decision-level equivalence; it prints the fp16 bias each run, so re
    2026-09-26): the claim is the delay-decay curve, each drone observes its own geometry, and the
    actions are a power fraction and a transmit advance.** D4a is done (§3.3i): the team stops matching
    one jammer at σ ≈ 0.5–1 symbol, and uncompensated geometry sits right there (1.1 symbols rms), so
-   both actions stay. **Next: build D4b (the policy).** If it gives good results, ~5 days remain to fold them into
-   the draft before ICC.
+   both actions stay. **D4b first cut done, then PAUSED (user, 2026-09-26): the user is reworking the GAN
+   itself, which could change everything MARL measures, so MARL waits for it (§3.3j).** The resume steps
+   are at the end of §3.3j. The teammate-information arm (§4.2 Q12) is not built.
 
 > **How to state it** is now a settled method decision — see the last row of
 > [§2.8](#28-settled-method-decisions). In short: report the matched-BER gain; the α-budget zeros bound
@@ -1738,15 +1791,15 @@ nonzero gradient on all of G's parameters** — autograd flows through Sionna's 
 matched filter and the detector (14c, ‖grad‖ ≈ 2.7e4). This de-risked the white-box approach before
 training.
 
-**Result — the effectiveness/detectability wall holds for a 1M-parameter white-box generator too.**
+**Result — the effectiveness/detectability wall holds for an 8.6M-parameter white-box generator too.**
 - **D1 plain GAN (`run001_G`):** confirmed stealthy BER (max BER at P(det) ≤ α = 0.05, re-measured on
   4096 fresh frames) is **0 against every detector** — on the floor with noise/pulsed. Max BER when
   loud 0.44. The honest "detectability of a reproduced GAN jammer" baseline.
 - **D2 (13 generators: eff + power-1s/2s + kurtosis × β{1,10,100,1000}):** confirmed stealthy BER
   **≈ 0 against every detector** (a few ~1e-5–8e-5 vs kurtosis, at the measurement floor). Every
   generator reaches max BER ~0.40 when loud (effectiveness-only crosses BER 1e-3 at ~−18 dB, on par
-  with D2a's shaped control), so the zero is a **real tradeoff, not a broken optimiser**. **A
-  1M-parameter neural generator with white-box gradients does no better than D2a's 48-parameter shaped
+  with D2a's shaped control), so the zero is a **real tradeoff, not a broken optimiser**. **An
+  8.6M-parameter neural generator with white-box gradients does no better than D2a's 48-parameter shaped
   control** — the wall is not a hypothesis-class limit. Consistent with the square-root-law (§2.1).
 - **Cross-detector (kurtosis is the soft spot):** matched-QPSK reaches BER ≈ 0.4 at P(det)_kurtosis ≈
   0.1 (just outside the strict budget) — a strong same-modulation jammer barely changes the amplitude
@@ -1763,18 +1816,135 @@ real weights.
   gradient — the failure mode the per-target JSR band (§3.1) was introduced to avoid.
 - **At matched BER the gain is real and is THE headline (user decision 2026-09-23).** Reporting only at
   the α budget is the wrong cut: there everything is 0 and no jammer can be distinguished from any
-  other. Driven to the same BER = 3e-4 and compared against **D1, which shares D2's architecture,
-  warm start and eval path** — so the difference is detector-aware training alone:
+  other. Driven to the same BER = 3e-4. **⚠ CORRECTED 2026-09-26 — attribution.** This table was
+  first read as "D1 vs D2 = detector-aware training alone". It is not: D1 → D2 also adds the **BER
+  term**. The control for the detector term is the **β = 0 generator** (`eff`, same warm start,
+  recipe and eval path, no detection term). The middle column is new:
 
-  | detector | D1 plain GAN | D2 vs CNN, β = 10 | Δ |
-  |---|---|---|---|
-  | spectrogram CNN | 1.000 | **0.802** | **−19.8 pp** |
-  | power (1-sided) | 1.000 | **0.688** | −31.2 pp |
-  | kurtosis | 0.987 | **0.060** (β = 1) | −92.7 pp |
+  | detector | D1 plain GAN | β = 0 (BER only) | D2 vs CNN, β = 10 | D1 → β = 0 | β = 0 → D2 |
+  |---|---|---|---|---|---|
+  | spectrogram CNN | 1.000 | 0.977 | **0.802** | −2.3 pp | **−17.5 pp** |
+  | power (1-sided) | 1.000 | 0.886 | **0.688** | −11.4 pp | −19.8 pp |
+  | kurtosis | 0.987 | 0.086 | 0.104 | **−90.1 pp** | +1.8 pp |
 
-  It also reaches that BER at **−21.2 dB instead of −8.4 dB — 12.8 dB less power**. Binomial SE is
+  - **Only the CNN term moves its own detector.** The power- and kurtosis-TARGETED generators are no
+    better than β = 0 on their own detector (one-sided power 0.861–0.910 vs 0.886; kurtosis 0.082–0.099
+    vs 0.086). The old kurtosis cell, 0.060 "(β = 1)", was the **CNN-targeted** β = 1 generator's
+    kurtosis score — the minimum across generators, not a kurtosis-targeted result. **Do not quote
+    "−92.7 pp against kurtosis" as a detector-awareness gain:** −90 pp of it is BER training.
+  - Power: β = 0 already reaches BER 3e-4 at −19.0 dB, so **~10.6 of the 12.8 dB saving is BER
+    training**; the CNN term adds ~2.2 dB.
+  - At 400 steps these generators are **under-trained** (next bullet), so all of the above is
+    being re-measured at 4000 steps (run002, 2026-09-26).
+
+  D2 reaches that BER at **−21.2 dB instead of −8.4 dB — 12.8 dB less power** (split as above). Binomial SE is
   ±1.8 pp at 512 frames, so the CNN result is ~11σ; **differences below ~4 pp are not meaningful.**
   Matched-BER points are interpolated on the 1 dB JSR grid, linearly in log BER.
+- **Imitation start and training budget — ablation 2026-09-26 (user: "we avoid inductive bias but
+  train the GAN to imitate the waveform?").** No D2 generator had ever been trained without the
+  `run001_G` warm start, and 400 steps was never checked for convergence. `train_gan.py --init random`
+  (Zhou's architecture, fresh weights) and `--steps 4000`, tasks 0 / 9 / 14, same seeds, same eval
+  path. Matched BER 3e-4, SNR 30 dB, one seed per arm (4-seed replicates below the list):
+
+  | generator | CNN | power 1s | kurtosis | JSR [dB] | max BER |
+  |---|---|---|---|---|---|
+  | β = 0, warm, 400 *(reported)* | 0.977 | 0.886 | 0.086 | −19.0 | 0.40 |
+  | β = 0, warm, 4000 | **0.601** | 0.806 | 0.071 | −22.1 | 0.33 |
+  | β = 0, cold, 400 | 1.000 | 0.995 | 0.252 | −16.4 | 0.27 |
+  | β = 0, cold, 4000 | 0.988 | 0.767 | 0.104 | −20.9 | 0.19 |
+  | CNN β = 10, warm, 400 *(headline)* | 0.802 | 0.688 | 0.104 | −21.2 | 0.38 |
+  | CNN β = 10, warm, 4000 | 0.553 | 0.638 | 0.114 | −22.2 | 0.33 |
+  | CNN β = 10, cold, 400 | 1.000 | 0.951 | 0.246 | −17.6 | 0.24 |
+  | CNN β = 10, **cold, 4000** | **0.105** | 0.600 | 0.080 | **−23.0** | **0.024** |
+  | kurtosis β = 1, warm 400 / warm 4000 / cold 400 / cold 4000 | 0.984 / 0.674 / 1.000 / 1.000 | 0.910 / 0.823 / 0.997 / 0.983 | 0.092 / 0.073 / 0.197 / 0.183 | −18.5 / −22.0 / −16.8 / −17.8 | 0.41 / 0.35 / 0.27 / 0.29 |
+
+  1. **400 steps under-trains.** With 4000 steps the β = 0 generator — BER only — beats the 400-step
+     CNN-targeted headline generator *against the CNN* (0.601 vs 0.802). The headline was measured
+     before convergence; re-run as run002 (warm, 4000 steps, all 20 tasks) + E2 on it.
+  2. **The imitation start is an inductive bias toward the victim's modulation, and it trades
+     stealth for damage capacity.** At 400 steps cold is worse everywhere (a head start, nothing
+     more). At 4000 steps the cold CNN-targeted generator finds a jammer the warm one never does:
+     CNN 0.105 at BER 3.7e-4 (warm 0.553), 0.135 at BER 1.3e-3 — but its BER saturates near 2 %
+     even at +10 dB (warm 20–30 %). The warm start keeps G QPSK-like, which is what makes it both
+     damaging when loud and visible to the CNN. One-sided power still flags it (0.600): power at
+     matched BER is set by JSR, which no shaping hides.
+  3. **The cold kurtosis-targeted run stalled** (kurtosis 0.18 at 4000 steps vs 0.07 warm).
+  4. **α budget unchanged:** confirmed stealthy BER is still 0 for every arm. Cold CNN 4000 has its
+     CNN stealth edge near −25 dB and BER onset at −23 dB — the gap narrows from ~30 dB to ~2 dB
+     against the CNN, but one-sided power closes it.
+  5. **Seeds (r0–r3, 4000 steps, tasks 0/14; `warm002_4k*`, `cold002_4k*`) confirm it.** Mean ± std:
+
+     | | CNN | power 1s | kurtosis | JSR [dB] | max BER |
+     |---|---|---|---|---|---|
+     | β = 0, warm | 0.633 ± 0.084 | 0.830 ± 0.038 | 0.077 ± 0.008 | −21.8 ± 0.7 | 0.33 |
+     | β = 0, cold | 0.995 ± 0.005 | 0.837 ± 0.079 | 0.111 ± 0.024 | −20.3 ± 0.4 | 0.20 |
+     | CNN β = 10, warm | 0.480 ± 0.074 | 0.675 ± 0.082 | 0.110 ± 0.017 | −22.4 ± 0.2 | 0.30 |
+     | CNN β = 10, cold | **0.146 ± 0.024** | 0.651 ± 0.085 | 0.078 ± 0.015 | −22.8 ± 0.3 | **0.030** |
+
+     The warm and cold CNN arms do not overlap (warm ≥ 0.359, cold ≤ 0.168). The detector term is
+     −85 pp from a cold start but only ~−15 pp (≈ 2.7 SE) from the imitation start. **Why the cold
+     jammer saturates:** it is pulsed — 97 % of its power in 5 % of symbols (warm 82 %, D1 13 %), so
+     BER ≤ ~duty/2 — which is Amuru's low-power optimum and exactly what the CNN band (−48, −16) dB
+     rewards; it never sees high JSR. **It is not the weaker jammer:** BER at matched CNN P(det) 0.25 /
+     0.5 / 0.9 is 1.5e-3 / 2.6e-3 / 3.3e-3 cold vs 5.5e-6 / 4.9e-4 / 2.2e-3 warm (also ≥ warm against
+     power and kurtosis). Warm only wins at JSR ≥ 0 dB, where every detector flags 100 %. Single-run
+     variance is itself ~0.07 in CNN P(det): run002's task 14 re-run of the warm β = 10 recipe reads
+     0.611 against `warm002_4k`'s 0.553 (GPU non-determinism over 4000 steps), so **any one generator's
+     number carries ~±0.08, and picking the best β out of seven is selection on that noise.**
+- **run002 — the headline re-measured at 4000 steps (2026-09-26, jobs 2273985 train / 2273986 eval /
+  2273987 D1).** All 20 tasks, warm start, otherwise the run001 recipe. Matched BER 3e-4, SNR 30 dB
+  (`artifacts/cgan/gan/run002/`; checkpoints symlinked to net_scratch):
+
+  | generator | CNN | power 1s | power 2s | kurtosis | JSR [dB] |
+  |---|---|---|---|---|---|
+  | D1 plain | 1.000 | 1.000 | 1.000 | 0.984 | −8.2 |
+  | **β = 0 (BER only)** | **0.579** | 0.834 | 0.868 | 0.078 | **−22.1** |
+  | CNN β = 1 | **0.413** | 0.791 | 0.855 | 0.076 | −22.7 |
+  | CNN β = 10 | 0.611 | 0.663 | 0.813 | 0.101 | −22.3 |
+  | CNN β = 100 / 1000 / ≥ 1e4 | 0.994 / 1.000 / 1.000 | | | | −20.4 / −17.4 / ≤ −14.9 |
+  | power 1s β = 1–100 | 0.50–0.65 | 0.80–0.83 | | 0.08 | −22.0 to −22.2 |
+  | power 2s β = 1–100 | 0.61–0.62 | 0.82–0.83 | 0.85–0.89 | 0.08 | −22.0 to −22.1 |
+  | kurtosis β = 1–100 | 0.60–0.68 | 0.81–0.82 | | 0.070–0.078 | −22.0 to −22.1 |
+
+  - **D1 → β = 0 is the effect:** −42 pp against the CNN, −17 pp against power, −91 pp against
+    kurtosis, 13.9 dB less power. **β = 0 → best CNN β is the detector term:** −17 pp (β = 1),
+    +0.6 dB; β = 10 is within single-run noise of β = 0 here (seeds above: −15 pp on average).
+  - Power/kurtosis targets: nothing beyond β = 0 on their own detector, as at 400 steps. β = 1000
+    breaks every target (the kurtosis β = 1000 run needs −11.8 dB).
+  - Limit (iii) below still holds: β has an interior optimum, now at β = 1 for the CNN.
+  - Regression: E2's 30 dB level reproduces this eval — 5544 generator P(det) pairs, 12 with
+    |z| > 3 (15 expected by chance), none > 4, mean z −0.016. `regress_snr30.py` prints FAIL on 3 CNN
+    points (0.090–0.104 vs its 0.088 tolerance) because that tolerance is 4σ of ONE 512-frame
+    estimate, not of a difference of two (√2 larger, 0.125) — a latent gate bug, §4.3 housekeeping.
+    The array ran alongside the gate, not after it (deadline).
+
+  Jobs: 2273958 verify · 2273959/2273960 cold 400 · 2273967/2273969 cold 4000 · 2273968/2273970 warm
+  4000 · seeds r1–r3 2273989–2274000 · run002 2273985 (train) / 2273986 (eval) / 2273987 (D1) ·
+  E2 on run002 2273988. Ablation checkpoints live on net_scratch (`/itet-stor/rrahman/net_scratch/
+  cgan_gan/`), symlinked from `artifacts/cgan/gan/` — home quota (§C.4). `run001/` untouched;
+  `train_gan.py` refuses to write any non-original recipe into it.
+- **run003 — THE PAPER METHOD: random init, 4000 steps (2026-09-27, jobs 2274753–2274759,
+  2274789–2274792, 2274822/2274823).** All 20 tasks, `--init random`. Matched BER 3e-4, SNR 30 dB:
+
+  | generator | CNN | power 1s | power 2s | kurtosis | JSR [dB] | BER @ +10 dB |
+  |---|---|---|---|---|---|---|
+  | β = 0 (control) | 0.999 | 0.947 | 0.945 | 0.081 | −20.4 | 0.090 |
+  | **CNN β = 1** | **0.078** | **0.574** | 0.787 | 0.090 | **−23.0** | 0.018 |
+  | **CNN β = 10** *(headline, rule)* | **0.113** | 0.615 | 0.822 | 0.113 | **−23.0** | 0.018 |
+  | CNN β = 100 / ≥ 1000 | 0.697 / 1.000 | 0.635 / 1.000 | | | −22.0 / ≥ −6.0 | |
+  | power 1s β = 1–100 | ≥ 0.995 | 0.82–0.93 | | 0.11–0.15 | −18.8 to −20.3 | |
+  | power 2s β = 1 | 0.959 | 0.675 | 0.806 | 0.126 | −21.5 | 0.056 |
+  | kurtosis β = 10 | 1.000 | 0.979 | 0.978 | 0.068 | −19.2 | 0.071 |
+
+  - **The CNN-targeted generator is the best generator on every detector at once** (vs run002's best,
+    CNN β = 1 from the imitation start: CNN 0.413, power 1s 0.791, power 2s 0.855, JSR −22.7).
+  - **Detection term vs its control: −89 pp against the CNN, 2.6 dB less power.** The random-init
+    control is itself CNN-visible (0.999) — from random weights the damage term alone finds a
+    CNN-visible waveform; the detection term is what steers it away.
+  - Power/kurtosis targets: no gain from random init (worse than run002 on power, equal on kurtosis).
+    Only the learned detector is a target worth training against.
+  - β = 10 has five runs in all (0.105, 0.160, 0.168, 0.152 from the seed ablation; 0.113 here):
+    **0.14 ± 0.03** — quote that, not one run.
 - **Three limits on that gain, all load-bearing.** (i) **It lives only at low BER** — at 3e-4 the
   spread is 0.42–1.00, but by BER 3e-3 every detector reads 1.000 for every jammer. (ii) **A classical
   jammer still evades the CNN better**: Amuru pulsed sits at **P(det)_CNN = 0.421**, below every
@@ -1819,6 +1989,57 @@ TITAN RTX) had 2 free CPUs; dropping to `--cpus-per-task=2` scheduled them at on
 rejected again 2026-09-21, now with measurements — see §1.5.
 
 ## 3.3g E2 — the noise ablation on the live models: 30 dB is near the WORST place to measure the gain (2026-09-23)
+
+**E2 on run003 — THE PAPER NUMBERS (2026-09-27, jobs 2274792 + 2274823 noiseless;
+`artifacts/cgan/snr_ablation/run003/`).** P(det) CNN / one-sided power at matched excess BER 3e-4 (JSR):
+
+| SNR | β = 0 control | CNN β = 1 | **CNN β = 10** | power 2s β = 1 | kurtosis β = 10 | Amuru pulsed | noise |
+|---|---|---|---|---|---|---|---|
+| 5 | 0.05 / 0.13 (−22) | 0.05 / 0.07 (−24) | 0.05 / 0.07 (−24) | 0.06 / 0.09 (−22) | 0.05 / 0.17 (−20) | 0.08 / 0.22 (−17) | 0.99 / 1.00 (−4) |
+| 10 | 0.10 / 0.28 (−21) | 0.06 / 0.13 (−23) | 0.05 / 0.13 (−24) | 0.06 / 0.16 (−22) | 0.08 / 0.40 (−19) | 0.11 / 0.62 (−16) | 1.00 / 1.00 (−2) |
+| 15 | 0.15 / 0.55 (−21) | 0.05 / 0.23 (−23) | **0.04** / 0.25 (−23) | 0.08 / 0.31 (−22) | 0.14 / 0.71 (−19) | 0.17 / 0.86 (−15) | 1.00 / 1.00 (−2) |
+| 20 | 0.32 / 0.77 (−21) | 0.06 / 0.40 (−23) | **0.07** / 0.40 (−23) | 0.16 / 0.49 (−22) | 0.47 / 0.93 (−19) | 0.25 / 0.90 (−15) | 1.00 / 1.00 (−2) |
+| 25 | 0.85 / 0.87 (−21) | 0.08 / 0.54 (−23) | **0.06** / 0.54 (−23) | 0.54 / 0.66 (−21) | 0.89 / 0.98 (−19) | 0.34 / 0.92 (−15) | 1.00 / 1.00 (−2) |
+| 30 | 1.00 / 0.94 (−21) | 0.10 / 0.62 (−23) | **0.11** / 0.61 (−23) | 0.97 / 0.68 (−21) | 1.00 / 0.99 (−19) | 0.45 / 0.95 (−14) | 1.00 / 1.00 (−2) |
+| 35 | 1.00 / 0.96 (−20) | 0.21 / 0.65 (−23) | 0.21 / 0.63 (−23) | 1.00 / 0.72 (−21) | 1.00 / 0.99 (−19) | 0.47 / 0.96 (−15) | 1.00 / 1.00 (−2) |
+| 40 | 1.00 / 0.98 (−20) | 0.35 / 0.65 (−23) | 0.36 / 0.64 (−23) | 1.00 / 0.74 (−21) | 1.00 / 1.00 (−19) | 0.46 / 0.95 (−15) | 1.00 / 1.00 (−2) |
+
+1. **The CNN barely sees the CNN-targeted generator at any SNR up to 30 dB** (≤ 0.11, α = 0.05);
+   the control is caught from 25 dB up. Largest effect of the detection term: −89 pp at 30 dB.
+2. **It beats the classical Amuru pulsed jammer on both detectors at every SNR ≥ 10 dB**, at ~8 dB
+   less power. The 400-step "a classical jammer evades the CNN better" limit (§3.3f (ii)) is gone.
+3. **Boundary:** confirmed picks vs the CNN at 5–25 dB reach BER 4e-4–3.9e-3 at P(det) 0.065–0.075
+   and fail the α + 2σ confirmation narrowly; one-sided power still flags 0.25–0.64 of frames at
+   matched BER from 15 dB up. Stealthy BER inside the strict budget stays 0.
+4. The 0 dB row (JSR −40 for β = 10) is the low-SNR artifact of finding 5 below, not a result.
+5. 30 dB regression vs run003's eval: 5544 P(det) pairs, 6 with |z| > 3 (15 by chance), none > 4.
+
+**E2 on run002 (2026-09-26, job 2273988; `artifacts/cgan/snr_ablation/run002/`) — supersedes the
+headline numbers of the 2026-09-23 run below, which compared 400-step generators against D1.** Same
+protocol (Tier 1: evaluated, not retrained; detectors re-calibrated per level). P(det) CNN / one-sided
+power at matched excess BER 3e-4, JSR in brackets:
+
+| SNR | D1 plain | β = 0 | CNN β = 1 | CNN β = 10 | power 1s β = 1 | kurtosis β = 1 |
+|---|---|---|---|---|---|---|
+| 5 | 0.17 / 0.86 (−11) | 0.06 / 0.10 (−23) | 0.06 / 0.09 (−24) | 0.06 / 0.09 (−23) | 0.05 / 0.10 (−23) | 0.05 / 0.11 (−23) |
+| 10 | 0.67 / 1.00 (−9) | 0.06 / 0.25 (−22) | 0.04 / 0.22 (−23) | 0.06 / 0.17 (−22) | 0.07 / 0.25 (−22) | 0.06 / 0.23 (−22) |
+| 15 | 0.94 / 1.00 (−8) | **0.09** / 0.45 (−22) | 0.09 / 0.41 (−23) | 0.07 / 0.26 (−22) | 0.07 / 0.44 (−22) | 0.09 / 0.47 (−22) |
+| 20 | 1.00 / 1.00 (−8) | 0.14 / 0.64 (−22) | 0.12 / 0.62 (−23) | 0.12 / 0.53 (−22) | 0.15 / 0.63 (−22) | 0.16 / 0.64 (−22) |
+| 25 | 1.00 / 1.00 (−8) | 0.27 / 0.75 (−22) | **0.19** / 0.72 (−23) | 0.28 / 0.59 (−22) | 0.29 / 0.74 (−22) | 0.39 / 0.75 (−22) |
+| 30 | 1.00 / 1.00 (−8) | 0.59 / 0.81 (−22) | **0.39** / 0.75 (−23) | 0.55 / 0.65 (−22) | 0.58 / 0.81 (−22) | 0.67 / 0.78 (−22) |
+| 35 | 1.00 / 1.00 (−8) | 0.84 / 0.82 (−22) | **0.66** / 0.83 (−23) | 0.85 / 0.69 (−22) | 0.82 / 0.81 (−22) | 0.89 / 0.83 (−22) |
+| 40 | 1.00 / 1.00 (−8) | 0.96 / 0.84 (−22) | 0.87 / 0.84 (−23) | 0.97 / 0.69 (−22) | 0.95 / 0.83 (−22) | 0.96 / 0.85 (−22) |
+
+1. **BER training does the heavy lifting at every SNR.** D1 → β = 0: −85 pp against the CNN at 15 dB
+   (0.94 → 0.09), −86 at 20 dB, −41 at 30 dB; 13.9 dB less power at every level.
+2. **The detector term's own gain is SNR-dependent and CNN-only:** β = 1 vs β = 0 is 0 at ≤ 20 dB
+   (both near the floor), −8 pp at 25, −20 at 30, −18 at 35, −9 at 40. The CNN β = 10 generator buys
+   one-sided power instead (−11 to −19 pp vs β = 0 at 15–35 dB) — single-run, ±0.08.
+3. **Against power, nothing hides at matched BER:** one-sided power flags 0.25–0.45 of frames at
+   10–15 dB and ~0.8 at 30 dB for every BER-trained generator.
+4. Findings 4–5 of the run below (edge-vs-onset mechanism, CNN off-design at low SNR) are about the
+   classical rows and the CNN, not the generators, and are not re-derived here. Figures:
+   `CGAN_RUN=run002 sbatch submit_snr_figures.sh` (job 2274104).
 
 **The supervisor's mandated primary ablation** (§B.2: *"Ablation: parameter study, increase noise and
 see what happens"* + *"Noise level, ε, change exponentially"*), finally run on the models the paper
@@ -2067,6 +2288,119 @@ leader by **1.1 symbols rms** (median 0.8, max 2.4; from `test_drops.json` posit
 right at the crossover, so compensating propagation delay decides whether the team beats the single
 jammer or loses to it. D4b keeps both actions (u_k and δ_k).
 
+**Received powers are unequal but comparable, so timing still matters with real geometry.** D4a used an
+equal received split. On the 50 test drops (free-space gains, equal transmit power), the strongest
+drone's share of the team's received power has a median of **0.51** at K = 4 (IQR 0.41–0.68), and the
+second-strongest drone is a median **2.3 dB** weaker (IQR 1.0–6.0). At K = 2 the share is 0.70 and the
+gap 3.8 dB. A weak drone smears little, so the geometric version of the curve should decay more gently
+than the table above. **Measured by D4b's heuristic arm: it does, by about 2 dB at σ = 16 and at the
+floor, with no difference at σ ≤ 1 (§3.3j finding 4, with an implementation caveat).**
+
+## 3.3j D4b — the learned policy finds the power lever, not delay compensation (2026-09-26, PAUSED)
+
+**STATE: PAUSED by the user on 2026-09-26, pending the GAN rework (§3.3f, "Imitation start and training
+budget").** Every D4b number below uses the frozen **`run001/task14_G.pt`** (the CNN-targeted D2 generator
+at β = 10, warm start, 400 steps). That generator is now known to be under-trained, and a 4000-step cold
+start produces a different jammer. The timing sensitivity that D4a and D4b measure comes from the
+waveform's burst structure, so **E3, D4a and D4b are all conditional on the old generator**. Before any
+of them is quoted, re-run them on whichever generator the rework settles on. Nothing D4b-related is in
+the paper (user rule).
+
+**What was built (first cut: K = 4, SNR 15/30 dB, β ∈ {0, 10}, own-geometry arm only; user choices
+2026-09-26).** `cgan/team_policy.py` implements Q12 (§4.2):
+- **Policy:** one shared MLP (4 → 64 → 64 → 2, tanh). It maps each drone's position relative to R
+  (divided by the box) and log1p(σ_k) to a power fraction u_k = sigmoid and a transmit advance
+  δ_k = 6·sigmoid symbols. The leader is drone 0, with σ_k = 0; followers have σ_k = σ.
+- **Training:** direct gradient of the D2 loss −(log E[BER] − β·soft P(det)_CNN) through a new
+  **differentiable FFT fractional delay** (`frac_delay`, a phase ramp on the padded stream) and a
+  √u amplitude. Random drops come from `scene.draw_positions` with analytic LOS gain and delay; σ is drawn
+  from the D4a grid, and the full-power total received JSR is drawn from (−30, −10) dB.
+- **Budget axis:** T_full, the full-power total received JSR, is split across drones in proportion to
+  their gain (equal transmit power). At u = 1 the team's nominal total is exactly T_full, and at K = 1 it
+  reduces to the D-series jammer.
+- **Evaluation:** pooled over the 50 test drops, matched excess BER 3e-4, 512 frames per point.
+  Four arms: *learned* · *heuristic* (δ = τ, u = 1) · *uncoordinated* (no shared clock: a uniform
+  offset over the 128-symbol period, u = 1) · *ceiling* (one D2 jammer at the team total).
+- **Checks:** `verify.py` §18 has 10 checks. frac_delay equals an integer roll and carries gradient;
+  geometry equals d/c and free space; heuristic K = 1 equals the single jammer; u = 1 gives exactly
+  T_full; both policy outputs receive gradient. They pass in the team-only job 2273734 and in two
+  full-suite jobs, 2273958 and 2273984.
+
+**Result (final variant, jobs 2273939 train / 2273943 eval).** CNN P(det) @ total JSR [dB] at matched
+excess BER 3e-4 (tables: `python team_figures.py --policy`):
+
+| 30 dB, β = 10 | σ = 0 | σ = 1 | σ = 4 | σ = 16 |
+|---|---|---|---|---|
+| heuristic (δ = τ, full power) | **0.705 @ −22.2** | 0.855 @ −20.4 | 0.920 @ −19.5 | 0.959 @ −18.9 |
+| learned | 0.794 @ −21.0 | 0.828 @ −20.5 | 0.908 @ −19.3 | 0.956 @ −18.7 |
+
+For reference at 30 dB: the ceiling is 0.854 @ −21.1 and the uncoordinated floor is 0.982 @ −18.2.
+
+| 15 dB, β = 10 | σ = 0 | σ = 1 | σ = 4 | σ = 16 |
+|---|---|---|---|---|
+| heuristic | 0.072 @ −22.7 | 0.100 @ −20.7 | 0.127 @ −19.4 | 0.153 @ −18.9 |
+| learned | 0.080 @ −20.8 | 0.098 @ −20.4 | 0.143 @ −19.3 | 0.152 @ −19.1 |
+
+For reference at 15 dB: the ceiling is 0.097 @ −20.8 and the uncoordinated floor is 0.202 @ −18.4.
+
+1. **The delay-decay curve reproduces with real geometry.** The heuristic rises from 0.705 at σ = 0 to
+   0.959 at σ = 16 (30 dB), and at σ = 0 it slightly beats the single-jammer ceiling (−15 pp, −1.1 dB),
+   as in §3.3h. The heuristic arm is stable across four evaluations (0.673–0.705 at σ = 0, 30 dB).
+2. **The policy learns the power lever: u → 0.99 everywhere.** Full power is best and no drone should go
+   quiet. With a shared σ and a per-drone cap that is the expected answer, and learning finds it.
+3. **The policy does not learn delay compensation.** δ does not track τ in any of the four training
+   variants (below): (δ − τ) rms is 1.5–3.4 symbols, and δ ends near one constant per policy. A constant
+   δ leaves the drones' geometric spread (1.1 symbols rms) uncompensated. That is why learned loses to
+   the heuristic at σ = 0 (−9 pp and −1.2 dB at 30 dB β = 10; −11 pp at β = 0) and matches it once
+   σ ≥ 1 swamps the geometric spread. **"Learned ≈ an uncompensated team" is inferred, not measured:
+   no δ = 0 arm was run.**
+4. **With real geometry the curve decays more gently at large σ, as §3.3i predicted.** The heuristic
+   arm does not depend on β, so the β = 0 and β = 10 files are two independent measurements of it.
+   Compared with D4a's equal split (spec_cnn_b10, K = 4):
+   - σ ≤ 1: equal within the ±0.7 dB run-to-run noise.
+   - σ = 16: −18.9 / −19.2 dB against −16.7 at 30 dB, and −18.6 / −18.9 against −17.1 at 15 dB,
+     so about 2 dB gentler.
+   - Uncoordinated floor: −18.2 against −16.2 dB. At 15 dB it is also less detectable, 0.19–0.20
+     against 0.29.
+
+   This fits the unequal-power argument: the strongest drone carries a median 51 % of the received
+   power, and a weak drone smears little. **Caveat:** D4b applies delays with the FFT `frac_delay`,
+   D4a with integer crops plus Sionna sinc taps. The two paths are shown equivalent only at K = 1, on
+   BER, with the perfect generator (§18d). So part of the 2 dB could be implementation rather than
+   geometry.
+
+**Training variants.** All four wrote to the same filenames, so only the last one is on disk.
+
+| variant | jobs (train / eval) | δ outcome at σ = 0 (30 dB β = 10) |
+|---|---|---|
+| unbounded δ = 8·raw, 400 steps, batch 32 | 2273737 / 2273738 | δ mean 0.62 vs τ mean 1.74; rms error 1.75; u ≈ 0.87 |
+| unbounded, 2000 steps | 2273906 / 2273907 | **diverged**: δ mean 5.6, rms error 5.9 (−16.9 at σ = 16) |
+| bounded δ = 6·sigmoid, 2000 steps | 2273924 / eval 2273925 cancelled | collapsed to a bound: δ ≈ 0.4 (or ≈ 5.8 in other tasks) |
+| bounded, **ACCUM = 8** (effective batch 256), 600 updates | **2273939 / 2273943** | δ mean 5.04, rms error 3.39; u ≈ 0.99 — **on disk** |
+
+**The δ diagnostic** (`team_policy.py --mode diag`, heuristic δ = τ plus an offset Δ, σ = 0,
+T_full −20 dB, 30 dB, β = 10):
+- *Common shift of all drones* (job 2273922, 512 drops; job 2273923, 4096 drops): the loss is flat to
+  within ~0.3 of ~15.4 and does not have its minimum at Δ = 0. It is slightly lower at Δ = +4 to +8,
+  apparently a preference of the frozen generator for a certain phase of its periodic segments.
+- *Follower 1 alone* (job 2273923, 4096 drops): **a clean minimum at Δ = 0** (loss 15.37), rising
+  smoothly to 15.9 by |Δ| = 2. The per-drone δ = τ optimum therefore exists, but it is only ~0.6 loss
+  units deep.
+- At batch 32 the soft-P(det) noise is about √(0.8·0.2/32)·β ≈ 0.7 loss units, larger than that well.
+  **Raising the effective batch to 256 did not fix δ, so noise is not the whole explanation — the cause
+  is open** (§4.2 Q12).
+
+**Artifacts:** `artifacts/cgan/team_policy/run001/{snr15,snr30}_{b0,b10}{_policy.pt,.json}` (final
+variant) plus `snr15_b0_smoke*` from smoke jobs 2273735/2273736. To inspect what a policy does,
+rebuild the MLP from the `state_dict` (strip the `net.` prefix), feed it `obs_of` on the test-drop
+positions, and compare δ = 6·sigmoid(out₁) with τ = d_kR/300 m (symbols). The script used on
+2026-09-26 was session scratch and is not in the repo.
+
+**To resume (after the GAN rework):** point `team_policy.D2_GEN` at the new generator. Then re-run E3
+and D4a on it first (`team_fading.py`), because both set the scale of what coordination can buy, and
+only then return to the δ question.
+
+
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
 ### Exploratory CGAN track — ACTIVE since 2026-09-14
@@ -2100,7 +2434,7 @@ NP on the axes). Rationale and design constraints: §2.10 (STATE 2026-09-17). **
 - **The single-jammer compute is complete.** The paper draft is being finished (user, due Sunday
   2026-09-27); the extend-vs-MARL fork resolved toward **MARL (D4) as the next experimental direction,
   built in the background** (user, 2026-09-26). The E2 follow-ons (§4.3) are not being pursued now.
-- **STATE 2026-09-26: E3 pre-check done ([§3.3h](#33h-e3-pre-check--under-fading-the-team-gains-nothing-timing-coordination-does-2026-09-26)); D4 promoted from gated to active-background.**
+- **STATE 2026-09-26: E3 pre-check done ([§3.3h](#33h-e3-pre-check--under-fading-the-team-gains-nothing-timing-coordination-does-2026-09-26)); D4 promoted to active-background, D4a and a D4b first cut done, then all of D4 PAUSED for the GAN rework ([§3.3j](#33j-d4b--the-learned-policy-finds-the-power-lever-not-delay-compensation-2026-09-26-paused)).**
   Nothing MARL enters the paper until MARL results exist (user); if they are good, ~5 days remain to fold
   them into the draft before ICC (2026-10-02).
 - The *framing* of D2 onward still waits on the direction email (§4.1 #0b).
@@ -2116,7 +2450,7 @@ Build order:
 | **D2** | **DONE — all four detectors ([§3.3f](#33f-cgan-under-detection--d1-plain-gan-and-d2-detector-aware-gan-all-four-detectors-2026-09-20-cnn-2026-09-23)).** Analytic 2026-09-20, CNN 2026-09-23. White-box direct-gradient generator (warm-started from `run001_G`), objective `−(log E[BER] − β·P_det_soft)`, one per (detector, β); the CNN is differentiated through a straight-through viridis LUT — the deployed weights, no surrogate. **Confirmed stealthy BER 0 against every detector**, ≤ 3 dB stealth edge over noise, ~30 dB gap to where BER bites (at 30 dB SNR; it grows with SNR, §3.3g). No better than D2a's 48-parameter control. | `train_gan.py`; per-target `JSR_BANDS` and β range matter — see §3.1 traps. |
 | **E2 = the noise ablation** | **DONE 2026-09-23 ([§3.3g](#33g-e2--the-noise-ablation-on-the-live-models-30-db-is-near-the-worst-place-to-measure-the-gain-2026-09-23)).** The supervisor's mandated primary ablation (§B.2), run on the live models: SNR 0–40 dB + noiseless, all 21 generators, detectors re-calibrated per level, CNN weights frozen at 30 dB, generators evaluated not retrained (transfer, not achievability). The gain peaks at −85.1 pp at 15 dB vs −16.2 pp at 30 dB. **Follow-ons (one rerun for PER / SINR / AUC, fixed-α trade-off figures, Tier 2 retraining) parked by the user 2026-09-24 — §4.3.** | `calibrate_snr.py`, `snr_ablation.py`, `regress_snr30.py`, `snr_examples.py`, `snr_figures.py`, `verify.py` §15. An eval is 35 s; the grid runs in ~20–30 min wall as a 10-task array. Setup, traps and caveats: §3.3g. |
 | **E3 pre-check** | **DONE 2026-09-26 ([§3.3h](#33h-e3-pre-check--under-fading-the-team-gains-nothing-timing-coordination-does-2026-09-26)).** Transfer check (no retrain): faded jammer→R links, K = 1/2/4, aligned vs random timing, five jammers. **Fading helps a single jammer (no gap to recover); the only real lever is TIMING alignment** — aligned K = 4 ≈ one jammer at 7.3 dB less per drone, random timing loses ~6 dB. Bounds what D4 can find. | `cgan/team_fading.py`, `submit_team_fading.sh`, `team_figures.py`, `verify.py` §16. Numbers only, no figures. |
-| **D4 (ACTIVE background, 2026-09-26)** | **MARL coordination: the delay-decay curve, learned with minimal inductive bias. Design SETTLED 2026-09-26 in [§4.2 Q12](#42-open-technical-questions).** The x-axis is the inter-jammer timing error σ (the supervisor's axis, §B.2). Each drone sees only its own geometry and σ_k and acts with (u_k = fraction of a per-drone power cap, δ_k = transmit advance); the D2 waveform is frozen. One shared MLP, CTDE, **direct gradient through the differentiable link**, MAPPO only as fallback. **Never policy-gradient RL over raw IQ** (§A.5, §2.8). Arms at matched detectability: learned · geometric heuristic · uncoordinated · single-jammer ceiling. **D4a DONE 2026-09-26 ([§3.3i](#33i-d4a--the-delay-decay-curve-coordination-is-worth-1-symbol-of-timing-accuracy-2026-09-26))**: the knee is at σ ≈ 1 symbol, below the geometric spread, so δ_k matters. **D4b (the policy) is next.** | ~1 week. `team_fading.py --sigmas`, `verify.py` §17, `team_figures.py --timing`. Nothing goes into the paper until results exist. |
+| **D4 (PAUSED 2026-09-26 for the GAN rework)** | **MARL coordination: the delay-decay curve, learned with minimal inductive bias. Design SETTLED 2026-09-26 in [§4.2 Q12](#42-open-technical-questions).** The x-axis is the inter-jammer timing error σ (the supervisor's axis, §B.2). Each drone sees only its own geometry and σ_k and acts with (u_k = fraction of a per-drone power cap, δ_k = transmit advance); the D2 waveform is frozen. One shared MLP, CTDE, **direct gradient through the differentiable link**, MAPPO only as fallback. **Never policy-gradient RL over raw IQ** (§A.5, §2.8). Arms at matched detectability: learned · geometric heuristic · uncoordinated · single-jammer ceiling. **D4a DONE 2026-09-26 ([§3.3i](#33i-d4a--the-delay-decay-curve-coordination-is-worth-1-symbol-of-timing-accuracy-2026-09-26))**: the knee is at σ ≈ 1 symbol, below the geometric spread, so δ_k matters. **D4b first cut DONE, then PAUSED ([§3.3j](#33j-d4b--the-learned-policy-finds-the-power-lever-not-delay-compensation-2026-09-26-paused))**: the policy learns u → 1 but not δ = τ, and every D4 number is conditional on the under-trained `run001/task14_G.pt`. | `team_fading.py --sigmas`, `verify.py` §17–18, `team_figures.py --timing/--policy`, `team_policy.py` + `submit_team_policy.sh`. Nothing goes into the paper until results exist. |
 
 MVP that already makes the point: **D0 + D1** (attackers {barrage, pulsed-QPSK, GAN} × detectors
 {energy, kurtosis, CNN, NP}, single jammer, one layer). Add D2, then D3/D4 only on evidence.
@@ -2601,10 +2935,26 @@ policy should find those levers itself.
   `team_figures.py --timing`. It locates the curve's knee. **Decision rule:** if the knee sits above the
   box's geometric delay spread (≤ 4.7 symbols: the 1,422 m diagonal at 1 MBd), δ_k is dead weight and the
   learned lever reduces to u_k. **Applied 2026-09-26 (§3.3i): the knee is at σ ≈ 1 symbol and
-  uncompensated test drops sit at 1.1 symbols rms, so δ_k stays.** **D4b** is the policy.
+  uncompensated test drops sit at 1.1 symbols rms, so δ_k stays.** **D4b** is the policy (§3.3j).
 - **D4b risks:** loss vs δ is periodic and non-convex (bursts), and whole-sample shifts are not
   differentiable, so δ needs a differentiable fractional delay (an FFT phase ramp on a padded stream;
   `channel.py`'s sinc taps reach only 8 samples). Training with σ > 0 jitter smooths the landscape.
+  **The fractional delay is built (`team_policy.frac_delay`) and the risk materialised (§3.3j).**
+- **OPEN — why the policy does not learn δ = τ (§3.3j).** A one-drone δ = τ minimum exists (~0.6 loss
+  units), and raising the effective batch from 32 to 256 did not help, so gradient noise is not the whole
+  story. Candidates, none tested: (i) a common shift of all δ is almost free, and the frozen generator
+  slightly prefers some common offset, so the optimiser spends δ on that; (ii) an MLP has to learn a
+  Euclidean norm from raw position through a shallow well; (iii) credit is diluted over K drones. The
+  options the user was offered and has not yet chosen between: accept it and add an explicit δ = 0 arm
+  (~2 min of eval) · give the policy its distance to R (the inductive bias the user wants to avoid) ·
+  per-drone credit assignment or δ-only training · move on to the teammate arm or K = 2.
+- **Second arm: teammate information (user, 2026-09-26).** Besides its own observation, each drone
+  also sees its teammates' relative positions and σ_j, pooled over teammates (a mean over a shared
+  embedding, so drone order does not matter). For timing this should not help, since each drone aligns
+  to R's frame and needs only its own τ_k. For power it can: at large σ, deciding *which* drones go
+  quiet is a joint decision that own information alone cannot settle. **The gap between the two arms at
+  large σ is the value of communicating over the inter-jammer link.** If the gap is zero, that is a
+  finding too: coordination needs a shared clock, not shared state. Own-geometry stays the main arm.
 - **OPEN — how a link *delay* maps to the timing error σ.** The realistic delay range is unknown (§4.1
   #8), so σ is swept rather than derived. A stated assumption is owed in the Methodology if D4 reaches
   the paper.
@@ -2627,7 +2977,30 @@ policy should find those levers itself.
   3. **Tier 2** — retrain D1 and the headline D2 generators (ideally the CNN too) at 10 / 15 / 20 dB
      to turn transfer into achievability; re-check `train_gan.JSR_BANDS` at each level first (§3.1 trap 1).
   4. Housekeeping: `gan_figures.py`'s failing Amuru colour and its `BER_REF` 1e-3 vs §3.3f's 3e-4
-     (§3.3f caveats).
+     (§3.3f caveats); `regress_snr30.py`'s P(det) tolerance is 4σ of one
+     estimate, not of a difference (should be √2 × 0.088 = 0.125, §3.3f run002).
+- **Damage when loud — a power-conditioned generator (2026-09-26, offered, not chosen).** The cold-start
+  CNN generator is pulsed and saturates near BER 3 % because training never sees JSR above −16 dB, and
+  the best duty cycle grows with power (Amuru). Options offered to the user: (1) widen the training
+  band to +10 dB (one line; one waveform then compromises); (2) condition G on its power budget via
+  the inactive conditioning path (principled; assumes the jammer knows its received JSR, i.e. its
+  channel gain); (3) report the stealthy and loud regimes as separate operating points. ~5 min per
+  generator to train. **2026-09-27: (1) TESTED AND REJECTED** (`run003_wide`, cold, CNN β 1/10, band
+  (−48, +10) dB, jobs 2274758/2274759, one seed): BER at +10 dB unchanged (0.019 vs 0.018) and stealth
+  lost (CNN P(det) at matched BER 3e-4: 0.213 vs 0.105 for β = 10). Likely cause (untested): at weak
+  JSR log E[BER] is in the thousands, so those steps dominate the gradient and the high-JSR samples
+  barely register. **Decision (user asked for a recommendation): (3) for the paper** — once every
+  detector flags every frame, stealth is moot and the best loud jammer is matched QPSK; (2) stays the
+  principled fix, future work.
+- **Detector-conditioned generator (user, 2026-09-26; decide after MARL).** Zhou's conditioning path
+  (label embedding into G, auxiliary classifier out of D) is inert today: QPSK is the only class, so the
+  label is constant and `losses.classification_loss` is exactly 0. Re-purpose the label as **which
+  detector is the target** (power 1s/2s, kurtosis, CNN) and train **one** detector-aware generator for
+  all four, instead of one per (target, β) as in D2 (§3.3f). It tests whether detector-aware training
+  *generalizes* across detectors rather than overfitting one statistic. Evaluate it against each
+  single-target D2 generator at matched BER. Held until it is clear whether the MARL direction is
+  pursued. The methodology draft carries a `\rar{}` note on this
+  (`paper_drafts/sec_methodology.tex`, §method:plain).
 - **Time-to-first-detection.** The cheap countermeasure-facing result: measure the **trigger**
   instead of the reaction. Computable from the per-frame P(det) we already produce — no
   countermeasure, no mobility, no throughput model. It also fixes a known weakness of our own
@@ -2713,7 +3086,7 @@ policy should find those levers itself.
   effectively blind** (edge +15 dB) — an OOD artifact that must not be read as a jammer property.
   Retraining per level is the fix (Tier 2, §3.4). The analytic detectors carry no such caveat.
 - **E2 Tier 1 measures transfer, not achievability** (§3.3g): the generators were trained at 30 dB and
-  evaluated elsewhere, so "−85.1 pp at 15 dB" is what a 30 dB-trained attacker achieves off-design. Per-SNR
+  evaluated elsewhere, so the run002 numbers at 15 dB (CNN 0.09 at matched BER) are what a 30 dB-trained attacker achieves off-design. Per-SNR
   retraining could only raise it, but that is an argument, not a measurement.
 - **D2a's learned family is Gaussian only** (§3.3e):
   - it cannot hold kurtosis at the clean value, so "kurtosis catches every effective learned jammer"
@@ -2769,9 +3142,15 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | **cgan** | run001 | CGAN (Zhou 2025), NS-GAN+GP, weights 1 | **ordering not reproduced**: with one sync model GAN−Optimal −1.30 dB async / −4.47 locked (paper +1.31); Noise−GAN 6.66 / 4.38 dB. The first-reported 4.34 / +1.01 scored GAN locked vs Optimal async (withdrawn); §3.3b | 2259289, 2259409, 2260623 |
 | **cgan** | run002 | CGAN, reference-backed recipe (WGAN-GP, feat 2 / STFT 45) | worse imitation: EVM 0.70, no 1e-3 crossing in grid (BER 3.6e-3 at −10 dB), plateau 0.31; critic gap stalls ≈ 57; §3.3b | 2260624, 2260806 |
 | **cgan_snr** | run001 | **E2**: SNR 0:5:40 dB + noiseless anchor × 7 classical attacks × all 21 generators, detectors re-calibrated per level (CNN weights frozen at 30 dB) | **matched-BER gain vs the CNN peaks at −85.1 pp at 15 dB SNR, 5× the −16.2 pp at 30 dB, gone by 40 dB**; stealth edge falls ~0.7 dB per dB while the BER onset is flat, so the gap grows with SNR; 30 dB reproduces §3.3f; power saving SNR-invariant at 12.3–12.9 dB; §3.3g | 2270447, 2270448, 2270449, 2270556, 2271314 |
+| **cgan_gan** | run002 | **D2 re-run at 4000 steps** (all 20 tasks, warm start, run001 recipe otherwise) + D1 re-evaluated | **β = 0 (BER only) does most of it**: BER 3e-4 at −22.1 dB (D1 −8.2), CNN 0.579; CNN term adds −17 pp (β = 1: 0.413); power/kurtosis targets no better than β = 0; §3.3f | 2273984 (verify), 2273985, 2273986, 2273987 |
+| **cgan_gan** | cold001 · cold002_4k · warm002_4k · {cold,warm}002_4k_r1–r3 | **imitation-start / training-budget ablation**, tasks 0/9/14 (seeds: 0/14), random vs warm init, 400 vs 4000 steps; on net_scratch via symlinks | **400 steps under-trains; the imitation start trades stealth for damage capacity** — cold CNN β = 10: 0.146 ± 0.024 (4 seeds) vs warm 0.480 ± 0.074, pulsed (97 % power in 5 % of symbols), BER saturates ~3 %; §3.3f | 2273958–2273960, 2273967–2273970, 2273989–2274000 |
+| **cgan_snr** | run002 | **E2 on the run002 generators**, same protocol as run001 | **D1 → β = 0: −85 pp vs the CNN at 15 dB, 13.9 dB less power at every SNR; the detector term (CNN β = 1) adds −8 to −20 pp at 25–35 dB only**; 30 dB reproduces run002's eval (two-sample z, none > 4); §3.3g | 2273988, figures 2274104 |
+| **cgan_gan** | run003 · run003_wide | **THE PAPER METHOD: random init, 4000 steps, all 20 tasks** (+ wide-band arm: CNN β 1/10, band (−48, +10) dB) | **CNN β = 10: CNN 0.113 at matched BER 3e-4 / 30 dB vs control 0.999; best generator on every detector**; wide band: no loud-regime gain, stealth lost (0.213); §3.3f, §4.3 | 2274753–2274759, 2274789–2274792, 2274822 |
+| **cgan_snr** | run003 | **E2 on run003** | **CNN β = 10 ≤ 0.11 CNN P(det) at matched BER over 0–30 dB; control 1.00 at 30 dB; beats Amuru on both detectors ≥ 10 dB**; §3.3g | 2274792, 2274823, figures 2274829/2274828 |
 | **sim08_abl** | run001 | noise × power × #jammers on the frozen sim08 suite | **stealthy BER 0.005–0.016 at every Eb/N0 ≥ 15 dB** (×1.4→×109 the floor); detection set by *total* power; more jammers = louder, no matched-detectability gain; suite ≡ CNN (26/4914); §3.3c | 2261123, 2261126, 2261146, 2261173, 2261174 |
 | **cgan_team** | run001 | **E3 pre-check**: K = 1/2/4 jammers, jammer→R fading (lossless/rician10/rayleigh) × SNR 15/30 dB, aligned vs random timing, 5 jammers; transfer (no retrain) | **fading helps a single jammer (frame-level pulsing artifact), so no gap for a team; the only lever is TIMING** — aligned K = 4 ≈ one jammer at 7.3 dB less per drone, random timing loses ~6 dB / 19–35 pp; lossless K = 1 reproduces E2; §3.3h | 2273604, 2273605, 2273606 |
 | **cgan_team_timing** | run001 | **D4a delay-decay curve**: lossless, K = 1/2/4, SNR 15/30 dB, three generators (spec_cnn_b10, plain_run001, kurtosis_b1); followers' timing error σ ∈ {0 … 64} symbols + uncoordinated; transfer (no retrain) | **the team stops matching one jammer at σ ≈ 0.5–1 symbol**; half the gain is gone by σ ≈ 2 and it reaches the floor by 8–16; an uncompensated team in the test drops sits at 1.1 symbols rms, so δ matters; σ = 0 and shifted reproduce E3 within ±0.06 / ±0.7 dB; §3.3i | 2273650 (verify §16–17), 2273651 |
+| **cgan_team_policy** | run001 | **D4b learned policy**: shared MLP → (u_k, δ_k) per drone, direct gradient through `frac_delay`, K = 4, SNR 15/30 dB × β 0/10; four training variants, only the last on disk (bounded δ, effective batch 256, 600 updates); pooled over the 50 test drops | **learns u → 1, not δ = τ**: loses to the δ = τ heuristic at σ = 0 (30 dB β 10: 0.794 vs 0.705 CNN P(det), −1.2 dB) and matches it for σ ≥ 1; a one-drone δ = τ minimum exists but is ~0.6 loss units deep; conditional on the under-trained `task14_G`; **paused**; §3.3j | 2273734 (verify §16–18), 2273735/36 (smoke), 2273737/38, 2273906/07, 2273924/25, 2273922/23 (diag), **2273939/43** |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
 appendix states it nowhere and two findings below are properties of the objective, not of the

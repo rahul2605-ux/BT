@@ -1,0 +1,12 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 2 | eval | SNR 30 dB | beta 0 | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.05419921875, "power_two_sided": 0.04248046875, "kurtosis": 0.05419921875, "spec_cnn": 0.0498046875}
+  ceiling                  max BER 6.470e-03  CNN P(det) at max T 1.000  (9s)
+  uncoordinated            max BER 1.052e-02  CNN P(det) at max T 1.000  (18s)
+  heuristic|sigma0         max BER 7.042e-03  CNN P(det) at max T 1.000  (28s)
+  learned|sigma0           max BER 8.064e-03  CNN P(det) at max T 1.000  (38s)
+  heuristic|sigma1         max BER 8.720e-03  CNN P(det) at max T 1.000  (48s)
+  learned|sigma1           max BER 8.728e-03  CNN P(det) at max T 1.000  (57s)
+  heuristic|sigma4         max BER 1.077e-02  CNN P(det) at max T 1.000  (67s)
+  learned|sigma4           max BER 1.151e-02  CNN P(det) at max T 1.000  (77s)
+  heuristic|sigma16        max BER 1.112e-02  CNN P(det) at max T 1.000  (87s)

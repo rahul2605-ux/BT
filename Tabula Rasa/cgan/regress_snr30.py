@@ -28,9 +28,10 @@ real shift is one-signed, noise is not.
 import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-AB = os.path.join(HERE, "..", "artifacts/cgan/snr_ablation/run001/snr_snr_30.json")
+RUN = os.environ.get("CGAN_RUN", "run001")   # E2 at 30 dB vs the same run's D-series eval
+AB = os.path.join(HERE, "..", f"artifacts/cgan/snr_ablation/{RUN}/snr_snr_30.json")
 BD = os.path.join(HERE, "..", "artifacts/cgan/baselines/run001/sweep_K1.json")
-GD = os.path.join(HERE, "..", "artifacts/cgan/gan/run001")
+GD = os.path.join(HERE, "..", f"artifacts/cgan/gan/{RUN}")
 A = "0.05"
 DETS = ["power_one_sided", "power_two_sided", "kurtosis", "spec_cnn"]
 MIN_ERRORS = 25          # below this the count is not a BER measurement

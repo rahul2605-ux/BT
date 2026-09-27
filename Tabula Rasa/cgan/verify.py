@@ -927,6 +927,77 @@ def test_team_timing(L):
               math.sqrt(sigma ** 2 + 1 / (12 * L.sps ** 2)), 0.02 * sigma)
 
 
+def test_team_policy(L):
+    """
+    D4b (team_policy.py) adds two things D4a lacks: a DIFFERENTIABLE fractional delay
+    (delta_k) and a per-drone power fraction (u_k), over real geometry. Check:
+    (a) frac_delay by an integer is a plain circular shift; (b) it carries gradient in
+    the delay; (c) geom's tau/gain match d/c and free space; (d) the heuristic K = 1
+    arm IS the D-series single jammer (the containment ceiling), draw-statistics equal;
+    (e) with u = 1 the received nominal total is exactly the requested T_full; (f) one
+    training step gives finite, non-zero gradient to BOTH policy outputs.
+    """
+    import team_policy as tp
+    print("\n18. D4b learned policy: frac delay, geometry, ceiling, power, gradient")
+    dev = L.device
+
+    # (a) an integer delay == torch.roll(+d)
+    x = torch.randn(4, 400, dtype=torch.complex64, device=dev)
+    y = tp.frac_delay(x, torch.full((4,), 3.0, device=dev))
+    check("frac_delay(3) == roll(+3), max |error|",
+          float((y - torch.roll(x, 3, dims=-1)).abs().max()), 0.0, 1e-4)
+
+    # (b) it is differentiable in the (fractional) delay
+    d = torch.tensor([1.5, 2.5], device=dev, requires_grad=True)
+    tp.frac_delay(torch.randn(2, 128, dtype=torch.complex64, device=dev), d).real[:, 7].sum().backward()
+    check("frac_delay gradient in delay is finite and non-zero",
+          float(torch.isfinite(d.grad).all() & (d.grad.abs().min() > 0)), 1.0, 0.0)
+
+    # (c) analytic geometry: tau = d/c in symbols, gain ratio == free space
+    pos = torch.tensor(np.stack([scene.draw_positions(9000 + i, n_nodes=2 + tp.K_TEAM)
+                                 for i in range(16)]), dtype=torch.float32, device=dev)
+    tau, g = tp.geom(pos)
+    dm = (pos[:, 2:] - pos[:, 1:2]).norm(dim=-1)
+    check("geom tau == d/c [symbols], max |err|", float((tau - dm / tp.C_LIGHT * scene.SYMBOL_RATE).abs().max()),
+          0.0, 1e-4)
+    g_fs = torch.tensor(scene.free_space_gain(dm.cpu().numpy()), device=dev)
+    check("geom gain ratio == free space, max |err|",
+          float((g / g.sum(-1, keepdim=True) - g_fs / g_fs.sum(-1, keepdim=True)).abs().max()), 0.0, 1e-4)
+
+    # (d) heuristic K = 1 == the D-series single jammer (the containment ceiling)
+    PG = PerfectG(L)
+    gan = dict(name="gan", G=PG, scale=PG.scaler.scale)
+    pool1 = torch.tensor(np.stack([scene.draw_positions(9100 + i, n_nodes=3) for i in range(256)]),
+                         dtype=torch.float32)
+    for T in (-6.0, -2.0):
+        team = dict(name="team", rx=tp.make_rx(L, PG, PG.scaler.scale, pool1, "heuristic", 0.0, None))
+        _same_ber(f"heuristic K=1 == single jammer (ceiling), T {T:+.0f} dB",
+                  _batches(L, 8000, team, [T], lk.SNR_DB), _batches(L, 8000, gan, [T], lk.SNR_DB),
+                  floor=0.01)
+
+    # (e) with u = 1 (heuristic) the received nominal total JSR equals the requested T_full
+    F, T = 4096, -8.0
+    j = tp.team_jammer(L, PG, PG.scaler.scale, pos.repeat(F // pos.shape[0], 1, 1), T, 2.0, "heuristic")
+    tot_db = 10 * math.log10(float(j[:, L.active(scene.N_SYM)].abs().pow(2).mean()) / L.p_s)
+    check("heuristic u=1: mean received total JSR [dB] == T_full", tot_db, T, 0.3)
+
+    # (f) one training step -> finite, non-zero gradient to both policy outputs
+    pol = tp.Policy().to(dev)
+    thr = 0.0
+    posb = torch.tensor(np.stack([scene.draw_positions(9200 + i, n_nodes=2 + tp.K_TEAM) for i in range(16)]),
+                        dtype=torch.float32, device=dev)
+    bits, sym, xs = L.modulate(16, scene.N_SYM)
+    jt = tp.team_jammer(L, PG, PG.scaler.scale, posb, -14.0, 4.0, "learned", pol, grad=True)
+    r = L.awgn(xs, L.noise_var(lk.SNR_DB)) + jt
+    lber = attacks.log_expected_ber(dict(bits=bits, z_nf=L.matched_filter(xs + jt, scene.N_SYM)),
+                                    L.noise_var(lk.SNR_DB))
+    (-(lber)).backward()
+    head = pol.net[-1]           # last Linear: rows 0 -> u, 1 -> delta
+    check("policy u-branch gets non-zero gradient", float(head.weight.grad[0].abs().sum() > 0), 1.0, 0.0)
+    check("policy delta-branch gets non-zero gradient", float(head.weight.grad[1].abs().sum() > 0), 1.0, 0.0)
+    check("policy gradients finite", float(torch.isfinite(head.weight.grad).all()), 1.0, 0.0)
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -939,6 +1010,7 @@ def test_baselines():
     test_snr_ablation(L)
     test_team_fading(L)
     test_team_timing(L)
+    test_team_policy(L)
 
 
 def main():
@@ -947,7 +1019,8 @@ def main():
     ap.add_argument("-v", action="store_true")
     ap.add_argument("--baselines-only", action="store_true",
                     help="run only sections 8-17 (scene, channel, attacks, detectors, CNN, shaped, GAN, E2, E3, D4a)")
-    ap.add_argument("--team-only", action="store_true", help="run only sections 16-17 (E3 team, D4a timing)")
+    ap.add_argument("--team-only", action="store_true",
+                    help="run only sections 16-18 (E3 team, D4a timing, D4b policy)")
     args = ap.parse_args()
     VERBOSE = args.v
 
@@ -957,6 +1030,7 @@ def main():
         L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
         test_team_fading(L)
         test_team_timing(L)
+        test_team_policy(L)
     elif not args.baselines_only:
         for sps, pulse in [(8, "rrc0.35"), (4, "rect")]:
             L = lk.Link(sps=sps, pulse=pulse)

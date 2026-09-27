@@ -5,6 +5,7 @@
 % versions from git, commit 4f6a1d5, if the thesis needs them).
 %
 % Budget: ~600 words of prose = ~1.1 IEEE columns, no table, no figure.
+% (~750 since the 2026-09-27 imitation paragraph; cut there first if long.)
 % It summarises; experiments that carry a claim are written out in full in
 % their own sections, so no number here needs a table to be read.
 %
@@ -78,6 +79,18 @@ A $70\%$ gain from channel-aware subcarrier selection, measured at equal configu
 $-4.6\%$ and $+6.2\%$ at equal detectability.
 And with the detector's own false-alarm rate as the stealth budget, no effective unflagged attacker
 existed below $20$\,dB, and the best BER at $20$ and $30$\,dB was $0.011$ and $0.004$.
+
+\textit{Imitation as initialization.}
+Our first detector-aware generators followed~\cite{11184988}: the generator was first trained adversarially to imitate the victim's transmit waveform, then trained on the objective of Sec.~\ref{sec:method} for 400 steps.
+Both choices were revised.
+The budget was short: with ten times the steps, the same generators reached a bit error rate of $3\times10^{-4}$ with up to 3\,dB less power.
+The imitation start was a bias toward the victim's modulation.
+Trained from random weights against the learned detector, the generator put 97\% of its power on 5\% of the symbols, and at that error rate and 30\,dB SNR the detector flagged $15\%$ of its frames, against $48\%$ for the imitation start (four seeds each).
+The price is damage when loud: its error rate levels off near $3\%$, where the imitation-started generator reaches $30\%$, at powers at which every detector already flags every frame.
+Imitation alone, with no damage term, needed 12--15\,dB more power for the same error rate.
+% README Sec. 3.3f "Imitation start and training budget" + seeds + run002.
+% 11184988 = Overleaf key of Zhou 2025 (zhou2025cgan in the other drafts).
+% User 2026-09-27: appendix for now; promote to the main text if space.
 
 These steps fixed three choices for what follows: attacks are parameterised in low dimension rather
 than raw IQ, results are compared at matched detectability under the false-alarm budget, and a learned
