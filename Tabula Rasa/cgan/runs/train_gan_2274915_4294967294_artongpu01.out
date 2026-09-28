@@ -1,0 +1,18 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 0 = {'target': None, 'beta': 0.0}  (tag eff, 32 frames/step, JSR band (-32.0, 0.0))
+  learned power: cap +0.0 dB, start -40.0 dB, gain lr 0.01, damage per
+  step    0  JSR  -37.6  loss 3915.6298  logE[PER] -3915.630  P_det_soft 0.0000  (0s)
+  step   19  JSR  -32.0  loss 3517.3904  logE[PER] -3517.390  P_det_soft 0.0000  (1s)
+wrote task0_smoke_G.pt, task0_smoke.json  (tag eff)
+task 1 = {'target': 'power_one_sided', 'beta': 1.0}  (tag power_one_sided_b1, 32 frames/step, JSR band (-32.0, 0.0))
+  target power_one_sided: threshold 0.100354, clean-frame std 0.000141124 (soft_pdet width)
+  learned power: cap +0.0 dB, start -40.0 dB, gain lr 0.01, damage per
+  step    0  JSR  -38.1  loss 3906.0989  logE[PER] -3905.852  P_det_soft 0.2473  (0s)
+  step   19  JSR  -31.7  loss 3503.1482  logE[PER] -3502.858  P_det_soft 0.2898  (0s)
+wrote task1_smoke_G.pt, task1_smoke.json  (tag power_one_sided_b1)
+task 13 = {'target': 'spec_cnn', 'beta': 1.0}  (tag spec_cnn_b1, 32 frames/step, JSR band (-48.0, -16.0))
+  target spec_cnn: threshold -3.17573, clean-frame std 0.982227 (soft_pdet width)
+  learned power: cap +0.0 dB, start -40.0 dB, gain lr 0.01, damage per
+  step    0  JSR  -37.9  loss 3905.4485  logE[PER] -3905.250  P_det_soft 0.1980  (0s)
+  step   19  JSR  -31.1  loss 3493.0896  logE[PER] -3492.693  P_det_soft 0.3970  (2s)
+wrote task13_smoke_G.pt, task13_smoke.json  (tag spec_cnn_b1)

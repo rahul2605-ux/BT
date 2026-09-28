@@ -55,7 +55,7 @@ def taps(link, delay, phase, l_min=L_MIN, l_max=L_MAX):
     return cir_to_time_channel(fs, a, tau, l_min, l_max)
 
 
-def receive(link, x_padded, jsr_db, delay=None, phase=None, l_min=L_MIN, l_max=L_MAX):
+def receive(link, x_padded, jsr_db, delay=None, phase=None, l_min=L_MIN, l_max=L_MAX, scale=True):
     """
     One jammer at R: x_padded [F, length + 2*PAD] -> [F, length], delayed and
     phase-rotated by Sionna, then scaled to jsr_db (scalar or [F]) over the
@@ -72,6 +72,8 @@ def receive(link, x_padded, jsr_db, delay=None, phase=None, l_min=L_MIN, l_max=L
     # output index b holds input index b + l_min (before the path delay)
     start = PAD - l_min
     y = y[:, start:start + length]
+    if not scale:      # learned-power jammers set their own level (attacks.learned_power)
+        return y
     jsr = torch.as_tensor(jsr_db, dtype=torch.float32, device=dev).reshape(-1, 1)
     return _scale(y, link, jsr)
 

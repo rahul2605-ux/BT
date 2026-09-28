@@ -998,6 +998,71 @@ def test_team_policy(L):
     check("policy gradients finite", float(torch.isfinite(head.weight.grad).all()), 1.0, 0.0)
 
 
+# ================================================================ shadowing (2026-09-27)
+def test_shadowing(L):
+    """
+    README §3.3k puts per-frame log-normal shadowing on the victim's link, so the
+    naive energy detector no longer knows the clean frame power. Check: (a) the gain
+    law -- unit mean power, std shadow_db in dB; (b) shadow_db 0 draws nothing, so
+    every earlier result stays bit-identical; (c) the gain reaches the victim and its
+    sign decisions need no channel estimate: BER == mean over frames of Q(g c0/sqrt(N0));
+    (d) mean clean power is unchanged; (e) power_csi == power at gain 1, keeps the
+    ideal link's clean spread under shadowing while naive power does not; (f) the
+    genie knows the channel: omniscient(1) at full budget still flips every bit.
+    """
+    print("\n19. shadowing on the victim's link: gain law, plumbing, power_csi, genie")
+    N = scene.N_SYM
+    try:
+        # (a) the gain law
+        L.shadow_db = 1.0
+        g2 = L.shadow_gain(200_000).double().pow(2)
+        check("shadow 1 dB: mean power gain", float(g2.mean()), 1.0, 0.005)
+        check("shadow 1 dB: std of power gain [dB]", float((10 * g2.log10()).std()), 1.0, 0.01)
+
+        # (b) sigma 0: nothing drawn, no gain in the output
+        L.shadow_db = 0.0
+        check("shadow 0: shadow_gain is None and frames carry no gain",
+              float(L.shadow_gain(4) is None and "gain" not in attacks.frames(L, 4, None, None, lk.SNR_DB)),
+              1.0, 0.0)
+
+        # (c) BER under shadowing == frame-average of the closed form at each gain
+        L.shadow_db, snr = 3.0, 8.0
+        out = _batches(L, 8192, None, None, snr)
+        fb = _frame_ber(out)
+        want = float(torch.as_tensor(lk.q_function(
+            (out["gain"].reshape(-1) * L.c0 / math.sqrt(L.noise_var(snr))).cpu().numpy())).mean())
+        check("shadow 3 dB, 8 dB SNR: BER == mean_f Q(g c0/sqrt(N0))", float(fb.mean()), want,
+              4 * float(fb.std()) / math.sqrt(fb.numel()) + 1e-6)
+
+        # (d) mean clean power unchanged (unit-mean-power normalisation)
+        p3 = detectors.power(_batches(L, 20_000, None, None, lk.SNR_DB)["r"])
+        L.shadow_db = 0.0
+        p0 = detectors.power(_batches(L, 20_000, None, None, lk.SNR_DB)["r"])
+        check("shadow 3 dB: mean clean power / ideal-link mean", float(p3.mean() / p0.mean()), 1.0,
+              4 * float(p3.std() / p0.mean()) / math.sqrt(p3.numel()))
+
+        # (e) power_csi: == power at gain 1; ideal-link spread under 1 dB shadowing
+        r0 = _batches(L, 4096, None, None, lk.SNR_DB)["r"]
+        check("power_csi(gain 1) == power, max |diff|",
+              float((detectors.power_csi(r0, torch.ones(r0.shape[0], 1, device=L.device), N)
+                     - detectors.power(r0)).abs().max()), 0.0, 1e-12)
+        L.shadow_db = 1.0
+        o1 = _batches(L, 20_000, None, None, lk.SNR_DB)
+        s0 = float(p0.std())
+        check("shadow 1 dB: clean std power_csi / ideal-link std power",
+              float(detectors.power_csi(o1["r"], o1["gain"], N).std()) / s0, 1.0, 0.25)
+        check("shadow 1 dB: naive power's clean std > 50x the ideal link's",
+              float(float(detectors.power(o1["r"]).std()) / s0 > 50), 1.0, 0.0)
+
+        # (f) the genie is handed the faded symbols: omniscient(1) at full budget flips all
+        L.shadow_db = 3.0
+        o = _batches(L, 256, dict(name="omniscient", eta=1.0), 7.0, NO_NOISE_DB)
+        check("shadow 3 dB, noiseless: omniscient(1) at full budget, BER", float(_frame_ber(o).mean()),
+              1.0, 1e-12)
+    finally:
+        L.shadow_db = 0.0
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -1011,6 +1076,7 @@ def test_baselines():
     test_team_fading(L)
     test_team_timing(L)
     test_team_policy(L)
+    test_shadowing(L)
 
 
 def main():
@@ -1018,7 +1084,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", action="store_true")
     ap.add_argument("--baselines-only", action="store_true",
-                    help="run only sections 8-17 (scene, channel, attacks, detectors, CNN, shaped, GAN, E2, E3, D4a)")
+                    help="run only sections 8-19 (scene, channel, attacks, detectors, CNN, shaped, GAN, E2, E3, D4, shadowing)")
+    ap.add_argument("--shadow-only", action="store_true", help="run only section 19 (shadowing)")
     ap.add_argument("--team-only", action="store_true",
                     help="run only sections 16-18 (E3 team, D4a timing, D4b policy)")
     args = ap.parse_args()
@@ -1026,7 +1093,9 @@ def main():
 
     device = lk.setup(seed=1234)
     print(f"device: {device}")
-    if args.team_only:
+    if args.shadow_only:
+        test_shadowing(lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")}))
+    elif args.team_only:
         L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
         test_team_fading(L)
         test_team_timing(L)
@@ -1045,7 +1114,7 @@ def main():
             test_perfect_generator(L)
             test_normalisation(L)
         test_models()
-    if not args.team_only:
+    if not (args.team_only or args.shadow_only):
         test_baselines()
 
     print("\n" + ("ALL CHECKS PASS" if not FAILURES else

@@ -5,7 +5,9 @@ M0 works on one symbol at a time. Zhou's jammer is a *waveform* (1024 I/Q
 samples), so this link keeps exactly the extra layers a waveform needs --
 oversampling, a pulse-shaping filter, a matched filter, symbol-time sampling --
 and nothing else: one channel (h = 1), AWGN, no fading, no synchronisation
-errors on the victim's side.
+errors on the victim's side. The one exception is opt-in: `Link.shadow_db` > 0
+puts per-frame log-normal shadowing on the victim's own link (README §3.3k), and
+only on the measurement path (attacks.frames), not in `run`.
 
 SIGNAL MODEL
 ------------
@@ -122,6 +124,7 @@ class Link:
         self.filt = make_pulse(pulse, sps, self.device)
         self.awgn = AWGN(device=self.device)
         self.p_s = 1.0 / sps
+        self.shadow_db = 0.0        # std of the victim link's per-frame power gain [dB]
 
         # Cascade response measured through the actual Sionna blocks, so the
         # sampling delay does not depend on whether Sionna convolves or correlates.
@@ -138,6 +141,20 @@ class Link:
         sym = self.mapper(bits)
         x = self.filt(self.upsample(sym), padding="full")
         return bits, sym, x
+
+    def shadow_gain(self, n_frames):
+        """
+        Per-frame amplitude gain [F, 1] of the victim's link: log-normal shadowing
+        whose POWER gain has std shadow_db in dB, normalised to unit mean power so
+        SNR and JSR keep their meaning on average. Real and positive, so the per-axis
+        sign decisions need no channel estimate. None when shadow_db == 0 -- nothing
+        is drawn, so the ideal link stays bit-identical (README §3.3k).
+        """
+        if self.shadow_db <= 0:
+            return None
+        s = self.shadow_db * math.log(10.0) / 10.0          # std of ln(power gain)
+        ln_p = s * torch.randn(n_frames, 1, device=self.device) - s * s / 2
+        return torch.exp(ln_p / 2)
 
     def real_segments(self, n_frames, seg_len):
         """

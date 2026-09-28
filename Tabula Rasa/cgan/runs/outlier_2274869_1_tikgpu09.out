@@ -1,0 +1,9 @@
+node: tikgpu09.ee.ethz.ch | gpu: NVIDIA GeForce RTX 3090
+SNR 30 dB | 200000 calibration + 50000 validation clean frames (100s) | realised FAR {"power_one_sided": {"0.05": 0.0498, "0.01": 0.00994, "0.001": 0.00106, "0.0001": 0.00016}, "power_two_sided": {"0.05": 0.05056, "0.01": 0.01028, "0.001": 0.00096, "0.0001": 0.00012}, "kurtosis": {"0.05": 0.05004, "0.01": 0.0099, "0.001": 0.00096, "0.0001": 4e-05}, "spec_cnn": {"0.05": 0.04926, "0.01": 0.01066, "0.001": 0.00108, "0.0001": 8e-05}}
+  noise done (113s)
+  pulsed_p1 done (126s)
+  pulsed_p0.1 done (139s)
+  eff done (153s)
+  spec_cnn_b1 done (166s)
+  spec_cnn_b10 done (179s)
+wrote ../artifacts/cgan/outlier_alarm/run003_per/snr_30.json in 179s

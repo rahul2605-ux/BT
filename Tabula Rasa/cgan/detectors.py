@@ -94,6 +94,20 @@ def power(r):
     return r.abs().pow(2).double().mean(dim=-1)
 
 
+def power_csi(r, gain, n_sym):
+    """
+    One-sided power for a defender that KNOWS its own link's per-frame gain (README
+    §3.3k): mean |r|^2 minus what the shadowing added to the known signal energy.
+    Every symbol carries unit energy and the frame keeps the pulse tails, so the
+    clean signal's frame power is n_sym / len(r). Equal to power(r) at gain 1 (and
+    for gain None, the ideal link), so it only differs where there is shadowing.
+    """
+    p = power(r)
+    if gain is None:
+        return p
+    return p - (gain.reshape(-1).double() ** 2 - 1.0) * n_sym / r.shape[-1]
+
+
 def kurtosis(r):
     m2 = r.abs().pow(2).double().mean(dim=-1)
     m4 = r.abs().pow(4).double().mean(dim=-1)

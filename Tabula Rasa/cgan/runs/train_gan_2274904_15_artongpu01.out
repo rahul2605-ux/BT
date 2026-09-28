@@ -1,0 +1,13 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 15 = {'target': 'spec_cnn', 'beta': 100.0}  (tag spec_cnn_b100, 32 frames/step, JSR band (-48.0, -16.0))
+  target spec_cnn: threshold -3.17573, clean-frame std 0.982227 (soft_pdet width)
+  learned power: cap +0.0 dB, start -40.0 dB, gain lr 0.01, damage per
+  step    0  JSR  -38.2  loss 3910.1033  logE[PER] -3890.230  P_det_soft 0.1987  (1s)
+  step   25  JSR  -30.5  loss 3535.7225  logE[PER] -3501.332  P_det_soft 0.3439  (3s)
+  step   50  JSR  -27.5  loss 3364.8849  logE[PER] -3307.798  P_det_soft 0.5709  (6s)
+  step   75  JSR  -24.4  loss 3126.3222  logE[PER] -3049.699  P_det_soft 0.7662  (8s)
+  step  100  JSR  -20.9  loss 2713.1497  logE[PER] -2619.569  P_det_soft 0.9358  (10s)
+  step  125  JSR  -17.1  loss 2084.6726  logE[PER] -1987.704  P_det_soft 0.9697  (13s)
+  step  150  JSR  -13.1  loss 1221.5292  logE[PER] -1122.849  P_det_soft 0.9868  (15s)
+  step  175  JSR   -9.8  loss 453.8450  logE[PER] -354.669  P_det_soft 0.9918  (18s)
+  step  200  JSR   -7.6  loss 156.6006  logE[PER] -57.932  P_det_soft 0.9867  (20s)

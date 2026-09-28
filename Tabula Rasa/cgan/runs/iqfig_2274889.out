@@ -1,0 +1,7 @@
+clean                            BER 0.00e+00  pdet {'power_one_sided': 0.055, 'power_two_sided': 0.057, 'kurtosis': 0.059, 'spec_cnn': 0.055}
+genie flip (sim04 mechanism)     BER 2.50e-01  pdet {'power_one_sided': 0.061, 'power_two_sided': 0.041, 'kurtosis': 0.049, 'spec_cnn': 0.064}
+matched QPSK, symbol-blind       BER 2.33e-01  pdet {'power_one_sided': 1.0, 'power_two_sided': 1.0, 'kurtosis': 1.0, 'spec_cnn': 1.0}
+GAN vs CNN, β=10                 BER 4.04e-04  pdet {'power_one_sided': 0.568, 'power_two_sided': 0.758, 'kurtosis': 0.102, 'spec_cnn': 0.15}
+GAN vs CNN, β=10                 BER 1.04e-02  pdet {'power_one_sided': 1.0, 'power_two_sided': 1.0, 'kurtosis': 1.0, 'spec_cnn': 1.0}
+GAN vs CNN, β=10                 BER 1.82e-02  pdet {'power_one_sided': 1.0, 'power_two_sided': 1.0, 'kurtosis': 1.0, 'spec_cnn': 1.0}
+wrote /home/rrahman/BT/Tabula Rasa/cgan/../artifacts/cgan/baselines/../iq/fig_iq_sim04_vs_gan.png

@@ -65,11 +65,15 @@ class Defender:
     that predates the ablation is unchanged.
     """
 
-    def __init__(self, L, snr_db=lk.SNR_DB, thr_dir=None):
+    def __init__(self, L, snr_db=lk.SNR_DB, thr_dir=None, cnn_path=None):
         thr_dir = scene.ART if thr_dir is None else thr_dir
         with open(os.path.join(thr_dir, "thresholds.json")) as f:
             self.thr = json.load(f)
-        self.net, scale, _ = detectors.load_cnn(os.path.join(scene.ART, "detector_spec.pt"), L.device)
+        # cnn_path: a surrogate CNN the attacker trained itself (grey-box, train_gan
+        # --detector-dir); its thr_dir then holds that CNN's own thresholds. Default:
+        # the deployed detector, so every existing caller is unchanged.
+        cnn_path = os.path.join(scene.ART, "detector_spec.pt") if cnn_path is None else cnn_path
+        self.net, scale, _ = detectors.load_cnn(cnn_path, L.device)
         # thresholds.json and the checkpoint carry the same scale at 30 dB (both written
         # from one SpecScale by train_spectrogram_cnn.py); off-design only the former moves.
         self.scale = detectors.SpecScale(**self.thr["spec_scale"]) if "spec_scale" in self.thr else scale
@@ -81,6 +85,10 @@ class Defender:
         # the noise LRT is log(s1/s0) with s0 = n0: it has no finite form at the
         # noiseless anchor, so drop the row there rather than fake it (calibrate_snr).
         self.dets = [d for d in DETS if d != "lrt_noise" or self.thr.get("lrt_usable", True)]
+        # a shadowed calibration (README §3.3k) adds the gain-aware energy detector
+        self.shadow_db = self.thr.get("shadow_db", 0.0)
+        if "power_csi" in self.thr:
+            self.dets.insert(1, "power_csi")
         self._lrt_thr = {}
 
     def lrt_threshold(self, jsr_lin, alpha):
@@ -90,14 +98,15 @@ class Defender:
             self._lrt_thr[key] = detectors.calibrate(s, alpha)
         return self._lrt_thr[key]
 
-    def statistics(self, r, z, noise_jsr_lin=None, dets=None, grad=False):
+    def statistics(self, r, z, noise_jsr_lin=None, dets=None, grad=False, gain=None):
         """
         Per-frame statistics, each already in larger-is-more-suspicious form. `dets`
         restricts them to a subset (train_shaped.py scores one detector at a time;
         the CNN is the only expensive one). `grad` only reaches the CNN: power,
         kurtosis and the LRT are differentiable as written, the CNN needs the
         straight-through image path (detectors.cnn_statistic) and one un-batched
-        forward pass, so it is off unless D2 is training against it.
+        forward pass, so it is off unless D2 is training against it. `gain` is
+        attacks.frames' out.get("gain"), needed only by power_csi.
         """
         want = set(self.dets if dets is None else dets)
         s, raw = {}, {}
@@ -105,6 +114,10 @@ class Defender:
             p = raw["power"] = detectors.power(r)
             s["power_one_sided"] = p
             s["power_two_sided"] = detectors.two_sided(p, self.thr["power_clean_mean"])
+        if "power_csi" in want:
+            if gain is None and self.shadow_db > 0:
+                raise ValueError("power_csi on a shadowed link needs the per-frame gain")
+            s["power_csi"] = detectors.power_csi(r, gain, z.shape[-1])
         if "kurtosis" in want:
             raw["kurtosis"] = detectors.kurtosis(r)
             s["kurtosis"] = detectors.two_sided(raw["kurtosis"], self.thr["kurtosis_clean_mean"])
@@ -116,7 +129,7 @@ class Defender:
 
     def threshold(self, det, alpha, noise_jsr_lin=None):
         key = {"power_one_sided": "power_one_sided", "power_two_sided": "power_two_sided",
-               "kurtosis": "kurtosis", "spec_cnn": "cnn"}
+               "power_csi": "power_csi", "kurtosis": "kurtosis", "spec_cnn": "cnn"}
         if det == "lrt_noise":
             return self.lrt_threshold(noise_jsr_lin, alpha)
         return self.thr[key[det]][str(alpha)]
@@ -131,12 +144,14 @@ def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512, keep_stats=False):
     if spec is not None and spec["name"] in ("noise", "shaped"):    # shaped: mismatched, still a valid test
         noise_jsr = float(sum(10 ** (v / 10) for v in jsr_db_k))
     counts = np.zeros(4, dtype=np.int64)
+    frame_errors = 0
     stats, raws = {}, {}
     for i in range(0, n_frames, batch):
         n = min(batch, n_frames - i)
         out = attacks.frames(L, n, spec, jsr_db_k, dfd.snr_db)
         counts += np.array(attacks.error_counts(out))
-        s, raw = dfd.statistics(out["r"], out["z"], noise_jsr)
+        frame_errors += int((out["bits"] != out["bits_hat"]).any(dim=-1).sum())
+        s, raw = dfd.statistics(out["r"], out["z"], noise_jsr, gain=out.get("gain"))
         for k, v in s.items():
             stats.setdefault(k, []).append(v)
         for k, v in raw.items():
@@ -147,6 +162,7 @@ def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512, keep_stats=False):
         pdet[det] = {str(a): detectors.p_detect(s, dfd.threshold(det, a, noise_jsr)) for a in detectors.ALPHAS}
     e, b, se, sb = (int(c) for c in counts)
     res = dict(ber=e / b, ser=se / sb, errors=e, bits=b, sym_errors=se, symbols=sb, frames=n_frames,
+               per=frame_errors / n_frames, frame_errors=frame_errors,
                pdet=pdet, mean_stat={k: float(torch.cat(v).mean()) for k, v in raws.items()})
     if keep_stats:
         res["stat_q"] = {det: detectors.stat_quantiles(s) for det, s in stats.items()}

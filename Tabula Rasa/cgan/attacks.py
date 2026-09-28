@@ -208,6 +208,23 @@ def omniscient_rx(link, sym, jsr_db, eta):
     return link.filt(link.upsample(-(1.0 + eta) * sym * mask), padding="full")
 
 
+def learned_power(y, link, log_gain, cap_db):
+    """
+    A jammer that CHOOSES its power (README §3.3f, 2026-09-27): a learned global gain
+    exp(log_gain) on the generator's own waveform, and a hard per-frame CAP -- a frame
+    whose power over the victim's active window exceeds cap_db (JSR, dB) is scaled down
+    to it, one below the cap is left alone. Unlike scale_to_jsr (the equality
+    projection) this keeps the generator's frame-to-frame power variation, so it may
+    learn to be quiet or loud per frame. y: [F, length] at R, unscaled; cap_db: [F].
+    """
+    g = torch.exp(log_gain)
+    j = y * g
+    a = link.active(link.n_sym_of(j.shape[-1]))
+    p = j[..., a].abs().pow(2).mean(dim=-1, keepdim=True)
+    cap = link.p_s * 10.0 ** (torch.as_tensor(cap_db, dtype=torch.float32, device=y.device).reshape(-1, 1) / 10.0)
+    return j * torch.sqrt(torch.clamp(cap / (p + 1e-30), max=1.0))
+
+
 def jammer_at_rx(link, spec, sym, jsr_db_k):
     """
     Sum of K jammers at R for one attack spec. jsr_db_k: list of K scalars, or a
@@ -234,6 +251,13 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
         elif name == "shaped":
             delay, phase = channel.async_draw(link, F)
             j = channel.receive(link, shaped_tx(link, F, N, spec["theta"]), jsr[:, k], delay, phase)
+        elif name == "gan" and spec.get("power") == "learned":
+            # the JSR argument is a CAP here, not a level (README §3.3f, 2026-09-27)
+            delay, phase = channel.async_draw(link, F)
+            y = channel.receive(link, gan_tx(link, F, N, spec["G"], spec["scale"],
+                                             grad=spec.get("grad", False)), jsr[:, k], delay, phase,
+                                scale=False)
+            j = learned_power(y, link, spec["log_gain"], jsr[:, k])
         elif name == "gan":
             delay, phase = channel.async_draw(link, F)
             j = channel.receive(link, gan_tx(link, F, N, spec["G"], spec["scale"],
@@ -256,10 +280,18 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
     Returns dict(bits, bits_hat, r [F, frame length], z [F, N] matched-filter samples),
     plus z_nf, the matched-filter samples WITHOUT the AWGN, if noiseless (for
     expected_ber). The random draws are the same either way.
+
+    With link.shadow_db > 0 the victim's waveform is scaled per frame by
+    link.shadow_gain (README §3.3k) and out["gain"] [F, 1] holds it. Jammers keep
+    their JSR against the MEAN signal power; the genie is handed the faded symbols,
+    because it knows the victim's channel by definition.
     """
     from scene import N_SYM
     n_sym = N_SYM if n_sym is None else n_sym
     bits, sym, x = link.modulate(n_frames, n_sym)
+    g = link.shadow_gain(n_frames)
+    if g is not None:
+        x, sym = x * g, sym * g
     r = link.awgn(x, link.noise_var(snr_db))
     r_nf = x
     if spec is not None and spec["name"] != "none":
@@ -267,6 +299,8 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
         r, r_nf = r + j, x + j
     z = link.matched_filter(r, n_sym)
     out = dict(bits=bits, bits_hat=link.decide(z), r=r, z=z)
+    if g is not None:
+        out["gain"] = g
     if noiseless:
         out["z_nf"] = link.matched_filter(r_nf, n_sym)
     return out
@@ -293,6 +327,32 @@ def ber_logprob(out, noise_var):
     m = torch.stack([torch.where(b[..., 0] == 0, z.real, -z.real),
                      torch.where(b[..., 1] == 0, z.imag, -z.imag)], dim=-1)
     return torch.special.log_ndtr(-m / math.sqrt(noise_var / 2.0))
+
+
+def log_expected_per(out, noise_var):
+    """
+    log E[frame error rate] as a scalar TENSOR, exact over the AWGN: a frame survives
+    with prob prod_b (1 - p_b), so PER_f = -expm1(sum_b log1p(-p_b)). Where every p_b
+    underflows (a weak jammer) that sum is 0 in float64 and log(-expm1) would be -inf;
+    there PER_f = sum_b p_b to first order, taken as logsumexp of the per-bit log
+    probabilities -- the same no-underflow device as log_expected_ber.
+    """
+    lp = ber_logprob(out, noise_var).flatten(1)                  # [F, bits]
+    return _log_mean_per(lp)
+
+
+def _log_mean_per(lp):
+    """log of the mean over frames of PER_f, from per-bit log error probs lp [F, bits].
+    The exact branch is fed a dummy where it is not used: torch.where differentiates
+    BOTH branches, and log(-expm1(s)) at a tiny nonzero s (~1e-310) has an infinite
+    gradient that the mask turns into 0 * inf = NaN (job 2274904, 2026-09-27)."""
+    s = torch.log1p(-torch.exp(lp).clamp(max=1 - 1e-12)).sum(-1)  # log P(frame survives)
+    use_exact = s < -1e-12
+    s_safe = torch.where(use_exact, s, torch.full_like(s, -1.0))
+    exact = torch.log(-torch.expm1(s_safe))
+    first_order = torch.logsumexp(lp, dim=-1)
+    log_per = torch.where(use_exact, exact, first_order)
+    return torch.logsumexp(log_per, 0) - math.log(log_per.numel())
 
 
 def log_expected_ber(out, noise_var):

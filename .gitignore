@@ -216,3 +216,6 @@ graphify-out/
 # SNR level, ~200 MB total, regenerated on demand by calibrate_snr.calibrate_at.
 # The thresholds.json beside it IS kept -- it is the calibration itself and is small.
 Tabula Rasa/artifacts/cgan/baselines/snr/*/clean_lrt_parts.pt
+
+# /arena skill run state (tournament scratch, hundreds of sub-agent files per run)
+.arena/

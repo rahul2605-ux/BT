@@ -46,6 +46,18 @@ Per noise level (one task):
   5. confirmation on fresh frames for every frontier pick, as everywhere else.
 
 Output: artifacts/cgan/snr_ablation/<run>/snr_<tag>.json, one per level.
+
+--axis shadow (README §3.3k, 2026-09-27) sweeps the second channel knob instead:
+per-frame log-normal shadowing on the victim's link, SHADOW_GRID_DB, at 30 dB. The
+defender at each level is the CNN RETRAINED on shadowed frames plus its own
+calibration (train_spectrogram_cnn.py --shadow-db, under SHADOW_ROOT/shadow_<s>/),
+which adds the gain-aware power detector power_csi. sigma 0 is the deployed
+defender, so that level reproduces §3.3f/E2's 30 dB row. Output
+<run>/shadow_<s>.json.
+
+    for s in 0.01 0.03 0.1 0.3 1 3; do sbatch submit_train_spectrogram_cnn.sh \\
+        --shadow-db $s --out-dir ../artifacts/cgan/baselines/shadow/shadow_$s; done
+    sbatch --array=0-6 submit_snr_ablation.sh --axis shadow --run shadow_run003 --gan-run run003
 """
 
 import mitsuba as mi
@@ -86,15 +98,37 @@ PLAIN_G = os.path.join(scene.ART, "..", "run001_G.pt")
 STATS_FOR = ("plain_run001", "spec_cnn_b10")
 
 
+# std of the victim link's per-frame power gain [dB]. The naive energy detector's
+# margin at 30 dB is +0.24 % of frame power (-26 dB JSR); with unit-mean shadowing a
+# +1.64 sigma fade is exp(1.645 s - s^2/2) - 1, s = sigma ln10/10: +0.4 % at 0.01 dB,
+# +3.8 % at 0.1 dB, +142 % at 3 dB -- the grid spans "invisible to the detector" to
+# sim01's hand-set +200 % budget (README §3.3k).
+SHADOW_GRID_DB = [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0]
+SHADOW_ROOT = os.path.join(scene.ART, "shadow")
+
+
 def task_level(task):
     """Array index -> SNR in dB, or None for the noiseless anchor."""
     return SNR_GRID_DB[task] if task < len(SNR_GRID_DB) else None
 
 
+def shadow_tag(sigma_db):
+    return f"shadow_{sigma_db:g}"
+
+
+def shadow_defender(L, sigma_db):
+    """The deployed defender at sigma 0; else the CNN retrained at sigma + its calibration."""
+    if sigma_db == 0:
+        return baselines.Defender(L)
+    d = os.path.join(SHADOW_ROOT, shadow_tag(sigma_db))
+    return baselines.Defender(L, thr_dir=d, cnn_path=os.path.join(d, "detector_spec.pt"))
+
+
 def generators(gan_dir=GAN_DIR):
     """[(tag, path)] for D1 and every D2 checkpoint, D1 first, D2 in task order."""
     out = [("plain_run001", PLAIN_G)]
-    paths = sorted(glob.glob(os.path.join(gan_dir, "task*_G.pt")),
+    paths = sorted((p for p in glob.glob(os.path.join(gan_dir, "task*_G.pt"))
+                    if re.search(r"task\d+_G\.pt$", p)),            # skips *_smoke_G.pt
                    key=lambda p: int(re.search(r"task(\d+)_G", p).group(1)))
     for p in paths:
         ckpt = torch.load(p, map_location="cpu", weights_only=False)
@@ -136,17 +170,22 @@ def main():
     ap.add_argument("--stats-for", default=",".join(STATS_FOR),
                     help="tags whose statistic quantiles are stored for the all-budget frontier")
     ap.add_argument("--seed", type=int, default=3000)
+    ap.add_argument("--axis", choices=["snr", "shadow"], default="snr",
+                    help="shadow: the task indexes SHADOW_GRID_DB at 30 dB (README §3.3k)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
 
-    snr = task_level(args.task)
-    tag = calibrate_snr.level_tag(snr)
+    shadow = SHADOW_GRID_DB[args.task] if args.axis == "shadow" else 0.0
+    snr = lk.SNR_DB if args.axis == "shadow" else task_level(args.task)
+    tag = shadow_tag(shadow) if args.axis == "shadow" else calibrate_snr.level_tag(snr)
     out_dir = os.path.join(ART, args.run)
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, f"snr_{tag}{'_smoke' if args.smoke else ''}.json")
+    stem = tag if args.axis == "shadow" else f"snr_{tag}"
+    out_path = os.path.join(out_dir, f"{stem}{'_smoke' if args.smoke else ''}.json")
 
     device = lk.setup(seed=args.seed + 100 * args.task)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+    L.shadow_db = shadow
     t0 = time.time()
 
     jsr_grid = [-30.0, -10.0, 0.0] if args.smoke else baselines.JSR_GRID_K1
@@ -156,8 +195,13 @@ def main():
 
     print(f"task {args.task} | {tag} | SNR {'noiseless' if snr is None else f'{snr:g} dB'} | "
           f"device {device}", flush=True)
-    dfd = calibrate_snr.defender_at(L, snr, n_cal=(1024 if args.smoke else args.n_cal))
-    print(f"detectors: {', '.join(dfd.dets)}  (thresholds re-calibrated at this level)", flush=True)
+    if args.axis == "shadow":
+        dfd = shadow_defender(L, shadow)
+        print(f"shadowing {shadow:g} dB | detectors: {', '.join(dfd.dets)}  "
+              f"(CNN retrained + calibrated on shadowed frames)", flush=True)
+    else:
+        dfd = calibrate_snr.defender_at(L, snr, n_cal=(1024 if args.smoke else args.n_cal))
+        print(f"detectors: {', '.join(dfd.dets)}  (thresholds re-calibrated at this level)", flush=True)
 
     clean = baselines.measure(L, dfd, None, None, 4 * frames, keep_stats=True)
     print(f"clean: BER {clean['ber']:.3e} (closed form {L.ber_clean(dfd.snr_db):.3e}), "
@@ -166,8 +210,9 @@ def main():
     meta = dict(run=args.run, task=args.task, snr_db=snr, noiseless=snr is None, tag=tag,
                 n0=dfd.n0, p_s=dfd.p_s, jsr_db=jsr_grid, n_frames=frames, n_confirm=confirm,
                 alphas=detectors.ALPHAS, dets=dfd.dets, seed=args.seed + 100 * args.task,
-                n_sym=scene.N_SYM, K=1, tier=1,
-                cnn="frozen 30 dB weights, re-calibrated scale + threshold",
+                n_sym=scene.N_SYM, K=1, tier=1, axis=args.axis, shadow_db=shadow,
+                cnn=("retrained on shadowed frames (train_spectrogram_cnn --shadow-db)"
+                     if shadow else "frozen 30 dB weights, re-calibrated scale + threshold"),
                 thresholds=dfd.thr)
     res = dict(meta=meta, clean=clean, attacks={}, generators={},
                confirmed_attacks={}, confirmed_generators={})

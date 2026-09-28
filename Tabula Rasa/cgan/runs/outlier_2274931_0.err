@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/rrahman/BT/Tabula Rasa/cgan/outlier_alarm.py", line 172, in <module>
+    main()
+  File "/home/rrahman/BT/Tabula Rasa/cgan/outlier_alarm.py", line 140, in main
+    for tag, gpath in snr_ablation.generators(gdir):          # tag from each checkpoint
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/snr_ablation.py", line 97, in generators
+    paths = sorted((p for p in glob.glob(os.path.join(gan_dir, "task*_G.pt"))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/rrahman/BT/Tabula Rasa/cgan/snr_ablation.py", line 98, in <lambda>
+    if re.search(r"task\d+_G\.pt$", p)),            # skips *_smoke_G.pt
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'group'

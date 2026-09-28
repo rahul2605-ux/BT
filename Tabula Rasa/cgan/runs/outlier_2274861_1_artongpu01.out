@@ -1,0 +1,9 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+SNR 30 dB | 4096 calibration + 2048 validation clean frames (9s) | realised FAR {"power_one_sided": {"0.05": 0.046875, "0.01": 0.0087890625, "0.001": 0.001953125, "0.0001": 0.0009765625}, "power_two_sided": {"0.05": 0.0478515625, "0.01": 0.00830078125, "0.001": 0.0009765625, "0.0001": 0.0}, "kurtosis": {"0.05": 0.04296875, "0.01": 0.0048828125, "0.001": 0.00048828125, "0.0001": 0.00048828125}, "spec_cnn": {"0.05": 0.04150390625, "0.01": 0.01318359375, "0.001": 0.0009765625, "0.0001": 0.00048828125}}
+  noise done (14s)
+  pulsed_p1 done (14s)
+  pulsed_p0.1 done (15s)
+  eff done (15s)
+  spec_cnn_b1 done (15s)
+  spec_cnn_b10 done (15s)
+wrote ../artifacts/cgan/outlier_alarm/run003/snr_30_smoke.json in 15s

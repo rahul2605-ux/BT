@@ -1,0 +1,9 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+SNR 15 dB | 200000 calibration + 50000 validation clean frames (153s) | realised FAR {"power_one_sided": {"0.05": 0.04998, "0.01": 0.0102, "0.001": 0.00094, "0.0001": 6e-05}, "power_two_sided": {"0.05": 0.04986, "0.01": 0.01034, "0.001": 0.001, "0.0001": 8e-05}, "kurtosis": {"0.05": 0.0486, "0.01": 0.00992, "0.001": 0.0009, "0.0001": 8e-05}, "spec_cnn": {"0.05": 0.0484, "0.01": 0.00926, "0.001": 0.00074, "0.0001": 4e-05}}
+  noise done (173s)
+  pulsed_p1 done (193s)
+  pulsed_p0.1 done (213s)
+  eff done (234s)
+  spec_cnn_b1 done (255s)
+  spec_cnn_b10 done (275s)
+wrote ../artifacts/cgan/outlier_alarm/run003/snr_15.json in 275s

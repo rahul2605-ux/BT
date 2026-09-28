@@ -1,0 +1,162 @@
+{
+ "15|spec_cnn|noise|ber": {
+  "value": 0.3225061968431223,
+  "jsr": 15.0
+ },
+ "15|spec_cnn|noise|per": {
+  "value": 1.0516352928804291,
+  "jsr": 15.0
+ },
+ "15|spec_cnn|pulsed_p1|ber": {
+  "value": 0.469967172855157,
+  "jsr": 15.0
+ },
+ "15|spec_cnn|pulsed_p1|per": {
+  "value": 1.1127405813966293,
+  "jsr": -3.0
+ },
+ "15|spec_cnn|pulsed_p0.1|ber": {
+  "value": 0.1574500349997371,
+  "jsr": 15.0
+ },
+ "15|spec_cnn|pulsed_p0.1|per": {
+  "value": 4.316989858380062,
+  "jsr": -10.0
+ },
+ "15|spec_cnn|eff|ber": {
+  "value": 0.22777461494127274,
+  "jsr": 15.0
+ },
+ "15|spec_cnn|eff|per": {
+  "value": 1.7279178699725295,
+  "jsr": -18.0
+ },
+ "15|spec_cnn|spec_cnn_b10|ber": {
+  "value": 0.1416167121947929,
+  "jsr": -16.0
+ },
+ "15|spec_cnn|spec_cnn_b10|per": {
+  "value": 30.384502062463167,
+  "jsr": -17.0
+ },
+ "15|power_one_sided|noise|ber": {
+  "value": 0.32352006770415753,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|noise|per": {
+  "value": 1.0549413452612035,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|pulsed_p1|ber": {
+  "value": 0.47144462050380703,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|pulsed_p1|per": {
+  "value": 1.0549413452612035,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|pulsed_p0.1|ber": {
+  "value": 0.15794501464390456,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|pulsed_p0.1|per": {
+  "value": 1.0549413452612035,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|eff|ber": {
+  "value": 0.22849067574020618,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|eff|per": {
+  "value": 1.0549413452612035,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|spec_cnn_b10|ber": {
+  "value": 0.025658821172277198,
+  "jsr": 15.0
+ },
+ "15|power_one_sided|spec_cnn_b10|per": {
+  "value": 1.3162582463579136,
+  "jsr": -20.0
+ },
+ "30|spec_cnn|noise|ber": {
+  "value": 0.32410121203286385,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|noise|per": {
+  "value": 1.051812272545596,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|pulsed_p1|ber": {
+  "value": 0.4662104614111442,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|pulsed_p1|per": {
+  "value": 1.051812272545596,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|pulsed_p0.1|ber": {
+  "value": 0.15019813770474183,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|pulsed_p0.1|per": {
+  "value": 1.4816047734153448,
+  "jsr": -11.0
+ },
+ "30|spec_cnn|eff|ber": {
+  "value": 0.22985121858614735,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|eff|per": {
+  "value": 1.051812272545596,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|spec_cnn_b10|ber": {
+  "value": 0.025534566125794116,
+  "jsr": 15.0
+ },
+ "30|spec_cnn|spec_cnn_b10|per": {
+  "value": 3.1309773203388285,
+  "jsr": -20.0
+ },
+ "30|power_one_sided|noise|ber": {
+  "value": 0.3242853992087192,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|noise|per": {
+  "value": 1.0524100189433803,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|pulsed_p1|ber": {
+  "value": 0.4664754094738279,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|pulsed_p1|per": {
+  "value": 1.0524100189433803,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|pulsed_p0.1|ber": {
+  "value": 0.15028349551821327,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|pulsed_p0.1|per": {
+  "value": 1.0524100189433803,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|eff|ber": {
+  "value": 0.22998184335781283,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|eff|per": {
+  "value": 1.0524100189433803,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|spec_cnn_b10|ber": {
+  "value": 0.025549077455733003,
+  "jsr": 15.0
+ },
+ "30|power_one_sided|spec_cnn_b10|per": {
+  "value": 1.0503545306251314,
+  "jsr": 14.0
+ }
+}

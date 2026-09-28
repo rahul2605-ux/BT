@@ -5,7 +5,9 @@
 % versions from git, commit 4f6a1d5, if the thesis needs them).
 %
 % Budget: ~600 words of prose = ~1.1 IEEE columns, no table, no figure.
-% (~750 since the 2026-09-27 imitation paragraph; cut there first if long.)
+% (~750 since the 2026-09-27 imitation paragraph; ~1,250 (~2.2 columns) since the six further
+% 2026-09-27 paragraphs, "minimal model" through "timing", ~460 words between them. If long, cut
+% those first: timing, then the first noise ablation, then the shaped-noise control.)
 % It summarises; experiments that carry a claim are written out in full in
 % their own sections, so no number here needs a table to be read.
 %
@@ -17,7 +19,8 @@
 %   - the centralised-optimiser caveat is stated.
 % Other numbers from: jobs 101306/101314/101328 (learned detector),
 % 101622-101817 (raw-IQ RL), 101860/101866/102115 (characterisation),
-% 101870/102305/102316/102319/102390 (realistic channel).
+% 101870/102305/102316/102319/102390 (realistic channel). The 2026-09-27 paragraphs carry their
+% README sections and job IDs in the comment after each.
 % ---------------------------------------------------------------------------
 
 \section{Experiment History}
@@ -80,6 +83,53 @@ $-4.6\%$ and $+6.2\%$ at equal detectability.
 And with the detector's own false-alarm rate as the stealth budget, no effective unflagged attacker
 existed below $20$\,dB, and the best BER at $20$ and $30$\,dB was $0.011$ and $0.004$.
 
+\textit{A minimal model with an optimal detector.}
+To simplify, we reduced the link to single QPSK symbols in white Gaussian noise, where the Neyman--Pearson optimal detector has a closed form.
+Within its $5\%$ false-alarm rate no attack blind to the symbol caused over $10^{-3}$ excess BER at $0$--$28$\,dB $E_b/N_0$, a finite instance of the square-root law~\cite{TODO-key} that checked the model rather than adding a finding.
+Its value was as a reference: at $8$\,dB, against a blind attack on $2\%$ of the symbols, a CNN on the IQ histogram flagged $12\%$ of frames and the optimal test $85\%$, a gap that shrank as the same power was spread over more symbols.
+% README Sec. 3.3 (E1, jobs 2243867/2243879) and 2.1 (prior art, hence "checked the model", not a claim).
+% "< 1e-3": largest blind entry in the 3.3 table is gaussian 7e-4 at sigma 0.5 (3.3's prose says
+% "3e-4", which is boundary_blind alone). Detector rates re-read from
+% artifacts/m0/frontier/results_sigma0.2.json: boundary_blind, P = 0.01, alpha 0.05, duty 0.0196:
+% p_l 0.116 / p_np 0.847; duty 1.0: p_l 0.431 / p_np 0.586 (README's "gap 0.73 -> 0.16").
+% TODO-key: Bash, Goeckel & Towsley, "Limits of reliable communication with low probability of
+% detection on AWGN channels", IEEE JSAC 31(9), 2013 -- bash2013limits in paper_drafts/refs_new.bib,
+% not in Overleaf refs.bib (b9620a0).
+
+% CUT for length 2026-09-27 (restore if space; the multi-jammer half is repeated on the waveform link below):
+% \textit{Noise and jammer count.}
+% On the faded link, noise changed the CNN's false-alarm rate ($0.42$ at $0$\,dB, $0.01$ at $20$\,dB $E_b/N_0$) but not the detection rate of a fixed jammer ($0.42$--$0.60$ throughout).
+% More independent jammers at equal total power raised BER and detection together, leaving the median unflagged BER at $0.008$--$0.009$.
+% README Sec. 3.3c findings 1 and 4 (sim08_ablation run001; jobs 2261126/2261146/2261173, figures 2261174).
+% Fixed jammer: n_active 16, power 1, suite P(det). Finding 4: 1/2/4 jammers, n = 16, mean over
+% Eb/N0 >= 15 dB: BER 0.066/0.084/0.096, detection 0.475/0.513/0.544; median confirmed stealthy BER
+% 0.0078/0.0092/0.0088, the suite's own clean FAR as the budget.
+
+\textit{Reproducing a generative jammer.}
+We reproduced the CGAN jammer of Zhou \emph{et al.}~\cite{11184988} on a single-carrier QPSK waveform link at $30$\,dB SNR.
+At a BER of $10^{-3}$ it needed $6.7$\,dB less power than white noise (paper: $2$--$6$\,dB), but with both jammers asynchronous it beat the paper's ``optimal'' same-modulation jammer by $1.3$\,dB rather than trailing it by $1.3$\,dB.
+Its losses have no error-rate term, so it did damage only by imitating QPSK.
+% README Sec. 3.3b; artifacts/cgan/run001_async_ber_vs_jsr.json (eval job 2260623): noise-GAN 6.66 dB,
+% GAN-optimal -1.30 dB vs the paper's +1.31. The withdrawn 2026-09-14 match (4.34 / +1.01, GAN scored
+% synchronised) is deliberately not quoted.
+
+\textit{Classical baselines on the waveform link.}
+On this link, barrage and pulsed jamming from one to four asynchronous jammers caused no confirmed bit error within the $5\%$ false-alarm rate of one- or two-sided power, kurtosis, or the retrained CNN of~\cite{9707819}; only a jammer that knew the symbol did.
+The CNN replicated ($99.94\%$ accuracy at $+10$\,dB jamming-to-signal ratio) once spectrograms used a fixed decibel scale: the per-image contrast stretch we had used erases a jammer that lifts the whole band evenly, which likely explains the flat-carrier failure above.
+% README Sec. 3.3d (jobs 2266131 CNN, 2266138 K = 1, 2266140 K = 2-4; artifacts/cgan/baselines/run001/
+% summary.json). Last sentence: README calls the contrast stretch "a cleaner explanation" of the
+% flat-carrier result than the one in "Learned detection" above; the user may prefer to fix it there.
+% Cut for length: the exact LRT flags barrage noise ~35 dB below where it does damage (README 3.3d).
+
+\textit{A learned shaped-noise control.}
+Gaussian noise with $48$ spectral and temporal gains tuned by CMA-ES~\cite{TODO-key} reached a BER of $10^{-3}$ at $15.9$\,dB less power than white noise, by concentrating its power in band and in one of $16$ symbol slots.
+Tuned against the CNN, it evaded it only by leaving the victim's band, where it caused no errors.
+% README Sec. 3.3e (cgan_learned run001, jobs 2267051/2267090): beta = 0 (BER only) crosses BER 1e-3
+% at -16.4 dB vs -0.5 dB for white noise; 99-100 % in-band, effective duty 0.06. CNN-trained: CNN
+% 0.03-0.09 up to -20 dB with 0-1 % in-band, BER 0 there. Stealthy BER 0 vs every detector.
+% TODO-key: Hansen, "The CMA evolution strategy: a tutorial", arXiv:1604.00772, 2016 -- hansen2016cma
+% in paper_drafts/refs_new.bib, not in Overleaf refs.bib (b9620a0).
+
 \textit{Imitation as initialization.}
 Our first detector-aware generators followed~\cite{11184988}: the generator was first trained adversarially to imitate the victim's transmit waveform, then trained on the objective of Sec.~\ref{sec:method} for 400 steps.
 Both choices were revised.
@@ -91,6 +141,29 @@ Imitation alone, with no damage term, needed 12--15\,dB more power for the same 
 % README Sec. 3.3f "Imitation start and training budget" + seeds + run002.
 % 11184988 = Overleaf key of Zhou 2025 (zhou2025cgan in the other drafts).
 % User 2026-09-27: appendix for now; promote to the main text if space.
+
+\textit{A first noise ablation.}
+We evaluated the $400$-step generators and classical attacks at $0$--$40$\,dB SNR, recalibrating every detector per level.
+For barrage noise, the loudest unflagged power fell by about $0.7$\,dB per dB of SNR against one-sided power and the CNN, while the onset of errors stayed nearly flat above $10$\,dB, so results at the $30$\,dB of~\cite{11184988} do not transfer across SNR.
+Its generator gains, measured against the imitation-only generator, are superseded.
+% README Sec. 3.3g, the 2026-09-23 run (cgan_snr run001; jobs 2270449/2270556): findings 2-3, stealth
+% edge -21 -> -49 dB (power 1-sided), -16 -> -48 dB (CNN) over SNR 0 -> 40; BER onset -2.0 to -3.1 dB
+% at SNR >= 10. CNN weights frozen at 30 dB, scale and threshold re-fitted. Its -85.1 pp headline
+% compared D2 with D1 and is superseded (README 3.1, 3.3g "E2 on run002"), so it is not quoted.
+
+\textit{Timing among several jammers.}
+With the detector at the victim's receiver, a team can at best match one jammer sending its received sum.
+For teams of the $400$-step CNN-targeted generator, fading on the jammer links left no loss to recover, but timing mattered: at matched BER and $30$\,dB SNR, four copies with bursts aligned at the receiver matched or slightly beat a single copy at $7.3$\,dB less power each, random offsets cost $6$\,dB and $35$ points of detection probability, and a follower timing error of standard deviation $0.5$--$1$ symbol already lost the match.
+% README Sec. 3.3h (E3 pre-check, jobs 2273604-2273606) and 3.3i (D4a, jobs 2273650/2273651). Matched
+% excess BER 3e-4, CNN P(det), K = 4, lossless: one 0.822 @ -21.2 dB, aligned 0.649 @ -22.5, random
+% 0.996 @ -16.3 (30 dB); D4a knee at 30 dB, and in JSR also at 15 dB. "No loss to recover": fading
+% helped a single jammer (block fading acts as frame-level pulsing it could apply itself; 3.3h #1).
+% Cut for length: D4a reaches the random-offset floor by sigma ~ 8-16; E3 random timing costs
+% 19-35 pp over 15/30 dB (35 is the 30 dB value).
+% CANDIDATE: the user may move this paragraph to the main text or to Future Work instead.
+% CAUTION: README 3.1 says no E3/team numbers go in the paper yet, and 3.3j says E3/D4a froze the
+% under-trained run001/task14_G (400 steps, imitation start) and should be re-run on the current
+% generator before being quoted. Included here as history on request; user's call.
 
 These steps fixed three choices for what follows: attacks are parameterised in low dimension rather
 than raw IQ, results are compared at matched detectability under the false-alarm budget, and a learned

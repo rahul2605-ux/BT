@@ -96,7 +96,14 @@ No other training signal is used.
 % Was "Initialization by Imitation" until 2026-09-27; label kept. Architecture
 % details parked for Experiment Setup below. cgan/models.py; train_gan.py
 % --init random.
-We use the generator architecture of the conditional generative adversarial network (GAN) of~\cite{zhou2025cgan}, a convolutional network that maps $\mathbf{z}$ to one segment of $M$ complex samples, but not its training.
+The generator is a generic convolutional network with a dense output layer that maps $\mathbf{z}$ to one segment of $M$ complex samples; we take its layout from the conditional generative adversarial network (GAN) of~\cite{zhou2025cgan}, but not its training, and nothing in the method depends on it.
+% User 2026-09-27. Zhou cites no source for the generator: noise (400) + label
+% embedding (16) -> 3 Conv1d blocks over the noise vector -> adaptive pool ->
+% Linear -> tanh; the dense layer holds 8.39 M of 8.6 M parameters, so it is
+% close to a noise-conditioned MLP, not a waveform-synthesis architecture
+% (WaveGAN/HiFi-GAN upsample). Zhou's citations: Mirza & Osindero (cGAN),
+% Goodfellow (GAN), Fre-GAN (normalisation only), GAN-TTS (multi-task D),
+% Saarinen & Koivunen (baseline). No other architecture needs citing.
 Zhou trains the generator adversarially to imitate the victim's waveform; ours starts from random weights and learns only from the objective below, so the jammer resembles the victim only where resemblance pays.
 Imitation as a starting point biases the generator toward the victim's modulation and makes it markedly easier to detect (Sec.~\ref{sec:exphist}).
 Its modulation-label input is constant here, so the conditioning path is inactive.

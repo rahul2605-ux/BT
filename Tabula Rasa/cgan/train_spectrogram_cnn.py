@@ -96,11 +96,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--seed", type=int, default=11)
+    ap.add_argument("--out-dir", default=scene.ART,
+                    help="where the checkpoint, thresholds and LRT parts go. The default is the "
+                         "DEPLOYED detector; a surrogate (grey-box attacker, README §3.3f) needs "
+                         "its own directory")
+    ap.add_argument("--shadow-db", type=float, default=0.0,
+                    help="log-normal shadowing on the victim's link [dB] (README §3.3k): the same "
+                         "recipe retrained on shadowed frames, plus the gain-aware power detector")
     args = ap.parse_args()
-    os.makedirs(scene.ART, exist_ok=True)
+    out_dir = args.out_dir
+    if os.path.abspath(out_dir) == os.path.abspath(scene.ART) and (args.seed != 11 or args.shadow_db):
+        raise SystemExit("a non-default seed or channel must not overwrite the deployed detector: "
+                         "pass --out-dir")
+    os.makedirs(out_dir, exist_ok=True)
 
     device = lk.setup(seed=args.seed)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+    L.shadow_db = args.shadow_db
     gen = torch.Generator(device=device).manual_seed(args.seed)
     t0 = time.time()
 
@@ -152,7 +164,7 @@ def main():
                     for k in ["clean"] + attacks.LI_TYPES}
 
     # 5. every detector's threshold, on N_CALIBRATION fresh clean frames
-    stat = dict(power=[], kurtosis=[], cnn=[], z=[], e_perp=[])
+    stat = dict(power=[], kurtosis=[], cnn=[], z=[], e_perp=[], power_csi=[])
     for i in range(0, N_CALIBRATION, 1024):
         n = min(1024, N_CALIBRATION - i)
         out = attacks.frames(L, n, None, None, lk.SNR_DB)
@@ -160,6 +172,7 @@ def main():
         stat["power"].append(s["power"]); stat["kurtosis"].append(s["kurtosis"])
         stat["cnn"].append(s["cnn"])
         stat["z"].append(s["lrt"][0].to(torch.complex64).cpu()); stat["e_perp"].append(s["lrt"][1].cpu())
+        stat["power_csi"].append(detectors.power_csi(out["r"], out.get("gain"), out["z"].shape[-1]))
     D = s["lrt"][2]
     stat = {k: torch.cat(v) for k, v in stat.items()}
     pm, km = float(stat["power"].mean()), float(stat["kurtosis"].mean())
@@ -173,8 +186,20 @@ def main():
         cnn={str(a): detectors.calibrate(stat["cnn"], a) for a in detectors.ALPHAS},
         lrt_d=D, noise_var=L.noise_var(lk.SNR_DB), p_s=L.p_s, spec_scale=scale.to_dict(),
     )
-    torch.save(dict(z=stat["z"], e_perp=stat["e_perp"], D=D), os.path.join(scene.ART, "clean_lrt_parts.pt"))
-    with open(os.path.join(scene.ART, "thresholds.json"), "w") as f:
+    if args.shadow_db:
+        # README §3.3k. The noise LRT's QPSK mixture assumes unit gain, so on a shadowed
+        # link it is no longer the optimal test it is reported as: dropped, not faked.
+        thresholds.update(
+            shadow_db=args.shadow_db, lrt_usable=False,
+            power_csi={str(a): detectors.calibrate(stat["power_csi"], a) for a in detectors.ALPHAS},
+            clean_stat_q=dict(
+                power_one_sided=detectors.stat_quantiles(stat["power"]),
+                power_two_sided=detectors.stat_quantiles(detectors.two_sided(stat["power"], pm)),
+                power_csi=detectors.stat_quantiles(stat["power_csi"]),
+                kurtosis=detectors.stat_quantiles(detectors.two_sided(stat["kurtosis"], km)),
+                spec_cnn=detectors.stat_quantiles(stat["cnn"])))
+    torch.save(dict(z=stat["z"], e_perp=stat["e_perp"], D=D), os.path.join(out_dir, "clean_lrt_parts.pt"))
+    with open(os.path.join(out_dir, "thresholds.json"), "w") as f:
         json.dump(thresholds, f, indent=2)
 
     # 6. reproduction check at high JSR (the paper's regime), and P(det) vs JSR per type
@@ -197,7 +222,7 @@ def main():
 
     torch.save(dict(state_dict=net.state_dict(), scale=scale.to_dict(), thresholds=thresholds,
                     epochs=args.epochs, seed=args.seed, history=history),
-               os.path.join(scene.ART, "detector_spec.pt"))
+               os.path.join(out_dir, "detector_spec.pt"))
     report = dict(
         paper=PAPER, config=dict(model="EfficientNet-B0 (torchvision, ImageNet init)", optimiser="SGD",
                                  lr=1e-3, momentum=0.0, batch=32, epochs=args.epochs,
@@ -212,7 +237,7 @@ def main():
         pdet_vs_jsr=dict(jsr_db=grid, alpha=0.05, per_type=pdet_vs_jsr),
         thresholds=thresholds, runtime_s=time.time() - t0,
     )
-    with open(os.path.join(scene.ART, "spec_cnn_training.json"), "w") as f:
+    with open(os.path.join(out_dir, "spec_cnn_training.json"), "w") as f:
         json.dump(report, f, indent=2)
 
     print("\n--- Li et al. spectrogram CNN, retrained ---")

@@ -1,0 +1,13 @@
+node: tikgpu05.ee.ethz.ch | gpu: Tesla V100-PCIE-32GB
+task 13 = {'target': 'spec_cnn', 'beta': 1.0}  (tag spec_cnn_b1, 32 frames/step, JSR band (-48.0, -16.0))
+  target spec_cnn: threshold -3.17573, clean-frame std 0.972924 (soft_pdet width)
+  learned power: cap +0.0 dB, start -40.0 dB, gain lr 0.01, damage per
+  step    0  JSR  -38.0  loss 3898.5422  logE[PER] -3898.318  P_det_soft 0.2238  (1s)
+  step   25  JSR  -30.3  loss 3486.2754  logE[PER] -3485.916  P_det_soft 0.3591  (3s)
+  step   50  JSR  -27.4  loss 3266.4423  logE[PER] -3265.963  P_det_soft 0.4791  (5s)
+  step   75  JSR  -24.2  loss 3059.0347  logE[PER] -3058.343  P_det_soft 0.6913  (7s)
+  step  100  JSR  -20.9  loss 2597.2345  logE[PER] -2596.399  P_det_soft 0.8354  (9s)
+  step  125  JSR  -17.3  loss 2077.3529  logE[PER] -2076.426  P_det_soft 0.9266  (11s)
+  step  150  JSR  -13.5  loss 1192.7194  logE[PER] -1191.775  P_det_soft 0.9441  (13s)
+  step  175  JSR  -10.2  loss 455.3984  logE[PER] -454.445  P_det_soft 0.9535  (15s)
+  step  200  JSR   -7.8  loss 75.6709  logE[PER] -74.719  P_det_soft 0.9516  (17s)

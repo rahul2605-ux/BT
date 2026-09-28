@@ -1,0 +1,2 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 0 = {'target': None, 'beta': 0.0}  (tag eff, 32 frames/step, JSR band (-32.0, 0.0))
