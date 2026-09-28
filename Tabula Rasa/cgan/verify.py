@@ -1063,6 +1063,46 @@ def test_shadowing(L):
         L.shadow_db = 0.0
 
 
+# ================================================================ listening jammer (2026-09-28)
+def test_sync(L):
+    """
+    README §3.3l: Link.jammer_sync puts every jammer on R's symbol grid with a still
+    uniform phase. Check: (a) the default is still asynchronous, offset uniform over a
+    symbol; (b) sync zeroes the offset and leaves the phase draws untouched, so a sync
+    run is paired draw for draw with an async one; (c) it reaches the measurement
+    path exactly -- a synchronous matched-QPSK jammer (pulsed p = 1), noiseless, errs
+    on a bit iff sqrt(JSR) cos(theta) < -1/sqrt(2), theta uniform, i.e.
+    BER = arccos(1 / sqrt(2 JSR)) / pi (0.25 at 0 dB, 1/3 at 3 dB). An async jammer's
+    ISI would miss it.
+    """
+    print("\n20. listening jammer: synchronous arrival, random phase")
+    F = 100_000
+    try:
+        # (a) default: asynchronous
+        check("default Link.jammer_sync is False", float(L.jammer_sync is False), 1.0, 0.0)
+        lk.setup(L.device, seed=77)
+        d_async, p_async = channel.async_draw(L, F)
+        check("async offset mean [samples] == sps/2", float(d_async.mean()), L.sps / 2,
+              4 * L.sps / math.sqrt(12 * F))
+
+        # (b) sync: offset 0, phases identical draw for draw
+        L.jammer_sync = True
+        lk.setup(L.device, seed=77)
+        d_sync, p_sync = channel.async_draw(L, F)
+        check("sync: max |offset| [samples]", float(d_sync.abs().max()), 0.0, 0.0)
+        check("sync: phases == async phases, max |diff|", float((p_sync - p_async).abs().max()), 0.0, 0.0)
+
+        # (c) closed form for a synchronous matched-QPSK jammer, noiseless
+        for jsr_db in (0.0, 3.0):
+            t = 1.0 / math.sqrt(2.0 * 10 ** (jsr_db / 10))
+            fb = _frame_ber(_batches(L, 4096, dict(name="pulsed", p=1.0), [jsr_db], NO_NOISE_DB))
+            check(f"sync matched QPSK {jsr_db:+.0f} dB noiseless: BER == arccos(1/sqrt(2 JSR))/pi",
+                  float(fb.mean()), math.acos(t) / math.pi,
+                  4 * float(fb.std()) / math.sqrt(fb.numel()) + 0.005)
+    finally:
+        L.jammer_sync = False
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -1077,6 +1117,7 @@ def test_baselines():
     test_team_timing(L)
     test_team_policy(L)
     test_shadowing(L)
+    test_sync(L)
 
 
 def main():
@@ -1084,8 +1125,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-v", action="store_true")
     ap.add_argument("--baselines-only", action="store_true",
-                    help="run only sections 8-19 (scene, channel, attacks, detectors, CNN, shaped, GAN, E2, E3, D4, shadowing)")
-    ap.add_argument("--shadow-only", action="store_true", help="run only section 19 (shadowing)")
+                    help="run only sections 8-20 (scene, channel, attacks, detectors, CNN, shaped, GAN, E2, E3, D4, shadowing, sync)")
+    ap.add_argument("--shadow-only", action="store_true", help="run only sections 19-20 (shadowing, sync)")
     ap.add_argument("--team-only", action="store_true",
                     help="run only sections 16-18 (E3 team, D4a timing, D4b policy)")
     args = ap.parse_args()
@@ -1094,7 +1135,9 @@ def main():
     device = lk.setup(seed=1234)
     print(f"device: {device}")
     if args.shadow_only:
-        test_shadowing(lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")}))
+        L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+        test_shadowing(L)
+        test_sync(L)
     elif args.team_only:
         L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
         test_team_fading(L)

@@ -37,9 +37,18 @@ L_MIN, L_MAX = -32, 40  # sinc tap range: delays up to L_MAX - 32 samples keep +
 
 
 def async_draw(link, n_frames):
-    """Per-frame asynchronous timing offset [samples, float] and carrier phase [rad]."""
+    """
+    Per-frame timing offset [samples, float] and carrier phase [rad]. Asynchronous
+    (offset uniform over a symbol) unless link.jammer_sync: the LISTENING jammer
+    (README §3.3l), which has learned T's symbol clock and the geometry, lands on R's
+    symbol grid (offset 0) but keeps a uniform phase -- the T->R carrier phase is not
+    observable by a third party. The offset is drawn either way, so a synchronous run
+    sees the same phases as an asynchronous one, draw for draw.
+    """
     delay = torch.rand(n_frames, device=link.device) * link.sps
     phase = 2 * math.pi * torch.rand(n_frames, device=link.device)
+    if link.jammer_sync:
+        delay = torch.zeros_like(delay)
     return delay, phase
 
 

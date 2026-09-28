@@ -172,6 +172,9 @@ def main():
     ap.add_argument("--seed", type=int, default=3000)
     ap.add_argument("--axis", choices=["snr", "shadow"], default="snr",
                     help="shadow: the task indexes SHADOW_GRID_DB at 30 dB (README §3.3k)")
+    ap.add_argument("--sync", action="store_true",
+                    help="every jammer lands on R's symbol grid, the listening jammer (README §3.3l); "
+                         "same seed as an async run = paired draws (same bits, noise, phases)")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
 
@@ -186,6 +189,7 @@ def main():
     device = lk.setup(seed=args.seed + 100 * args.task)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     L.shadow_db = shadow
+    L.jammer_sync = args.sync
     t0 = time.time()
 
     jsr_grid = [-30.0, -10.0, 0.0] if args.smoke else baselines.JSR_GRID_K1
@@ -210,7 +214,7 @@ def main():
     meta = dict(run=args.run, task=args.task, snr_db=snr, noiseless=snr is None, tag=tag,
                 n0=dfd.n0, p_s=dfd.p_s, jsr_db=jsr_grid, n_frames=frames, n_confirm=confirm,
                 alphas=detectors.ALPHAS, dets=dfd.dets, seed=args.seed + 100 * args.task,
-                n_sym=scene.N_SYM, K=1, tier=1, axis=args.axis, shadow_db=shadow,
+                n_sym=scene.N_SYM, K=1, tier=1, axis=args.axis, shadow_db=shadow, sync=args.sync,
                 cnn=("retrained on shadowed frames (train_spectrogram_cnn --shadow-db)"
                      if shadow else "frozen 30 dB weights, re-calibrated scale + threshold"),
                 thresholds=dfd.thr)

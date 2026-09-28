@@ -200,6 +200,8 @@ def main():
     ap.add_argument("--shadow-db", type=float, default=0.0,
                     help="log-normal shadowing on the victim's link [dB] (README §3.3k); pair it "
                          "with --detector-dir pointing at that level's retrained defender")
+    ap.add_argument("--sync", action="store_true",
+                    help="the listening jammer (README §3.3l): lands on R's symbol grid, phase still random")
     ap.add_argument("--rep", type=int, default=0,
                     help="seed replicate: 0 = the original seeds; r > 0 shifts every seed by 1000 r "
                          "(fresh init for --init random, fresh frames either way)")
@@ -211,13 +213,14 @@ def main():
     out = os.path.join(scene.ART, "..", "gan", args.run)
     if args.run == RUN and (args.init != "warm" or args.rep != 0 or args.steps != 400 or args.band
                             or args.detector_dir or args.power != "fixed" or args.damage != "ber"
-                            or args.shadow_db):
+                            or args.shadow_db or args.sync):
         raise SystemExit("run001 holds the original recipe (warm, 400 steps, rep 0); "
                          "write any variant to its own --run folder")
     os.makedirs(out, exist_ok=True)
     device = lk.setup(seed=4000 + args.task + 1000 * args.rep)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     L.shadow_db = args.shadow_db
+    L.jammer_sync = args.sync
     dfd = (baselines.Defender(L) if args.detector_dir is None else
            baselines.Defender(L, thr_dir=args.detector_dir,
                               cnn_path=os.path.join(args.detector_dir, "detector_spec.pt")))
@@ -248,7 +251,7 @@ def main():
         recipe = dict(target=task["target"], beta=task["beta"], steps=steps, frames=frames,
                       lr=2e-4, jsr_band=band, alpha=ALPHA, init=args.init, rep=args.rep,
                       detector=args.detector_dir or "deployed", power=args.power, damage=args.damage,
-                      shadow_db=args.shadow_db,
+                      shadow_db=args.shadow_db, sync=args.sync,
                       jsr_cap=args.jsr_cap if args.power == "learned" else None,
                       warm_start=os.path.relpath(args.gen0) if args.init == "warm" else None)
         torch.save({"state_dict": G.state_dict(), "n_classes": 1, "seg_len": models.SEG_LEN,

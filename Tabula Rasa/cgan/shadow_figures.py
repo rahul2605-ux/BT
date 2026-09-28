@@ -17,8 +17,11 @@ import math
 import os
 
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-from snr_figures import BER_FLOOR, _cross_log
+from snr_figures import BER_FLOOR, GRID, INK, INK2, _cross_log, style
 
 AD = "../artifacts/cgan/snr_ablation"
 DETS = ["power_one_sided", "power_csi", "kurtosis", "spec_cnn"]
@@ -92,10 +95,88 @@ def summary(levels):
               + "  ".join(f"{SHORT.get(k, k)} {v[0]:.1e} ({v[1]})" for k, v in best.items()))
 
 
+# ---------------------------------------------------------------- linear frontier
+# The whole damage range on a LINEAR axis (user, 2026-09-28): the stealthy region is
+# one end of the curve, not the evaluation. Reference jammers dashed, generators
+# solid, one marker each -- two pairs sit at CVD dE 6.4-7.6 (genie/GAN-CNN protan,
+# GAN-beta0/GAN-power deutan), legal only with that secondary encoding.
+FRONT = [("omniscient_e1", "genie (knows the symbols)", "#333333", "X", (0, (5, 2))),
+         ("noise", "white noise", "#0072B2", "o", (0, (5, 2))),
+         ("pulsed_p1", "matched QPSK", "#D55E00", "P", (0, (5, 2))),
+         ("pulsed_p0.1", "Amuru pulsed (p = 0.1)", "#E69F00", "D", (0, (5, 2))),
+         ("eff", "GAN, no detection term (β = 0)", "#009E73", "^", "-"),
+         ("power_one_sided_b10", "GAN vs power (β = 10)", "#CC79A7", "v", "-"),
+         ("spec_cnn_b10", "GAN vs CNN (β = 10)", "#882255", "s", "-")]
+FRONT_DETS = [("power_one_sided", "power threshold (one-sided)"), ("kurtosis", "kurtosis"),
+              ("spec_cnn", "spectrogram CNN")]
+BUDGET = 0.5
+
+
+def at_budget(pts, det, key, budget=BUDGET):
+    """Max damage `key` over sweep points with P(det) <= budget (None if none qualifies)."""
+    ok = [p[key] for p in pts if pdet(p, det) <= budget and key in p]
+    return max(ok) if ok else None
+
+
+def fig_linear(d, out):
+    fig, axes = plt.subplots(1, len(FRONT_DETS), figsize=(13.5, 4.6), sharey=True)
+    for ax, (det, title) in zip(axes, FRONT_DETS):
+        style(ax)
+        far = pdet(d["clean"], det)
+        ax.axvline(far, color=INK2, lw=1, ls=":", zorder=1)
+        ax.axvline(BUDGET, color=INK2, lw=1, ls=(0, (4, 3)), zorder=1)
+        ax.axhline(0.5, color=GRID, lw=1.2, zorder=1)
+        for key, lab, col, mk, ls in FRONT:
+            pts = d["attacks"].get(key) or d["generators"].get(key)
+            x = [pdet(p, det) for p in pts]
+            y = [p["ber"] for p in pts]
+            ax.plot(x, y, color=col, lw=2, ls=ls, marker=mk, ms=6, markevery=5, label=lab,
+                    zorder=3, markeredgecolor="white", markeredgewidth=0.8)
+        ax.set_xlim(-0.02, 1.02)
+        ax.set_ylim(-0.02, 1.02)
+        ax.set_title(title, color=INK, fontsize=11)
+        ax.set_xlabel("P(det) per frame, α = 0.05", color=INK2)
+        ax.text(far + 0.015, 0.97, "FAR", color=INK2, fontsize=8, va="top")
+        ax.text(BUDGET + 0.015, 0.97, "P(det) = 0.5", color=INK2, fontsize=8, va="top")
+        ax.text(0.99, 0.51, "random guessing", color=INK2, fontsize=8, ha="right", va="bottom")
+    axes[0].set_ylabel("BER (linear)", color=INK2)
+    h, lab = axes[0].get_legend_handles_labels()
+    fig.legend(h, lab, loc="lower center", ncol=4, frameon=False, fontsize=9,
+               bbox_to_anchor=(0.5, -0.12), labelcolor=INK)
+    s = d["meta"]["shadow_db"]
+    fig.suptitle(f"Damage vs detection over the whole range — 30 dB SNR, "
+                 f"{'ideal link' if not s else f'shadowing {s:g} dB'}, one point per JSR (−50…+15 dB)",
+                 color=INK, fontsize=11, y=1.02)
+    fig.savefig(out, dpi=160, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    print(f"wrote {os.path.relpath(out)}")
+
+
+def budget_table(d):
+    print(f"\nmax damage with P(det) <= {BUDGET} (over the JSR grid), BER / PER:")
+    print(f"  {'jammer':<34}" + "".join(f"{t[:22]:>24}" for _, t in FRONT_DETS))
+    for key, lab, *_ in FRONT:
+        pts = d["attacks"].get(key) or d["generators"].get(key)
+        cells = []
+        for det, _ in FRONT_DETS:
+            b, p = at_budget(pts, det, "ber"), at_budget(pts, det, "per")
+            cells.append("--" if b is None else f"{b:.4f} / {p:.3f}")
+        print(f"  {lab:<34}" + "".join(f"{c:>24}" for c in cells))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default="shadow_run003")
-    summary(load(ap.parse_args().run))
+    ap.add_argument("--linear", type=float, default=None, metavar="SIGMA",
+                    help="linear BER-vs-P(det) figure + P(det)<=0.5 table at this shadowing level")
+    args = ap.parse_args()
+    levels = load(args.run)
+    if args.linear is None:
+        summary(levels)
+        return
+    d = next(x for x in levels if x["meta"]["shadow_db"] == args.linear)
+    fig_linear(d, os.path.join(AD, args.run, f"fig_frontier_linear_{args.linear:g}.png"))
+    budget_table(d)
 
 
 if __name__ == "__main__":

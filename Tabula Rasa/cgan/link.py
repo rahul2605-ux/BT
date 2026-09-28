@@ -125,6 +125,7 @@ class Link:
         self.awgn = AWGN(device=self.device)
         self.p_s = 1.0 / sps
         self.shadow_db = 0.0        # std of the victim link's per-frame power gain [dB]
+        self.jammer_sync = False    # jammers land on R's symbol grid (channel.async_draw, §3.3l)
 
         # Cascade response measured through the actual Sionna blocks, so the
         # sampling delay does not depend on whether Sionna convolves or correlates.
