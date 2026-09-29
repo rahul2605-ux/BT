@@ -1,0 +1,810 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+task 4 | SNR 15 dB | defender A (/usr/itetnas04/data-scratch-01/rrahman/data/bt_d6/Tabula Rasa/cgan/../artifacts/cgan/baselines/arms/snr15_A) | detectors power_one_sided, power_two_sided, kurtosis, spec_cnn, lrt_noise | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.04833984375, "power_two_sided": 0.04736328125, "kurtosis": 0.05322265625, "spec_cnn": 0.0517578125}
+Li classes, li_range [-20.0, 10.0]: accuracy 0.9157, FAR (argmax) 0.0682, DR at alpha 0.8888, AUC 0.9651  (33s)
+Li classes, wide_range [-35.0, 10.0]: accuracy 0.7928, FAR (argmax) 0.0778, DR at alpha 0.6461, AUC 0.8563  (33s)
+  noise          JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.051 kurtosis 0.061 spec_cnn 0.043 lrt_noise 0.068
+  noise          JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.049 kurtosis 0.053 spec_cnn 0.053 lrt_noise 0.049
+  noise          JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.033 power_two_sided 0.043 kurtosis 0.043 spec_cnn 0.061 lrt_noise 0.062
+  noise          JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.037 kurtosis 0.045 spec_cnn 0.041 lrt_noise 0.064
+  noise          JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.043 kurtosis 0.061 spec_cnn 0.057 lrt_noise 0.059
+  noise          JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.049 kurtosis 0.055 spec_cnn 0.070 lrt_noise 0.053
+  noise          JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.039 kurtosis 0.035 spec_cnn 0.041 lrt_noise 0.039
+  noise          JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.041 kurtosis 0.043 spec_cnn 0.057 lrt_noise 0.064
+  noise          JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.051 kurtosis 0.035 spec_cnn 0.045 lrt_noise 0.037
+  noise          JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.068 kurtosis 0.062 spec_cnn 0.039 lrt_noise 0.068
+  noise          JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.047 kurtosis 0.051 spec_cnn 0.037 lrt_noise 0.064
+  noise          JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.049 kurtosis 0.039 spec_cnn 0.053 lrt_noise 0.051
+  noise          JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.053 kurtosis 0.045 spec_cnn 0.047 lrt_noise 0.072
+  noise          JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.043 kurtosis 0.047 spec_cnn 0.064 lrt_noise 0.059
+  noise          JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.045 kurtosis 0.062 spec_cnn 0.055 lrt_noise 0.098
+  noise          JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.080 power_two_sided 0.053 kurtosis 0.053 spec_cnn 0.070 lrt_noise 0.113
+  noise          JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.055 kurtosis 0.047 spec_cnn 0.043 lrt_noise 0.105
+  noise          JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.076 kurtosis 0.049 spec_cnn 0.055 lrt_noise 0.158
+  noise          JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.049 kurtosis 0.055 spec_cnn 0.061 lrt_noise 0.182
+  noise          JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.039 kurtosis 0.059 spec_cnn 0.062 lrt_noise 0.252
+  noise          JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.043 kurtosis 0.072 spec_cnn 0.080 lrt_noise 0.328
+  noise          JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.086 power_two_sided 0.055 kurtosis 0.076 spec_cnn 0.102 lrt_noise 0.418
+  noise          JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.109 power_two_sided 0.070 kurtosis 0.053 spec_cnn 0.096 lrt_noise 0.502
+  noise          JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.045 kurtosis 0.074 spec_cnn 0.146 lrt_noise 0.666
+  noise          JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.098 power_two_sided 0.064 kurtosis 0.043 spec_cnn 0.176 lrt_noise 0.857
+  noise          JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.154 power_two_sided 0.082 kurtosis 0.043 spec_cnn 0.254 lrt_noise 0.951
+  noise          JSR  -24.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.176 power_two_sided 0.127 kurtosis 0.049 spec_cnn 0.207 lrt_noise 0.998
+  noise          JSR  -23.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.219 power_two_sided 0.109 kurtosis 0.059 spec_cnn 0.354 lrt_noise 0.998
+  noise          JSR  -22.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.266 power_two_sided 0.189 kurtosis 0.064 spec_cnn 0.482 lrt_noise 1.000
+  noise          JSR  -21.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.352 power_two_sided 0.256 kurtosis 0.070 spec_cnn 0.646 lrt_noise 1.000
+  noise          JSR  -20.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.484 power_two_sided 0.379 kurtosis 0.057 spec_cnn 0.787 lrt_noise 1.000
+  noise          JSR  -19.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.609 power_two_sided 0.480 kurtosis 0.086 spec_cnn 0.910 lrt_noise 1.000
+  noise          JSR  -18.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.746 power_two_sided 0.676 kurtosis 0.121 spec_cnn 0.975 lrt_noise 1.000
+  noise          JSR  -17.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.875 power_two_sided 0.799 kurtosis 0.152 spec_cnn 0.994 lrt_noise 1.000
+  noise          JSR  -16.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.961 power_two_sided 0.928 kurtosis 0.184 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -15.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.988 power_two_sided 0.973 kurtosis 0.238 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -14.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.342 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -13.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.545 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -12.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.691 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -11.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.848 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -10.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.967 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -9.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.994 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -8.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -7.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -6.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -5.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -4.0 dB  BER 1.53e-05  PER 0.004  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -3.0 dB  BER 3.05e-05  PER 0.008  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -2.0 dB  BER 2.14e-04  PER 0.053  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -1.0 dB  BER 9.77e-04  PER 0.227  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +0.0 dB  BER 2.79e-03  PER 0.523  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +1.0 dB  BER 6.20e-03  PER 0.811  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +2.0 dB  BER 1.30e-02  PER 0.961  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +3.0 dB  BER 2.30e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +4.0 dB  BER 3.78e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +5.0 dB  BER 5.71e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +6.0 dB  BER 8.03e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +7.0 dB  BER 1.04e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +8.0 dB  BER 1.30e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +9.0 dB  BER 1.58e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +10.0 dB  BER 1.85e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +11.0 dB  BER 2.12e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +12.0 dB  BER 2.38e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +13.0 dB  BER 2.64e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +14.0 dB  BER 2.87e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +15.0 dB  BER 3.08e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  [A @ 15 dB] noise (classical) done (53s)
+  pulsed_p1      JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.051 kurtosis 0.059 spec_cnn 0.051
+  pulsed_p1      JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.041 power_two_sided 0.039 kurtosis 0.039 spec_cnn 0.064
+  pulsed_p1      JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.061 kurtosis 0.045 spec_cnn 0.037
+  pulsed_p1      JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.059 kurtosis 0.051 spec_cnn 0.059
+  pulsed_p1      JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.051 kurtosis 0.057 spec_cnn 0.055
+  pulsed_p1      JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.043 kurtosis 0.053 spec_cnn 0.061
+  pulsed_p1      JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.061 kurtosis 0.041 spec_cnn 0.043
+  pulsed_p1      JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.031 kurtosis 0.039 spec_cnn 0.053
+  pulsed_p1      JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.037 kurtosis 0.037 spec_cnn 0.041
+  pulsed_p1      JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.066 kurtosis 0.059 spec_cnn 0.053
+  pulsed_p1      JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.053 kurtosis 0.039 spec_cnn 0.059
+  pulsed_p1      JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.053 kurtosis 0.043 spec_cnn 0.055
+  pulsed_p1      JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.061 kurtosis 0.051 spec_cnn 0.045
+  pulsed_p1      JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.035 kurtosis 0.057 spec_cnn 0.049
+  pulsed_p1      JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.072 power_two_sided 0.055 kurtosis 0.047 spec_cnn 0.043
+  pulsed_p1      JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.039 kurtosis 0.053 spec_cnn 0.057
+  pulsed_p1      JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.047 kurtosis 0.047 spec_cnn 0.041
+  pulsed_p1      JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.047 kurtosis 0.055 spec_cnn 0.059
+  pulsed_p1      JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.049 kurtosis 0.031 spec_cnn 0.072
+  pulsed_p1      JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.104 power_two_sided 0.090 kurtosis 0.045 spec_cnn 0.066
+  pulsed_p1      JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.086 power_two_sided 0.076 kurtosis 0.055 spec_cnn 0.055
+  pulsed_p1      JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.117 power_two_sided 0.094 kurtosis 0.057 spec_cnn 0.074
+  pulsed_p1      JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.131 power_two_sided 0.104 kurtosis 0.049 spec_cnn 0.047
+  pulsed_p1      JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.145 power_two_sided 0.104 kurtosis 0.049 spec_cnn 0.078
+  pulsed_p1      JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.162 power_two_sided 0.135 kurtosis 0.066 spec_cnn 0.064
+  pulsed_p1      JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.168 power_two_sided 0.154 kurtosis 0.037 spec_cnn 0.078
+  pulsed_p1      JSR  -24.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.234 power_two_sided 0.207 kurtosis 0.062 spec_cnn 0.090
+  pulsed_p1      JSR  -23.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.250 power_two_sided 0.240 kurtosis 0.059 spec_cnn 0.109
+  pulsed_p1      JSR  -22.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.295 power_two_sided 0.262 kurtosis 0.076 spec_cnn 0.113
+  pulsed_p1      JSR  -21.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.408 power_two_sided 0.379 kurtosis 0.090 spec_cnn 0.117
+  pulsed_p1      JSR  -20.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.422 power_two_sided 0.408 kurtosis 0.096 spec_cnn 0.143
+  pulsed_p1      JSR  -19.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.541 power_two_sided 0.504 kurtosis 0.094 spec_cnn 0.191
+  pulsed_p1      JSR  -18.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.635 power_two_sided 0.562 kurtosis 0.150 spec_cnn 0.209
+  pulsed_p1      JSR  -17.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.701 power_two_sided 0.686 kurtosis 0.240 spec_cnn 0.199
+  pulsed_p1      JSR  -16.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.756 power_two_sided 0.736 kurtosis 0.305 spec_cnn 0.250
+  pulsed_p1      JSR  -15.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.863 power_two_sided 0.840 kurtosis 0.398 spec_cnn 0.340
+  pulsed_p1      JSR  -14.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.889 power_two_sided 0.877 kurtosis 0.584 spec_cnn 0.332
+  pulsed_p1      JSR  -13.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.951 power_two_sided 0.949 kurtosis 0.756 spec_cnn 0.426
+  pulsed_p1      JSR  -12.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.973 power_two_sided 0.959 kurtosis 0.855 spec_cnn 0.449
+  pulsed_p1      JSR  -11.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.977 power_two_sided 0.975 kurtosis 0.953 spec_cnn 0.510
+  pulsed_p1      JSR  -10.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.994 power_two_sided 0.990 kurtosis 0.992 spec_cnn 0.566
+  pulsed_p1      JSR   -9.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.596
+  pulsed_p1      JSR   -8.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.998 power_two_sided 0.998 kurtosis 1.000 spec_cnn 0.719
+  pulsed_p1      JSR   -7.0 dB  BER 4.12e-04  PER 0.080  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.781
+  pulsed_p1      JSR   -6.0 dB  BER 2.32e-03  PER 0.291  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.871
+  pulsed_p1      JSR   -5.0 dB  BER 9.04e-03  PER 0.578  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.930
+  pulsed_p1      JSR   -4.0 dB  BER 2.46e-02  PER 0.816  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.957
+  pulsed_p1      JSR   -3.0 dB  BER 6.32e-02  PER 0.949  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.990
+  pulsed_p1      JSR   -2.0 dB  BER 1.08e-01  PER 0.990  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.996
+  pulsed_p1      JSR   -1.0 dB  BER 1.62e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p1      JSR   +0.0 dB  BER 1.99e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p1      JSR   +1.0 dB  BER 2.36e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p1      JSR   +2.0 dB  BER 2.62e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p1      JSR   +3.0 dB  BER 2.86e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p1      JSR   +4.0 dB  BER 3.10e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.994 spec_cnn 1.000
+  pulsed_p1      JSR   +5.0 dB  BER 3.28e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.977 spec_cnn 1.000
+  pulsed_p1      JSR   +6.0 dB  BER 3.47e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.881 spec_cnn 1.000
+  pulsed_p1      JSR   +7.0 dB  BER 3.64e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.535 spec_cnn 1.000
+  pulsed_p1      JSR   +8.0 dB  BER 3.77e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.193 spec_cnn 1.000
+  pulsed_p1      JSR   +9.0 dB  BER 3.93e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.123 spec_cnn 1.000
+  pulsed_p1      JSR  +10.0 dB  BER 3.96e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.451 spec_cnn 1.000
+  pulsed_p1      JSR  +11.0 dB  BER 4.06e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.760 spec_cnn 1.000
+  pulsed_p1      JSR  +12.0 dB  BER 4.20e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.941 spec_cnn 1.000
+  pulsed_p1      JSR  +13.0 dB  BER 4.34e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.990 spec_cnn 1.000
+  pulsed_p1      JSR  +14.0 dB  BER 4.34e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p1      JSR  +15.0 dB  BER 4.41e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] pulsed_p1 (classical) done (72s)
+  pulsed_p0.1    JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.062 kurtosis 0.045 spec_cnn 0.027
+  pulsed_p0.1    JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.059 kurtosis 0.062 spec_cnn 0.041
+  pulsed_p0.1    JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.061 kurtosis 0.045 spec_cnn 0.039
+  pulsed_p0.1    JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.051 kurtosis 0.041 spec_cnn 0.047
+  pulsed_p0.1    JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.057 kurtosis 0.041 spec_cnn 0.057
+  pulsed_p0.1    JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.049 kurtosis 0.051 spec_cnn 0.051
+  pulsed_p0.1    JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.041 kurtosis 0.053 spec_cnn 0.051
+  pulsed_p0.1    JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.049 kurtosis 0.041 spec_cnn 0.035
+  pulsed_p0.1    JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.039 kurtosis 0.035 spec_cnn 0.068
+  pulsed_p0.1    JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.066 kurtosis 0.047 spec_cnn 0.055
+  pulsed_p0.1    JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.041 power_two_sided 0.049 kurtosis 0.047 spec_cnn 0.047
+  pulsed_p0.1    JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.074 kurtosis 0.055 spec_cnn 0.059
+  pulsed_p0.1    JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.043 kurtosis 0.055 spec_cnn 0.029
+  pulsed_p0.1    JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.057 kurtosis 0.051 spec_cnn 0.059
+  pulsed_p0.1    JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.055 kurtosis 0.047 spec_cnn 0.045
+  pulsed_p0.1    JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.074 kurtosis 0.047 spec_cnn 0.039
+  pulsed_p0.1    JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.039 kurtosis 0.041 spec_cnn 0.061
+  pulsed_p0.1    JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.064 kurtosis 0.074 spec_cnn 0.057
+  pulsed_p0.1    JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.080 power_two_sided 0.066 kurtosis 0.049 spec_cnn 0.057
+  pulsed_p0.1    JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.072 power_two_sided 0.055 kurtosis 0.057 spec_cnn 0.059
+  pulsed_p0.1    JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.064 kurtosis 0.059 spec_cnn 0.051
+  pulsed_p0.1    JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.090 power_two_sided 0.076 kurtosis 0.053 spec_cnn 0.039
+  pulsed_p0.1    JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.104 power_two_sided 0.104 kurtosis 0.037 spec_cnn 0.074
+  pulsed_p0.1    JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.127 power_two_sided 0.125 kurtosis 0.062 spec_cnn 0.080
+  pulsed_p0.1    JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.152 power_two_sided 0.137 kurtosis 0.051 spec_cnn 0.086
+  pulsed_p0.1    JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.164 power_two_sided 0.174 kurtosis 0.072 spec_cnn 0.070
+  pulsed_p0.1    JSR  -24.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.256 power_two_sided 0.221 kurtosis 0.055 spec_cnn 0.098
+  pulsed_p0.1    JSR  -23.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.264 power_two_sided 0.217 kurtosis 0.066 spec_cnn 0.092
+  pulsed_p0.1    JSR  -22.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.344 power_two_sided 0.324 kurtosis 0.057 spec_cnn 0.102
+  pulsed_p0.1    JSR  -21.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.350 power_two_sided 0.281 kurtosis 0.080 spec_cnn 0.109
+  pulsed_p0.1    JSR  -20.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.492 power_two_sided 0.436 kurtosis 0.117 spec_cnn 0.107
+  pulsed_p0.1    JSR  -19.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.551 power_two_sided 0.508 kurtosis 0.154 spec_cnn 0.141
+  pulsed_p0.1    JSR  -18.0 dB  BER 7.63e-06  PER 0.002  P(det)@0.05 power_one_sided 0.621 power_two_sided 0.588 kurtosis 0.199 spec_cnn 0.109
+  pulsed_p0.1    JSR  -17.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.705 power_two_sided 0.664 kurtosis 0.246 spec_cnn 0.150
+  pulsed_p0.1    JSR  -16.0 dB  BER 1.75e-04  PER 0.023  P(det)@0.05 power_one_sided 0.736 power_two_sided 0.709 kurtosis 0.375 spec_cnn 0.184
+  pulsed_p0.1    JSR  -15.0 dB  BER 4.65e-04  PER 0.062  P(det)@0.05 power_one_sided 0.832 power_two_sided 0.791 kurtosis 0.537 spec_cnn 0.166
+  pulsed_p0.1    JSR  -14.0 dB  BER 8.24e-04  PER 0.125  P(det)@0.05 power_one_sided 0.887 power_two_sided 0.869 kurtosis 0.674 spec_cnn 0.176
+  pulsed_p0.1    JSR  -13.0 dB  BER 2.94e-03  PER 0.307  P(det)@0.05 power_one_sided 0.930 power_two_sided 0.920 kurtosis 0.828 spec_cnn 0.262
+  pulsed_p0.1    JSR  -12.0 dB  BER 6.61e-03  PER 0.539  P(det)@0.05 power_one_sided 0.965 power_two_sided 0.965 kurtosis 0.924 spec_cnn 0.240
+  pulsed_p0.1    JSR  -11.0 dB  BER 1.14e-02  PER 0.770  P(det)@0.05 power_one_sided 0.980 power_two_sided 0.977 kurtosis 0.969 spec_cnn 0.285
+  pulsed_p0.1    JSR  -10.0 dB  BER 1.64e-02  PER 0.898  P(det)@0.05 power_one_sided 0.998 power_two_sided 0.998 kurtosis 0.996 spec_cnn 0.359
+  pulsed_p0.1    JSR   -9.0 dB  BER 2.19e-02  PER 0.965  P(det)@0.05 power_one_sided 0.998 power_two_sided 0.998 kurtosis 0.996 spec_cnn 0.461
+  pulsed_p0.1    JSR   -8.0 dB  BER 2.58e-02  PER 0.986  P(det)@0.05 power_one_sided 0.998 power_two_sided 0.998 kurtosis 1.000 spec_cnn 0.518
+  pulsed_p0.1    JSR   -7.0 dB  BER 3.10e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.633
+  pulsed_p0.1    JSR   -6.0 dB  BER 3.60e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.770
+  pulsed_p0.1    JSR   -5.0 dB  BER 3.94e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.893
+  pulsed_p0.1    JSR   -4.0 dB  BER 4.39e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.932
+  pulsed_p0.1    JSR   -3.0 dB  BER 4.67e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.986
+  pulsed_p0.1    JSR   -2.0 dB  BER 4.95e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.994
+  pulsed_p0.1    JSR   -1.0 dB  BER 5.29e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +0.0 dB  BER 5.68e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +1.0 dB  BER 6.00e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +2.0 dB  BER 6.56e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +3.0 dB  BER 7.09e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +4.0 dB  BER 7.64e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +5.0 dB  BER 8.33e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +6.0 dB  BER 8.98e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +7.0 dB  BER 9.54e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +8.0 dB  BER 1.02e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR   +9.0 dB  BER 1.08e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR  +10.0 dB  BER 1.10e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR  +11.0 dB  BER 1.16e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR  +12.0 dB  BER 1.23e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR  +13.0 dB  BER 1.34e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR  +14.0 dB  BER 1.41e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  pulsed_p0.1    JSR  +15.0 dB  BER 1.45e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] pulsed_p0.1 (classical) done (91s)
+  eff            JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.057 kurtosis 0.053 spec_cnn 0.045
+  eff            JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.037 power_two_sided 0.049 kurtosis 0.041 spec_cnn 0.033
+  eff            JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.072 power_two_sided 0.064 kurtosis 0.057 spec_cnn 0.055
+  eff            JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.055 kurtosis 0.053 spec_cnn 0.037
+  eff            JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.057 kurtosis 0.053 spec_cnn 0.059
+  eff            JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.057 kurtosis 0.053 spec_cnn 0.070
+  eff            JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.051 kurtosis 0.037 spec_cnn 0.043
+  eff            JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.059 kurtosis 0.053 spec_cnn 0.057
+  eff            JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.061 kurtosis 0.033 spec_cnn 0.057
+  eff            JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.037 kurtosis 0.039 spec_cnn 0.047
+  eff            JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.055 kurtosis 0.061 spec_cnn 0.051
+  eff            JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.064 kurtosis 0.043 spec_cnn 0.027
+  eff            JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.039 kurtosis 0.061 spec_cnn 0.051
+  eff            JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.057 kurtosis 0.049 spec_cnn 0.062
+  eff            JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.053 kurtosis 0.066 spec_cnn 0.047
+  eff            JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.064 kurtosis 0.049 spec_cnn 0.047
+  eff            JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.061 kurtosis 0.061 spec_cnn 0.043
+  eff            JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.092 power_two_sided 0.072 kurtosis 0.055 spec_cnn 0.057
+  eff            JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.086 power_two_sided 0.082 kurtosis 0.049 spec_cnn 0.068
+  eff            JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.057 kurtosis 0.037 spec_cnn 0.086
+  eff            JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.113 power_two_sided 0.096 kurtosis 0.076 spec_cnn 0.053
+  eff            JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.082 power_two_sided 0.076 kurtosis 0.053 spec_cnn 0.082
+  eff            JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.115 power_two_sided 0.086 kurtosis 0.041 spec_cnn 0.055
+  eff            JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.141 power_two_sided 0.102 kurtosis 0.049 spec_cnn 0.068
+  eff            JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.174 power_two_sided 0.107 kurtosis 0.047 spec_cnn 0.090
+  eff            JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.227 power_two_sided 0.176 kurtosis 0.051 spec_cnn 0.107
+  eff            JSR  -24.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.266 power_two_sided 0.172 kurtosis 0.062 spec_cnn 0.162
+  eff            JSR  -23.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.318 power_two_sided 0.236 kurtosis 0.049 spec_cnn 0.188
+  eff            JSR  -22.0 dB  BER 2.29e-05  PER 0.006  P(det)@0.05 power_one_sided 0.400 power_two_sided 0.320 kurtosis 0.045 spec_cnn 0.211
+  eff            JSR  -21.0 dB  BER 1.60e-04  PER 0.041  P(det)@0.05 power_one_sided 0.512 power_two_sided 0.432 kurtosis 0.051 spec_cnn 0.248
+  eff            JSR  -20.0 dB  BER 5.34e-04  PER 0.137  P(det)@0.05 power_one_sided 0.615 power_two_sided 0.547 kurtosis 0.084 spec_cnn 0.354
+  eff            JSR  -19.0 dB  BER 9.69e-04  PER 0.248  P(det)@0.05 power_one_sided 0.732 power_two_sided 0.654 kurtosis 0.104 spec_cnn 0.473
+  eff            JSR  -18.0 dB  BER 1.46e-03  PER 0.365  P(det)@0.05 power_one_sided 0.828 power_two_sided 0.783 kurtosis 0.123 spec_cnn 0.590
+  eff            JSR  -17.0 dB  BER 1.86e-03  PER 0.459  P(det)@0.05 power_one_sided 0.918 power_two_sided 0.889 kurtosis 0.186 spec_cnn 0.746
+  eff            JSR  -16.0 dB  BER 2.32e-03  PER 0.555  P(det)@0.05 power_one_sided 0.963 power_two_sided 0.943 kurtosis 0.238 spec_cnn 0.875
+  eff            JSR  -15.0 dB  BER 2.68e-03  PER 0.598  P(det)@0.05 power_one_sided 0.988 power_two_sided 0.984 kurtosis 0.375 spec_cnn 0.949
+  eff            JSR  -14.0 dB  BER 2.98e-03  PER 0.629  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.488 spec_cnn 0.979
+  eff            JSR  -13.0 dB  BER 3.40e-03  PER 0.676  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.623 spec_cnn 0.998
+  eff            JSR  -12.0 dB  BER 3.62e-03  PER 0.689  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.789 spec_cnn 1.000
+  eff            JSR  -11.0 dB  BER 3.97e-03  PER 0.732  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.945 spec_cnn 1.000
+  eff            JSR  -10.0 dB  BER 4.36e-03  PER 0.742  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.998 spec_cnn 1.000
+  eff            JSR   -9.0 dB  BER 4.67e-03  PER 0.779  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.998 spec_cnn 1.000
+  eff            JSR   -8.0 dB  BER 4.63e-03  PER 0.768  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -7.0 dB  BER 5.25e-03  PER 0.805  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -6.0 dB  BER 5.66e-03  PER 0.816  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -5.0 dB  BER 6.40e-03  PER 0.830  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -4.0 dB  BER 6.70e-03  PER 0.855  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -3.0 dB  BER 7.86e-03  PER 0.896  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -2.0 dB  BER 8.32e-03  PER 0.908  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   -1.0 dB  BER 8.66e-03  PER 0.910  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +0.0 dB  BER 9.94e-03  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +1.0 dB  BER 1.09e-02  PER 0.943  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +2.0 dB  BER 1.12e-02  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +3.0 dB  BER 1.37e-02  PER 0.965  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +4.0 dB  BER 1.63e-02  PER 0.979  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +5.0 dB  BER 2.15e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +6.0 dB  BER 2.91e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +7.0 dB  BER 3.90e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +8.0 dB  BER 5.33e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR   +9.0 dB  BER 7.11e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR  +10.0 dB  BER 8.88e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR  +11.0 dB  BER 1.14e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR  +12.0 dB  BER 1.37e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR  +13.0 dB  BER 1.65e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR  +14.0 dB  BER 1.93e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  eff            JSR  +15.0 dB  BER 2.20e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] eff (control) done (110s)
+  r0_b1          JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.027 kurtosis 0.061 spec_cnn 0.037
+  r0_b1          JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.057 kurtosis 0.043 spec_cnn 0.045
+  r0_b1          JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.020 power_two_sided 0.029 kurtosis 0.047 spec_cnn 0.051
+  r0_b1          JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.053 kurtosis 0.061 spec_cnn 0.041
+  r0_b1          JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.043 kurtosis 0.059 spec_cnn 0.061
+  r0_b1          JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.045 kurtosis 0.061 spec_cnn 0.049
+  r0_b1          JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.037 power_two_sided 0.037 kurtosis 0.057 spec_cnn 0.051
+  r0_b1          JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.051 kurtosis 0.057 spec_cnn 0.047
+  r0_b1          JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.045 kurtosis 0.066 spec_cnn 0.035
+  r0_b1          JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.031 kurtosis 0.057 spec_cnn 0.051
+  r0_b1          JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.066 kurtosis 0.055 spec_cnn 0.029
+  r0_b1          JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.062 kurtosis 0.047 spec_cnn 0.057
+  r0_b1          JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.057 kurtosis 0.049 spec_cnn 0.064
+  r0_b1          JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.076 power_two_sided 0.053 kurtosis 0.049 spec_cnn 0.057
+  r0_b1          JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.047 kurtosis 0.053 spec_cnn 0.066
+  r0_b1          JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.049 kurtosis 0.045 spec_cnn 0.037
+  r0_b1          JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.061 kurtosis 0.068 spec_cnn 0.059
+  r0_b1          JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.057 kurtosis 0.066 spec_cnn 0.055
+  r0_b1          JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.082 power_two_sided 0.053 kurtosis 0.053 spec_cnn 0.055
+  r0_b1          JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.111 power_two_sided 0.096 kurtosis 0.068 spec_cnn 0.053
+  r0_b1          JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.102 power_two_sided 0.090 kurtosis 0.045 spec_cnn 0.055
+  r0_b1          JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.082 power_two_sided 0.078 kurtosis 0.043 spec_cnn 0.059
+  r0_b1          JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.117 power_two_sided 0.090 kurtosis 0.059 spec_cnn 0.072
+  r0_b1          JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.127 power_two_sided 0.102 kurtosis 0.041 spec_cnn 0.053
+  r0_b1          JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.141 power_two_sided 0.121 kurtosis 0.070 spec_cnn 0.055
+  r0_b1          JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.174 power_two_sided 0.145 kurtosis 0.072 spec_cnn 0.070
+  r0_b1          JSR  -24.0 dB  BER 5.34e-05  PER 0.014  P(det)@0.05 power_one_sided 0.199 power_two_sided 0.174 kurtosis 0.076 spec_cnn 0.062
+  r0_b1          JSR  -23.0 dB  BER 3.43e-04  PER 0.088  P(det)@0.05 power_one_sided 0.279 power_two_sided 0.225 kurtosis 0.117 spec_cnn 0.055
+  r0_b1          JSR  -22.0 dB  BER 7.02e-04  PER 0.180  P(det)@0.05 power_one_sided 0.291 power_two_sided 0.258 kurtosis 0.125 spec_cnn 0.064
+  r0_b1          JSR  -21.0 dB  BER 1.25e-03  PER 0.320  P(det)@0.05 power_one_sided 0.352 power_two_sided 0.332 kurtosis 0.164 spec_cnn 0.092
+  r0_b1          JSR  -20.0 dB  BER 1.62e-03  PER 0.412  P(det)@0.05 power_one_sided 0.457 power_two_sided 0.414 kurtosis 0.227 spec_cnn 0.102
+  r0_b1          JSR  -19.0 dB  BER 2.04e-03  PER 0.490  P(det)@0.05 power_one_sided 0.504 power_two_sided 0.453 kurtosis 0.330 spec_cnn 0.102
+  r0_b1          JSR  -18.0 dB  BER 2.43e-03  PER 0.559  P(det)@0.05 power_one_sided 0.568 power_two_sided 0.551 kurtosis 0.404 spec_cnn 0.102
+  r0_b1          JSR  -17.0 dB  BER 2.98e-03  PER 0.646  P(det)@0.05 power_one_sided 0.588 power_two_sided 0.561 kurtosis 0.457 spec_cnn 0.117
+  r0_b1          JSR  -16.0 dB  BER 3.10e-03  PER 0.656  P(det)@0.05 power_one_sided 0.703 power_two_sided 0.668 kurtosis 0.553 spec_cnn 0.162
+  r0_b1          JSR  -15.0 dB  BER 3.39e-03  PER 0.672  P(det)@0.05 power_one_sided 0.756 power_two_sided 0.732 kurtosis 0.666 spec_cnn 0.205
+  r0_b1          JSR  -14.0 dB  BER 3.72e-03  PER 0.684  P(det)@0.05 power_one_sided 0.859 power_two_sided 0.809 kurtosis 0.744 spec_cnn 0.254
+  r0_b1          JSR  -13.0 dB  BER 4.26e-03  PER 0.746  P(det)@0.05 power_one_sided 0.906 power_two_sided 0.879 kurtosis 0.812 spec_cnn 0.305
+  r0_b1          JSR  -12.0 dB  BER 4.49e-03  PER 0.789  P(det)@0.05 power_one_sided 0.977 power_two_sided 0.965 kurtosis 0.902 spec_cnn 0.385
+  r0_b1          JSR  -11.0 dB  BER 4.60e-03  PER 0.783  P(det)@0.05 power_one_sided 0.996 power_two_sided 0.996 kurtosis 0.961 spec_cnn 0.535
+  r0_b1          JSR  -10.0 dB  BER 5.16e-03  PER 0.826  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.629
+  r0_b1          JSR   -9.0 dB  BER 5.36e-03  PER 0.820  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.775
+  r0_b1          JSR   -8.0 dB  BER 5.71e-03  PER 0.850  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.893
+  r0_b1          JSR   -7.0 dB  BER 6.71e-03  PER 0.873  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.961
+  r0_b1          JSR   -6.0 dB  BER 7.24e-03  PER 0.893  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.994
+  r0_b1          JSR   -5.0 dB  BER 8.09e-03  PER 0.898  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   -4.0 dB  BER 8.52e-03  PER 0.920  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   -3.0 dB  BER 9.02e-03  PER 0.902  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   -2.0 dB  BER 9.28e-03  PER 0.918  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   -1.0 dB  BER 1.04e-02  PER 0.943  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +0.0 dB  BER 1.12e-02  PER 0.941  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +1.0 dB  BER 1.16e-02  PER 0.949  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +2.0 dB  BER 1.24e-02  PER 0.947  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +3.0 dB  BER 1.34e-02  PER 0.961  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +4.0 dB  BER 1.41e-02  PER 0.967  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +5.0 dB  BER 1.54e-02  PER 0.979  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +6.0 dB  BER 1.56e-02  PER 0.971  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +7.0 dB  BER 1.63e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +8.0 dB  BER 1.70e-02  PER 0.988  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR   +9.0 dB  BER 1.75e-02  PER 0.984  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR  +10.0 dB  BER 1.89e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR  +11.0 dB  BER 1.93e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR  +12.0 dB  BER 2.00e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR  +13.0 dB  BER 2.25e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR  +14.0 dB  BER 2.47e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b1          JSR  +15.0 dB  BER 2.84e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] r0_b1 (seen) done (130s)
+  r0_b10         JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.053 kurtosis 0.053 spec_cnn 0.055
+  r0_b10         JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.025 kurtosis 0.055 spec_cnn 0.045
+  r0_b10         JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.043 kurtosis 0.055 spec_cnn 0.072
+  r0_b10         JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.059 kurtosis 0.051 spec_cnn 0.033
+  r0_b10         JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.072 kurtosis 0.045 spec_cnn 0.031
+  r0_b10         JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.055 kurtosis 0.059 spec_cnn 0.043
+  r0_b10         JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.055 kurtosis 0.051 spec_cnn 0.045
+  r0_b10         JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.062 kurtosis 0.053 spec_cnn 0.055
+  r0_b10         JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.053 kurtosis 0.049 spec_cnn 0.064
+  r0_b10         JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.039 kurtosis 0.031 spec_cnn 0.041
+  r0_b10         JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.035 kurtosis 0.053 spec_cnn 0.061
+  r0_b10         JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.051 kurtosis 0.059 spec_cnn 0.062
+  r0_b10         JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.057 kurtosis 0.051 spec_cnn 0.045
+  r0_b10         JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.047 kurtosis 0.041 spec_cnn 0.051
+  r0_b10         JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.041 kurtosis 0.045 spec_cnn 0.045
+  r0_b10         JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.070 kurtosis 0.051 spec_cnn 0.043
+  r0_b10         JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.066 kurtosis 0.057 spec_cnn 0.055
+  r0_b10         JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.061 kurtosis 0.041 spec_cnn 0.074
+  r0_b10         JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.080 power_two_sided 0.084 kurtosis 0.033 spec_cnn 0.043
+  r0_b10         JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.076 power_two_sided 0.074 kurtosis 0.055 spec_cnn 0.047
+  r0_b10         JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.072 power_two_sided 0.064 kurtosis 0.078 spec_cnn 0.049
+  r0_b10         JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.090 power_two_sided 0.086 kurtosis 0.049 spec_cnn 0.055
+  r0_b10         JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.105 power_two_sided 0.094 kurtosis 0.051 spec_cnn 0.068
+  r0_b10         JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.135 power_two_sided 0.119 kurtosis 0.068 spec_cnn 0.059
+  r0_b10         JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.131 power_two_sided 0.115 kurtosis 0.082 spec_cnn 0.055
+  r0_b10         JSR  -25.0 dB  BER 1.53e-05  PER 0.004  P(det)@0.05 power_one_sided 0.189 power_two_sided 0.186 kurtosis 0.057 spec_cnn 0.061
+  r0_b10         JSR  -24.0 dB  BER 7.63e-05  PER 0.020  P(det)@0.05 power_one_sided 0.219 power_two_sided 0.164 kurtosis 0.078 spec_cnn 0.043
+  r0_b10         JSR  -23.0 dB  BER 4.81e-04  PER 0.123  P(det)@0.05 power_one_sided 0.270 power_two_sided 0.242 kurtosis 0.096 spec_cnn 0.061
+  r0_b10         JSR  -22.0 dB  BER 7.25e-04  PER 0.186  P(det)@0.05 power_one_sided 0.350 power_two_sided 0.305 kurtosis 0.123 spec_cnn 0.057
+  r0_b10         JSR  -21.0 dB  BER 1.14e-03  PER 0.291  P(det)@0.05 power_one_sided 0.424 power_two_sided 0.371 kurtosis 0.182 spec_cnn 0.078
+  r0_b10         JSR  -20.0 dB  BER 1.63e-03  PER 0.410  P(det)@0.05 power_one_sided 0.428 power_two_sided 0.391 kurtosis 0.225 spec_cnn 0.084
+  r0_b10         JSR  -19.0 dB  BER 2.11e-03  PER 0.510  P(det)@0.05 power_one_sided 0.510 power_two_sided 0.477 kurtosis 0.328 spec_cnn 0.074
+  r0_b10         JSR  -18.0 dB  BER 2.65e-03  PER 0.582  P(det)@0.05 power_one_sided 0.537 power_two_sided 0.516 kurtosis 0.410 spec_cnn 0.113
+  r0_b10         JSR  -17.0 dB  BER 2.72e-03  PER 0.600  P(det)@0.05 power_one_sided 0.633 power_two_sided 0.604 kurtosis 0.500 spec_cnn 0.109
+  r0_b10         JSR  -16.0 dB  BER 3.22e-03  PER 0.654  P(det)@0.05 power_one_sided 0.686 power_two_sided 0.664 kurtosis 0.584 spec_cnn 0.180
+  r0_b10         JSR  -15.0 dB  BER 3.49e-03  PER 0.676  P(det)@0.05 power_one_sided 0.783 power_two_sided 0.752 kurtosis 0.674 spec_cnn 0.230
+  r0_b10         JSR  -14.0 dB  BER 4.01e-03  PER 0.732  P(det)@0.05 power_one_sided 0.812 power_two_sided 0.797 kurtosis 0.738 spec_cnn 0.252
+  r0_b10         JSR  -13.0 dB  BER 4.06e-03  PER 0.707  P(det)@0.05 power_one_sided 0.902 power_two_sided 0.873 kurtosis 0.832 spec_cnn 0.330
+  r0_b10         JSR  -12.0 dB  BER 4.27e-03  PER 0.756  P(det)@0.05 power_one_sided 0.969 power_two_sided 0.959 kurtosis 0.889 spec_cnn 0.428
+  r0_b10         JSR  -11.0 dB  BER 4.75e-03  PER 0.773  P(det)@0.05 power_one_sided 0.994 power_two_sided 0.990 kurtosis 0.965 spec_cnn 0.559
+  r0_b10         JSR  -10.0 dB  BER 4.96e-03  PER 0.795  P(det)@0.05 power_one_sided 1.000 power_two_sided 0.998 kurtosis 0.998 spec_cnn 0.705
+  r0_b10         JSR   -9.0 dB  BER 5.43e-03  PER 0.834  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.842
+  r0_b10         JSR   -8.0 dB  BER 5.53e-03  PER 0.820  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.928
+  r0_b10         JSR   -7.0 dB  BER 6.39e-03  PER 0.877  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.984
+  r0_b10         JSR   -6.0 dB  BER 6.90e-03  PER 0.877  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.994
+  r0_b10         JSR   -5.0 dB  BER 7.35e-03  PER 0.908  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   -4.0 dB  BER 8.19e-03  PER 0.902  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   -3.0 dB  BER 8.80e-03  PER 0.918  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   -2.0 dB  BER 9.77e-03  PER 0.943  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   -1.0 dB  BER 9.83e-03  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +0.0 dB  BER 1.07e-02  PER 0.949  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +1.0 dB  BER 1.11e-02  PER 0.945  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +2.0 dB  BER 1.26e-02  PER 0.965  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +3.0 dB  BER 1.33e-02  PER 0.957  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +4.0 dB  BER 1.41e-02  PER 0.969  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +5.0 dB  BER 1.50e-02  PER 0.977  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +6.0 dB  BER 1.54e-02  PER 0.990  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +7.0 dB  BER 1.61e-02  PER 0.988  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +8.0 dB  BER 1.74e-02  PER 0.982  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR   +9.0 dB  BER 1.65e-02  PER 0.984  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR  +10.0 dB  BER 1.77e-02  PER 0.990  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR  +11.0 dB  BER 1.89e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR  +12.0 dB  BER 1.99e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR  +13.0 dB  BER 2.08e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR  +14.0 dB  BER 2.16e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  r0_b10         JSR  +15.0 dB  BER 2.41e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] r0_b10 (seen) done (150s)
+  twin_cold_b10  JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.051 kurtosis 0.064 spec_cnn 0.057
+  twin_cold_b10  JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.051 kurtosis 0.051 spec_cnn 0.043
+  twin_cold_b10  JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.045 kurtosis 0.059 spec_cnn 0.037
+  twin_cold_b10  JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.045 kurtosis 0.055 spec_cnn 0.049
+  twin_cold_b10  JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.043 kurtosis 0.045 spec_cnn 0.068
+  twin_cold_b10  JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.051 kurtosis 0.064 spec_cnn 0.051
+  twin_cold_b10  JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.061 kurtosis 0.045 spec_cnn 0.072
+  twin_cold_b10  JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.064 kurtosis 0.053 spec_cnn 0.062
+  twin_cold_b10  JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.041 kurtosis 0.057 spec_cnn 0.062
+  twin_cold_b10  JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.051 kurtosis 0.045 spec_cnn 0.045
+  twin_cold_b10  JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.057 kurtosis 0.055 spec_cnn 0.049
+  twin_cold_b10  JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.047 kurtosis 0.047 spec_cnn 0.043
+  twin_cold_b10  JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.080 power_two_sided 0.051 kurtosis 0.045 spec_cnn 0.064
+  twin_cold_b10  JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.082 power_two_sided 0.062 kurtosis 0.035 spec_cnn 0.051
+  twin_cold_b10  JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.059 kurtosis 0.049 spec_cnn 0.051
+  twin_cold_b10  JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.084 kurtosis 0.062 spec_cnn 0.041
+  twin_cold_b10  JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.035 kurtosis 0.059 spec_cnn 0.039
+  twin_cold_b10  JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.070 kurtosis 0.047 spec_cnn 0.051
+  twin_cold_b10  JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.084 kurtosis 0.049 spec_cnn 0.045
+  twin_cold_b10  JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.090 power_two_sided 0.096 kurtosis 0.053 spec_cnn 0.057
+  twin_cold_b10  JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.082 power_two_sided 0.078 kurtosis 0.045 spec_cnn 0.055
+  twin_cold_b10  JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.107 power_two_sided 0.088 kurtosis 0.053 spec_cnn 0.064
+  twin_cold_b10  JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.119 power_two_sided 0.107 kurtosis 0.057 spec_cnn 0.055
+  twin_cold_b10  JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.146 power_two_sided 0.148 kurtosis 0.053 spec_cnn 0.039
+  twin_cold_b10  JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.148 power_two_sided 0.117 kurtosis 0.080 spec_cnn 0.045
+  twin_cold_b10  JSR  -25.0 dB  BER 7.63e-06  PER 0.002  P(det)@0.05 power_one_sided 0.148 power_two_sided 0.133 kurtosis 0.057 spec_cnn 0.062
+  twin_cold_b10  JSR  -24.0 dB  BER 8.39e-05  PER 0.021  P(det)@0.05 power_one_sided 0.176 power_two_sided 0.160 kurtosis 0.086 spec_cnn 0.057
+  twin_cold_b10  JSR  -23.0 dB  BER 3.81e-04  PER 0.098  P(det)@0.05 power_one_sided 0.260 power_two_sided 0.236 kurtosis 0.076 spec_cnn 0.066
+  twin_cold_b10  JSR  -22.0 dB  BER 9.31e-04  PER 0.238  P(det)@0.05 power_one_sided 0.324 power_two_sided 0.268 kurtosis 0.133 spec_cnn 0.070
+  twin_cold_b10  JSR  -21.0 dB  BER 1.34e-03  PER 0.344  P(det)@0.05 power_one_sided 0.354 power_two_sided 0.316 kurtosis 0.172 spec_cnn 0.074
+  twin_cold_b10  JSR  -20.0 dB  BER 1.75e-03  PER 0.438  P(det)@0.05 power_one_sided 0.434 power_two_sided 0.404 kurtosis 0.271 spec_cnn 0.098
+  twin_cold_b10  JSR  -19.0 dB  BER 2.22e-03  PER 0.531  P(det)@0.05 power_one_sided 0.490 power_two_sided 0.455 kurtosis 0.307 spec_cnn 0.088
+  twin_cold_b10  JSR  -18.0 dB  BER 2.52e-03  PER 0.582  P(det)@0.05 power_one_sided 0.541 power_two_sided 0.500 kurtosis 0.406 spec_cnn 0.100
+  twin_cold_b10  JSR  -17.0 dB  BER 2.77e-03  PER 0.600  P(det)@0.05 power_one_sided 0.625 power_two_sided 0.590 kurtosis 0.533 spec_cnn 0.127
+  twin_cold_b10  JSR  -16.0 dB  BER 3.40e-03  PER 0.686  P(det)@0.05 power_one_sided 0.676 power_two_sided 0.658 kurtosis 0.576 spec_cnn 0.135
+  twin_cold_b10  JSR  -15.0 dB  BER 3.44e-03  PER 0.695  P(det)@0.05 power_one_sided 0.779 power_two_sided 0.746 kurtosis 0.668 spec_cnn 0.193
+  twin_cold_b10  JSR  -14.0 dB  BER 3.95e-03  PER 0.723  P(det)@0.05 power_one_sided 0.820 power_two_sided 0.807 kurtosis 0.732 spec_cnn 0.242
+  twin_cold_b10  JSR  -13.0 dB  BER 4.17e-03  PER 0.742  P(det)@0.05 power_one_sided 0.932 power_two_sided 0.918 kurtosis 0.844 spec_cnn 0.307
+  twin_cold_b10  JSR  -12.0 dB  BER 4.44e-03  PER 0.766  P(det)@0.05 power_one_sided 0.965 power_two_sided 0.953 kurtosis 0.900 spec_cnn 0.410
+  twin_cold_b10  JSR  -11.0 dB  BER 4.55e-03  PER 0.746  P(det)@0.05 power_one_sided 0.992 power_two_sided 0.990 kurtosis 0.969 spec_cnn 0.523
+  twin_cold_b10  JSR  -10.0 dB  BER 5.18e-03  PER 0.822  P(det)@0.05 power_one_sided 1.000 power_two_sided 0.998 kurtosis 1.000 spec_cnn 0.688
+  twin_cold_b10  JSR   -9.0 dB  BER 5.58e-03  PER 0.832  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.789
+  twin_cold_b10  JSR   -8.0 dB  BER 5.63e-03  PER 0.830  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.922
+  twin_cold_b10  JSR   -7.0 dB  BER 6.71e-03  PER 0.855  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.965
+  twin_cold_b10  JSR   -6.0 dB  BER 7.31e-03  PER 0.875  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.996
+  twin_cold_b10  JSR   -5.0 dB  BER 7.84e-03  PER 0.895  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   -4.0 dB  BER 8.60e-03  PER 0.918  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   -3.0 dB  BER 8.86e-03  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   -2.0 dB  BER 9.73e-03  PER 0.934  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   -1.0 dB  BER 1.00e-02  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +0.0 dB  BER 1.03e-02  PER 0.939  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +1.0 dB  BER 1.11e-02  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +2.0 dB  BER 1.20e-02  PER 0.959  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +3.0 dB  BER 1.28e-02  PER 0.963  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +4.0 dB  BER 1.34e-02  PER 0.969  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +5.0 dB  BER 1.52e-02  PER 0.971  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +6.0 dB  BER 1.51e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +7.0 dB  BER 1.61e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +8.0 dB  BER 1.71e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR   +9.0 dB  BER 1.69e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR  +10.0 dB  BER 1.80e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR  +11.0 dB  BER 1.84e-02  PER 0.979  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR  +12.0 dB  BER 1.96e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR  +13.0 dB  BER 2.11e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR  +14.0 dB  BER 2.26e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_cold_b10  JSR  +15.0 dB  BER 2.45e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] twin_cold_b10 (twin) done (170s)
+  twin_grey_b1   JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.039 kurtosis 0.049 spec_cnn 0.062
+  twin_grey_b1   JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.051 kurtosis 0.061 spec_cnn 0.064
+  twin_grey_b1   JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.043 kurtosis 0.051 spec_cnn 0.045
+  twin_grey_b1   JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.049 kurtosis 0.051 spec_cnn 0.057
+  twin_grey_b1   JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.059 kurtosis 0.039 spec_cnn 0.049
+  twin_grey_b1   JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.045 kurtosis 0.053 spec_cnn 0.037
+  twin_grey_b1   JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.061 kurtosis 0.051 spec_cnn 0.057
+  twin_grey_b1   JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.043 kurtosis 0.045 spec_cnn 0.051
+  twin_grey_b1   JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.049 kurtosis 0.051 spec_cnn 0.053
+  twin_grey_b1   JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.051 kurtosis 0.062 spec_cnn 0.051
+  twin_grey_b1   JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.049 power_two_sided 0.041 kurtosis 0.059 spec_cnn 0.045
+  twin_grey_b1   JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.049 kurtosis 0.057 spec_cnn 0.039
+  twin_grey_b1   JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.039 kurtosis 0.051 spec_cnn 0.070
+  twin_grey_b1   JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.055 kurtosis 0.043 spec_cnn 0.055
+  twin_grey_b1   JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.076 power_two_sided 0.064 kurtosis 0.043 spec_cnn 0.070
+  twin_grey_b1   JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.039 kurtosis 0.057 spec_cnn 0.047
+  twin_grey_b1   JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.074 kurtosis 0.059 spec_cnn 0.047
+  twin_grey_b1   JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.066 kurtosis 0.047 spec_cnn 0.037
+  twin_grey_b1   JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.088 power_two_sided 0.064 kurtosis 0.041 spec_cnn 0.049
+  twin_grey_b1   JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.082 power_two_sided 0.072 kurtosis 0.047 spec_cnn 0.057
+  twin_grey_b1   JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.088 power_two_sided 0.094 kurtosis 0.068 spec_cnn 0.051
+  twin_grey_b1   JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.084 power_two_sided 0.070 kurtosis 0.037 spec_cnn 0.066
+  twin_grey_b1   JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.100 power_two_sided 0.078 kurtosis 0.070 spec_cnn 0.051
+  twin_grey_b1   JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.111 power_two_sided 0.090 kurtosis 0.070 spec_cnn 0.047
+  twin_grey_b1   JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.154 power_two_sided 0.152 kurtosis 0.074 spec_cnn 0.049
+  twin_grey_b1   JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.168 power_two_sided 0.121 kurtosis 0.068 spec_cnn 0.062
+  twin_grey_b1   JSR  -24.0 dB  BER 3.81e-05  PER 0.010  P(det)@0.05 power_one_sided 0.195 power_two_sided 0.146 kurtosis 0.076 spec_cnn 0.062
+  twin_grey_b1   JSR  -23.0 dB  BER 3.43e-04  PER 0.088  P(det)@0.05 power_one_sided 0.275 power_two_sided 0.223 kurtosis 0.082 spec_cnn 0.047
+  twin_grey_b1   JSR  -22.0 dB  BER 7.78e-04  PER 0.199  P(det)@0.05 power_one_sided 0.375 power_two_sided 0.301 kurtosis 0.139 spec_cnn 0.066
+  twin_grey_b1   JSR  -21.0 dB  BER 1.37e-03  PER 0.350  P(det)@0.05 power_one_sided 0.369 power_two_sided 0.316 kurtosis 0.148 spec_cnn 0.094
+  twin_grey_b1   JSR  -20.0 dB  BER 1.63e-03  PER 0.416  P(det)@0.05 power_one_sided 0.459 power_two_sided 0.432 kurtosis 0.252 spec_cnn 0.096
+  twin_grey_b1   JSR  -19.0 dB  BER 2.07e-03  PER 0.496  P(det)@0.05 power_one_sided 0.514 power_two_sided 0.479 kurtosis 0.322 spec_cnn 0.076
+  twin_grey_b1   JSR  -18.0 dB  BER 2.38e-03  PER 0.545  P(det)@0.05 power_one_sided 0.574 power_two_sided 0.541 kurtosis 0.436 spec_cnn 0.109
+  twin_grey_b1   JSR  -17.0 dB  BER 2.74e-03  PER 0.594  P(det)@0.05 power_one_sided 0.611 power_two_sided 0.574 kurtosis 0.531 spec_cnn 0.152
+  twin_grey_b1   JSR  -16.0 dB  BER 3.32e-03  PER 0.676  P(det)@0.05 power_one_sided 0.676 power_two_sided 0.643 kurtosis 0.574 spec_cnn 0.113
+  twin_grey_b1   JSR  -15.0 dB  BER 3.48e-03  PER 0.689  P(det)@0.05 power_one_sided 0.783 power_two_sided 0.758 kurtosis 0.676 spec_cnn 0.162
+  twin_grey_b1   JSR  -14.0 dB  BER 3.66e-03  PER 0.693  P(det)@0.05 power_one_sided 0.842 power_two_sided 0.818 kurtosis 0.756 spec_cnn 0.215
+  twin_grey_b1   JSR  -13.0 dB  BER 3.91e-03  PER 0.725  P(det)@0.05 power_one_sided 0.939 power_two_sided 0.912 kurtosis 0.838 spec_cnn 0.320
+  twin_grey_b1   JSR  -12.0 dB  BER 4.43e-03  PER 0.764  P(det)@0.05 power_one_sided 0.959 power_two_sided 0.947 kurtosis 0.879 spec_cnn 0.389
+  twin_grey_b1   JSR  -11.0 dB  BER 4.91e-03  PER 0.807  P(det)@0.05 power_one_sided 0.990 power_two_sided 0.982 kurtosis 0.965 spec_cnn 0.508
+  twin_grey_b1   JSR  -10.0 dB  BER 4.74e-03  PER 0.779  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.996 spec_cnn 0.623
+  twin_grey_b1   JSR   -9.0 dB  BER 5.36e-03  PER 0.816  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.760
+  twin_grey_b1   JSR   -8.0 dB  BER 6.03e-03  PER 0.865  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.867
+  twin_grey_b1   JSR   -7.0 dB  BER 6.58e-03  PER 0.838  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.955
+  twin_grey_b1   JSR   -6.0 dB  BER 7.66e-03  PER 0.887  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.988
+  twin_grey_b1   JSR   -5.0 dB  BER 8.16e-03  PER 0.895  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.998
+  twin_grey_b1   JSR   -4.0 dB  BER 8.28e-03  PER 0.887  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   -3.0 dB  BER 9.37e-03  PER 0.926  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   -2.0 dB  BER 9.03e-03  PER 0.924  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   -1.0 dB  BER 1.05e-02  PER 0.939  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +0.0 dB  BER 1.13e-02  PER 0.943  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +1.0 dB  BER 1.18e-02  PER 0.936  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +2.0 dB  BER 1.34e-02  PER 0.949  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +3.0 dB  BER 1.38e-02  PER 0.971  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +4.0 dB  BER 1.42e-02  PER 0.975  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +5.0 dB  BER 1.50e-02  PER 0.979  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +6.0 dB  BER 1.61e-02  PER 0.984  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +7.0 dB  BER 1.67e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +8.0 dB  BER 1.75e-02  PER 0.979  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR   +9.0 dB  BER 1.82e-02  PER 0.988  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR  +10.0 dB  BER 1.92e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR  +11.0 dB  BER 1.92e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR  +12.0 dB  BER 2.05e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR  +13.0 dB  BER 2.15e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR  +14.0 dB  BER 2.34e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b1   JSR  +15.0 dB  BER 2.75e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] twin_grey_b1 (twin) done (190s)
+  twin_grey_b10  JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.047 kurtosis 0.059 spec_cnn 0.045
+  twin_grey_b10  JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.029 power_two_sided 0.039 kurtosis 0.045 spec_cnn 0.059
+  twin_grey_b10  JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.055 kurtosis 0.049 spec_cnn 0.057
+  twin_grey_b10  JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.068 kurtosis 0.035 spec_cnn 0.055
+  twin_grey_b10  JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.053 kurtosis 0.045 spec_cnn 0.051
+  twin_grey_b10  JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.047 kurtosis 0.041 spec_cnn 0.049
+  twin_grey_b10  JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.055 kurtosis 0.049 spec_cnn 0.043
+  twin_grey_b10  JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.045 kurtosis 0.039 spec_cnn 0.053
+  twin_grey_b10  JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.053 kurtosis 0.045 spec_cnn 0.055
+  twin_grey_b10  JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.055 kurtosis 0.057 spec_cnn 0.043
+  twin_grey_b10  JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.051 kurtosis 0.041 spec_cnn 0.059
+  twin_grey_b10  JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.035 kurtosis 0.049 spec_cnn 0.059
+  twin_grey_b10  JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.045 kurtosis 0.031 spec_cnn 0.045
+  twin_grey_b10  JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.055 kurtosis 0.045 spec_cnn 0.066
+  twin_grey_b10  JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.053 kurtosis 0.049 spec_cnn 0.043
+  twin_grey_b10  JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.061 kurtosis 0.053 spec_cnn 0.055
+  twin_grey_b10  JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.057 kurtosis 0.070 spec_cnn 0.029
+  twin_grey_b10  JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.062 kurtosis 0.037 spec_cnn 0.047
+  twin_grey_b10  JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.070 kurtosis 0.057 spec_cnn 0.043
+  twin_grey_b10  JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.076 power_two_sided 0.078 kurtosis 0.051 spec_cnn 0.064
+  twin_grey_b10  JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.064 kurtosis 0.049 spec_cnn 0.047
+  twin_grey_b10  JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.125 power_two_sided 0.102 kurtosis 0.061 spec_cnn 0.057
+  twin_grey_b10  JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.074 kurtosis 0.059 spec_cnn 0.066
+  twin_grey_b10  JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.137 power_two_sided 0.121 kurtosis 0.051 spec_cnn 0.047
+  twin_grey_b10  JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.156 power_two_sided 0.131 kurtosis 0.055 spec_cnn 0.072
+  twin_grey_b10  JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.186 power_two_sided 0.139 kurtosis 0.068 spec_cnn 0.064
+  twin_grey_b10  JSR  -24.0 dB  BER 3.05e-05  PER 0.008  P(det)@0.05 power_one_sided 0.176 power_two_sided 0.158 kurtosis 0.088 spec_cnn 0.080
+  twin_grey_b10  JSR  -23.0 dB  BER 4.27e-04  PER 0.109  P(det)@0.05 power_one_sided 0.254 power_two_sided 0.225 kurtosis 0.080 spec_cnn 0.051
+  twin_grey_b10  JSR  -22.0 dB  BER 8.62e-04  PER 0.221  P(det)@0.05 power_one_sided 0.264 power_two_sided 0.248 kurtosis 0.111 spec_cnn 0.059
+  twin_grey_b10  JSR  -21.0 dB  BER 1.30e-03  PER 0.332  P(det)@0.05 power_one_sided 0.387 power_two_sided 0.342 kurtosis 0.162 spec_cnn 0.076
+  twin_grey_b10  JSR  -20.0 dB  BER 1.60e-03  PER 0.398  P(det)@0.05 power_one_sided 0.428 power_two_sided 0.391 kurtosis 0.234 spec_cnn 0.080
+  twin_grey_b10  JSR  -19.0 dB  BER 2.13e-03  PER 0.523  P(det)@0.05 power_one_sided 0.480 power_two_sided 0.441 kurtosis 0.326 spec_cnn 0.076
+  twin_grey_b10  JSR  -18.0 dB  BER 2.49e-03  PER 0.564  P(det)@0.05 power_one_sided 0.543 power_two_sided 0.516 kurtosis 0.404 spec_cnn 0.117
+  twin_grey_b10  JSR  -17.0 dB  BER 2.72e-03  PER 0.590  P(det)@0.05 power_one_sided 0.662 power_two_sided 0.635 kurtosis 0.531 spec_cnn 0.170
+  twin_grey_b10  JSR  -16.0 dB  BER 3.13e-03  PER 0.662  P(det)@0.05 power_one_sided 0.744 power_two_sided 0.709 kurtosis 0.604 spec_cnn 0.158
+  twin_grey_b10  JSR  -15.0 dB  BER 3.27e-03  PER 0.674  P(det)@0.05 power_one_sided 0.814 power_two_sided 0.791 kurtosis 0.707 spec_cnn 0.213
+  twin_grey_b10  JSR  -14.0 dB  BER 3.59e-03  PER 0.686  P(det)@0.05 power_one_sided 0.840 power_two_sided 0.820 kurtosis 0.771 spec_cnn 0.279
+  twin_grey_b10  JSR  -13.0 dB  BER 4.17e-03  PER 0.740  P(det)@0.05 power_one_sided 0.912 power_two_sided 0.883 kurtosis 0.795 spec_cnn 0.338
+  twin_grey_b10  JSR  -12.0 dB  BER 4.71e-03  PER 0.768  P(det)@0.05 power_one_sided 0.955 power_two_sided 0.945 kurtosis 0.879 spec_cnn 0.441
+  twin_grey_b10  JSR  -11.0 dB  BER 4.81e-03  PER 0.791  P(det)@0.05 power_one_sided 0.996 power_two_sided 0.988 kurtosis 0.973 spec_cnn 0.551
+  twin_grey_b10  JSR  -10.0 dB  BER 4.99e-03  PER 0.814  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.996 spec_cnn 0.656
+  twin_grey_b10  JSR   -9.0 dB  BER 5.00e-03  PER 0.797  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.840
+  twin_grey_b10  JSR   -8.0 dB  BER 5.91e-03  PER 0.830  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.904
+  twin_grey_b10  JSR   -7.0 dB  BER 6.69e-03  PER 0.869  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.975
+  twin_grey_b10  JSR   -6.0 dB  BER 7.52e-03  PER 0.895  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.990
+  twin_grey_b10  JSR   -5.0 dB  BER 7.76e-03  PER 0.893  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.996
+  twin_grey_b10  JSR   -4.0 dB  BER 8.37e-03  PER 0.893  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   -3.0 dB  BER 9.53e-03  PER 0.938  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   -2.0 dB  BER 9.48e-03  PER 0.934  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   -1.0 dB  BER 1.01e-02  PER 0.941  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +0.0 dB  BER 1.07e-02  PER 0.936  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +1.0 dB  BER 1.20e-02  PER 0.967  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +2.0 dB  BER 1.26e-02  PER 0.967  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +3.0 dB  BER 1.31e-02  PER 0.955  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +4.0 dB  BER 1.35e-02  PER 0.975  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +5.0 dB  BER 1.51e-02  PER 0.969  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +6.0 dB  BER 1.63e-02  PER 0.982  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +7.0 dB  BER 1.60e-02  PER 0.977  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +8.0 dB  BER 1.69e-02  PER 0.982  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR   +9.0 dB  BER 1.78e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR  +10.0 dB  BER 1.83e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR  +11.0 dB  BER 1.89e-02  PER 0.986  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR  +12.0 dB  BER 2.07e-02  PER 0.990  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR  +13.0 dB  BER 2.19e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR  +14.0 dB  BER 2.49e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  twin_grey_b10  JSR  +15.0 dB  BER 2.70e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] twin_grey_b10 (twin) done (209s)
+  held_r1_b10    JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.049 kurtosis 0.041 spec_cnn 0.057
+  held_r1_b10    JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.045 power_two_sided 0.049 kurtosis 0.039 spec_cnn 0.039
+  held_r1_b10    JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.025 power_two_sided 0.033 kurtosis 0.049 spec_cnn 0.043
+  held_r1_b10    JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.043 kurtosis 0.061 spec_cnn 0.045
+  held_r1_b10    JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.047 kurtosis 0.061 spec_cnn 0.053
+  held_r1_b10    JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.059 kurtosis 0.037 spec_cnn 0.049
+  held_r1_b10    JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.035 kurtosis 0.049 spec_cnn 0.047
+  held_r1_b10    JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.051 kurtosis 0.057 spec_cnn 0.035
+  held_r1_b10    JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.045 kurtosis 0.057 spec_cnn 0.053
+  held_r1_b10    JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.041 power_two_sided 0.049 kurtosis 0.045 spec_cnn 0.057
+  held_r1_b10    JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.059 kurtosis 0.035 spec_cnn 0.057
+  held_r1_b10    JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.059 kurtosis 0.043 spec_cnn 0.049
+  held_r1_b10    JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.045 kurtosis 0.037 spec_cnn 0.055
+  held_r1_b10    JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.053 kurtosis 0.041 spec_cnn 0.041
+  held_r1_b10    JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.061 kurtosis 0.053 spec_cnn 0.057
+  held_r1_b10    JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.061 kurtosis 0.043 spec_cnn 0.053
+  held_r1_b10    JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.072 power_two_sided 0.051 kurtosis 0.043 spec_cnn 0.055
+  held_r1_b10    JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.057 kurtosis 0.041 spec_cnn 0.045
+  held_r1_b10    JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.066 kurtosis 0.043 spec_cnn 0.059
+  held_r1_b10    JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.084 power_two_sided 0.070 kurtosis 0.047 spec_cnn 0.049
+  held_r1_b10    JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.086 power_two_sided 0.076 kurtosis 0.039 spec_cnn 0.064
+  held_r1_b10    JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.133 power_two_sided 0.084 kurtosis 0.074 spec_cnn 0.057
+  held_r1_b10    JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.135 power_two_sided 0.109 kurtosis 0.057 spec_cnn 0.055
+  held_r1_b10    JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.170 power_two_sided 0.127 kurtosis 0.045 spec_cnn 0.051
+  held_r1_b10    JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.195 power_two_sided 0.133 kurtosis 0.055 spec_cnn 0.066
+  held_r1_b10    JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.297 power_two_sided 0.219 kurtosis 0.057 spec_cnn 0.055
+  held_r1_b10    JSR  -24.0 dB  BER 1.53e-05  PER 0.004  P(det)@0.05 power_one_sided 0.322 power_two_sided 0.242 kurtosis 0.039 spec_cnn 0.068
+  held_r1_b10    JSR  -23.0 dB  BER 1.60e-04  PER 0.041  P(det)@0.05 power_one_sided 0.373 power_two_sided 0.291 kurtosis 0.059 spec_cnn 0.062
+  held_r1_b10    JSR  -22.0 dB  BER 4.43e-04  PER 0.113  P(det)@0.05 power_one_sided 0.482 power_two_sided 0.416 kurtosis 0.068 spec_cnn 0.086
+  held_r1_b10    JSR  -21.0 dB  BER 1.05e-03  PER 0.268  P(det)@0.05 power_one_sided 0.568 power_two_sided 0.494 kurtosis 0.082 spec_cnn 0.070
+  held_r1_b10    JSR  -20.0 dB  BER 1.54e-03  PER 0.387  P(det)@0.05 power_one_sided 0.674 power_two_sided 0.607 kurtosis 0.125 spec_cnn 0.084
+  held_r1_b10    JSR  -19.0 dB  BER 1.66e-03  PER 0.402  P(det)@0.05 power_one_sided 0.791 power_two_sided 0.748 kurtosis 0.186 spec_cnn 0.084
+  held_r1_b10    JSR  -18.0 dB  BER 2.40e-03  PER 0.551  P(det)@0.05 power_one_sided 0.828 power_two_sided 0.781 kurtosis 0.217 spec_cnn 0.092
+  held_r1_b10    JSR  -17.0 dB  BER 2.51e-03  PER 0.557  P(det)@0.05 power_one_sided 0.914 power_two_sided 0.900 kurtosis 0.350 spec_cnn 0.113
+  held_r1_b10    JSR  -16.0 dB  BER 2.90e-03  PER 0.604  P(det)@0.05 power_one_sided 0.975 power_two_sided 0.965 kurtosis 0.479 spec_cnn 0.117
+  held_r1_b10    JSR  -15.0 dB  BER 3.21e-03  PER 0.645  P(det)@0.05 power_one_sided 0.996 power_two_sided 0.996 kurtosis 0.564 spec_cnn 0.160
+  held_r1_b10    JSR  -14.0 dB  BER 3.61e-03  PER 0.699  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.693 spec_cnn 0.186
+  held_r1_b10    JSR  -13.0 dB  BER 3.90e-03  PER 0.703  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.885 spec_cnn 0.273
+  held_r1_b10    JSR  -12.0 dB  BER 4.37e-03  PER 0.729  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.998 spec_cnn 0.385
+  held_r1_b10    JSR  -11.0 dB  BER 4.82e-03  PER 0.764  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.518
+  held_r1_b10    JSR  -10.0 dB  BER 5.25e-03  PER 0.787  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.730
+  held_r1_b10    JSR   -9.0 dB  BER 5.76e-03  PER 0.820  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.881
+  held_r1_b10    JSR   -8.0 dB  BER 6.45e-03  PER 0.842  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.986
+  held_r1_b10    JSR   -7.0 dB  BER 6.98e-03  PER 0.871  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.998
+  held_r1_b10    JSR   -6.0 dB  BER 7.97e-03  PER 0.900  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   -5.0 dB  BER 8.45e-03  PER 0.885  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   -4.0 dB  BER 8.86e-03  PER 0.893  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   -3.0 dB  BER 1.02e-02  PER 0.934  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   -2.0 dB  BER 1.10e-02  PER 0.920  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   -1.0 dB  BER 1.16e-02  PER 0.957  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +0.0 dB  BER 1.26e-02  PER 0.951  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +1.0 dB  BER 1.37e-02  PER 0.967  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +2.0 dB  BER 1.42e-02  PER 0.965  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +3.0 dB  BER 1.47e-02  PER 0.965  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +4.0 dB  BER 1.57e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +5.0 dB  BER 1.64e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +6.0 dB  BER 1.71e-02  PER 0.988  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +7.0 dB  BER 1.78e-02  PER 0.984  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +8.0 dB  BER 1.89e-02  PER 0.988  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR   +9.0 dB  BER 2.01e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR  +10.0 dB  BER 2.01e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR  +11.0 dB  BER 2.07e-02  PER 0.990  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR  +12.0 dB  BER 2.15e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR  +13.0 dB  BER 2.41e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR  +14.0 dB  BER 2.63e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r1_b10    JSR  +15.0 dB  BER 3.04e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] held_r1_b10 (held-out) done (229s)
+  held_r2_b10    JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.047 kurtosis 0.041 spec_cnn 0.049
+  held_r2_b10    JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.045 kurtosis 0.045 spec_cnn 0.053
+  held_r2_b10    JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.039 kurtosis 0.057 spec_cnn 0.045
+  held_r2_b10    JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.047 kurtosis 0.051 spec_cnn 0.045
+  held_r2_b10    JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.061 kurtosis 0.049 spec_cnn 0.055
+  held_r2_b10    JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.062 kurtosis 0.057 spec_cnn 0.055
+  held_r2_b10    JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.066 kurtosis 0.053 spec_cnn 0.047
+  held_r2_b10    JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.033 kurtosis 0.047 spec_cnn 0.051
+  held_r2_b10    JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.053 kurtosis 0.049 spec_cnn 0.068
+  held_r2_b10    JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.053 kurtosis 0.035 spec_cnn 0.043
+  held_r2_b10    JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.043 kurtosis 0.051 spec_cnn 0.068
+  held_r2_b10    JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.051 power_two_sided 0.047 kurtosis 0.062 spec_cnn 0.051
+  held_r2_b10    JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.049 kurtosis 0.061 spec_cnn 0.049
+  held_r2_b10    JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.072 kurtosis 0.047 spec_cnn 0.037
+  held_r2_b10    JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.041 power_two_sided 0.035 kurtosis 0.051 spec_cnn 0.041
+  held_r2_b10    JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.037 kurtosis 0.051 spec_cnn 0.066
+  held_r2_b10    JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.078 power_two_sided 0.080 kurtosis 0.051 spec_cnn 0.053
+  held_r2_b10    JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.061 kurtosis 0.051 spec_cnn 0.053
+  held_r2_b10    JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.053 kurtosis 0.055 spec_cnn 0.051
+  held_r2_b10    JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.092 power_two_sided 0.086 kurtosis 0.037 spec_cnn 0.035
+  held_r2_b10    JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.084 power_two_sided 0.070 kurtosis 0.051 spec_cnn 0.053
+  held_r2_b10    JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.094 power_two_sided 0.104 kurtosis 0.057 spec_cnn 0.047
+  held_r2_b10    JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.105 power_two_sided 0.092 kurtosis 0.059 spec_cnn 0.049
+  held_r2_b10    JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.119 power_two_sided 0.104 kurtosis 0.055 spec_cnn 0.068
+  held_r2_b10    JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.152 power_two_sided 0.129 kurtosis 0.049 spec_cnn 0.076
+  held_r2_b10    JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.186 power_two_sided 0.152 kurtosis 0.084 spec_cnn 0.062
+  held_r2_b10    JSR  -24.0 dB  BER 4.58e-05  PER 0.012  P(det)@0.05 power_one_sided 0.230 power_two_sided 0.191 kurtosis 0.061 spec_cnn 0.078
+  held_r2_b10    JSR  -23.0 dB  BER 2.75e-04  PER 0.070  P(det)@0.05 power_one_sided 0.254 power_two_sided 0.213 kurtosis 0.107 spec_cnn 0.088
+  held_r2_b10    JSR  -22.0 dB  BER 7.40e-04  PER 0.189  P(det)@0.05 power_one_sided 0.314 power_two_sided 0.266 kurtosis 0.115 spec_cnn 0.066
+  held_r2_b10    JSR  -21.0 dB  BER 1.13e-03  PER 0.289  P(det)@0.05 power_one_sided 0.359 power_two_sided 0.305 kurtosis 0.174 spec_cnn 0.072
+  held_r2_b10    JSR  -20.0 dB  BER 1.76e-03  PER 0.443  P(det)@0.05 power_one_sided 0.418 power_two_sided 0.412 kurtosis 0.213 spec_cnn 0.080
+  held_r2_b10    JSR  -19.0 dB  BER 1.96e-03  PER 0.467  P(det)@0.05 power_one_sided 0.518 power_two_sided 0.471 kurtosis 0.328 spec_cnn 0.080
+  held_r2_b10    JSR  -18.0 dB  BER 2.42e-03  PER 0.545  P(det)@0.05 power_one_sided 0.564 power_two_sided 0.535 kurtosis 0.418 spec_cnn 0.146
+  held_r2_b10    JSR  -17.0 dB  BER 2.81e-03  PER 0.619  P(det)@0.05 power_one_sided 0.631 power_two_sided 0.594 kurtosis 0.467 spec_cnn 0.146
+  held_r2_b10    JSR  -16.0 dB  BER 3.15e-03  PER 0.643  P(det)@0.05 power_one_sided 0.682 power_two_sided 0.664 kurtosis 0.598 spec_cnn 0.182
+  held_r2_b10    JSR  -15.0 dB  BER 3.46e-03  PER 0.678  P(det)@0.05 power_one_sided 0.789 power_two_sided 0.760 kurtosis 0.707 spec_cnn 0.234
+  held_r2_b10    JSR  -14.0 dB  BER 3.71e-03  PER 0.697  P(det)@0.05 power_one_sided 0.846 power_two_sided 0.816 kurtosis 0.723 spec_cnn 0.314
+  held_r2_b10    JSR  -13.0 dB  BER 4.23e-03  PER 0.744  P(det)@0.05 power_one_sided 0.910 power_two_sided 0.881 kurtosis 0.818 spec_cnn 0.420
+  held_r2_b10    JSR  -12.0 dB  BER 4.33e-03  PER 0.766  P(det)@0.05 power_one_sided 0.977 power_two_sided 0.965 kurtosis 0.895 spec_cnn 0.504
+  held_r2_b10    JSR  -11.0 dB  BER 4.59e-03  PER 0.777  P(det)@0.05 power_one_sided 0.994 power_two_sided 0.990 kurtosis 0.949 spec_cnn 0.615
+  held_r2_b10    JSR  -10.0 dB  BER 4.88e-03  PER 0.805  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.998 spec_cnn 0.791
+  held_r2_b10    JSR   -9.0 dB  BER 5.25e-03  PER 0.832  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.900
+  held_r2_b10    JSR   -8.0 dB  BER 6.13e-03  PER 0.861  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.977
+  held_r2_b10    JSR   -7.0 dB  BER 6.65e-03  PER 0.861  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.996
+  held_r2_b10    JSR   -6.0 dB  BER 7.51e-03  PER 0.883  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   -5.0 dB  BER 8.13e-03  PER 0.898  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   -4.0 dB  BER 8.65e-03  PER 0.906  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   -3.0 dB  BER 9.48e-03  PER 0.916  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   -2.0 dB  BER 1.03e-02  PER 0.939  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   -1.0 dB  BER 1.02e-02  PER 0.920  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +0.0 dB  BER 1.12e-02  PER 0.955  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +1.0 dB  BER 1.23e-02  PER 0.971  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +2.0 dB  BER 1.26e-02  PER 0.953  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +3.0 dB  BER 1.40e-02  PER 0.982  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +4.0 dB  BER 1.40e-02  PER 0.980  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +5.0 dB  BER 1.53e-02  PER 0.973  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +6.0 dB  BER 1.55e-02  PER 0.975  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +7.0 dB  BER 1.63e-02  PER 0.982  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +8.0 dB  BER 1.75e-02  PER 0.990  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR   +9.0 dB  BER 1.81e-02  PER 0.994  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR  +10.0 dB  BER 1.94e-02  PER 0.996  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR  +11.0 dB  BER 2.10e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR  +12.0 dB  BER 2.17e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR  +13.0 dB  BER 2.37e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR  +14.0 dB  BER 2.64e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r2_b10    JSR  +15.0 dB  BER 3.15e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] held_r2_b10 (held-out) done (249s)
+  held_r3_b10    JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.049 kurtosis 0.047 spec_cnn 0.055
+  held_r3_b10    JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.037 kurtosis 0.053 spec_cnn 0.051
+  held_r3_b10    JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.051 kurtosis 0.072 spec_cnn 0.055
+  held_r3_b10    JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.049 kurtosis 0.049 spec_cnn 0.043
+  held_r3_b10    JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.041 kurtosis 0.059 spec_cnn 0.033
+  held_r3_b10    JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.062 kurtosis 0.057 spec_cnn 0.047
+  held_r3_b10    JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.053 kurtosis 0.051 spec_cnn 0.053
+  held_r3_b10    JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.066 power_two_sided 0.072 kurtosis 0.047 spec_cnn 0.047
+  held_r3_b10    JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.039 power_two_sided 0.027 kurtosis 0.039 spec_cnn 0.041
+  held_r3_b10    JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.045 kurtosis 0.047 spec_cnn 0.039
+  held_r3_b10    JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.039 kurtosis 0.043 spec_cnn 0.057
+  held_r3_b10    JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.068 kurtosis 0.047 spec_cnn 0.070
+  held_r3_b10    JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.055 power_two_sided 0.047 kurtosis 0.051 spec_cnn 0.053
+  held_r3_b10    JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.057 kurtosis 0.045 spec_cnn 0.051
+  held_r3_b10    JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.078 kurtosis 0.047 spec_cnn 0.047
+  held_r3_b10    JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.057 kurtosis 0.055 spec_cnn 0.043
+  held_r3_b10    JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.053 power_two_sided 0.049 kurtosis 0.051 spec_cnn 0.059
+  held_r3_b10    JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.047 kurtosis 0.074 spec_cnn 0.061
+  held_r3_b10    JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.064 power_two_sided 0.061 kurtosis 0.047 spec_cnn 0.055
+  held_r3_b10    JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.064 kurtosis 0.051 spec_cnn 0.078
+  held_r3_b10    JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.100 power_two_sided 0.080 kurtosis 0.061 spec_cnn 0.059
+  held_r3_b10    JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.076 power_two_sided 0.076 kurtosis 0.047 spec_cnn 0.059
+  held_r3_b10    JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.111 power_two_sided 0.092 kurtosis 0.064 spec_cnn 0.035
+  held_r3_b10    JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.127 power_two_sided 0.098 kurtosis 0.039 spec_cnn 0.049
+  held_r3_b10    JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.135 power_two_sided 0.104 kurtosis 0.064 spec_cnn 0.066
+  held_r3_b10    JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.168 power_two_sided 0.158 kurtosis 0.062 spec_cnn 0.047
+  held_r3_b10    JSR  -24.0 dB  BER 8.39e-05  PER 0.021  P(det)@0.05 power_one_sided 0.191 power_two_sided 0.170 kurtosis 0.061 spec_cnn 0.051
+  held_r3_b10    JSR  -23.0 dB  BER 2.90e-04  PER 0.074  P(det)@0.05 power_one_sided 0.217 power_two_sided 0.188 kurtosis 0.078 spec_cnn 0.066
+  held_r3_b10    JSR  -22.0 dB  BER 6.64e-04  PER 0.170  P(det)@0.05 power_one_sided 0.340 power_two_sided 0.301 kurtosis 0.111 spec_cnn 0.076
+  held_r3_b10    JSR  -21.0 dB  BER 1.14e-03  PER 0.291  P(det)@0.05 power_one_sided 0.357 power_two_sided 0.311 kurtosis 0.150 spec_cnn 0.090
+  held_r3_b10    JSR  -20.0 dB  BER 1.56e-03  PER 0.393  P(det)@0.05 power_one_sided 0.430 power_two_sided 0.408 kurtosis 0.248 spec_cnn 0.076
+  held_r3_b10    JSR  -19.0 dB  BER 2.02e-03  PER 0.494  P(det)@0.05 power_one_sided 0.488 power_two_sided 0.430 kurtosis 0.322 spec_cnn 0.084
+  held_r3_b10    JSR  -18.0 dB  BER 2.56e-03  PER 0.594  P(det)@0.05 power_one_sided 0.568 power_two_sided 0.529 kurtosis 0.391 spec_cnn 0.119
+  held_r3_b10    JSR  -17.0 dB  BER 2.79e-03  PER 0.611  P(det)@0.05 power_one_sided 0.643 power_two_sided 0.590 kurtosis 0.486 spec_cnn 0.145
+  held_r3_b10    JSR  -16.0 dB  BER 3.27e-03  PER 0.686  P(det)@0.05 power_one_sided 0.709 power_two_sided 0.670 kurtosis 0.559 spec_cnn 0.225
+  held_r3_b10    JSR  -15.0 dB  BER 3.34e-03  PER 0.658  P(det)@0.05 power_one_sided 0.805 power_two_sided 0.781 kurtosis 0.684 spec_cnn 0.213
+  held_r3_b10    JSR  -14.0 dB  BER 3.71e-03  PER 0.691  P(det)@0.05 power_one_sided 0.863 power_two_sided 0.816 kurtosis 0.768 spec_cnn 0.338
+  held_r3_b10    JSR  -13.0 dB  BER 4.22e-03  PER 0.736  P(det)@0.05 power_one_sided 0.906 power_two_sided 0.883 kurtosis 0.803 spec_cnn 0.387
+  held_r3_b10    JSR  -12.0 dB  BER 4.19e-03  PER 0.729  P(det)@0.05 power_one_sided 0.979 power_two_sided 0.967 kurtosis 0.904 spec_cnn 0.541
+  held_r3_b10    JSR  -11.0 dB  BER 4.55e-03  PER 0.768  P(det)@0.05 power_one_sided 0.988 power_two_sided 0.984 kurtosis 0.951 spec_cnn 0.715
+  held_r3_b10    JSR  -10.0 dB  BER 4.81e-03  PER 0.773  P(det)@0.05 power_one_sided 0.996 power_two_sided 0.996 kurtosis 0.992 spec_cnn 0.805
+  held_r3_b10    JSR   -9.0 dB  BER 5.43e-03  PER 0.814  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.930
+  held_r3_b10    JSR   -8.0 dB  BER 5.86e-03  PER 0.844  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.982
+  held_r3_b10    JSR   -7.0 dB  BER 6.70e-03  PER 0.875  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 0.998
+  held_r3_b10    JSR   -6.0 dB  BER 7.20e-03  PER 0.865  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   -5.0 dB  BER 7.87e-03  PER 0.912  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   -4.0 dB  BER 8.19e-03  PER 0.896  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   -3.0 dB  BER 9.12e-03  PER 0.912  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   -2.0 dB  BER 9.70e-03  PER 0.924  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   -1.0 dB  BER 1.03e-02  PER 0.943  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +0.0 dB  BER 1.10e-02  PER 0.936  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +1.0 dB  BER 1.17e-02  PER 0.951  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +2.0 dB  BER 1.32e-02  PER 0.969  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +3.0 dB  BER 1.40e-02  PER 0.975  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +4.0 dB  BER 1.38e-02  PER 0.967  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +5.0 dB  BER 1.54e-02  PER 0.975  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +6.0 dB  BER 1.59e-02  PER 0.971  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +7.0 dB  BER 1.70e-02  PER 0.982  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +8.0 dB  BER 1.77e-02  PER 0.988  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR   +9.0 dB  BER 1.89e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR  +10.0 dB  BER 2.01e-02  PER 0.992  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR  +11.0 dB  BER 2.18e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR  +12.0 dB  BER 2.42e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR  +13.0 dB  BER 2.66e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR  +14.0 dB  BER 3.13e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  held_r3_b10    JSR  +15.0 dB  BER 3.61e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000
+  [A @ 15 dB] held_r3_b10 (held-out) done (269s)
+wrote ../artifacts/cgan/baselines/arms/eval/round1/snr15_A.json in 269s

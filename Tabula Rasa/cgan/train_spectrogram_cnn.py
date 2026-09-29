@@ -21,6 +21,12 @@ Outputs, in artifacts/cgan/baselines/:
                              is recomputed per sweep point)
     spec_cnn_training.json   loss/accuracy per epoch, validation metrics vs the paper,
                              ROC, accuracy at high JSR, P(det) vs JSR per jammer type
+
+D6, the arms race (README §3.3o), retrains the same recipe as the DEFENDER's move,
+each into its own --out-dir: --jsr-range widens the jammed frames' JSR (arm A,
+attacker-agnostic), --extra-gens adds the attacker's frames as a fifth jammed type
+(arm B, attacker-aware), --snr-db trains and calibrates at another noise level.
+All three default to the deployed recipe.
 """
 
 import mitsuba as mi
@@ -38,6 +44,7 @@ import torch
 import attacks
 import detectors
 import link as lk
+import models
 import scene
 
 PAPER = dict(two_class_dr=100.0, two_class_va=99.91, five_class_dr=99.79, far_weighted=0.03)
@@ -46,24 +53,45 @@ JSR_RANGE_DB = (-20.0, 10.0)
 N_CALIBRATION = 20_000
 
 
-def make_frames(L, n, kind, jsr_db):
-    """n received frames of one kind ('clean' or a Li et al. type) at per-frame JSRs [n]."""
-    spec = None if kind == "clean" else dict(name=kind)
-    out = attacks.frames(L, n, spec, None if spec is None else jsr_db.reshape(n, 1), lk.SNR_DB)
+def make_frames(L, n, kind, jsr_db, snr_db=lk.SNR_DB):
+    """n received frames of one kind ('clean', a Li et al. type, or an attack spec dict) at per-frame JSRs [n]."""
+    spec = kind if isinstance(kind, dict) else (None if kind == "clean" else dict(name=kind))
+    out = attacks.frames(L, n, spec, None if spec is None else jsr_db.reshape(n, 1), snr_db)
     return out["r"]
 
 
-def batched_frames(L, n, kind, jsr_db, batch=512):
-    return torch.cat([make_frames(L, min(batch, n - i), kind, jsr_db[i:i + batch])
+def batched_frames(L, n, kind, jsr_db, snr_db=lk.SNR_DB, batch=512):
+    return torch.cat([make_frames(L, min(batch, n - i), kind, jsr_db[i:i + batch], snr_db)
                       for i in range(0, n, batch)])
 
 
-def dataset(L, gen):
-    """Li et al.'s class balance: 762 clean + 204 per jammer type, JSR uniform in dB."""
+def gan_specs(paths, device):
+    """Attack specs for generator checkpoints (D6 arm B), at their evaluation power law."""
+    specs = []
+    for p in paths:
+        G, scale, ckpt = models.load_generator(p, device)
+        if ckpt.get("power") == "learned":
+            raise SystemExit(f"{p}: a learned-power generator's JSR is a cap, not a level")
+        specs.append(dict(name="gan", G=G, scale=scale, tag=os.path.relpath(p)))
+    return specs
+
+
+def dataset(L, gen, jsr_range=JSR_RANGE_DB, extra=(), snr_db=lk.SNR_DB):
+    """
+    Li et al.'s class balance: 762 clean + 204 per jammer type, JSR uniform in dB.
+    `extra` (D6 arm B, README §3.3o): generator specs forming ONE more jammed type,
+    'generator', of N_PER_TYPE frames split evenly across them. It is drawn after
+    Li's types, so the first 1578 frames are the same draws as without it (on the
+    same GPU model: CUDA's random streams differ between card types).
+    """
+    parts = [("clean", "clean", N_CLEAN)] + [(t, t, N_PER_TYPE) for t in attacks.LI_TYPES]
+    for i, spec in enumerate(extra):
+        parts.append(("generator", spec,
+                      N_PER_TYPE * (i + 1) // len(extra) - N_PER_TYPE * i // len(extra)))
     rs, labels, kinds, jsrs = [], [], [], []
-    for kind, n in [("clean", N_CLEAN)] + [(t, N_PER_TYPE) for t in attacks.LI_TYPES]:
-        jsr = torch.empty(n, device=L.device).uniform_(*JSR_RANGE_DB, generator=gen)
-        rs.append(batched_frames(L, n, kind, jsr))
+    for kind, src, n in parts:
+        jsr = torch.empty(n, device=L.device).uniform_(*jsr_range, generator=gen)
+        rs.append(batched_frames(L, n, src, jsr, snr_db))
         labels += [0 if kind == "clean" else 1] * n
         kinds += [kind] * n
         jsrs += (jsr.tolist() if kind != "clean" else [float("nan")] * n)
@@ -92,7 +120,8 @@ def roc(stat, y, n_points=200):
     return fpr, tpr, float(np.trapezoid(tpr, fpr))
 
 
-def main():
+def parse_args(argv=None):
+    """The command line, and the refusal to write any non-deployed recipe over the deployed detector."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--seed", type=int, default=11)
@@ -103,25 +132,47 @@ def main():
     ap.add_argument("--shadow-db", type=float, default=0.0,
                     help="log-normal shadowing on the victim's link [dB] (README §3.3k): the same "
                          "recipe retrained on shadowed frames, plus the gain-aware power detector")
-    args = ap.parse_args()
+    ap.add_argument("--snr-db", type=float, default=lk.SNR_DB,
+                    help="train AND calibrate at this SNR (README §3.3o: D6 retrains every CNN at "
+                         "15 dB too); default the deployed 30 dB")
+    ap.add_argument("--jsr-range", type=float, nargs=2, default=list(JSR_RANGE_DB), metavar=("LO", "HI"),
+                    help="received JSR range [dB] of the jammed training frames (README §3.3o, D6 arm A: "
+                         "-35 10, down to where the attacker works)")
+    ap.add_argument("--extra-gens", nargs="+", default=[], metavar="G_PT",
+                    help="generator checkpoints forming a fifth jammed type of N_PER_TYPE frames, split "
+                         "evenly, same JSR range (README §3.3o, D6 arm B: the attacker-aware defender)")
+    args = ap.parse_args(argv)
+    if os.path.abspath(args.out_dir) == os.path.abspath(scene.ART) and (
+            args.seed != 11 or args.shadow_db or args.snr_db != lk.SNR_DB
+            or tuple(args.jsr_range) != JSR_RANGE_DB or args.extra_gens):
+        raise SystemExit("a non-default seed, channel, SNR or training set must not overwrite the "
+                         "deployed detector: pass --out-dir")
+    return args
+
+
+def main():
+    args = parse_args()
     out_dir = args.out_dir
-    if os.path.abspath(out_dir) == os.path.abspath(scene.ART) and (args.seed != 11 or args.shadow_db):
-        raise SystemExit("a non-default seed or channel must not overwrite the deployed detector: "
-                         "pass --out-dir")
     os.makedirs(out_dir, exist_ok=True)
 
     device = lk.setup(seed=args.seed)
+    extra = gan_specs(args.extra_gens, device)
+    if extra:
+        # building the generators drew from the RNG: re-seed, so arm B's first 1578
+        # frames are the same draws as arm A's
+        lk.setup(device, seed=args.seed)
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     L.shadow_db = args.shadow_db
+    snr = args.snr_db
     gen = torch.Generator(device=device).manual_seed(args.seed)
     t0 = time.time()
 
     # 1. the fixed colour scale, from clean frames only
-    scale = detectors.SpecScale.fit(batched_frames(L, 2048, "clean", torch.zeros(2048, device=device)))
+    scale = detectors.SpecScale.fit(batched_frames(L, 2048, "clean", torch.zeros(2048, device=device), snr))
     print(f"spectrogram scale: vmin {scale.vmin:.2f} dB, vmax {scale.vmax:.2f} dB", flush=True)
 
     # 2. Li et al.'s dataset and split
-    r, y, kinds, jsrs = dataset(L, gen)
+    r, y, kinds, jsrs = dataset(L, gen, tuple(args.jsr_range), extra, snr)
     perm = torch.randperm(r.shape[0], generator=gen, device=device)
     n_train = int(round(TRAIN_FRACTION * r.shape[0]))
     tr, va = perm[:n_train], perm[n_train:]
@@ -161,13 +212,13 @@ def main():
     va_kinds = kinds[va.cpu().numpy()]
     per_type_val = {k: float((pred[torch.as_tensor(va_kinds == k, device=device)] ==
                               (0 if k == "clean" else 1)).double().mean())
-                    for k in ["clean"] + attacks.LI_TYPES}
+                    for k in ["clean"] + attacks.LI_TYPES + (["generator"] if extra else [])}
 
     # 5. every detector's threshold, on N_CALIBRATION fresh clean frames
     stat = dict(power=[], kurtosis=[], cnn=[], z=[], e_perp=[], power_csi=[])
     for i in range(0, N_CALIBRATION, 1024):
         n = min(1024, N_CALIBRATION - i)
-        out = attacks.frames(L, n, None, None, lk.SNR_DB)
+        out = attacks.frames(L, n, None, None, snr)
         s = detectors.statistics(out["r"], out["z"], net, scale)
         stat["power"].append(s["power"]); stat["kurtosis"].append(s["kurtosis"])
         stat["cnn"].append(s["cnn"])
@@ -184,8 +235,18 @@ def main():
         kurtosis={str(a): detectors.calibrate(detectors.two_sided(stat["kurtosis"], km), a)
                   for a in detectors.ALPHAS},
         cnn={str(a): detectors.calibrate(stat["cnn"], a) for a in detectors.ALPHAS},
-        lrt_d=D, noise_var=L.noise_var(lk.SNR_DB), p_s=L.p_s, spec_scale=scale.to_dict(),
+        lrt_d=D, noise_var=L.noise_var(snr), p_s=L.p_s, spec_scale=scale.to_dict(),
     )
+    if snr != lk.SNR_DB or tuple(args.jsr_range) != JSR_RANGE_DB or extra:
+        # README §3.3o (D6): record what this defender was trained on, and keep the
+        # clean side of the ROC so P(det) can be read at any budget later
+        thresholds.update(
+            snr_db=snr, jsr_range_db=list(args.jsr_range), extra_gens=[s["tag"] for s in extra],
+            clean_stat_q=dict(
+                power_one_sided=detectors.stat_quantiles(stat["power"]),
+                power_two_sided=detectors.stat_quantiles(detectors.two_sided(stat["power"], pm)),
+                kurtosis=detectors.stat_quantiles(detectors.two_sided(stat["kurtosis"], km)),
+                spec_cnn=detectors.stat_quantiles(stat["cnn"])))
     if args.shadow_db:
         # README §3.3k. The noise LRT's QPSK mixture assumes unit gain, so on a shadowed
         # link it is no longer the optimal test it is reported as: dropped, not faked.
@@ -206,7 +267,7 @@ def main():
     thr05 = thresholds["cnn"]["0.05"]
     hi = {}
     for kind, n in [("clean", N_CLEAN)] + [(t, N_PER_TYPE) for t in attacks.LI_TYPES]:
-        rr = batched_frames(L, n, kind, torch.full((n,), 10.0, device=device))
+        rr = batched_frames(L, n, kind, torch.full((n,), 10.0, device=device), snr)
         s = detectors.cnn_statistic(net, rr, scale)
         hi[kind] = dict(argmax_correct=float(((s > 0) == (kind != "clean")).double().mean()),
                         p_det_at_alpha05=detectors.p_detect(s, thr05))
@@ -217,8 +278,8 @@ def main():
     pdet_vs_jsr = {}
     for kind in attacks.LI_TYPES:
         pdet_vs_jsr[kind] = [detectors.p_detect(
-            detectors.cnn_statistic(net, batched_frames(L, 256, kind, torch.full((256,), g, device=device)),
-                                    scale), thr05) for g in grid]
+            detectors.cnn_statistic(net, batched_frames(L, 256, kind, torch.full((256,), g, device=device),
+                                                        snr), scale), thr05) for g in grid]
 
     torch.save(dict(state_dict=net.state_dict(), scale=scale.to_dict(), thresholds=thresholds,
                     epochs=args.epochs, seed=args.seed, history=history),
@@ -227,7 +288,8 @@ def main():
         paper=PAPER, config=dict(model="EfficientNet-B0 (torchvision, ImageNet init)", optimiser="SGD",
                                  lr=1e-3, momentum=0.0, batch=32, epochs=args.epochs,
                                  n_clean=N_CLEAN, n_per_type=N_PER_TYPE, train_fraction=TRAIN_FRACTION,
-                                 jsr_range_db=JSR_RANGE_DB, types=attacks.LI_TYPES,
+                                 jsr_range_db=list(args.jsr_range), types=attacks.LI_TYPES,
+                                 snr_db=snr, extra_gens=[s["tag"] for s in extra],
                                  image=[detectors.IMG_H, detectors.IMG_W], n_fft=detectors.N_FFT,
                                  hop=detectors.HOP, headroom_db=detectors.HEADROOM_DB),
         history=history,

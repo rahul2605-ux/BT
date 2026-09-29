@@ -1103,6 +1103,133 @@ def test_sync(L):
         L.jammer_sync = False
 
 
+# ================================================================ D6 arms race (2026-09-28)
+def test_arms(L):
+    """
+    README §3.3o: the defender's retrains (train_spectrogram_cnn.py --jsr-range /
+    --extra-gens / --snr-db) and the round-1 evaluation (arms_eval.py). Check:
+    (a) the defaults ARE the deployed recipe: the refactored default path draws the
+    pre-D6 path's frames bit for bit, and seed 11 re-derives the deployed CNN's colour
+    scale -- statistically only (0.02 dB off, job 2275902, with either path: CUDA's
+    random streams differ between GPU models, job 2275953, README §3.3o); (b) arm A's
+    range reaches where
+    the attackers work (~-23 dB), which Li's range never did; (c) arm B adds exactly
+    one type of N_PER_TYPE generator frames, and its first 1578 frames are arm A's
+    draw for draw, so A vs B isolates the attacker's frames; (d) --snr-db reaches the
+    frames: mean clean power moves by exactly the noise-variance change; (e) no D6
+    flag can overwrite the deployed detector; (f) arms_eval's generators exist and
+    its roles hold -- each twin shares a round-0 attacker's init, no held-out seed
+    does; (g) once trained, each D6 CNN records what it was trained on and honours
+    its FAR on fresh clean frames at its own SNR.
+    """
+    import os
+    import arms_eval
+    import train_spectrogram_cnn as tsc
+    print("\n23. D6 arms race: retrain flags, arm A/B datasets, SNR plumbing, trained defenders")
+    dev = L.device
+
+    # (a) the defaults == the deployed recipe
+    check("default jammed-frame JSR range == Li's (-20, +10) dB", float(tsc.JSR_RANGE_DB == (-20.0, 10.0)),
+          1.0, 0.0)
+    def seed11_clean(new):
+        lk.setup(dev, seed=11)                      # train_spectrogram_cnn.main's order: seed, Link, fit
+        L11 = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+        if new:
+            return tsc.batched_frames(L11, 2048, "clean", torch.zeros(2048, device=dev))
+        return torch.cat([attacks.frames(L11, min(512, 2048 - i), None, None, lk.SNR_DB)["r"]
+                          for i in range(0, 2048, 512)])      # the pre-D6 make_frames/batched_frames
+
+    r_new = seed11_clean(True)
+    check("defaults: clean frames == the pre-D6 code path's, max |diff|",
+          float((r_new - seed11_clean(False)).abs().max()), 0.0, 0.0)
+    _, dep, _ = detectors.load_cnn(os.path.join(scene.ART, "detector_spec.pt"), dev)
+    sc = detectors.SpecScale.fit(r_new)
+    check("defaults, seed 11: colour scale vmin ~ the deployed CNN's [dB]", sc.vmin, dep.vmin, 0.1)
+    check("defaults, seed 11: colour scale vmax ~ the deployed CNN's [dB]", sc.vmax, dep.vmax, 0.1)
+
+    # (b)+(c) arm A and arm B datasets, built as main builds them
+    seen = [os.path.join(arms_eval.GAN, rel) for _, rel, role in arms_eval.GENS if role == "seen"]
+
+    def arm_dataset(paths):
+        lk.setup(dev, seed=11)                      # main's order: seed, load, re-seed, Link
+        extra = tsc.gan_specs(paths, dev)
+        if extra:
+            lk.setup(dev, seed=11)
+        Lx = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
+        return tsc.dataset(Lx, torch.Generator(device=dev).manual_seed(11), arms_eval.WIDE_DB, extra)
+
+    rA, yA, kA, jA = arm_dataset([])
+    rB, yB, kB, jB = arm_dataset(seen)
+    nA = tsc.N_CLEAN + len(attacks.LI_TYPES) * tsc.N_PER_TYPE
+    jam = jA[kA != "clean"]
+    check("arm A: frames == 762 clean + 4 x 204", float(len(yA)), float(nA), 0.0)
+    check("arm A: jammed JSRs inside (-35, +10) dB",
+          float(jam.min() >= arms_eval.WIDE_DB[0] and jam.max() <= arms_eval.WIDE_DB[1]), 1.0, 0.0)
+    check("arm A: fraction of jammed frames below Li's -20 dB (U: 1/3)", float((jam < -20).mean()), 1 / 3,
+          4 * math.sqrt((1 / 3) * (2 / 3) / len(jam)))
+    check("arm B: one extra type of N_PER_TYPE 'generator' frames, labelled jammed",
+          float((kB == "generator").sum() == tsc.N_PER_TYPE and len(yB) == nA + tsc.N_PER_TYPE
+                and bool((yB[torch.as_tensor(kB == "generator", device=yB.device)] == 1).all())), 1.0, 0.0)
+    check("arm B: first 1578 frames == arm A's, max |diff|", float((rB[:nA] - rA).abs().max()), 0.0, 0.0)
+    check("arm B: generator frames != clean (mean power above the clean frames')",
+          float(detectors.power(rB[nA:]).mean()
+                > detectors.power(rA[torch.as_tensor(kA == "clean", device=rA.device)]).mean()), 1.0, 0.0)
+
+    # (d) --snr-db reaches the frames: E|r|^2 = signal power + n0 on every sample
+    p15 = detectors.power(tsc.batched_frames(L, 4096, "clean", torch.zeros(4096, device=dev), 15.0))
+    p30 = detectors.power(tsc.batched_frames(L, 4096, "clean", torch.zeros(4096, device=dev)))
+    check("snr_db 15: mean clean power - the 30 dB default's == n0(15) - n0(30)",
+          float(p15.mean() - p30.mean()), L.noise_var(15.0) - L.noise_var(lk.SNR_DB),
+          4 * math.sqrt(float(p15.var() + p30.var()) / 4096))
+
+    # (e) the guard: parse_args refuses, without touching disk, and accepts with --out-dir
+    for flags in (["--jsr-range", "-35", "10"], ["--extra-gens", "x_G.pt"], ["--snr-db", "15"]):
+        try:
+            tsc.parse_args(flags)
+            refused = False
+        except SystemExit as e:
+            refused = "deployed detector" in str(e)
+        check(f"train_spectrogram_cnn {' '.join(flags)} without --out-dir is refused", float(refused), 1.0, 0.0)
+    a = tsc.parse_args(["--jsr-range", "-35", "10", "--snr-db", "15", "--out-dir", "elsewhere"])
+    check("... and accepted with --out-dir (range, SNR parsed)",
+          float(a.jsr_range == [-35.0, 10.0] and a.snr_db == 15.0), 1.0, 0.0)
+
+    # (f) arms_eval's generators and their roles (relative weight distance to the round-0 attackers)
+    sd = {tag: torch.load(os.path.join(arms_eval.GAN, rel), map_location="cpu", weights_only=False)["state_dict"]
+          for tag, rel, _ in arms_eval.GENS}
+
+    def dist(a, b):
+        keys = [k for k in a if a[k].is_floating_point()]
+        return math.sqrt(sum(float((a[k] - b[k]).pow(2).sum()) for k in keys)
+                         / sum(float(a[k].pow(2).sum()) for k in keys))
+
+    r0 = [tag for tag, _, role in arms_eval.GENS if role == "seen"]
+    for tag, _, role in arms_eval.GENS:
+        if role in ("twin", "held-out"):
+            d = min(dist(sd[s], sd[tag]) for s in r0)
+            check(f"arms_eval {tag} ({role}): nearest round-0 attacker, relative weight distance "
+                  f"{'< 0.18' if role == 'twin' else '> 0.20'}",
+                  float(d < 0.18 if role == "twin" else d > 0.20), 1.0, 0.0, note=f"{d:.3f}")
+
+    # (g) the trained defenders (skipped until submit_arms_cnn.sh has run)
+    for snr, arm in arms_eval.TASKS:
+        d = arms_eval.cnn_dir(snr, arm)
+        if d is None:
+            continue
+        if not os.path.exists(os.path.join(d, "detector_spec.pt")):
+            print(f"  [SKIP] {os.path.relpath(d)}: not trained yet (submit_arms_cnn.sh)")
+            continue
+        dfd = arms_eval.defender(L, snr, arm)
+        rec = (dfd.thr.get("snr_db"), dfd.thr.get("jsr_range_db"), dfd.thr.get("extra_gens"))
+        want = (snr, list(arms_eval.WIDE_DB if arm in "AB" else tsc.JSR_RANGE_DB),
+                [os.path.relpath(p) for p in seen] if arm == "B" else [])
+        check(f"{os.path.basename(d)}: trained on (SNR, JSR range, generators) as arms_eval says",
+              float(rec == want), 1.0, 0.0, note=f"{rec}")
+        s = detectors.cnn_statistic(dfd.net, _batches(L, 8192, None, None, snr)["r"], dfd.scale)
+        check(f"{os.path.basename(d)}: CNN realised FAR at alpha 0.05 (fresh clean, {snr:g} dB)",
+              detectors.p_detect(s, dfd.threshold("spec_cnn", 0.05)), 0.05, 4 * math.sqrt(0.05 * 0.95 / 8192))
+
+
 def test_baselines():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     test_scene()
@@ -1118,6 +1245,7 @@ def test_baselines():
     test_team_policy(L)
     test_shadowing(L)
     test_sync(L)
+    test_arms(L)
 
 
 def main():
@@ -1129,6 +1257,7 @@ def main():
     ap.add_argument("--shadow-only", action="store_true", help="run only sections 19-20 (shadowing, sync)")
     ap.add_argument("--team-only", action="store_true",
                     help="run only sections 16-18 (E3 team, D4a timing, D4b policy)")
+    ap.add_argument("--arms-only", action="store_true", help="run only section 23 (D6 arms race)")
     args = ap.parse_args()
     VERBOSE = args.v
 
@@ -1143,6 +1272,8 @@ def main():
         test_team_fading(L)
         test_team_timing(L)
         test_team_policy(L)
+    elif args.arms_only:
+        test_arms(lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")}))
     elif not args.baselines_only:
         for sps, pulse in [(8, "rrc0.35"), (4, "rect")]:
             L = lk.Link(sps=sps, pulse=pulse)
@@ -1157,7 +1288,7 @@ def main():
             test_perfect_generator(L)
             test_normalisation(L)
         test_models()
-    if not (args.team_only or args.shadow_only):
+    if not (args.team_only or args.shadow_only or args.arms_only):
         test_baselines()
 
     print("\n" + ("ALL CHECKS PASS" if not FAILURES else

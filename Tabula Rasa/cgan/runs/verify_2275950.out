@@ -1,0 +1,37 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+device: cuda:0
+
+23. D6 arms race: retrain flags, arm A/B datasets, SNR plumbing, trained defenders
+  [PASS] default jammed-frame JSR range == Li's (-20, +10) dB       got=1           want=1           tol=0
+  [PASS] defaults: clean frames == the pre-D6 code path's, max |diff| got=0           want=0           tol=0
+  [PASS] defaults, seed 11: colour scale vmin ~ the deployed CNN's [dB] got=-44.276     want=-44.236     tol=0.1
+  [PASS] defaults, seed 11: colour scale vmax ~ the deployed CNN's [dB] got=39.281      want=39.275      tol=0.1
+  [PASS] arm A: frames == 762 clean + 4 x 204                       got=1578        want=1578        tol=0
+  [PASS] arm A: jammed JSRs inside (-35, +10) dB                    got=1           want=1           tol=0
+  [PASS] arm A: fraction of jammed frames below Li's -20 dB (U: 1/3) got=0.34926     want=0.33333     tol=0.0660098
+  [PASS] arm B: one extra type of N_PER_TYPE 'generator' frames, labelled jammed got=1           want=1           tol=0
+  [PASS] arm B: first 1578 frames == arm A's, max |diff|            got=0           want=0           tol=0
+  [PASS] arm B: generator frames != clean (mean power above the clean frames') got=1           want=1           tol=0
+  [PASS] snr_db 15: mean clean power - the 30 dB default's == n0(15) - n0(30) got=0.003825    want=0.0038278   tol=5.05789e-05
+  [PASS] train_spectrogram_cnn --jsr-range -35 10 without --out-dir is refused got=1           want=1           tol=0
+  [PASS] train_spectrogram_cnn --extra-gens x_G.pt without --out-dir is refused got=1           want=1           tol=0
+  [PASS] train_spectrogram_cnn --snr-db 15 without --out-dir is refused got=1           want=1           tol=0
+  [PASS] ... and accepted with --out-dir (range, SNR parsed)        got=1           want=1           tol=0
+  [PASS] arms_eval twin_cold_b10 (twin): nearest round-0 attacker, relative weight distance < 0.18 got=1           want=1           tol=0   0.142
+  [PASS] arms_eval twin_grey_b1 (twin): nearest round-0 attacker, relative weight distance < 0.18 got=1           want=1           tol=0   0.116
+  [PASS] arms_eval twin_grey_b10 (twin): nearest round-0 attacker, relative weight distance < 0.18 got=1           want=1           tol=0   0.146
+  [PASS] arms_eval held_r1_b10 (held-out): nearest round-0 attacker, relative weight distance > 0.20 got=1           want=1           tol=0   0.252
+  [PASS] arms_eval held_r2_b10 (held-out): nearest round-0 attacker, relative weight distance > 0.20 got=1           want=1           tol=0   0.254
+  [PASS] arms_eval held_r3_b10 (held-out): nearest round-0 attacker, relative weight distance > 0.20 got=1           want=1           tol=0   0.224
+  [PASS] snr30_A: trained on (SNR, JSR range, generators) as arms_eval says got=1           want=1           tol=0   (30.0, [-35.0, 10.0], [])
+  [PASS] snr30_A: CNN realised FAR at alpha 0.05 (fresh clean, 30 dB) got=0.051514    want=0.05        tol=0.0096319
+  [PASS] snr30_B: trained on (SNR, JSR range, generators) as arms_eval says got=1           want=1           tol=0   (30.0, [-35.0, 10.0], ['../artifacts/cgan/gan/run003/task13_G.pt', '../artifacts/cgan/gan/run003/task14_G.pt'])
+  [PASS] snr30_B: CNN realised FAR at alpha 0.05 (fresh clean, 30 dB) got=0.047729    want=0.05        tol=0.0096319
+  [PASS] snr15_r0: trained on (SNR, JSR range, generators) as arms_eval says got=1           want=1           tol=0   (15.0, [-20.0, 10.0], [])
+  [PASS] snr15_r0: CNN realised FAR at alpha 0.05 (fresh clean, 15 dB) got=0.050293    want=0.05        tol=0.0096319
+  [PASS] snr15_A: trained on (SNR, JSR range, generators) as arms_eval says got=1           want=1           tol=0   (15.0, [-35.0, 10.0], [])
+  [PASS] snr15_A: CNN realised FAR at alpha 0.05 (fresh clean, 15 dB) got=0.052002    want=0.05        tol=0.0096319
+  [PASS] snr15_B: trained on (SNR, JSR range, generators) as arms_eval says got=1           want=1           tol=0   (15.0, [-35.0, 10.0], ['../artifacts/cgan/gan/run003/task13_G.pt', '../artifacts/cgan/gan/run003/task14_G.pt'])
+  [PASS] snr15_B: CNN realised FAR at alpha 0.05 (fresh clean, 15 dB) got=0.047485    want=0.05        tol=0.0096319
+
+ALL CHECKS PASS

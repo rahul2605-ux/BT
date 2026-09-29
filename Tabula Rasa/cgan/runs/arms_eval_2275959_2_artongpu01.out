@@ -1,0 +1,88 @@
+node: artongpu01.ee.ethz.ch | gpu: NVIDIA GeForce RTX 2080 Ti
+task 2 | SNR 30 dB | defender B (/usr/itetnas04/data-scratch-01/rrahman/data/bt_d6/Tabula Rasa/cgan/../artifacts/cgan/baselines/arms/snr30_B) | detectors power_one_sided, power_two_sided, kurtosis, spec_cnn, lrt_noise | device cuda:0
+clean: BER 0.000e+00, FAR {"power_one_sided": 0.052734375, "power_two_sided": 0.05712890625, "kurtosis": 0.05029296875, "spec_cnn": 0.044921875}
+Li classes, li_range [-20.0, 10.0]: accuracy 0.9632, FAR (argmax) 0.0331, DR at alpha 0.9663, AUC 0.9912  (37s)
+Li classes, wide_range [-35.0, 10.0]: accuracy 0.9453, FAR (argmax) 0.0289, DR at alpha 0.9323, AUC 0.9812  (37s)
+  noise          JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.059 power_two_sided 0.049 kurtosis 0.049 spec_cnn 0.051 lrt_noise 0.072
+  noise          JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.047 power_two_sided 0.039 kurtosis 0.062 spec_cnn 0.062 lrt_noise 0.062
+  noise          JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.057 kurtosis 0.041 spec_cnn 0.057 lrt_noise 0.068
+  noise          JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.041 power_two_sided 0.057 kurtosis 0.047 spec_cnn 0.074 lrt_noise 0.082
+  noise          JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.039 kurtosis 0.051 spec_cnn 0.080 lrt_noise 0.070
+  noise          JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.068 power_two_sided 0.053 kurtosis 0.057 spec_cnn 0.086 lrt_noise 0.143
+  noise          JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.045 kurtosis 0.033 spec_cnn 0.094 lrt_noise 0.123
+  noise          JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.057 power_two_sided 0.064 kurtosis 0.037 spec_cnn 0.115 lrt_noise 0.172
+  noise          JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.062 power_two_sided 0.049 kurtosis 0.035 spec_cnn 0.111 lrt_noise 0.203
+  noise          JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.100 power_two_sided 0.094 kurtosis 0.057 spec_cnn 0.125 lrt_noise 0.305
+  noise          JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.061 kurtosis 0.051 spec_cnn 0.170 lrt_noise 0.377
+  noise          JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.105 power_two_sided 0.098 kurtosis 0.051 spec_cnn 0.229 lrt_noise 0.443
+  noise          JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.064 kurtosis 0.027 spec_cnn 0.334 lrt_noise 0.672
+  noise          JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.096 power_two_sided 0.088 kurtosis 0.049 spec_cnn 0.461 lrt_noise 0.832
+  noise          JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.088 power_two_sided 0.055 kurtosis 0.053 spec_cnn 0.605 lrt_noise 0.932
+  noise          JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.109 power_two_sided 0.096 kurtosis 0.035 spec_cnn 0.744 lrt_noise 0.990
+  noise          JSR  -34.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.160 power_two_sided 0.145 kurtosis 0.043 spec_cnn 0.891 lrt_noise 1.000
+  noise          JSR  -33.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.156 power_two_sided 0.139 kurtosis 0.053 spec_cnn 0.967 lrt_noise 1.000
+  noise          JSR  -32.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.213 power_two_sided 0.168 kurtosis 0.055 spec_cnn 0.994 lrt_noise 1.000
+  noise          JSR  -31.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.271 power_two_sided 0.230 kurtosis 0.041 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -30.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.303 power_two_sided 0.254 kurtosis 0.055 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -29.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.342 power_two_sided 0.316 kurtosis 0.078 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -28.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.477 power_two_sided 0.410 kurtosis 0.051 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -27.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.502 power_two_sided 0.459 kurtosis 0.053 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -26.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.617 power_two_sided 0.570 kurtosis 0.031 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -25.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.736 power_two_sided 0.695 kurtosis 0.053 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -24.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.799 power_two_sided 0.777 kurtosis 0.053 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -23.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.875 power_two_sided 0.854 kurtosis 0.043 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -22.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.928 power_two_sided 0.916 kurtosis 0.078 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -21.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.961 power_two_sided 0.949 kurtosis 0.059 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -20.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.982 power_two_sided 0.977 kurtosis 0.035 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -19.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.988 power_two_sided 0.990 kurtosis 0.086 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -18.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.998 power_two_sided 0.996 kurtosis 0.117 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -17.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.143 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -16.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.207 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -15.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.283 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -14.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.418 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -13.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.607 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -12.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.785 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -11.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.922 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  -10.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 0.986 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -9.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -8.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -7.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -6.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -5.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -4.0 dB  BER 7.63e-06  PER 0.002  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -3.0 dB  BER 3.81e-05  PER 0.010  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -2.0 dB  BER 1.53e-04  PER 0.039  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   -1.0 dB  BER 7.93e-04  PER 0.180  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +0.0 dB  BER 2.37e-03  PER 0.459  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +1.0 dB  BER 5.81e-03  PER 0.754  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +2.0 dB  BER 1.25e-02  PER 0.971  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +3.0 dB  BER 2.22e-02  PER 0.998  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +4.0 dB  BER 3.70e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +5.0 dB  BER 5.61e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +6.0 dB  BER 7.84e-02  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +7.0 dB  BER 1.03e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +8.0 dB  BER 1.31e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR   +9.0 dB  BER 1.57e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +10.0 dB  BER 1.84e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +11.0 dB  BER 2.11e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +12.0 dB  BER 2.40e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +13.0 dB  BER 2.63e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +14.0 dB  BER 2.86e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  noise          JSR  +15.0 dB  BER 3.08e-01  PER 1.000  P(det)@0.05 power_one_sided 1.000 power_two_sided 1.000 kurtosis 1.000 spec_cnn 1.000 lrt_noise 1.000
+  [B @ 30 dB] noise (classical) done (59s)
+  pulsed_p1      JSR  -50.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.061 power_two_sided 0.039 kurtosis 0.053 spec_cnn 0.047
+  pulsed_p1      JSR  -49.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.043 power_two_sided 0.059 kurtosis 0.059 spec_cnn 0.061
+  pulsed_p1      JSR  -48.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.092 kurtosis 0.041 spec_cnn 0.062
+  pulsed_p1      JSR  -47.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.080 power_two_sided 0.088 kurtosis 0.033 spec_cnn 0.053
+  pulsed_p1      JSR  -46.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.080 power_two_sided 0.082 kurtosis 0.051 spec_cnn 0.055
+  pulsed_p1      JSR  -45.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.070 power_two_sided 0.074 kurtosis 0.047 spec_cnn 0.068
+  pulsed_p1      JSR  -44.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.074 power_two_sided 0.086 kurtosis 0.043 spec_cnn 0.066
+  pulsed_p1      JSR  -43.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.090 power_two_sided 0.115 kurtosis 0.035 spec_cnn 0.076
+  pulsed_p1      JSR  -42.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.092 power_two_sided 0.104 kurtosis 0.045 spec_cnn 0.072
+  pulsed_p1      JSR  -41.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.123 power_two_sided 0.125 kurtosis 0.057 spec_cnn 0.076
+  pulsed_p1      JSR  -40.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.098 power_two_sided 0.137 kurtosis 0.041 spec_cnn 0.074
+  pulsed_p1      JSR  -39.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.141 power_two_sided 0.160 kurtosis 0.043 spec_cnn 0.107
+  pulsed_p1      JSR  -38.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.131 power_two_sided 0.168 kurtosis 0.043 spec_cnn 0.127
+  pulsed_p1      JSR  -37.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.156 power_two_sided 0.207 kurtosis 0.045 spec_cnn 0.119
+  pulsed_p1      JSR  -36.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.182 power_two_sided 0.248 kurtosis 0.047 spec_cnn 0.174
+  pulsed_p1      JSR  -35.0 dB  BER 0.00e+00  PER 0.000  P(det)@0.05 power_one_sided 0.244 power_two_sided 0.299 kurtosis 0.037 spec_cnn 0.256

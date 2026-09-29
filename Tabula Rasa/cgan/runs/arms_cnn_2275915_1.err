@@ -1,0 +1,4 @@
+/usr/itetnas04/data-scratch-01/rrahman/data/bt_d6/Tabula Rasa/cgan/train_spectrogram_cnn.py:196: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  tl += float(loss) * len(idx)
+slurmstepd: error: *** JOB 2275928 ON tikgpu06 CANCELLED AT 2026-09-28T15:29:35 ***
