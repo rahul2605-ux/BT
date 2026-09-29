@@ -255,9 +255,9 @@ Work through all of it, in order:
    same reason M0 is. It keeps `graphify-out/graph.json` in step with the code. **It does not
    re-read `README.md`** — prose, papers and figures need semantic re-extraction, which costs
    tokens and dispatches subagents. Do that with `/graphify . --update` only when deliberately
-   asked; it is not part of r2c. Note that 56 `artifacts/*.png` figures (sim08, sim08_ablation,
-   the newer cgan ones; count of 2026-09-28 evening) are still queued unextracted, so a `--update` will try to
-   process all of them at roughly 48 k tokens each, ~2.7 M in total (README C.5). `graphify update` also **evicts the nodes of any non-code
+   asked; it is not part of r2c. Note that 58 `artifacts/*.png` figures (sim08, sim08_ablation,
+   the newer cgan ones incl. D6's two; count of 2026-09-29) are still queued unextracted, so a `--update` will try to
+   process all of them at roughly 48 k tokens each, ~2.8 M in total (README C.5). `graphify update` also **evicts the nodes of any non-code
    file that is gone from disk**. Archiving artifacts therefore removes their figure nodes; save
    `graphify-out/<date>/` before a second same-day run overwrites it.
    Expect two side effects each time: it snapshots the previous graph into `graphify-out/<date>/`,

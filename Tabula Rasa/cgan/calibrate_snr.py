@@ -104,14 +104,17 @@ def defender_at(L, snr_db, n_cal=N_CALIBRATION, verbose=True):
                               thr_dir=cal_dir(snr_db))
 
 
-def calibrate_at(L, net, snr_db, n_cal=N_CALIBRATION, force=False, verbose=True):
+def calibrate_at(L, net, snr_db, n_cal=N_CALIBRATION, force=False, verbose=True,
+                 out=None, scale=None, extra=None):
     """
     Re-calibrate every detector at `snr_db`. Returns (thresholds dict, lrt parts path).
 
     Cached under artifacts/cgan/baselines/snr/<tag>/ in the same schema as the 30 dB
-    thresholds.json + clean_lrt_parts.pt, so Defender can load either one.
+    thresholds.json + clean_lrt_parts.pt, so Defender can load either one. `out`
+    overrides that folder, `scale` skips the colour-scale fit and keeps the one given,
+    `extra` is merged into thresholds.json (S5's honest CFAR, cfar_defender).
     """
-    out = cal_dir(snr_db)
+    out = cal_dir(snr_db) if out is None else out
     thr_path = os.path.join(out, "thresholds.json")
     parts_path = os.path.join(out, "clean_lrt_parts.pt")
     if not force and os.path.exists(thr_path) and os.path.exists(parts_path):
@@ -132,7 +135,7 @@ def calibrate_at(L, net, snr_db, n_cal=N_CALIBRATION, force=False, verbose=True)
     snr = NO_NOISE_DB if snr_db is None else snr_db
     n0 = L.noise_var(snr)
 
-    scale = fit_scale(L, snr)
+    scale = fit_scale(L, snr) if scale is None else scale
     if verbose:
         print(f"  [{level_tag(snr_db)}] scale vmin {scale.vmin:.2f} vmax {scale.vmax:.2f} dB, "
               f"n0 {n0:.3e}  ({time.time() - t0:.0f}s)", flush=True)
@@ -167,7 +170,7 @@ def calibrate_at(L, net, snr_db, n_cal=N_CALIBRATION, force=False, verbose=True)
         cnn={str(a): detectors.calibrate(stat["cnn"], a) for a in detectors.ALPHAS},
         lrt_d=D, noise_var=n0, p_s=L.p_s, spec_scale=scale.to_dict(),
         lrt_usable=bool(n0 > MIN_N0), clean_ber=float(L.ber_clean(snr)),
-        clean_stat_q=clean_q, calibration_s=time.time() - t0,
+        clean_stat_q=clean_q, calibration_s=time.time() - t0, **(extra or {}),
     )
     torch.save(dict(z=stat["z"], e_perp=stat["e_perp"], D=D), parts_path)
     with open(thr_path, "w") as f:
@@ -178,3 +181,29 @@ def calibrate_at(L, net, snr_db, n_cal=N_CALIBRATION, force=False, verbose=True)
               f"lrt {'on' if thresholds['lrt_usable'] else 'OFF (n0 underflow)'}  "
               f"({time.time() - t0:.0f}s)", flush=True)
     return thresholds, parts_path
+
+
+# ---------------------------------------------------------------- S5: noise uncertainty
+UNC_ROOT = os.path.join(scene.ART, "noise_unc")
+
+
+def unc_dir(snr_db, unc_db):
+    return os.path.join(UNC_ROOT, f"{level_tag(snr_db)}_unc_{unc_db:g}")
+
+
+def cfar_defender(L, naive, snr_db, n_cal=N_CALIBRATION, out=None, verbose=True):
+    """
+    S5 (README §3.3n), the honest-CFAR defender (ii): every threshold re-calibrated on
+    clean frames drawn WITH the per-frame noise uncertainty (L.noise_unc_db must already
+    be set), so its FAR is alpha again and its thresholds widen. It keeps the naive
+    defender's CNN weights AND colour scale (user decision, 2026-09-28): both then see
+    identical statistics on the same frames and only the thresholds differ. The LRT keeps
+    the nominal n0 in its statistic -- the receiver does not know the frame's noise --
+    and takes its threshold from the uncertain clean frames. Always recalibrated (force):
+    the folder is keyed by level, not by the naive defender's scale.
+    """
+    import baselines
+    out = unc_dir(snr_db, L.noise_unc_db) if out is None else out
+    calibrate_at(L, naive.net, snr_db, n_cal=n_cal, force=True, verbose=verbose, out=out,
+                 scale=naive.scale, extra=dict(noise_unc_db=L.noise_unc_db, defender="cfar"))
+    return baselines.Defender(L, snr_db=snr_db, thr_dir=out)

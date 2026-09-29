@@ -1103,6 +1103,140 @@ def test_sync(L):
         L.jammer_sync = False
 
 
+# ================================================================ S4: training at 15 dB (2026-09-28)
+def test_snr_training(L):
+    """
+    README §3.3m (S4) trains generators at 15 dB. Check: (a) flag off -- train_gan's SNR
+    defaults are the deployed 30 dB, so every earlier run is unchanged; (b) one training
+    step at 15 dB, replayed draw for draw: its log E[BER] is the 15 dB value on the same
+    frames (and distinguishably not the 30 dB one), and its soft P(det) uses the 15 dB
+    threshold and clean width; (c) the S4 defender -- the CNN retrained at 15 dB with its
+    own calibration (env S4_CNN_DIR) -- honours alpha on fresh 15 dB frames and carries
+    the 15 dB noise variance into the LRT. (c) is skipped until that CNN exists.
+    """
+    import copy
+    import inspect
+    import os
+    import baselines
+    import calibrate_snr
+    import train_gan
+    print("\n21. S4: training at 15 dB -- SNR plumbing, a replayed step, the 15 dB defender")
+    snr = 15.0
+
+    # (a) flag off
+    for fn in (train_gan.train, train_gan.clean_scale, train_gan.run_task):
+        check(f"train_gan.{fn.__name__}: default snr_db is the deployed {lk.SNR_DB:g} dB",
+              inspect.signature(fn).parameters["snr_db"].default, lk.SNR_DB, 0)
+
+    # (b) one step at 15 dB against E2's 15 dB defender, replayed
+    dfd = calibrate_snr.defender_at(L, snr, verbose=VERBOSE)
+    target, jsr, seed, F = "power_one_sided", -20.0, 7, 16
+    G = models.Generator(n_classes=1).to(L.device)
+    G0 = copy.deepcopy(G)                               # train mode, like G: same dropout draws
+    _, hist, _ = train_gan.train(L, dfd, G, 1.0, target, 1.0, 1, F, (jsr, jsr), seed, snr_db=snr)
+    lk.setup(L.device, seed=seed * 1_000_000)
+    torch.rand(1, device=L.device)                      # train's JSR draw
+    out = attacks.frames(L, F, dict(name="gan", G=G0, scale=1.0, grad=True), [jsr], snr, noiseless=True)
+    want15 = float(attacks.log_expected_ber(out, L.noise_var(snr)))
+    want30 = float(attacks.log_expected_ber(out, L.noise_var(lk.SNR_DB)))
+    check("S4 step 0 at 15 dB: log E[BER] == the replayed 15 dB value", hist[0]["log_ber"], want15,
+          1e-4 * abs(want15) + 1e-6, note=f"30 dB on the same frames: {want30:.3f}")
+    check("S4 step 0: the 15 and 30 dB log E[BER] differ by > 1 nat", float(abs(want15 - want30) > 1.0), 1.0, 0)
+    sc = train_gan.clean_scale(L, dfd, target, snr_db=snr)
+    thr = dfd.threshold(target, train_gan.ALPHA)
+    s, _ = dfd.statistics(out["r"], out["z"], dets=[target])
+    check("S4 step 0: soft P(det) at the 15 dB threshold and clean width", hist[0]["soft_pdet"],
+          float(detectors.soft_pdet(s[target], thr, sc)), 1e-4)
+    check("S4: the 15 dB power threshold is not the deployed 30 dB one",
+          float(abs(thr - baselines.Defender(L).threshold(target, train_gan.ALPHA)) > 1e-4), 1.0, 0)
+
+    # (c) the S4 defender: CNN retrained at 15 dB + its own calibration
+    d = os.environ.get("S4_CNN_DIR", os.path.join(scene.ART, "arms", "snr15_r0"))
+    if not os.path.exists(os.path.join(d, "detector_spec.pt")):
+        print(f"  [SKIP] 21c needs the 15 dB CNN at {d} (env S4_CNN_DIR)")
+        return
+    d15 = baselines.Defender(L, snr_db=snr, thr_dir=d, cnn_path=os.path.join(d, "detector_spec.pt"))
+    check("S4 defender: LRT noise variance is the 15 dB one", d15.n0, L.noise_var(snr), 1e-15)
+    n_test, a = 4096, detectors.HEADLINE_ALPHA
+    fresh = _batches(L, n_test, None, None, snr)
+    s, _ = d15.statistics(fresh["r"], fresh["z"])
+    for det in ("power_one_sided", "power_two_sided", "kurtosis", "spec_cnn"):
+        check(f"S4 defender at 15 dB: {det} realised FAR at alpha={a}",
+              detectors.p_detect(s[det], d15.threshold(det, a)), a, 4 * math.sqrt(a * (1 - a) / n_test) + 0.01)
+
+
+# ================================================================ S5: noise uncertainty (2026-09-28)
+def test_noise_uncertainty(L):
+    """
+    README §3.3n (S5) scales each frame's noise variance by a log-normal factor the
+    defender does not know. Check: (a) the factor's law -- unit mean, std noise_unc_db in
+    dB; (b) noise_unc_db 0 draws nothing, so every earlier result stays bit-identical;
+    (c) it reaches the measurement path: clean BER == mean over frames of Q(c0/sqrt(N0 u_f))
+    and the decision-point noise power tracks N0 u_f frame by frame; (d) at 15 dB, 2 dB the
+    honest-CFAR defender keeps the naive colour scale and honours alpha on fresh uncertain
+    frames, while the naive defender's realised FAR on the same frames rises; (e) the CFAR
+    statistics are the naive ones except the two-sided centres (snr_ablation.cfar_stats).
+    """
+    import os
+    import calibrate_snr
+    import snr_ablation
+    print("\n22. S5: noise uncertainty -- factor law, plumbing, naive vs honest CFAR")
+    try:
+        # (a) the factor's law
+        L.noise_unc_db = 1.0
+        u = L.noise_scale(200_000).double()
+        check("noise unc 1 dB: mean variance factor", float(u.mean()), 1.0, 0.005)
+        check("noise unc 1 dB: std of the factor [dB]", float((10 * u.log10()).std()), 1.0, 0.01)
+
+        # (b) off: nothing drawn, no factor in the output
+        L.noise_unc_db = 0.0
+        check("noise unc 0: noise_scale is None and frames carry no factor",
+              float(L.noise_scale(4) is None
+                    and "noise_scale" not in attacks.frames(L, 4, None, None, lk.SNR_DB)), 1.0, 0.0)
+
+        # (c) plumbing: BER and the per-frame decision-point noise
+        L.noise_unc_db, snr = 3.0, 8.0
+        out = _batches(L, 8192, None, None, snr)
+        fb, n0 = _frame_ber(out), L.noise_var(snr)
+        want = float(np.mean(lk.q_function((L.c0 / torch.sqrt(n0 * out["noise_scale"])).cpu().numpy())))
+        check("noise unc 3 dB, 8 dB SNR: BER == mean_f Q(c0/sqrt(N0 u_f))", float(fb.mean()), want,
+              4 * float(fb.std()) / math.sqrt(fb.numel()) + 1e-6)
+        e = out["z"] - L.mapper(out["bits"]).reshape(out["z"].shape)
+        ratio = e.abs().pow(2).mean(dim=-1).double() / (n0 * out["noise_scale"].double())
+        check("noise unc 3 dB: decision-point noise power / (N0 u_f), mean over frames",
+              float(ratio.mean()), 1.0, 4 * float(ratio.std()) / math.sqrt(ratio.numel()) + 0.01)
+
+        # (d) naive vs honest CFAR at 15 dB, 2 dB
+        if not os.path.exists(os.path.join(scene.ART, "detector_spec.pt")):
+            print("  [SKIP] 22d-e need artifacts/cgan/baselines/detector_spec.pt")
+            return
+        L.noise_unc_db = 0.0
+        naive = calibrate_snr.defender_at(L, 15.0, verbose=VERBOSE)
+        L.noise_unc_db = 2.0
+        cfar = calibrate_snr.cfar_defender(L, naive, 15.0, n_cal=4096, verbose=VERBOSE,
+                                           out=os.path.join(calibrate_snr.UNC_ROOT, "_verify"))
+        check("CFAR keeps the naive colour scale (vmin, vmax)",
+              float((cfar.scale.vmin, cfar.scale.vmax) == (naive.scale.vmin, naive.scale.vmax)), 1.0, 0)
+        n_test, a = 4096, detectors.HEADLINE_ALPHA
+        tol = 4 * math.sqrt(a * (1 - a) / n_test) + 0.01
+        fresh = _batches(L, n_test, None, None, 15.0)
+        s, raw = naive.statistics(fresh["r"], fresh["z"])
+        c = snr_ablation.cfar_stats(cfar, s, raw)
+        for det in ("power_one_sided", "power_two_sided", "kurtosis", "spec_cnn"):
+            check(f"15 dB, unc 2 dB: CFAR {det} realised FAR at alpha={a}",
+                  detectors.p_detect(c[det], cfar.threshold(det, a)), a, tol)
+        far = detectors.p_detect(s["power_one_sided"], naive.threshold("power_one_sided", a))
+        check("15 dB, unc 2 dB: the naive one-sided power FAR rises above alpha", float(far > a + tol), 1.0, 0,
+              note=f"realised {far:.3f}")
+
+        # (e) only the two-sided centres differ
+        check("cfar_stats: one-sided power and CNN are the naive statistics",
+              float(torch.equal(c["power_one_sided"], s["power_one_sided"])
+                    and torch.equal(c["spec_cnn"], s["spec_cnn"])), 1.0, 0)
+    finally:
+        L.noise_unc_db = 0.0
+
+
 # ================================================================ D6 arms race (2026-09-28)
 def test_arms(L):
     """
@@ -1245,6 +1379,8 @@ def test_baselines():
     test_team_policy(L)
     test_shadowing(L)
     test_sync(L)
+    test_snr_training(L)
+    test_noise_uncertainty(L)
     test_arms(L)
 
 

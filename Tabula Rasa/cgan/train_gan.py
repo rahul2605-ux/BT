@@ -86,10 +86,10 @@ FRAMES = {None: 128, "power_one_sided": 128, "power_two_sided": 128, "kurtosis":
           "spec_cnn": 32}
 
 
-def clean_scale(L, dfd, target, n=4096, seed=1):
+def clean_scale(L, dfd, target, n=4096, seed=1, snr_db=lk.SNR_DB):
     """Std of the target's statistic on clean frames -- the soft-detector's width."""
     lk.setup(L.device, seed=seed)
-    out = attacks.frames(L, n, None, None, lk.SNR_DB)
+    out = attacks.frames(L, n, None, None, snr_db)
     s, _ = dfd.statistics(out["r"], out["z"], dets=[target], gain=out.get("gain"))
     return float(s[target].std())
 
@@ -103,7 +103,7 @@ def jammer_jsr_db(L, spec, cap_db, n=64):
         return float(10 * torch.log10(j[..., a].abs().pow(2).mean() / L.p_s))
 
 
-def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed, mode=None):
+def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed, mode=None, snr_db=lk.SNR_DB):
     """
     One generator; returns the trained G, a per-step history and the learned log-gain
     (None unless mode["power"] == "learned"). mode (README §3.3f, 2026-09-27):
@@ -112,11 +112,13 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed, mode=No
                           so the generator CHOOSES its power; cap = mode["cap"] dB JSR,
                           started at mode["init"] dB so the detection gradient is alive;
       damage "ber" (log E[BER], all runs <= run004) or "per" (log E[frame error rate]).
+    snr_db (S4, README §3.3m): the noise level of the training frames, of log E[damage] and of
+    the soft detector's clean width; dfd must be calibrated at the same level.
     """
     mode = {**dict(power="fixed", damage="ber", cap=0.0, init=-40.0, gain_lr=1e-2), **(mode or {})}
-    n0 = L.noise_var(lk.SNR_DB)
+    n0 = L.noise_var(snr_db)
     thr = dfd.threshold(target, ALPHA) if target else None
-    sc = clean_scale(L, dfd, target) if target else None
+    sc = clean_scale(L, dfd, target, snr_db=snr_db) if target else None
     if target is not None:
         print(f"  target {target}: threshold {thr:.6g}, clean-frame std {sc:.6g} "
               f"(soft_pdet width)", flush=True)
@@ -139,7 +141,7 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed, mode=No
     for step in range(steps):
         lk.setup(L.device, seed=seed * 1_000_000 + step)     # fresh randomness per step
         jsr = mode["cap"] if log_gain is not None else lo + (hi - lo) * float(torch.rand(1, device=L.device))
-        out = attacks.frames(L, frames, spec, [jsr], lk.SNR_DB, noiseless=True)
+        out = attacks.frames(L, frames, spec, [jsr], snr_db, noiseless=True)
         log_ber = damage(out, n0)          # log E[BER] or log E[PER] (name kept for the history keys)
         if target is None:
             soft = torch.zeros((), device=L.device)
@@ -162,7 +164,8 @@ def train(L, dfd, G, scale, target, beta, steps, frames, jsr_band, seed, mode=No
     return G, hist, (None if log_gain is None else float(log_gain.detach()))
 
 
-def run_task(L, dfd, task, gen0, steps, frames, seed, band=JSR_BAND, init="warm", mode=None):
+def run_task(L, dfd, task, gen0, steps, frames, seed, band=JSR_BAND, init="warm", mode=None,
+             snr_db=lk.SNR_DB):
     if init == "warm":
         G, scale, _ = models.load_generator(gen0, L.device)  # warm start from run001_G
     else:
@@ -171,7 +174,8 @@ def run_task(L, dfd, task, gen0, steps, frames, seed, band=JSR_BAND, init="warm"
         # rescales every frame to its JSR.
         G, scale = models.Generator(n_classes=1).to(L.device), 1.0
     G.train()
-    G, hist, log_gain = train(L, dfd, G, scale, task["target"], task["beta"], steps, frames, band, seed, mode)
+    G, hist, log_gain = train(L, dfd, G, scale, task["target"], task["beta"], steps, frames, band, seed, mode,
+                              snr_db=snr_db)
     return G, scale, hist, log_gain
 
 
@@ -202,6 +206,10 @@ def main():
                          "with --detector-dir pointing at that level's retrained defender")
     ap.add_argument("--sync", action="store_true",
                     help="the listening jammer (README §3.3l): lands on R's symbol grid, phase still random")
+    ap.add_argument("--snr-db", type=float, default=lk.SNR_DB,
+                    help="train at this SNR (README §3.3m, S4). The defender is --detector-dir, "
+                         "loaded at this SNR, or else E2's (calibrate_snr.defender_at: 30 dB CNN "
+                         "weights, re-calibrated here)")
     ap.add_argument("--rep", type=int, default=0,
                     help="seed replicate: 0 = the original seeds; r > 0 shifts every seed by 1000 r "
                          "(fresh init for --init random, fresh frames either way)")
@@ -213,7 +221,7 @@ def main():
     out = os.path.join(scene.ART, "..", "gan", args.run)
     if args.run == RUN and (args.init != "warm" or args.rep != 0 or args.steps != 400 or args.band
                             or args.detector_dir or args.power != "fixed" or args.damage != "ber"
-                            or args.shadow_db or args.sync):
+                            or args.shadow_db or args.sync or args.snr_db != lk.SNR_DB):
         raise SystemExit("run001 holds the original recipe (warm, 400 steps, rep 0); "
                          "write any variant to its own --run folder")
     os.makedirs(out, exist_ok=True)
@@ -221,9 +229,14 @@ def main():
     L = lk.Link(**{k: lk.LINK[k] for k in ("sps", "pulse")})
     L.shadow_db = args.shadow_db
     L.jammer_sync = args.sync
-    dfd = (baselines.Defender(L) if args.detector_dir is None else
-           baselines.Defender(L, thr_dir=args.detector_dir,
-                              cnn_path=os.path.join(args.detector_dir, "detector_spec.pt")))
+    if args.detector_dir is not None:
+        dfd = baselines.Defender(L, snr_db=args.snr_db, thr_dir=args.detector_dir,
+                                 cnn_path=os.path.join(args.detector_dir, "detector_spec.pt"))
+    elif args.snr_db != lk.SNR_DB:
+        import calibrate_snr
+        dfd = calibrate_snr.defender_at(L, args.snr_db)
+    else:
+        dfd = baselines.Defender(L)
 
     if args.smoke:
         cnn0 = next(i for i, t in enumerate(TASKS) if t["target"] == "spec_cnn")
@@ -247,11 +260,13 @@ def main():
                     gain_lr=args.gain_lr)
         G, scale, hist, log_gain = run_task(L, dfd, task, args.gen0, steps, frames,
                                             seed=4000 + tid + 1000 * args.rep, band=band, init=args.init,
-                                            mode=mode)
+                                            mode=mode, snr_db=args.snr_db)
         recipe = dict(target=task["target"], beta=task["beta"], steps=steps, frames=frames,
                       lr=2e-4, jsr_band=band, alpha=ALPHA, init=args.init, rep=args.rep,
-                      detector=args.detector_dir or "deployed", power=args.power, damage=args.damage,
-                      shadow_db=args.shadow_db, sync=args.sync,
+                      detector=args.detector_dir or ("deployed" if args.snr_db == lk.SNR_DB else
+                                                     "E2 (30 dB weights, re-calibrated)"),
+                      power=args.power, damage=args.damage,
+                      shadow_db=args.shadow_db, sync=args.sync, snr_db=args.snr_db,
                       jsr_cap=args.jsr_cap if args.power == "learned" else None,
                       warm_start=os.path.relpath(args.gen0) if args.init == "warm" else None)
         torch.save({"state_dict": G.state_dict(), "n_classes": 1, "seg_len": models.SEG_LEN,

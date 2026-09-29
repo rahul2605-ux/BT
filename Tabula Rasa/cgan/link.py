@@ -5,9 +5,10 @@ M0 works on one symbol at a time. Zhou's jammer is a *waveform* (1024 I/Q
 samples), so this link keeps exactly the extra layers a waveform needs --
 oversampling, a pulse-shaping filter, a matched filter, symbol-time sampling --
 and nothing else: one channel (h = 1), AWGN, no fading, no synchronisation
-errors on the victim's side. The one exception is opt-in: `Link.shadow_db` > 0
+errors on the victim's side. The exceptions are opt-in: `Link.shadow_db` > 0
 puts per-frame log-normal shadowing on the victim's own link (README §3.3k), and
-only on the measurement path (attacks.frames), not in `run`.
+`Link.noise_unc_db` > 0 a per-frame log-normal factor on the noise variance
+(README §3.3n), both only on the measurement path (attacks.frames), not in `run`.
 
 SIGNAL MODEL
 ------------
@@ -126,6 +127,7 @@ class Link:
         self.p_s = 1.0 / sps
         self.shadow_db = 0.0        # std of the victim link's per-frame power gain [dB]
         self.jammer_sync = False    # jammers land on R's symbol grid (channel.async_draw, §3.3l)
+        self.noise_unc_db = 0.0     # std of the per-frame noise-variance factor [dB] (§3.3n)
 
         # Cascade response measured through the actual Sionna blocks, so the
         # sampling delay does not depend on whether Sionna convolves or correlates.
@@ -156,6 +158,18 @@ class Link:
         s = self.shadow_db * math.log(10.0) / 10.0          # std of ln(power gain)
         ln_p = s * torch.randn(n_frames, 1, device=self.device) - s * s / 2
         return torch.exp(ln_p / 2)
+
+    def noise_scale(self, n_frames):
+        """
+        Per-frame factor [F] on the noise VARIANCE: log-normal with std noise_unc_db in dB,
+        normalised to unit mean so the SNR keeps its meaning on average (README §3.3n, S5).
+        The receiver does not know it. None when noise_unc_db == 0 -- nothing is drawn, so
+        the fixed-noise link stays bit-identical.
+        """
+        if self.noise_unc_db <= 0:
+            return None
+        s = self.noise_unc_db * math.log(10.0) / 10.0       # std of ln(variance factor)
+        return torch.exp(s * torch.randn(n_frames, device=self.device) - s * s / 2)
 
     def real_segments(self, n_frames, seg_len):
         """

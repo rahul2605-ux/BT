@@ -285,6 +285,10 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
     link.shadow_gain (README §3.3k) and out["gain"] [F, 1] holds it. Jammers keep
     their JSR against the MEAN signal power; the genie is handed the faded symbols,
     because it knows the victim's channel by definition.
+
+    With link.noise_unc_db > 0 each frame's noise variance is noise_var(snr_db) times
+    link.noise_scale (README §3.3n) and out["noise_scale"] [F] holds the factor. The
+    unit noise is the same draw either way (Sionna's AWGN scales it by sqrt(no)).
     """
     from scene import N_SYM
     n_sym = N_SYM if n_sym is None else n_sym
@@ -292,7 +296,9 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
     g = link.shadow_gain(n_frames)
     if g is not None:
         x, sym = x * g, sym * g
-    r = link.awgn(x, link.noise_var(snr_db))
+    u = link.noise_scale(n_frames)
+    n0 = link.noise_var(snr_db)
+    r = link.awgn(x, n0 if u is None else n0 * u)
     r_nf = x
     if spec is not None and spec["name"] != "none":
         j = jammer_at_rx(link, spec, sym, jsr_db_k)
@@ -301,6 +307,8 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
     out = dict(bits=bits, bits_hat=link.decide(z), r=r, z=z)
     if g is not None:
         out["gain"] = g
+    if u is not None:
+        out["noise_scale"] = u
     if noiseless:
         out["z_nf"] = link.matched_filter(r_nf, n_sym)
     return out
