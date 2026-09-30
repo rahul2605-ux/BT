@@ -1,0 +1,4 @@
+node: tikgpu05.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env fading = {'noise_unc_db': 0.0, 'rician_k_db': 12.0} | detectors ['energy', 'energy_2s', 'kurtosis', 'spec_cnn', 'energy_csi'] | 66 JSR points x 512 frames | NVIDIA TITAN RTX
+  random_push_e0.1   done (21s): max BER 3.861e-01, PER at +15 dB 0.943, P_det at +15 dB energy 0.97 energy_2s 0.96 kurtosis 1.00 spec_cnn 0.66 energy_csi 1.00, DC share 0.007
+wrote ../artifacts/final/fading/eval.json in 22s

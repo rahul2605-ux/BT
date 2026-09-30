@@ -1,0 +1,5 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env both = {'noise_unc_db': 0.5, 'rician_k_db': 12.0} | task control_r1 = {'target': None, 'beta': 0.0, 'cgan_task': 0} | seed 5000 | band (-32.0, 0.0) | 128 frames/step | 20 steps | device cuda:0
+  step    0  JSR  -12.5  loss 24.5434  logE[BER] -24.543  P_det_soft 0.0000  (2s)
+  step   19  JSR  -10.7  loss 6.0751  logE[BER] -6.075  P_det_soft 0.0000  (2s)
+wrote gan/control_r1_G.pt, gan/control_r1.json in 3s

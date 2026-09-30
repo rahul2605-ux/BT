@@ -1,0 +1,4 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env noise_1db = {'noise_unc_db': 1.0, 'rician_k_db': None} | detectors ['energy', 'energy_2s', 'kurtosis', 'spec_cnn'] | 66 JSR points x 512 frames | NVIDIA TITAN RTX
+  random_push_e0.1   done (21s): max BER 4.746e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00, DC share 0.007
+wrote ../artifacts/final/noise_1db/eval.json in 22s

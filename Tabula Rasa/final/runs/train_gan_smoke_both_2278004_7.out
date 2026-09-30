@@ -1,0 +1,6 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env both = {'noise_unc_db': 0.5, 'rician_k_db': 12.0} | task kurtosis_b10_r0 = {'target': 'kurtosis', 'beta': 10.0, 'cgan_task': 10} | seed 4010 | band (-31.2, 0.0) | 128 frames/step | 20 steps | device cuda:0
+  target kurtosis: threshold 0.0571707, clean-frame std 0.0181988 (soft_pdet width)
+  step    0  JSR  -27.5  loss 36.1929  logE[BER] -34.182  P_det_soft 0.2010  (1s)
+  step   19  JSR   -6.4  loss 8.4617  logE[BER] -5.610  P_det_soft 0.2852  (2s)
+wrote gan/kurtosis_b10_r0_G.pt, gan/kurtosis_b10_r0.json in 3s

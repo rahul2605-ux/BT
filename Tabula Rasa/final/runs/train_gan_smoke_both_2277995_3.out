@@ -1,0 +1,6 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env both = {'noise_unc_db': 0.5, 'rician_k_db': 12.0} | task cnn_b10_r0 = {'target': 'spec_cnn', 'beta': 10.0, 'cgan_task': 14} | seed 4014 | band (-16.4, 15.6) | 32 frames/step | 20 steps | device cuda:0
+  target spec_cnn: threshold 0.211382, clean-frame std 0.0634601 (soft_pdet width)
+  step    0  JSR   +6.6  loss 8.4899  logE[BER] -2.245  P_det_soft 0.6245  (1s)
+  step   19  JSR  +10.0  loss 1.8202  logE[BER] -1.811  P_det_soft 0.0009  (2s)
+wrote gan/cnn_b10_r0_G.pt, gan/cnn_b10_r0.json in 9s

@@ -1,0 +1,25 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env fading = {'noise_unc_db': 0.0, 'rician_k_db': 12.0} | detectors ['energy', 'energy_2s', 'kurtosis', 'spec_cnn', 'energy_csi'] | 66 JSR points x 512 frames | NVIDIA TITAN RTX
+clean: BER 0.00e+00 PER 0.0000 | realised FAR energy 0.0493 energy_2s 0.0479 energy_csi 0.0522 kurtosis 0.0547 spec_cnn 0.0515
+  omniscient_e1      done (17s): max BER 1.000e+00, PER at +15 dB 1.000, P_det at +15 dB energy 0.04 energy_2s 0.06 kurtosis 0.06 spec_cnn 0.05 energy_csi 0.07, DC share 0.008
+  omniscient_e0.1    done (17s): max BER 9.365e-01, PER at +15 dB 1.000, P_det at +15 dB energy 0.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.00 energy_csi 0.00, DC share 0.008
+  noise              done (18s): max BER 3.117e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.001
+  pulsed_p1          done (18s): max BER 4.430e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.008
+  pulsed_p0.5        done (18s): max BER 3.509e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.007
+  pulsed_p0.25       done (18s): max BER 2.499e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.008
+  pulsed_p0.1        done (18s): max BER 1.474e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.008
+  pulsed_p0.05       done (18s): max BER 8.914e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.008
+  pulsed_p0.02       done (18s): max BER 4.370e-02, PER at +15 dB 0.945, P_det at +15 dB energy 0.95 energy_2s 0.95 kurtosis 0.95 spec_cnn 0.92 energy_csi 0.95, DC share 0.007
+  pulsed_p0.01       done (18s): max BER 2.589e-02, PER at +15 dB 0.777, P_det at +15 dB energy 0.79 energy_2s 0.79 kurtosis 0.80 spec_cnn 0.76 energy_csi 0.79, DC share 0.006
+  tone               done (18s): max BER 4.700e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 1.000
+  pulse_comb         done (18s): max BER 1.117e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.016
+  zhou_cgan          done (19s): max BER 4.319e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.48 spec_cnn 1.00 energy_csi 1.00, DC share 0.015
+  control_r0         done (19s): max BER 7.541e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.006
+  control_r1         done (19s): max BER 1.012e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.002
+  control_r2         done (19s): max BER 6.873e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.005
+  cnn_b10_r0         done (19s): max BER 8.786e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.010
+  cnn_b10_r1         done (19s): max BER 9.602e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.007
+  cnn_b10_r2         done (19s): max BER 8.160e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.013
+  energy_b10_r0      done (19s): max BER 2.058e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.014
+  kurtosis_b10_r0    done (19s): max BER 1.010e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 energy_csi 1.00, DC share 0.007
+wrote ../artifacts/final/fading/eval.json in 390s

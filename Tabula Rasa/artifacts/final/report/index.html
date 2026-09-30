@@ -1,0 +1,468 @@
+<title>Six-Environment Jamming Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~70ch) with a sticky contents rail on wide screens; figures break out to full width on a light plate. */
+:root {
+  --bg: #f4f6f8;
+  --paper: #ffffff;
+  --fg: #15191d;
+  --fg2: #4a525b;
+  --muted: #7b848e;
+  --rule: #d9dee3;
+  --accent: #2a78d6;          /* the CNN-conditioned cGAN's series colour */
+  --accent-ink: #1c5cab;
+  --warn: #a8660b;
+  --good: #16762a;
+  --bad: #b3322f;
+  --plate: #fcfcfb;
+  --shade: 42, 120, 214;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --k-genie: #0b0b0b; --k-cnn: #2a78d6; --k-control: #eb6834;
+  --k-amuru: #1baf7a; --k-noise: #4a3aa7; --k-grey: #898781; --k-env: #52514e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111417; --paper: #181c20; --fg: #e7eaed; --fg2: #b3bac2; --muted: #8a939c; --rule: #2c3238;
+    --accent: #5aa0f0; --accent-ink: #8dbdf5; --warn: #e3a44a; --good: #58c46b; --bad: #ef7b77; --plate: #fcfcfb;
+    --shade: 90, 160, 240; --k-genie: #e7eaed; --k-env: #b3bac2; color-scheme: dark;
+    --k-cnn: #3987e5; --k-control: #d95926; --k-amuru: #199e70; --k-noise: #9085e9;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111417; --paper: #181c20; --fg: #e7eaed; --fg2: #b3bac2; --muted: #8a939c; --rule: #2c3238;
+  --accent: #5aa0f0; --accent-ink: #8dbdf5; --warn: #e3a44a; --good: #58c46b; --bad: #ef7b77; --plate: #fcfcfb;
+  --shade: 90, 160, 240; --k-genie: #e7eaed; --k-env: #b3bac2; color-scheme: dark;
+  --k-cnn: #3987e5; --k-control: #d95926; --k-amuru: #199e70; --k-noise: #9085e9;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+       padding-inline: 16px; padding-block: 0 64px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 40px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; padding-top: 40px;
+          font-family: var(--font-display); font-size: 13px; line-height: 1.4; }
+nav.toc a { display: block; color: var(--fg2); text-decoration: none; padding: 3px 0 3px 10px; border-left: 2px solid var(--rule); }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent-ink); border-left-color: var(--accent); }
+nav.toc .grp { margin-top: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+main { min-width: 0; }
+main > header { padding-block: 40px 8px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.eyebrow { font-family: var(--font-display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-stretch: 80%; font-weight: 800; font-size: clamp(34px, 5vw, 54px); line-height: 1.02;
+     margin: 8px 0 12px; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 28px; line-height: 1.15; margin: 56px 0 12px; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin: 44px 0 8px; text-wrap: balance; }
+h3 .sub { font-weight: 500; color: var(--muted); font-size: 16px; margin-left: 6px; }
+h4 { font-family: var(--font-display); font-weight: 600; font-size: 15px; margin: 22px 0 6px; color: var(--fg2); }
+p, li { max-width: 72ch; }
+p { margin: 0 0 12px; }
+.lede { font-size: 19px; color: var(--fg2); max-width: 70ch; }
+.small { font-size: 14px; color: var(--fg2); }
+code { font-family: var(--font-mono); font-size: 0.86em; background: color-mix(in srgb, var(--rule) 45%, transparent); padding: 1px 4px; border-radius: 3px; }
+a { color: var(--accent-ink); }
+strong { font-weight: 600; }
+.steps { padding-left: 22px; }
+.steps li { margin-bottom: 6px; }
+.answer { background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 18px 22px; margin: 22px 0; border-radius: 2px; }
+.answer h2 { margin-top: 0; font-size: 22px; }
+.answer li { margin-bottom: 8px; }
+.defbox { background: var(--paper); border: 1px solid var(--rule); padding: 16px 20px; border-radius: 2px; }
+.defbox p:last-child { margin-bottom: 0; }
+.tablewrap { overflow-x: auto; margin: 10px 0 18px; }
+table { border-collapse: collapse; font-size: 14px; line-height: 1.4; min-width: 100%; background: var(--paper); }
+th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 600; font-size: 12.5px; color: var(--fg2); background: color-mix(in srgb, var(--rule) 30%, var(--paper)); }
+td.num, th.num { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.res td.num { background: rgba(var(--shade), calc(var(--v) * 0.0045)); text-align: right; }
+td.na { color: var(--muted); text-align: right; }
+.pm { color: var(--fg2); font-size: 11.5px; margin-left: 3px; }
+.key { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 8px; background: var(--k-grey); }
+.k-genie { background: var(--k-genie); height: 4px; } .k-cnn { background: var(--k-cnn); } .k-control { background: var(--k-control); }
+.k-amuru { background: var(--k-amuru); } .k-noise { background: var(--k-noise); }
+.k-push { background: repeating-linear-gradient(90deg, var(--k-env) 0 6px, transparent 6px 9px); }
+figure { margin: 18px 0 26px; }
+.plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 3px; overflow-x: auto; }
+.plate img { display: block; width: 100%; min-width: 760px; height: auto; }
+figcaption { font-size: 14.5px; color: var(--fg2); margin-top: 8px; max-width: 80ch; }
+figcaption b { color: var(--fg); font-weight: 600; }
+.pill { display: inline-block; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; vertical-align: 2px; }
+.pill.good { color: var(--good); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+.envsec { border-top: 1px solid var(--rule); margin-top: 36px; }
+ul.tight li { margin-bottom: 4px; }
+.loading { color: var(--muted); font-size: 14px; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  nav.toc { display: none; }
+  body { font-size: 16px; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="grp">Answer</div>
+  <a href="#summary">Short answer</a>
+  <div class="grp">Setup</div>
+  <a href="#built">What was built</a>
+  <a href="#link">Link and operating point</a>
+  <a href="#attackers">Attackers</a>
+  <a href="#detectors">Detectors</a>
+  <a href="#pdet">P_det and CFAR</a>
+  <a href="#envs">Environments</a>
+  <a href="#bands">Training and bands</a>
+  <a href="#checks">Verify and gate</a>
+  <div class="grp">Results</div>
+  <a href="#env-base">base</a>
+  <a href="#env-noise">noise</a>
+  <a href="#env-noise_1db">noise_1db</a>
+  <a href="#env-fading">fading</a>
+  <a href="#env-fading_k28">fading_k28</a>
+  <a href="#env-both">both</a>
+  <a href="#compare">Across environments</a>
+  <a href="#caveats">Caveats and failures</a>
+</nav>
+<main>
+<header>
+<div class="eyebrow">Tabula Rasa · final experiment · session B · built and run overnight 29/30 Sep 2026 · figures redrawn 30 Sep, random push added</div>
+<h1>Six-Environment Jamming Run</h1>
+<p class="lede">Every attacker against every detector, retrained at Es/N0 24 dB, in six environments: the ideal link, two levels of noise-level uncertainty, two levels of Rician fading, and both together. This page explains what was built and checked, then shows each environment's figures and tables and the comparison across environments.</p>
+</header>
+
+<section id="summary" class="answer">
+<h2>The short answer</h2>
+<ul>
+<li><span class="pill good">done</span> <code>final/</code> is built and every chain ran to the end: six CNNs, 48 generators, six evaluations. The random push was added on 30.9 with three new closed-form checks and evaluated in all six environments (jobs 2278413–2278418). verify now passes 100/100 and the regression gate still reproduces S4 (job 2278412). No job failed because of the code.</li>
+<li><strong>The figures now draw six attackers per detector:</strong> the genie flip, the random push, barrage, Amuru at its best p, the vanilla cGAN (β 0) and the cGAN conditioned on that detector. Damage and P<sub>det</sub> are stacked on one JSR axis. Every other attacker (matched QPSK, the other p, on/off, tone, pulse comb, Zhou's CGAN, the genie push) is in the tables only.</li>
+<li><span class="pill bad">weak</span> <strong>Against the CNN, the CNN-conditioned cGAN has no meaningful gain over Amuru's best p, except at <code>noise_1db</code>.</strong> At excess PER 0.1 it is within ±4 pp in five environments. At <code>noise_1db</code> it gains 4.6 ± 0.9 pp (0.052 vs 0.098), and 4.0 ± 0.8 pp at excess BER 3·10⁻⁴. The best p is 0.01 or 0.02, the smallest in the family, so a smaller p might close even that gap.</li>
+<li><span class="pill bad">weak</span> <strong>Conditioning on the detector buys nothing.</strong> The vanilla cGAN (same network and recipe, no detector term) is as hard for the CNN to detect as the CNN-conditioned one. In four of six environments it hides better: +4 to +8 pp in its favour. Only at <code>base</code> does conditioning look better (−6.4 ± 6.2 pp), and that comes from one vanilla seed.</li>
+<li><span class="pill warn">new</span> <strong>The random push does the most damage per dB of JSR, and the CNN barely sees it.</strong> It knows the victim's symbol timing and carrier phase but not the symbols, and pushes some symbols by 1.1 in a random QPSK direction. Its BER is ≈ JSR/2.4, 1.65× the genie flip's JSR/4. It first damages at −20 dB and already breaks 55–72 % of frames there. At that point the CNN flags it on 5–8 % of frames, less than the CNN-conditioned cGAN at PER 0.1 in five of six environments. Energy (≈ 0.42 without fading) and kurtosis (0.23–0.29) see it more than they see the learners. It needs a synchronisation that no asynchronous attacker in the set has, so it is a reference, not a practical jammer.</li>
+<li><strong>What the realism factors do</strong> is the clear part. <strong>Noise-level uncertainty hurts the CNN, not energy:</strong> energy after the matched filter keeps its threshold at +1.3 % of the clean mean up to σ<sub>N</sub> 1 dB, while the CNN's detection of the learned jammers falls to the false-alarm floor at 1 dB. <strong>Fading blinds the naive energy detector, not the CNN:</strong> at K 12 dB its threshold must sit 60 % above the clean mean and every drawn attacker is flagged at ≈ α. An energy detector that knows its gain (CSI) is unmoved (≈ 0.24 for the vanilla cGAN, as at <code>base</code>).</li>
+<li>Zhou's CGAN (table only): the CNN-conditioned cGAN gains −86 to −93 pp over it everywhere. It imitates the clean waveform, so it is detected like matched QPSK (≈ 1.0). The gain is real but the baseline is weak.</li>
+<li>The DC-share diagnostic answers the supervisor's question. No learner is the constant vector: DC share 3·10⁻⁴–1.5·10⁻² against the tone's 1, in the same range as matched QPSK (0.008).</li>
+</ul>
+<p class="small">"Gain" = the CNN-conditioned cGAN's P<sub>det</sub> minus the other attacker's at the same excess damage; negative means the cGAN hides better. Seed spreads: 3 seeds for the CNN-conditioned cGAN and the vanilla cGAN, 1 for the others.</p>
+</section>
+
+<section id="built">
+<h2>What was built, and why</h2>
+<p>The paper's results were spread over a dozen separate probes (E2, S1, S4, S5, D6), each with its own attackers, detectors and operating point. The final experiment puts them into <strong>one pipeline</strong>: every attacker against every detector, with the detectors and the learned jammers retrained at one realistic operating point, and the same comparison repeated under noise-level uncertainty, under fading, and under both. It answers the supervisor's points of 29.9: P<sub>det</sub> is now defined, outperformance is quantified against literature baselines, his constant-vector attack is in the baseline set, channel uncertainty and time variation are the realism axes, and the modulation is fixed (QPSK).</p>
+<p>The code lives in <code>final/</code>. It is a pruned copy of the <code>cgan/</code> code, never an import (both folders have a <code>link.py</code>). Each copied file names its source and commit on its first line. Per environment, one SLURM chain runs four steps:</p>
+<ol class="steps">
+<li><strong>train_cnn</strong>: retrain Li et al.'s spectrogram CNN on that environment's frames, then calibrate every detector's threshold on 20 000 clean frames of the same environment.</li>
+<li><strong>bands</strong>: choose the JSR range each learned jammer is trained over, from where white noise starts to be detected in that environment.</li>
+<li><strong>train_gan</strong>: train eight generators white-box against that environment's detectors.</li>
+<li><strong>evaluate</strong>: sweep every attacker from −50 to +15 dB JSR (1 dB steps, 512 frames per point) and record damage and every detector's P<sub>det</sub>.</li>
+</ol>
+<p>Two things are new relative to <code>cgan/</code>. The energy detector is measured <strong>after the matched filter</strong> (mean received symbol energy) instead of over the full simulated band, and the victim's link can carry <strong>per-frame Rician fading</strong> instead of S1's slow log-normal shadowing. Everything else (link, channel, jammers, CNN, training loss) is the copied code, and the regression gate below shows it reproduces S4.</p>
+</section>
+
+<section id="link">
+<h2>The link and the operating point</h2>
+<p>One transmitter sends QPSK to one receiver: 128 symbols per frame, root-raised-cosine pulses (roll-off 0.35), 8 samples per symbol, a matched filter and a sign decision per axis. The receiver knows its own carrier phase, so there is no equaliser. One jammer adds its waveform with a random clock offset and carrier phase per frame. Its received power is set exactly to the JSR on every frame (a hard constraint, never a loss term).</p>
+<p><strong>SNR 15 dB in the code is Es/N0 24 dB in the paper.</strong> The code's SNR is power per sample over the 8× oversampled band, so Es/N0 = SNR + 10 log<sub>10</sub>8 = SNR + 9.03 dB. The literature case is a fixed-QPSK UAS control link operating with about 10 dB of margin (Kakar's C2 link closes at ≈ 14 dB at the edge of its range). All JSR values are received jammer power over received signal power, per sample, over the symbol window.</p>
+</section>
+
+<section id="attackers">
+<h2>The attackers</h2>
+<p>"Knows" is what the attacker needs beyond the public signal format (modulation, pulse, symbol rate, band). Every real attacker is asynchronous: it does not know the victim's symbol timing or carrier phase. The two genies and the random push are the exceptions, by construction. <strong>A coloured key means the attacker is drawn in the figures</strong>; the cGAN conditioned on a detector is drawn in blue in that detector's column. Grey-keyed attackers are in the tables only.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>attacker</th><th>what it transmits</th><th>what it knows</th><th>why it is here</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-genie"></span>genie flip (η = 1)</td><td>−2·s on a fraction δ = JSR/4 of the victim's symbols, pulse-shaped on the victim's grid, so those symbols arrive sign-inverted</td><td>every current symbol and the victim's channel; arrives no later than the victim's own signal</td><td>The upper bound on stealth. The received signal is still i.i.d. uniform QPSK, exactly the clean law, so no detector can see it, and BER = δ.</td></tr>
+<tr><td><span class="key k-push"></span>random push (η = 0.1)</td><td>+1.1·u on a fraction δ = JSR/1.21 of the victim's symbols, u a uniformly random QPSK point drawn independently of s, pulse-shaped on the victim's grid</td><td>the victim's symbol timing and carrier phase; not its symbols, not its fading gain</td><td>The genie push without the data (added 30.9). Each attacked axis is pushed against its bit with probability ½, so BER ≈ δ/2 and SER ≈ 3δ/4 (verified to within 1 %). The received energy rises (1 + 1.21 per attacked symbol), so the one-sided test sees it. Per-frame power is hard-capped, so it attacks ⌊δN⌋ whole symbols: nothing below −20.2 dB, one symbol per frame at −20 dB.</td></tr>
+<tr><td><span class="key k-noise"></span>barrage</td><td>white complex Gaussian noise over the whole simulated band (= Li et al.'s barrage)</td><td>nothing</td><td>The classical jammer.</td></tr>
+<tr><td><span class="key k-amuru"></span>Amuru pulsed, p ∈ {1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01}</td><td>matched QPSK where each symbol is on with probability p, at amplitude 1/√p (same mean power)</td><td>signal format</td><td>Amuru &amp; Buehrer's pulsed jammer, the literature's power-efficient family. p = 0.25 is also Li's "protocol-aware" type. <strong>Drawn as one p per detector column:</strong> the p with the lowest P<sub>det</sub> at excess PER 0.1 against that detector (named in each column title). Every p is in the tables. Needed before any "beats Amuru" claim.</td></tr>
+<tr><td><span class="key k-control"></span>cGAN vanilla: damage only (β = 0), 3 seeds</td><td>raw IQ from Zhou's generator architecture (8.6 M parameters), trained from random init</td><td>signal format; trained on this environment's frames</td><td>The same network and recipe with no detector term. The difference to a conditioned cGAN is exactly what conditioning on the detector buys.</td></tr>
+<tr><td><span class="key k-cnn"></span>cGAN vs energy (β = 10), 1 seed</td><td>same network</td><td>as above, plus white-box gradients of the one-sided energy detector</td><td>Conditioned on the classical detector. Drawn in the energy column.</td></tr>
+<tr><td><span class="key k-cnn"></span>cGAN vs kurtosis (β = 10), 1 seed</td><td>same network</td><td>as above, for kurtosis</td><td>Conditioned on the shape detector. Drawn in the kurtosis column.</td></tr>
+<tr><td><span class="key k-cnn"></span><strong>cGAN vs CNN (β = 10), 3 seeds</strong></td><td>same network</td><td>as above, plus the environment's trained CNN weights (white-box, through a straight-through colour map)</td><td><strong>The headline attacker.</strong> Drawn in the CNN column. The question is where its gain over the baselines, against the CNN, is largest.</td></tr>
+<tr><td><span class="key"></span>genie push (η = 0.1)</td><td>−1.1·s on a fraction δ = JSR/1.21 of symbols: just past both decision boundaries</td><td>same as the flip</td><td>Table only. Replaced in the figures by the random push, because a push should not assume the attacker knows the symbols. It lowers the received energy, so only a two-sided test sees it.</td></tr>
+<tr><td><span class="key"></span>matched QPSK (Amuru p = 1)</td><td>the victim's own QPSK waveform with random symbols</td><td>signal format</td><td>Zhou et al.'s "optimal" jammer. Table only.</td></tr>
+<tr><td><span class="key"></span>on/off</td><td>matched QPSK at +15 dB on a random fraction f of frames, silent on the rest</td><td>signal format</td><td>The trivial way to buy low average damage cheaply. Computed analytically from the p = 1 point at +15 dB: P<sub>det</sub> = f·P<sub>det</sub>(+15) + (1 − f)·FAR, damage = f·damage(+15). Verified against a simulated on/off (below). Table only; part of the classical envelope.</td></tr>
+<tr><td><span class="key"></span>tone</td><td>one constant complex value per frame (random phase): Li et al.'s single tone at the carrier</td><td>carrier frequency</td><td>The supervisor's naive constant-vector attack. The CNN is trained on this type. Its DC share is 1 by construction. Tables and DC-share figure only.</td></tr>
+<tr><td><span class="key"></span>pulse comb</td><td>impulses every 64 samples (Li et al.'s successive pulse)</td><td>nothing</td><td>Li et al.'s fourth type; the CNN is trained on it. Table only.</td></tr>
+<tr><td><span class="key"></span>Zhou's CGAN</td><td>the generator reproduced from Zhou et al. 2025 (<code>run001_G.pt</code>), evaluated, not retrained</td><td>signal format (it imitates the clean waveform)</td><td>The literature's generative jammer. Trained to look like the clean signal, with no link and no detector in its loss, so it does not depend on the SNR. Table only.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="detectors">
+<h2>The detectors</h2>
+<p>Every detector sees one received frame and turns it into one number, larger = more suspicious. Its threshold is set so that exactly α = 5 % of clean frames of the same environment are flagged.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>detector</th><th>statistic</th><th>notes</th></tr></thead>
+<tbody>
+<tr><td>energy (one-sided)</td><td>mean over the frame's 128 symbols of |z<sub>k</sub>|², the matched-filter output: the received symbol energy. Clean mean c<sub>0</sub>² + N<sub>0</sub>.</td><td>The classical detector, and the one the energy-conditioned cGAN trains against. The matched filter keeps only the noise inside the symbol-rate bandwidth, 1/8 of the band, so an unknown noise level moves it about 10× less than the old full-band power (verified).</td></tr>
+<tr><td>energy (two-sided)</td><td>|energy − clean mean|</td><td>Same statistic; also flags frames whose energy drops (the genie push). Evaluated, not trained against. Tables only.</td></tr>
+<tr><td>energy, gain known (CSI)</td><td>energy − (g² − 1)·c<sub>0</sub>², with g the true fading gain of the frame</td><td>Fading environments only. A real receiver estimates g, so it lies between the naive energy detector and this one. No estimator was built. Tables only.</td></tr>
+<tr><td>kurtosis</td><td>E|r|⁴ / (E|r|²)² over the received samples, two-sided around its clean mean</td><td>Scale-free: it sees the shape of the amplitude distribution (pulsing, Gaussianisation), not the power.</td></tr>
+<tr><td>CNN (Li et al.)</td><td>EfficientNet-B0 on a fixed-colour-scale spectrogram image of the full band; statistic = logit(jammed) − logit(clean)</td><td>Retrained per environment with Li et al.'s recipe: 762 clean + 4 × 204 jammed frames (barrage, tone, pulse comb, protocol-aware), JSR uniform in [−20, +10] dB, SGD lr 10⁻³, batch 32, 100 epochs, seed 11. One retrain per environment, no seed replicate.</td></tr>
+</tbody></table></div>
+<p class="small">The figures have one column each for one-sided energy, kurtosis and the CNN: the three detectors a cGAN is conditioned on.</p>
+</section>
+
+<section id="pdet">
+<h2>P<sub>det</sub> and the CFAR rule</h2>
+<div class="defbox">
+<p><strong>P<sub>det</sub>(JSR) = Pr[T(r) &gt; τ<sub>α</sub> | jammer present at that received JSR]</strong>, with τ<sub>α</sub> the (1 − α) quantile of T over 20 000 clean frames, α = 0.05 for every detector. Estimated on 512 frames per JSR point, per frame (not "ever caught"). Both probabilities run over everything random: bits, noise, the jammer's input, delay and phase, and the channel draws.</p>
+<p><strong>CFAR rule.</strong> The clean frames that set τ<sub>α</sub> come from the same environment the detector is evaluated in, including everything the defender cannot know (the noise level, the fading). The false-alarm rate therefore stays α and the threshold rises instead. That loss of sensitivity is the realistic cost of not knowing.</p>
+<p><strong>Damage</strong> is excess BER, SER and PER (frame error rate) over the same environment's clean frames, on the same frames as P<sub>det</sub>. <strong>P<sub>det</sub> at matched damage</strong>: find the JSR where an attacker first reaches the damage level (interpolated in log damage), and read its P<sub>det</sub> there. The two levels are excess PER 0.1 and excess BER 3·10⁻⁴.</p>
+</div>
+</section>
+
+<section id="envs">
+<h2>The six environments</h2>
+<p>All six sit at our SNR 15 dB (Es/N0 24 dB). They differ in what the defender does not know about its own clean signal. <strong>Noise-level uncertainty</strong> (σ<sub>N</sub>) scales each frame's noise variance by a log-normal factor with that standard deviation in dB, mean 1, which the receiver does not know (S5's model). <strong>Fading</strong> multiplies each frame of the victim's own signal by a Rician amplitude with unit mean power; the receiver knows its phase, so clean BER stays ≈ 0. Per-frame P<sub>det</sub> and damage depend only on the per-frame distribution of these draws, so drawing them independently per frame changes no reported number (real frames are correlated over milliseconds; a frame is 128 µs at 1 MBd).</p>
+<p>The last two columns are measured in this run: how far above the clean mean the energy detector's CFAR threshold had to move (the price of not knowing), and the retrained CNN's validation accuracy and AUC on Li et al.'s own frame classes. For reference, S4/D6's 15 dB CNN (r0) had 0.932 / 0.978.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>env</th><th>σ<sub>N</sub></th><th>victim-link fading</th><th>literature value</th><th class="num">energy threshold over clean mean</th><th class="num">CNN val. accuracy / AUC</th></tr></thead>
+<tbody>
+<tr><td><code>base</code></td><td class="num">0</td><td>none</td><td>the ideal link at the operating point</td><td class="num">+1.29 %</td><td class="num">0.922 / 0.977</td></tr>
+<tr><td><code>noise</code></td><td class="num">0.5 dB</td><td>none</td><td>calibrated receiver: Tandra &amp; Sahai's ±1 dB device uncertainty ≈ σ 0.5 dB; Nikonowicz et al. reach 0.5 dB RMSE on real 2.4 GHz ISM noise traces</td><td class="num">+1.29 %</td><td class="num">0.934 / 0.975</td></tr>
+<tr><td><code>noise_1db</code></td><td class="num">1 dB</td><td>none</td><td>in-band interference (crowded ISM band, other UAVs); has to be argued in the paper</td><td class="num">+1.31 %</td><td class="num">0.920 / 0.968</td></tr>
+<tr><td><code>fading</code></td><td class="num">0</td><td>Rician K 12 dB</td><td>L-band CNPC (~970 MHz): Matolak &amp; Sun's NASA air–ground measurements, K ≈ 12–13 dB over urban, hilly and sea terrain; frame-power std ≈ 1.5 dB</td><td class="num">+60.69 % (CSI +1.27 %)</td><td class="num">0.939 / 0.975</td></tr>
+<tr><td><code>fading_k28</code></td><td class="num">0</td><td>Rician K 28 dB</td><td>C-band CNPC (~5 GHz): the same campaign, K ≈ 27–31 dB; frame-power std ≈ 0.24 dB</td><td class="num">+9.52 % (CSI +1.28 %)</td><td class="num">0.937 / 0.971</td></tr>
+<tr><td><code>both</code></td><td class="num">0.5 dB</td><td>Rician K 12 dB</td><td>σ<sub>N</sub> 0.5 dB and K 12 dB together: the candidate system model</td><td class="num">+60.44 % (CSI +1.23 %)</td><td class="num">0.926 / 0.969</td></tr>
+</tbody></table></div>
+<p class="small">Session A (in parallel) verifies these values against the original papers; this run uses them as decided on 29.9.</p>
+</section>
+
+<section id="bands">
+<h2>Training recipe and JSR bands</h2>
+<p><strong>Recipe</strong> (run003's, as in S4): Zhou's generator architecture from random weights, 4000 Adam steps (lr 2·10⁻⁴), 128 frames per step (32 for the CNN target, which keeps a full EfficientNet graph per frame). Each step draws one JSR uniformly from the target's band, simulates frames of that environment (noise factor and fading included), and minimises</p>
+<p style="text-align:center"><code>loss = −( log E[BER] − β · soft P<sub>det</sub> )</code></p>
+<p>log E[BER] is exact over the noise (each bit's error probability at the noiseless matched-filter sample, with each frame's own noise variance). soft P<sub>det</sub> = mean sigmoid((T − τ<sub>α</sub>)/σ<sub>clean</sub>) at the environment's CFAR threshold. Power never enters the loss: every frame is scaled to exactly its JSR. The generators' seeds follow <code>cgan/</code>'s task ids, so seed 0 of each task is the seed run003 and S4 used.</p>
+<p><strong>Why bands matter.</strong> If every sampled JSR lies above the target detector's transition, every frame is detected with certainty, the sigmoid is flat, and the detector term gives no gradient whatever β is (trap 1 of §3.1). The band must straddle the transition. The training logs confirm it did: every targeted generator's soft P<sub>det</sub> moves between ≈ 0.13 and ≈ 0.99 across its band.</p>
+<p><strong>The rule</strong> (S4's, made automatic in <code>bands.py</code>): start from the 30 dB bands (CNN (−48, −16), energy and kurtosis (−32, 0)), and shift each by how far that detector's white-noise transition (P<sub>det</sub> = 0.5) moved between the deployed 30 dB defender and this environment's. Cap the analytic targets' upper edge at 0 dB. The vanilla cGAN (damage only) keeps (−32, 0). At 30 dB the reference transitions are: energy −16.9 dB, full-band power −27.2 dB, kurtosis −13.6 dB, CNN −29.9 dB.</p>
+<p><strong>Deviation from the spec.</strong> §3.4 assumed energy and full-band power transition within ≈ 1 dB at 30 dB, "so power's reference serves for energy". That holds for an in-band jammer (measured: 1.4 dB apart for matched QPSK), but not for white noise: the matched filter passes only a tenth of a white jammer's frame energy while the clean spread is the same, so energy's white-noise transition sits 10 dB above power's (measured 10.3 dB). Using power's −27 dB reference for energy would have shifted the energy band about 10 dB too high, above the transition. The shift is therefore measured on energy's own statistic at both ends. The result at base, (−25.1, 0), matches S4's power band (−24, 0), which is what the rule is for.</p>
+<div class="tablewrap"><table>
+<thead><tr><th rowspan="2">env</th><th colspan="2">energy</th><th colspan="2">kurtosis</th><th colspan="2">CNN</th></tr>
+<tr><th class="num">white noise P<sub>det</sub> 0.5 [dB]</th><th class="num">training band [dB]</th><th class="num">white noise P<sub>det</sub> 0.5 [dB]</th><th class="num">training band [dB]</th><th class="num">white noise P<sub>det</sub> 0.5 [dB]</th><th class="num">training band [dB]</th></tr></thead>
+<tbody>
+<tr><td><code>base</code></td><td class="num">−10.0</td><td class="num">(−25.1, 0.0)</td><td class="num">−13.2</td><td class="num">(−31.6, 0.0)</td><td class="num">−21.0</td><td class="num">(−39.0, −7.0)</td></tr>
+<tr><td><code>noise</code></td><td class="num">−10.1</td><td class="num">(−25.2, 0.0)</td><td class="num">−13.2</td><td class="num">(−31.6, 0.0)</td><td class="num">−18.4</td><td class="num">(−36.4, −4.4)</td></tr>
+<tr><td><code>noise_1db</code></td><td class="num">−10.0</td><td class="num">(−25.1, 0.0)</td><td class="num">−13.0</td><td class="num">(−31.4, 0.0)</td><td class="num">−16.1</td><td class="num">(−34.1, −2.1)</td></tr>
+<tr><td><code>fading</code></td><td class="num">+7.1</td><td class="num">(−8.0, 0.0)</td><td class="num">−12.5</td><td class="num">(−30.9, 0.0)</td><td class="num">−20.9</td><td class="num">(−39.0, −7.0)</td></tr>
+<tr><td><code>fading_k28</code></td><td class="num">−1.1</td><td class="num">(−16.2, 0.0)</td><td class="num">−13.0</td><td class="num">(−31.5, 0.0)</td><td class="num">−21.2</td><td class="num">(−39.3, −7.3)</td></tr>
+<tr><td><code>both</code></td><td class="num">+6.8</td><td class="num">(−8.3, 0.0)</td><td class="num">−12.4</td><td class="num">(−30.8, 0.0)</td><td class="num">−17.8</td><td class="num">(−35.8, −3.8)</td></tr>
+</tbody></table></div>
+<p>Read-out: <strong>noise uncertainty moves the CNN, not energy</strong>. The CNN's white-noise transition rises by 2.6 dB at σ<sub>N</sub> 0.5 dB and by 4.9 dB at 1 dB, because its spectrogram shows the whole noise floor; energy's does not move (−10.0 dB throughout), because the matched filter keeps only 1/8 of the band's noise. <strong>Fading moves energy, not the CNN</strong>: at K 12 dB energy's transition jumps from −10 to +7 dB (its CFAR threshold sits ~60 % above the clean mean) and at K 28 dB to −1 dB; the CNN's barely moves. Kurtosis is scale-free and moves by ≤ 1.2 dB everywhere.</p>
+</section>
+
+<section id="checks">
+<h2>What verify and the regression gate checked</h2>
+<p><span class="pill good">verify: 100 / 100 pass</span> &nbsp; <span class="pill good">regression gate: passes</span> &nbsp; Both first ran before any environment was trained (job 2277992, 97/97): the spec allowed no environment on a copy that fails the gate. They ran again after the random push was added (job 2278412, TITAN RTX, 6 min 15 s, exit 0), and the six random-push evaluations were chained behind that job. The full log with every measured and predicted value is <code>final/runs/verify_2278412.out</code>.</p>
+<div class="tablewrap"><table>
+<thead><tr><th class="num">§</th><th>what it checks</th><th class="num">checks</th></tr></thead>
+<tbody>
+<tr><td class="num">1</td><td>Closed forms. Es/N0 = SNR + 9.03 dB; clean BER against Q(√(Es/N0)) at low SNR (0.0783 vs 0.0782, 0.0226 vs 0.0226) and exactly 0 in 1 Mbit at our 15 dB; white-noise BER against its closed form at 0 and +5 dB.</td><td class="num">8/8</td></tr>
+<tr><td class="num">2</td><td>Energy after the matched filter. Clean mean = c₀² + N₀ (1.0038 vs 1.0040); the noise share relative to full-band power (0.1035, as predicted, not the README's 1.35/8); energy vs power at 30 dB: white-noise transitions 10.3 dB apart (predicted 10), async matched QPSK 1.4 dB apart (predicted 1.37). These are the two corrected predictions.</td><td class="num">5/5</td></tr>
+<tr><td class="num">3</td><td>Rician fading. Unit mean power; empirical K 12.00 / 28.02 dB; frame-power std 1.57 / 0.24 dB; K → ∞ gives g = 1; clean BER 0 at K 12 dB and 15 dB; the gain reaches the measurement path (BER at −3 dB matches mean<sub>f</sub> Q(g<sub>f</sub>c₀/√N₀)); energy_csi removes the fading (naive energy's clean spread is 43× base).</td><td class="num">12/12</td></tr>
+<tr><td class="num">4</td><td>Noise-level uncertainty. S5's factor law; σ<sub>N</sub> = 0 draws nothing; the training damage term uses each frame's own noise variance (with the nominal N₀ it would be biased by 2×).</td><td class="num">5/5</td></tr>
+<tr><td class="num">5</td><td>CFAR in all six environments. Every detector calibrated on 20 000 clean frames of the environment (with S4's 15 dB CNN weights as a stand-in, since the environments' CNNs did not exist yet), then its realised false-alarm rate on 8192 fresh clean frames: 0.045–0.057 against 0.05.</td><td class="num">27/27</td></tr>
+<tr><td class="num">6</td><td>Bands at base against S4's hand-set bands, with S4's CNN as the base proxy: CNN (−38.8, −6.8) vs (−39, −7); energy (−25.1, 0) vs power's (−24, 0).</td><td class="num">4/4</td></tr>
+<tr><td class="num">7</td><td>Baselines. Tone's DC share is 1; the analytic on/off equals a simulated on/off at f = 0.3 on every detector, in PER and in BER; the genie flip has BER = δ and P<sub>det</sub> ≈ α on every detector (base and both); the two-sided energy detector flags the genie push (1.000) and the one-sided does not (0.000); at −10 dB the random push matches BER = ⌊δN⌋/N · (1 − Q(ηc₀/(√2σ)))/2 (0.03693 vs 0.03688) and its SER prediction (0.0567 vs 0.0564), and the one-sided energy test flags it (0.98).</td><td class="num">35/35</td></tr>
+<tr><td class="num">8</td><td>One training step per target in the hardest environment (noise factor + fading): finite loss and a non-zero gradient reaching the generator.</td><td class="num">4/4</td></tr>
+</tbody></table></div>
+<h3>The regression gate</h3>
+<p>Before training anything, the copied code (with the old full-band power detector kept for this purpose) re-measured S4's evaluation: S4's four generators and seven classical attacks against S4's 15 dB defender, 66 JSR points × 512 frames, on one-sided power, kurtosis and the CNN. The comparison is statistical, because CUDA draws differ between GPU models and S4 drew confirmation passes in between. Each P(det) pair is tested at 4σ of a <em>difference</em> of two binomial estimates (the √2 correction of the old gate's bug), BER as frame-capped error counts where both have ≥ 25 errors, plus a global bias test.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>row</th><th class="num">P(det) pairs beyond 4σ</th><th class="num">max |z|</th><th class="num">BER points outside band</th></tr></thead>
+<tbody>
+<tr><td>classical noise</td><td class="num">0/198</td><td class="num">2.08</td><td class="num">0/18</td></tr>
+<tr><td>classical pulsed_p1</td><td class="num">0/198</td><td class="num">2.61</td><td class="num">0/23</td></tr>
+<tr><td>classical pulsed_p0.5</td><td class="num">0/198</td><td class="num">3.28</td><td class="num">0/25</td></tr>
+<tr><td>classical pulsed_p0.25</td><td class="num">0/198</td><td class="num">3.32</td><td class="num">0/27</td></tr>
+<tr><td>classical pulsed_p0.1</td><td class="num">0/198</td><td class="num">2.49</td><td class="num">0/31</td></tr>
+<tr><td>classical omniscient_e0.1</td><td class="num">0/198</td><td class="num">2.66</td><td class="num">0/36</td></tr>
+<tr><td>classical omniscient_e1</td><td class="num">0/198</td><td class="num">2.61</td><td class="num">0/31</td></tr>
+<tr><td>generator eff (β 0)</td><td class="num">0/198</td><td class="num">2.85</td><td class="num">0/38</td></tr>
+<tr><td>generator power_one_sided_b10</td><td class="num">0/198</td><td class="num">2.54</td><td class="num">0/37</td></tr>
+<tr><td>generator spec_cnn_b1</td><td class="num">0/198</td><td class="num">2.07</td><td class="num">0/39</td></tr>
+<tr><td>generator spec_cnn_b10</td><td class="num">0/198</td><td class="num">2.84</td><td class="num">0/38</td></tr>
+</tbody></table></div>
+<p>Overall: mean z −0.005 over 2178 P(det) pairs (2 beyond 3σ, ≈ 6 expected by chance); BER deviations 44 % positive, mean −0.003 band units over 343 points; clean false-alarm rates within z ±0.7. <strong>The copy reproduces S4.</strong></p>
+</section>
+
+<section id="results">
+<h2>Results per environment</h2>
+<p>Every environment gets the same set: <b>(1)</b> excess BER, excess PER and P<sub>det</sub> stacked on one JSR axis, one column per detector, so damage and detection read off the same JSR; <b>(2)</b> the same points as damage vs P<sub>det</sub> with JSR hidden; and <b>(3)</b> the table of P<sub>det</sub> at matched damage. Compare attackers in (2) and (3), not at equal JSR in (1): equal JSR is the matched-configuration trap. (1) shows why each attacker lands where it does in (2).</p>
+<p>The columns are one-sided energy, kurtosis and the CNN. Each draws six attackers: <span class="key k-genie"></span>the genie flip (the upper bound), <span class="key k-push"></span>the random push, <span class="key k-noise"></span>barrage, <span class="key k-amuru"></span>Amuru at its best p for that detector (the p is in the column title), <span class="key k-control"></span>the vanilla cGAN and <span class="key k-cnn"></span>the cGAN conditioned on that column's detector (also named in the column title). Thick lines are seed means, thin lines single seeds. The four hues pass a colour-vision check pairwise. An environment's outputs come from one <code>eval.json</code>: 22 attackers × 66 JSR points × 512 frames. The tables load from each environment's <code>summary.json</code>, published with this page, and hold every attacker.</p>
+
+<section class="envsec" id="env-base"><h3><code>base</code> <span class="sub">the ideal link</span></h3>
+<p>The ideal link at Es/N0 24 dB. The retrained CNN reproduces S4/D6's 15 dB CNN (validation accuracy 0.922 vs 0.932, AUC 0.977 vs 0.978, the same JSR at which Li's four types reach P<sub>det</sub> 0.5), and the bands match S4's. This is the environment the older probes were measured in, and it agrees with them: energy flags the best generators on ≈ 24 % of frames at PER 0.1 (S4: ≈ 25 %), the CNN on ≈ 11 % (S4: 7–11 %).</p>
+<figure><div class="plate"><img src="figs/base_fig1_vs_jsr.png" alt="base: excess BER, excess PER and P_det against JSR, one column per detector" loading="lazy"></div><figcaption><b>Read down a column.</b> The vanilla cGAN, the energy- and CNN-conditioned cGANs and Amuru p 0.01–0.02 reach PER 0.1 at −22 to −21 dB; the cGAN vs kurtosis at −19 dB. The random push reaches it at −20 dB, where it jumps straight to PER 0.72; the genie flip at −15 dB, barrage at −2 dB. At −22 dB energy already flags the learners on ≈ 25 % of frames. In the CNN column the random push is the late one: its P<sub>det</sub> passes 0.5 near −9 dB, about 4 dB after the cGANs.</figcaption></figure>
+<figure><div class="plate"><img src="figs/base_fig2_damage_vs_pdet.png" alt="base: damage vs P_det" loading="lazy"></div><figcaption><b>Read:</b> up and left is better for the attacker. Against energy, both cGANs and Amuru p 0.01 lie on one curve. Against kurtosis the vanilla cGAN is furthest left of the learned jammers (0.07 at PER 0.1). Against the CNN the conditioned cGAN (blue) and Amuru p 0.02 share the low-P<sub>det</sub> corner, and the vanilla cGAN's mean sits to the right because of one seed. The random push appears only from PER 0.72 upward, at P<sub>det</sub> 0.08 on the CNN.</figcaption></figure>
+<div data-env="base" class="envtables"><p class="loading">The two matched-damage tables load from <code>data/base_summary.json</code>.</p></div>
+<p><strong>Blunt reading.</strong> Against the CNN at PER 0.1 the CNN-conditioned cGAN (0.107 ± 0.018) equals Amuru p 0.02 (0.102). Against energy, on/off (0.147, table only) beats every generator (0.24–0.38). The vanilla cGAN's 0.171 ± 0.106 comes from one seed at 0.277; its other two seeds are at 0.171 and 0.066.</p>
+</section>
+
+<section class="envsec" id="env-noise"><h3><code>noise</code> <span class="sub">σN 0.5 dB</span></h3>
+<p>σ<sub>N</sub> 0.5 dB: a calibrated receiver. The energy detector's CFAR threshold does not move (+1.29 % of the clean mean, as at base): the matched filter keeps only the in-band noise. The CNN's white-noise transition rises by 2.6 dB, and its band with it.</p>
+<figure><div class="plate"><img src="figs/noise_fig1_vs_jsr.png" alt="noise: excess BER, excess PER and P_det against JSR" loading="lazy"></div><figcaption><b>Read:</b> damage is unchanged from base. The noise-level factor has unit mean, and at Es/N0 24 dB a 0.5 dB spread does not move the error onsets. Energy and kurtosis columns as at base; in the CNN column the learned jammers' P<sub>det</sub> moves right by a few dB, because the CNN has to tolerate a wider clean noise floor.</figcaption></figure>
+<figure><div class="plate"><img src="figs/noise_fig2_damage_vs_pdet.png" alt="noise: damage vs P_det" loading="lazy"></div><figcaption><b>Read:</b> against the CNN the vanilla cGAN (orange) now sits at the far left with the genie (0.055 at PER 0.1). The conditioned cGAN is at 0.103 ± 0.036 and Amuru p 0.01 at 0.114. The random push enters at 0.06.</figcaption></figure>
+<div data-env="noise" class="envtables"><p class="loading">The two matched-damage tables load from <code>data/noise_summary.json</code>.</p></div>
+<p><strong>Blunt reading.</strong> Conditioning on the CNN hurts here: the CNN flags the CNN-conditioned cGAN at 0.103 and the vanilla cGAN at 0.055 (+4.8 ± 2.1 pp). Over Amuru's best p the gain is −1.1 ± 2.1 pp, i.e. none.</p>
+</section>
+
+<section class="envsec" id="env-noise_1db"><h3><code>noise_1db</code> <span class="sub">σN 1 dB</span></h3>
+<p>σ<sub>N</sub> 1 dB: in-band interference. The energy threshold still does not move (+1.31 %). The CNN's white-noise transition rises by 4.9 dB, and its argmax false-alarm rate on Li's own classes goes from 0.000 to 0.032.</p>
+<figure><div class="plate"><img src="figs/noise_1db_fig1_vs_jsr.png" alt="noise_1db: excess BER, excess PER and P_det against JSR" loading="lazy"></div><figcaption><b>Read:</b> damage is again unchanged from base. In the CNN column no learned jammer rises above α before −20 dB, which is where they already break frames. The random push stays at α until about −14 dB.</figcaption></figure>
+<figure><div class="plate"><img src="figs/noise_1db_fig2_damage_vs_pdet.png" alt="noise_1db: damage vs P_det" loading="lazy"></div><figcaption><b>Read:</b> against the CNN both cGANs hug the α line up to PER ≈ 0.3. Amuru p 0.01 is the only damaging curve clearly to the right.</figcaption></figure>
+<div data-env="noise_1db" class="envtables"><p class="loading">The two matched-damage tables load from <code>data/noise_1db_summary.json</code>.</p></div>
+<p><strong>Blunt reading.</strong> This is the one environment where the CNN-conditioned cGAN beats Amuru's best p beyond seed noise: 0.052 ± 0.016 vs 0.098 at PER 0.1 (−4.6 ± 0.9 pp), and −4.0 ± 0.8 pp at BER 3·10⁻⁴. But the vanilla cGAN and the energy- and kurtosis-conditioned cGANs are at 0.057–0.078 too. The gain belongs to the learned waveforms in general, not to conditioning, and it comes from the CNN losing sensitivity. On/off (table only) sits at the FAR floor at BER 3·10⁻⁴.</p>
+</section>
+
+<section class="envsec" id="env-fading"><h3><code>fading</code> <span class="sub">Rician K 12 dB</span></h3>
+<p>Rician K 12 dB (L-band CNPC): frame power varies with a 1.5 dB std. To keep α, the naive energy detector's threshold has to sit 60.7 % above the clean mean; with the true gain (CSI) it stays at +1.27 %. The CNN is retrained on faded frames and is unmoved (accuracy 0.939, AUC 0.975). The energy-conditioned cGAN's band follows energy's transition up to (−8, 0) dB.</p>
+<figure><div class="plate"><img src="figs/fading_fig1_vs_jsr.png" alt="fading: excess BER, excess PER and P_det against JSR" loading="lazy"></div><figcaption><b>Read:</b> in the energy column, blue is the cGAN vs energy. It now needs −10 dB to break 10 % of frames: it was only ever trained at −8 to 0 dB, because its target does not react below that. Every other learned jammer still breaks frames from −23 dB. The random push starts at −20 dB with PER 0.58, since faded symbols stronger than the push survive it. Naive energy stays at α until about −8 dB for everything that matters.</figcaption></figure>
+<figure><div class="plate"><img src="figs/fading_fig2_damage_vs_pdet.png" alt="fading: damage vs P_det" loading="lazy"></div><figcaption><b>Read:</b> against naive energy every drawn attacker sits at α at PER 0.1. With CSI (tables) the base picture returns: the vanilla cGAN at 0.24, Amuru's best p at 0.21, on/off 0.147 best. Against the CNN the vanilla cGAN (0.058) is left of the conditioned one (0.097), and the random push is at α (0.047).</figcaption></figure>
+<div data-env="fading" class="envtables"><p class="loading">The two matched-damage tables load from <code>data/fading_summary.json</code>.</p></div>
+<p><strong>Blunt reading.</strong> Fading blinds the naive energy detector, as predicted. It does not help the attacker against a detector that knows its gain, and it does not move the CNN. The CNN-conditioned cGAN has no gain over Amuru's best p (+0.6 ± 0.7 pp) and loses to the vanilla cGAN (+4.0 ± 0.8 pp). The cGAN vs energy here is a training casualty of the band rule (see caveats): the CNN flags it at 1.00.</p>
+</section>
+
+<section class="envsec" id="env-fading_k28"><h3><code>fading_k28</code> <span class="sub">Rician K 28 dB</span></h3>
+<p>Rician K 28 dB (C-band CNPC): frame-power std 0.24 dB. The naive energy threshold sits 9.5 % above the clean mean, still ≈ 7× its base margin; with CSI it is at +1.28 %.</p>
+<figure><div class="plate"><img src="figs/fading_k28_fig1_vs_jsr.png" alt="fading_k28: excess BER, excess PER and P_det against JSR" loading="lazy"></div><figcaption><b>Read:</b> the cGAN vs energy (blue in the energy column) trained on (−16, 0) dB and needs −13 dB for PER 0.1, 9 dB more than the other learners. Naive energy still misses the learned jammers at their operating JSR, but catches barrage (0.42 at PER 0.1).</figcaption></figure>
+<figure><div class="plate"><img src="figs/fading_k28_fig2_damage_vs_pdet.png" alt="fading_k28: damage vs P_det" loading="lazy"></div><figcaption><b>Read:</b> against naive energy the learners, Amuru and the random push are at 0.05–0.06. Against the CNN the conditioned cGAN (0.132 ± 0.045) is right of the vanilla one (0.075) and of Amuru p 0.01 (0.096).</figcaption></figure>
+<div data-env="fading_k28" class="envtables"><p class="loading">The two matched-damage tables load from <code>data/fading_k28_summary.json</code>.</p></div>
+<p><strong>Blunt reading.</strong> The §3.4 prediction held: even 0.24 dB of fading leaves naive energy near-blind to shaped jammers. For the CNN-conditioned cGAN this is the worst environment against its own target: +3.6 ± 2.6 pp over Amuru's best p, +5.7 ± 2.8 pp over the vanilla cGAN.</p>
+</section>
+
+<section class="envsec" id="env-both"><h3><code>both</code> <span class="sub">σN 0.5 dB + K 12 dB</span></h3>
+<p>σ<sub>N</sub> 0.5 dB and K 12 dB together: the candidate system model. The energy threshold is dominated by the fading (+60.4 %), and the CNN band moves up by 3.2 dB, about as in <code>noise</code>. Two of the three CNN-conditioned seeds did not learn low-power damage (see caveats).</p>
+<figure><div class="plate"><img src="figs/both_fig1_vs_jsr.png" alt="both: excess BER, excess PER and P_det against JSR" loading="lazy"></div><figcaption><b>Read:</b> in the CNN column the blue seeds split. Seed r1 breaks frames from −23 dB like every other learner; seeds r0 and r2 need −11 and −12 dB for PER 0.1, so the thick seed mean runs between them. The cGAN vs energy (band (−8, 0)) is late too (−10 dB), and the cGAN vs kurtosis 4 dB behind the vanilla cGAN. Naive energy stays at α until about −8 dB.</figcaption></figure>
+<figure><div class="plate"><img src="figs/both_fig2_damage_vs_pdet.png" alt="both: damage vs P_det" loading="lazy"></div><figcaption><b>Read:</b> against the CNN the vanilla cGAN (0.052) sits on the α line, and so does the random push (0.062, at PER 0.55). Seed r1 of the conditioned cGAN is at 0.054; the two late seeds are at 0.14–0.19.</figcaption></figure>
+<div data-env="both" class="envtables"><p class="loading">The two matched-damage tables load from <code>data/both_summary.json</code>.</p></div>
+<p><strong>Blunt reading.</strong> In the environment that would become the paper's system model, the learned jammers are at the CNN's false-alarm floor, but so is the vanilla cGAN. Naive energy is blind, and Amuru's best p is at 0.108 on the CNN and ≈ α on naive energy. The mean CNN-conditioned cGAN (0.128 ± 0.067) looks worse than the vanilla cGAN only because of the two late seeds; the one seed that trained normally (0.054) ties with it.</p>
+</section>
+</section>
+
+<section id="compare">
+<h2>Across environments</h2>
+<figure><div class="plate"><img src="figs/fig_compare_pdet.png" alt="P_det at matched damage across the six environments for the six drawn attackers" loading="lazy"></div><figcaption><b>P<sub>det</sub> at matched damage across the six environments</b> for the six drawn attackers (top: excess PER 0.1; bottom: excess BER 3·10⁻⁴; one column per detector; α dotted). Blue in each column is the cGAN conditioned on that column's detector, aqua is Amuru at its best p for that environment and detector. Read down a column to see what each realism factor does to one detector. Naive energy collapses to α under fading (<code>fading</code>, <code>fading_k28</code>, <code>both</code>) for every drawn attacker except barrage at K 28 dB. The CNN falls to ≈ α for both cGANs at <code>noise_1db</code>, and for the vanilla cGAN in four environments. The random push (×) is at ≈ α on the CNN everywhere and at 0.22–0.29 on kurtosis. Its numbers are read at PER 0.55–0.72, its first damaging point (see caveats). Energy with CSI, two-sided energy and every other attacker are in <code>artifacts/final/compare/compare.md</code>.</figcaption></figure>
+<figure><div class="plate"><img src="figs/fig_compare_gains.png" alt="The CNN-conditioned cGAN's gains against the CNN, over Amuru's best p and over the vanilla cGAN" loading="lazy"></div><figcaption><b>The CNN-conditioned cGAN's gains against the CNN</b>, over Amuru's best p (aqua) and over the vanilla cGAN (orange, = what conditioning on the CNN buys). The black star is the genie flip over Amuru's best p: the most any attacker could gain, since the genie sits at α. Negative = the cGAN hides better; bars are ± SE over seeds. Against Amuru only <code>noise_1db</code> lies below zero beyond its error bar. Against the vanilla cGAN only <code>base</code> does, by one SE, from one vanilla seed. The gains over the classical envelope and over Zhou's CGAN are in the table below.</figcaption></figure>
+<h3>Where is the CNN-conditioned cGAN's gain against the CNN largest?</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>gain against the CNN (pp, ± SE)</th><th class="num">base</th><th class="num">noise</th><th class="num">noise_1db</th><th class="num">fading</th><th class="num">fading_k28</th><th class="num">both</th></tr></thead>
+<tbody>
+<tr><td>over Amuru's best p, PER 0.1</td><td class="num">+0.5 ± 1.0</td><td class="num">−1.1 ± 2.1</td><td class="num"><strong>−4.6 ± 0.9</strong></td><td class="num">+0.6 ± 0.7</td><td class="num">+3.6 ± 2.6</td><td class="num">+2.0 ± 3.9</td></tr>
+<tr><td>over Amuru's best p, BER 3·10⁻⁴</td><td class="num">−0.1 ± 1.1</td><td class="num">+0.4 ± 1.7</td><td class="num"><strong>−4.0 ± 0.8</strong></td><td class="num">+1.5 ± 0.7</td><td class="num">+4.2 ± 2.2</td><td class="num">+1.1 ± 3.7</td></tr>
+<tr><td>over the vanilla cGAN, PER 0.1</td><td class="num">−6.4 ± 6.2</td><td class="num">+4.8 ± 2.1</td><td class="num">−0.5 ± 1.2</td><td class="num">+4.0 ± 0.8</td><td class="num">+5.7 ± 2.8</td><td class="num">+7.6 ± 3.9</td></tr>
+<tr><td>over the classical envelope, PER 0.1 (table only)</td><td class="num">+0.5 ± 1.0</td><td class="num">−1.1 ± 2.1</td><td class="num">−4.6 ± 0.9</td><td class="num">+0.6 ± 0.7</td><td class="num">+3.6 ± 2.6</td><td class="num">+2.0 ± 3.9</td></tr>
+<tr><td>over the classical envelope, BER 3·10⁻⁴ (table only; on/off is at α)</td><td class="num">+5.2</td><td class="num">+5.2</td><td class="num">+0.0</td><td class="num">+4.5</td><td class="num">+8.0</td><td class="num">+6.1</td></tr>
+<tr><td>over Zhou's CGAN, PER 0.1 (table only)</td><td class="num">−89.3</td><td class="num">−89.6</td><td class="num">−93.2</td><td class="num">−90.1</td><td class="num">−86.8</td><td class="num">−86.2</td></tr>
+<tr><td>room: genie flip over Amuru's best p, PER 0.1</td><td class="num">−4.9</td><td class="num">−6.3</td><td class="num">−4.9</td><td class="num">−4.1</td><td class="num">−5.4</td><td class="num">−6.4</td></tr>
+</tbody></table></div>
+<p class="small">Against the CNN at PER 0.1, Amuru's best p is also the classical envelope in every environment (on/off, tone, pulse comb and barrage are all flagged more), so the first and fourth rows coincide. They part at BER 3·10⁻⁴, where on/off needs one jammed frame in ≈ 1500 and sits at the false-alarm rate.</p>
+<p><strong>Answer: at <code>noise_1db</code>, and nowhere by much.</strong> Against Amuru's best p it is the only environment with a gain beyond seed noise (−4.6 ± 0.9 pp at PER 0.1, −4.0 ± 0.8 pp at BER 3·10⁻⁴). Even there the whole room between Amuru and the genie is 4.9 pp. The gain comes from the CNN losing sensitivity to noise, not from conditioning: the vanilla cGAN reaches the same floor. Against Zhou's CGAN the gain is large everywhere, but the CGAN is a weak baseline. Against the vanilla cGAN, conditioning helps only at <code>base</code>, by one standard error, from one vanilla seed.</p>
+<p><strong>Recommendation for the system-model choice</strong> (Wednesday's decision): as proposed in §3.4, choose by literature realism (<code>both</code>) and not by which environment favours the cGAN. None of them favours it by more than 5 pp. What the six environments do show robustly is the detector side. Noise-level uncertainty is the CNN's weakness and not energy's (after the matched filter). Fading is the naive energy detector's weakness and not the CNN's, and a gain-aware energy detector is immune to it.</p>
+
+<h3>§3.4's predictions, checked</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>prediction (written before the run)</th><th>outcome</th></tr></thead>
+<tbody>
+<tr><td>At base the detector term may buy nothing against the CNN.</td><td><span class="pill good">held</span> −6.4 ± 6.2 pp at base, from one vanilla seed; nothing, or the reverse, in the other five environments.</td></tr>
+<tr><td>Large gain over Zhou's CGAN.</td><td><span class="pill good">held</span> −86 to −93 pp.</td></tr>
+<tr><td>Large gain over the classical envelope (Amuru p 0.1 flagged 0.88 by energy, 0.23 by the CNN).</td><td><span class="pill bad">failed</span> Amuru p 0.1 is where predicted (energy 0.80, CNN 0.32 at base). But the family now runs to p 0.01, and p 0.02 / 0.01 reach 0.10 on the CNN. On/off reaches 0.147 on energy at PER 0.1 and α at BER 3·10⁻⁴. The envelope is level with the GAN.</td></tr>
+<tr><td>Energy after the matched filter shrinks S5's noise-uncertainty effect.</td><td><span class="pill good">held</span> CFAR margin +1.29 / +1.29 / +1.31 % at σ<sub>N</sub> 0 / 0.5 / 1 dB (S5's full-band power: +1.25 / +1.49 / +2.08 %). Generator P<sub>det</sub> by energy 0.24 / 0.25 / 0.22. The README's "≈ 6×" is ≈ 10× in fact (verify §2).</td></tr>
+<tr><td>Under fading naive energy is near-blind even at K 28 dB; energy_csi unmoved; the CNN's fate open.</td><td><span class="pill good">held</span> naive energy flags the learners at 0.04–0.08 at both K; CSI energy 0.24–0.26; the CNN is unmoved by fading.</td></tr>
+</tbody></table></div>
+<h3>The DC-share diagnostic</h3>
+<figure><div class="plate"><img src="figs/fig_dc_share.png" alt="DC share per attacker" loading="lazy"></div><figcaption><b>The DC-share diagnostic.</b> Per frame |mean j|² / mean |j|² of the received jammer, averaged over JSR; one dot per seed and environment. The tone (the supervisor's constant vector) is at 1. Every learner is at 3·10⁻⁴ to 1.5·10⁻², two orders of magnitude below it and in the range of matched QPSK and Amuru (0.008) and the pulse comb (0.016). A generator that had learned the constant vector would sit at the top.</figcaption></figure>
+</section>
+
+<section id="caveats">
+<h2>Caveats, deviations and failed jobs</h2>
+<h3>Deviations from the spec</h3>
+<ul class="tight">
+<li><strong>Energy's 30 dB band reference.</strong> The spec said energy and full-band power transition within ≈ 1 dB at 30 dB, so power's reference could serve for energy. That is true for an in-band jammer (1.4 dB apart, measured) and false for white noise, the probe the band rule uses (10.3 dB apart, measured; the matched filter passes a tenth of a white jammer's frame energy). The shift is therefore measured on energy's own statistic at both ends. The result at base matches S4's band. verify tests the physically correct predictions in place of the two README ones, and the "1.35/8 noise share" is corrected to ≈ 1/10 the same way.</li>
+<li><strong>A simulated on/off</strong> exists in <code>attacks.py</code> for verify only. The reported on/off is analytic, as specified. Its silent frames are charged the measured clean FAR of the environment, not exactly α.</li>
+<li><strong>Extra coverage in the gate:</strong> S4's seven classical attacks were compared as well as its four generators.</li>
+<li><strong>Figures</strong> (redrawn 30.9 on request): each detector column draws six attackers, with Amuru as its single best p at excess PER 0.1; all seven p, the envelope and every other attacker are in the tables. Damage and P<sub>det</sub> share one JSR axis instead of two figures. The DC-share figure is a dot plot, since the value does not depend on JSR.</li>
+<li><strong>The random push replaces the genie push in the figures.</strong> A push should not assume the attacker knows the symbols. The genie push stays in the tables.</li>
+</ul>
+<h3>Caveats</h3>
+<ul class="tight">
+<li><strong>The band rule can starve a generator of low-power training.</strong> Where the target detector only reacts at high JSR, the band follows it up. The energy-conditioned cGAN under fading trained on (−8, 0) dB and never learned to damage at −20 dB, so it is loud and flagged 1.00 by the CNN. In <code>both</code>, two of three CNN-conditioned seeds (band (−35.8, −3.8)) ended with a damage onset of −11 / −12 dB instead of −21. These are training outcomes, not crashes. Nothing was rerun: that would need a recipe change the spec does not allow. The fair reading of <code>both</code> uses seed r1 (0.054, level with the control).</li>
+<li><strong>The random push needs synchronisation.</strong> It knows the victim's symbol timing and carrier phase, which no asynchronous attacker in the set has. It is a reference between the genie and the real attackers, not a practical jammer. Its per-frame power is capped, so it attacks whole symbols: nothing below −20.2 dB, and PER 0.55–0.72 at −20 dB. Its matched-damage P<sub>det</sub> is therefore read at that first point and overstates what it would need at PER 0.1. Diluting it over frames the way on/off dilutes matched QPSK (our construction, not computed in the pipeline) would bring its energy P<sub>det</sub> at PER 0.1 at base to ≈ 0.10.</li>
+<li><strong>Amuru's best p sits at the edge of the family.</strong> Against the CNN and kurtosis it is 0.01 or 0.02 in every environment. p below 0.01 was not evaluated and might do better still.</li>
+<li><strong>One CNN per environment</strong>, seed 11, no retrain replicate (as §3.3o).</li>
+<li><strong>One seed</strong> for the energy- and kurtosis-conditioned cGANs.</li>
+<li><strong>energy_csi is handed the true gain.</strong> A real receiver estimates it, so it lies between the two energy detectors. No estimator was built.</li>
+<li><strong>Per-frame independent draws</strong> of fading and noise level. This changes no per-frame number, only multi-frame reasoning.</li>
+<li><strong>Matched damage by interpolation</strong> on a 1 dB grid, 512 frames per point: P<sub>det</sub> std ≈ 0.01 near 0.05 and ≈ 0.02 near 0.5 for a single seed.</li>
+<li><strong>At BER 3·10⁻⁴ the on/off jammer ends the comparison with the classical envelope.</strong> It needs one jammed frame in ≈ 1500, so its P<sub>det</sub> is the FAR. Against Amuru's best p alone, which the figures use, that column has room again.</li>
+<li>Every threshold, CNN and evaluation ran on TITAN RTX. CUDA draws differ between GPU models, so a rerun on another card is statistically, not bitwise, equivalent.</li>
+</ul>
+<h3>Failed jobs</h3>
+<ul class="tight">
+<li>2278012_7, 2278016_7, 2278020_7, 2278024_7, 2278028_7 (the kurtosis generator of <code>noise</code>, <code>noise_1db</code>, <code>fading</code>, <code>fading_k28</code>, <code>both</code>): <code>slurmstepd: error: TaskProlog failed status=1</code> at 0 s, always the last task of an array burst. The cluster's TaskProlog runs <code>nvidia-smi</code> and an <code>scontrol</code> comment update, which plausibly races when eight tasks start at once. Resubmitted unchanged as 2278057, 2278059, 2278068, 2278075, 2278083; all completed. Their environments' evaluate jobs (2278013, 2278017, 2278021, 2278025, 2278029) were cancelled and resubmitted on the new dependency (2278063, 2278064, 2278069, 2278076, 2278084).</li>
+<li>Smoke run 2277995_7: the same TaskProlog error; rerun 2278004.</li>
+<li>No job failed because of the code.</li>
+</ul>
+<h3>Where things are</h3>
+<p class="small">Code: <code>final/</code>. Per environment: <code>artifacts/final/&lt;env&gt;/</code> (<code>eval.json</code>, <code>bands.json</code>, <code>cnn/</code>, <code>gan/*.json</code>, <code>fig1_vs_jsr.png</code>, <code>fig2_damage_vs_pdet.png</code>, <code>table.md</code>, <code>summary.json</code>). Across environments: <code>artifacts/final/compare/</code>. Gate: <code>artifacts/final/regress/s4_gate.json</code>. Checkpoints: <code>/itet-stor/rrahman/net_scratch/final/&lt;env&gt;/</code>, symlinked. README: §1.3 (files), §3.3q (results), §3.4 (status), §A.0 (runs). Nothing is committed.</p>
+</section>
+</main></div>
+
+<script>
+(function () {
+  var ROWS = [
+    ["omniscient_e1", "genie flip (bound)", "k-genie"], ["random_push_e0.1", "random push", "k-push"],
+    ["noise", "barrage", "k-noise"], ["amuru", "Amuru, best p", "k-amuru"],
+    ["control", "cGAN vanilla (β 0)", "k-control"], ["cnn_b10", "cGAN vs CNN", "k-cnn"],
+    ["energy_b10", "cGAN vs energy", "k-cnn"], ["kurtosis_b10", "cGAN vs kurtosis", "k-cnn"],
+    ["envelope", "classical envelope (min)", ""], ["zhou_cgan", "Zhou's CGAN", ""],
+    ["pulsed_p1", "matched QPSK (p 1)", ""], ["pulsed_p0.1", "Amuru p 0.1", ""],
+    ["pulsed_p0.02", "Amuru p 0.02", ""], ["pulsed_p0.01", "Amuru p 0.01", ""],
+    ["tone", "tone (constant vector)", ""], ["pulse_comb", "pulse comb", ""],
+    ["onoff", "on/off", ""], ["omniscient_e0.1", "genie push (knows the symbols)", ""]];
+  var DETS = ["energy", "energy_2s", "kurtosis", "spec_cnn", "energy_csi"];
+  var DLAB = {energy: "energy 1-s", energy_2s: "energy 2-s", kurtosis: "kurtosis", spec_cnn: "CNN", energy_csi: "energy, CSI"};
+  function stats(v) {
+    v = (v || []).filter(function (x) { return x !== null && isFinite(x); });
+    if (!v.length) return null;
+    var m = v.reduce(function (a, b) { return a + b; }, 0) / v.length;
+    if (v.length < 2) return [m, null];
+    var s = Math.sqrt(v.reduce(function (a, b) { return a + (b - m) * (b - m); }, 0) / (v.length - 1));
+    return [m, s];
+  }
+  function cell(v) {
+    var r = stats(v);
+    if (!r) return '<td class="na">—</td>';
+    var shade = Math.round(Math.min(Math.max(r[0], 0), 1) * 100);
+    return '<td class="num" style="--v:' + shade + '">' + r[0].toFixed(2) +
+      (r[1] === null ? "" : '<span class="pm">±' + r[1].toFixed(2) + "</span>") + "</td>";
+  }
+  function table(s, lvl) {
+    var dets = DETS.filter(function (d) { return s.dets.indexOf(d) >= 0; });
+    var h = '<div class="tablewrap"><table class="res"><thead><tr><th>attacker</th>' +
+      dets.map(function (d) { return '<th class="num">' + DLAB[d] + "</th>"; }).join("") + "</tr></thead><tbody>";
+    ROWS.forEach(function (r) {
+      var row = s.rows[r[0]];
+      if (!row) return;
+      h += '<tr><td><span class="key ' + r[2] + '"></span>' + r[1] + "</td>" +
+        dets.map(function (d) { return cell(row[d] ? row[d][lvl] : null); }).join("") + "</tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+  document.querySelectorAll(".envtables").forEach(function (el) {
+    var env = el.getAttribute("data-env");
+    fetch("data/" + env + "_summary.json").then(function (r) { return r.text(); }).then(function (t) {
+      var s = JSON.parse(t.replace(/\bNaN\b/g, "null").replace(/-?Infinity/g, "null"));
+      var far = DETS.filter(function (d) { return d in s.far; })
+        .map(function (d) { return DLAB[d] + " " + s.far[d].toFixed(3); }).join(", ");
+      el.innerHTML = '<h4>(3) P<sub>det</sub> at excess PER 0.1</h4><p class="small">Realised FAR on 4096 fresh clean frames: ' +
+        far + ". Mean ± std over seeds (3 for the CNN-conditioned and the vanilla cGAN). Shading scales with P<sub>det</sub>. " +
+        "Coloured key = drawn in the figures, grey = table only. The random push is read at its first damaging JSR " +
+        "(PER 0.55–0.72). — = never reaches the damage level at JSR ≤ +15 dB.</p>" + table(s, "per01") +
+        "<h4>P<sub>det</sub> at excess BER 3·10⁻⁴</h4>" + table(s, "ber3e4");
+    }).catch(function () {
+      el.innerHTML = '<p class="loading">Could not load data/' + env + "_summary.json; the same table is in artifacts/final/" + env + "/table.md.</p>";
+    });
+  });
+})();
+</script>

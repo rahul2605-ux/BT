@@ -13,6 +13,12 @@ cluster; findings live in prose.
 generator of Zhou et al. 2025 on QPSK, then condition it on stealth against three detectors. The M0
 coordination direction is paused, not superseded.
 
+**Since 2026-09-29 the paper's final experiment is built in `final/`** (README §3.4 "Final
+experiment"). It is one pipeline covering every attacker against energy, kurtosis and the CNN, retrained
+at our SNR 15 dB (Es/N0 24 dB), in six environments: `base`, `noise` (σ_N 0.5 dB), `noise_1db`,
+`fading` (Rician K 12 dB), `fading_k28` and `both`. D6 (defender retraining) is parked and is not part
+of it.
+
 **`README.md` is the single source of truth** for goals, state, results and open questions. Read it
 before planning anything. It is deliberately structured as: 1. whole picture · 2. goal & approach ·
 3. current state · 4. open questions · then Appendix A (experiment history), B (supervisor record),
@@ -26,17 +32,22 @@ C (engineering notes).
   ours and may be edited.
 - **`simulation00`–`simulation08` and `frontier/` are FROZEN.** They are appendix material. Do not
   extend, re-run sweeps, or "improve" them — the supervisor's standing mandate is *simplify, as much
-  as possible*. Live work happens in `m0/`, `cgan/` and `sim08_ablation/` only. **`sim08_ablation/`
+  as possible*. Live work happens in `m0/`, `cgan/`, `sim08_ablation/` and `final/` only. **`sim08_ablation/`
   (opened 2026-09-16, agreed with the supervisor) is the one sanctioned way to run new sweeps over the
   sim08 stack: it imports `simulation08/` and `simulation06/` read-only and adds its own evaluate.
   Frozen files stay untouched** — new axes go in `sim08_ablation/`, never into `frontier_channel.py`
   (README §3.3c, §A.9). Every entry point is an `sbatch` script (Sionna); `sbatch submit_verify.sh`
   first — it re-measures frozen job 102390's points as a regression check.
+- **`final/` copies `cgan/` code and never imports it.** Both folders have a `link.py`, so flat sibling
+  imports would collide. Each copied file's first line names its source file and commit
+  (`# copied from cgan/<file> at 68c97a4 (2026-09-29), pruned`). New work for the paper's experiment
+  goes into `final/`. `cgan/` stays as it is, as the record of every earlier run, and its artifacts are
+  the regression reference.
 - **Do not create new planning/status markdown files.** A 2026-09-10 consolidation deleted six
   overlapping docs into `README.md`. Add to the relevant README section instead.
 - **Never compute on the login node** — always `sbatch`. (M0 is the exception in practice: it is
-  pure-PyTorch and runs on CPU in seconds.) **`cgan/` has no exception**: its link uses Sionna, which
-  cannot be imported on the login node, so even `cgan/verify.py` goes through `sbatch`.
+  pure-PyTorch and runs on CPU in seconds.) **`cgan/` and `final/` have no exception**: their link uses
+  Sionna, which cannot be imported on the login node, so even `verify.py` goes through `sbatch`.
 - **`source_papers/*.pdf` are IEEE-licensed ETH copies** and are git-ignored. Never commit or push them.
 
 ## Commands
@@ -83,6 +94,27 @@ sbatch submit_train.sh       # CGAN training -> ../artifacts/cgan/runNNN_G.pt
 sbatch submit_eval.sh        # BER vs JSR, noise/optimal/GAN -> ../artifacts/cgan/runNNN_ber_vs_jsr.*
 tail -f runs/verify_<JOBID>.out
 ```
+
+`final/` (built 2026-09-30; files in README §1.3, results in §3.3q) uses the same layout. Run from
+inside `final/`, Sionna scripts via sbatch only (all pinned `titan_rtx`), and choose the environment
+with `--env {base,noise,noise_1db,fading,fading_k28,both}`:
+
+```bash
+cd final
+sbatch submit_verify.sh              # THE TEST SUITE (verify.py) + the regression gate vs S4 (regress.py) — exit 0 first
+sbatch submit_verify.sh --gate-only  # regress.py alone
+./submit_env.sh base                 # login node, sbatch only: train_cnn -> bands -> train_gan (array 0-7) -> evaluate,
+                                     # chained --dependency=afterok; prints the four job IDs
+./submit_env.sh base --smoke         # tiny end-to-end run into ../artifacts/final/_smoke/ (FINAL_SMOKE=1)
+sbatch --array=3 submit_train_gan.sh base          # rerun one generator (train_gan.ARRAY index)
+sbatch submit_evaluate.sh base --only cnn_b10_r1   # re-measure named attackers into an existing eval.json
+python figures.py --env base         # login node: the frozen figure set from ../artifacts/final/base/eval.json
+python figures.py --all --compare    # every environment + the cross-environment comparison (compare/)
+tail -f runs/train_cnn_base_<JOBID>.out
+```
+
+A failed generator task leaves its environment's evaluate job waiting forever (afterok): resubmit the task,
+then `sbatch submit_evaluate.sh <env>` by hand.
 
 Reading the live paper draft (never touches the working tree):
 
@@ -151,6 +183,22 @@ Contracts that carry over from M0: **JSR is imposed by a hard power projection**
 jammer waveform, never by a loss term; any detector added in step 2 follows the
 larger-is-more-suspicious + `calibrate(stat_clean, alpha)` convention of `m0/detectors.py`.
 
+### Final experiment (`final/`, built and run 2026-09-30; results README §3.3q)
+
+This is the CGAN link and detectors from `cgan/`, copied and pruned, and parameterised by one
+environment config (`env.py`). The contracts are those of `cgan/`, plus four traps specific to this
+experiment:
+- **SNR units.** `cgan/`'s SNR is power per sample over the 8× simulated band (sps 8), so
+  **Es/N0 = SNR + 9.03 dB**. Our 15 dB is Es/N0 24 dB. The paper states Es/N0, and any literature SNR
+  must be converted before it is compared with ours.
+- **P_det** is defined in README §2.7. Every threshold is calibrated on clean frames of *the same
+  environment* (CFAR), so noise uncertainty and fading raise the threshold instead of the false-alarm
+  rate.
+- **Energy is measured after the matched filter** (mean |z_k|²), not over the full band. The full-band
+  `power` survives only for the regression gate. The CNN keeps Li et al.'s full-band spectrogram.
+- **Each generator's JSR training band comes from `bands.py`**, per environment. A band outside the
+  target's transition gives the detector term no gradient (README §3.1, trap 1).
+
 ### The frozen stack (`frontier/`, `simulation06/`, `simulation08/`)
 
 Read only to write up the appendix. Shape worth knowing so you can navigate it: `simulation06/`
@@ -168,7 +216,9 @@ only for the channel and representation it was trained on (see the checkpoint ta
 
 `artifacts/simXX/` — never `simulationXX/runs/`. `runNNN.png` (curves), `runNNN_iq.png` (IQ scatter),
 `runNNN_model.pt`. New runs get a row in the run index (README §A.0). `runs/` inside a sim directory
-holds only SLURM `.out`/`.err`.
+holds only SLURM `.out`/`.err`. `final/` writes to `artifacts/final/<env>/`. Its generator and CNN
+checkpoints live on net_scratch (`/itet-stor/rrahman/net_scratch/final/<env>/`) and are symlinked
+there, because of the home quota.
 
 ## Cluster gotchas (ITET/TIK — full detail in `cluster/README.md`)
 

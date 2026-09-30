@@ -1,0 +1,6 @@
+node: tikgpu05.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env both = {'noise_unc_db': 0.5, 'rician_k_db': 12.0} | task energy_b10_r0 = {'target': 'energy', 'beta': 10.0, 'cgan_task': 2} | seed 4002 | band (-8.6, 0.0) | 128 frames/step | 20 steps | device cuda:0
+  target energy: threshold 1.60462, clean-frame std 0.335706 (soft_pdet width)
+  step    0  JSR   -1.8  loss 8.9127  logE[BER] -6.605  P_det_soft 0.2308  (1s)
+  step   19  JSR   -6.3  loss 6.0742  logE[BER] -3.797  P_det_soft 0.2277  (2s)
+wrote gan/energy_b10_r0_G.pt, gan/energy_b10_r0.json in 2s

@@ -244,3 +244,124 @@
   title={The {CMA} Evolution Strategy: A Tutorial},
   author={Hansen, Nikolaus},
   year={2016}, eprint={1604.00772}, archivePrefix={arXiv}, primaryClass={cs.LG}, note={preprint}}
+
+% ---- Experiment Setup: operating point and link realism (session A, 2026-09-30) -------------------
+% Each entry was checked against the full text (README Sec. 4.2 Q13); the page of the cited passage
+% is in the comment. Used by sec_setup_operating_point.tex.
+
+% Table 4.3 (p. 41): LoS link budget, required RX SNR 14 dB = 6 + 2 + 6 dB, excess margin 0 dB.
+@mastersthesis{kakar2015uav,
+  title={{UAV} Communications: Spectral Requirements, {MAV} and {SUAV} Channel Modeling, {OFDM} Waveform
+         Parameters, Performance and Spectrum Management},
+  author={Kakar, Jaber A.},
+  school={Virginia Polytechnic Institute and State University}, address={Blacksburg, VA}, year={2015},
+  url={http://hdl.handle.net/10919/53512}}
+
+% Sec. 3.1 and Tables I-II (pp. 2-3): prototype CNPC radios, GMSK (BT 0.2), 103.5 / 138 ksymbol/s.
+@techreport{bishop2017cnpc,
+  title={Control and Non-Payload Communications ({CNPC}) Prototype Radio Verification Test Report},
+  author={Bishop, William D. and Frantz, Brian D. and Thadhani, Suresh K. and Young, Daniel P.},
+  institution={NASA Glenn Research Center}, address={Cleveland, OH}, type={Contractor Report},
+  number={NASA/CR-2017-219380}, year={2017}}
+
+% p. 28: about 20.4 dB of margin over free-space loss would have avoided the random frame losses
+% at 100 nmi with partial terrain obstruction. NOT cited in the draft text; kept for the rebuttal.
+@techreport{shalkhauser2017cnpc,
+  title={Control and Non-Payload Communications ({CNPC}) Prototype Radio Validation Flight Test Report},
+  author={Shalkhauser, Kurt A. and Ishac, Joseph A. and Iannicca, Dennis C. and Bretmersky, Steven C.
+          and Smith, Albert E.},
+  institution={NASA Glenn Research Center}, address={Cleveland, OH}, type={Technical Memorandum},
+  number={NASA/TM-2017-219379}, year={2017}}
+
+% Abstract (p. 1): WRC-12 allocated 5030-5091 MHz for LOS CNPC; with the existing L-band AM(R)S
+% allocation (960-1164 MHz), of which 960-977 MHz is proposed for CNPC.
+@inproceedings{kerczewski2015cosite,
+  title={Impact of Co-Site Interference on {L/C}-Band Spectrum for {UAS} Control and Non-Payload
+         Communications},
+  author={Kerczewski, Robert J. and Bishop, William D. and Hoder, Douglas J. and Shalkhauser, Kurt A.
+          and Wilson, Jeffrey D.},
+  booktitle={Proc. IEEE Aerospace Conference}, pages={1--12}, year={2015},
+  doi={10.1109/AERO.2015.7119060}}
+
+% Table V (p. 37): mean K over sea 12.5 dB (L) / 31.3 dB (C), over fresh water 12.8 / 27.3 dB;
+% Sec. VI (p. 41): "mean K-factors ~12 dB for L-band and 27-30 dB for C-band".
+@article{matolak2017airground1,
+  title={Air--Ground Channel Characterization for Unmanned Aircraft Systems---{Part I}: Methods,
+         Measurements, and Models for Over-Water Settings},
+  author={Matolak, David W. and Sun, Ruoyu},
+  journal={IEEE Trans. Veh. Technol.}, volume={66}, number={1}, pages={26--44}, year={2017},
+  doi={10.1109/TVT.2016.2530306}}
+
+% Abstract (p. 1913) and Sec. IV-B (p. 1919): K 12.8 dB (L) / 29.4 dB (C), hilly and mountainous.
+@article{sun2017airground2,
+  title={Air--Ground Channel Characterization for Unmanned Aircraft Systems {Part II}: Hilly and
+         Mountainous Settings},
+  author={Sun, Ruoyu and Matolak, David W.},
+  journal={IEEE Trans. Veh. Technol.}, volume={66}, number={3}, pages={1913--1925}, year={2017},
+  doi={10.1109/TVT.2016.2585504}}
+
+% Table V (p. 6613): near-urban median K 12.0 dB (L) / 27.4 dB (C); suburban medians 13.2-14.7 /
+% 27.5-29.6 dB. Sec. VI (p. 6617) summary.
+@article{matolak2017airground3,
+  title={Air--Ground Channel Characterization for Unmanned Aircraft Systems---{Part III}: The Suburban
+         and Near-Urban Environments},
+  author={Matolak, David W. and Sun, Ruoyu},
+  journal={IEEE Trans. Veh. Technol.}, volume={66}, number={8}, pages={6607--6618}, year={2017},
+  doi={10.1109/TVT.2017.2659651}}
+
+% Sec. IV-C (p. 2373): K 12 / 27.4 (urban), 12.8 / 29.4 (hilly), 12.5 / 31.3 dB (sea); K does not
+% strongly depend on the ground environment in these strong-LOS channels.
+@article{khawaja2019survey,
+  title={A Survey of Air-to-Ground Propagation Channel Modeling for Unmanned Aerial Vehicles},
+  author={Khawaja, Wahab and Guvenc, Ismail and Matolak, David W. and Fiebig, Uwe-Carsten and
+          Schneckenburger, Nicolas},
+  journal={IEEE Commun. Surveys Tuts.}, volume={21}, number={3}, pages={2361--2391}, year={2019},
+  doi={10.1109/COMST.2019.2915069}}
+
+% p. 7 (Fig. 4): noise uncertainty x = 1 dB, sigma^2 in [sigma_n^2/rho, rho sigma_n^2], x = 10 log rho;
+% p. 13 (Fig. 8): x = 10 dB "to account for potentially significant interference", calibrated to 1 dB.
+@article{tandra2008snr,
+  title={{SNR} Walls for Signal Detection},
+  author={Tandra, Rahul and Sahai, Anant},
+  journal={IEEE J. Sel. Topics Signal Process.}, volume={2}, number={1}, pages={4--17}, year={2008},
+  doi={10.1109/JSTSP.2007.914879}}
+
+% Slides 4-9: temperature 0.28 dB + LNA gain 0.2 dB + calibration 0.22 dB = "at least 0.7 dB",
+% "rounding up ... 1 dB" without interference; slide 11: range N +- Delta.
+@misc{shellhammer2006noise,
+  title={Performance of the Power Detector with Noise Uncertainty},
+  author={Shellhammer, Steve and Tandra, Rahul},
+  howpublished={IEEE 802.22 Working Group, doc. IEEE 802.22-06/0134r0}, month=jul, year={2006}}
+
+% p. 658: log-normal noise-level error, "standard deviation of sigma dB", example sigma = 1 dB;
+% p. 659: sources (antenna temperature vs weather and pointing, finite averaging, nonstationary noise).
+@article{sonnenschein1992radiometric,
+  title={Radiometric Detection of Spread-Spectrum Signals in Noise of Uncertain Power},
+  author={Sonnenschein, Arie and Fishman, Philip M.},
+  journal={IEEE Trans. Aerosp. Electron. Syst.}, volume={28}, number={3}, pages={654--660}, year={1992},
+  doi={10.1109/7.256287}}
+
+% Sec. II-B (p. 942): bounded (log-uniform) and unbounded (log-normal) noise uncertainty; sources
+% "temperature change, environmental noise change, and calibration error"; Fig. 1 sigma 0.5/1/1.5 dB.
+@article{he2017covert,
+  title={On Covert Communication With Noise Uncertainty},
+  author={He, Biao and Yan, Shihao and Zhou, Xiangyun and Lau, Vincent K. N.},
+  journal={IEEE Commun. Lett.}, volume={21}, number={4}, pages={941--944}, year={2017},
+  doi={10.1109/LCOMM.2016.2647716}}
+
+% Abstract (p. 105) and Sec. VII: < 0.5 dB RMSE of the best estimator on measured industrial ISM noise.
+@article{nikonowicz2019noise,
+  title={Noise Power Estimators in {ISM} Radio Environments: Performance Comparison and Enhancement
+         Using a Novel Samples Separation Technique},
+  author={Nikonowicz, Jakub and Mahmood, Aamir and Sisinni, Emiliano and Gidlund, Mikael},
+  journal={IEEE Trans. Instrum. Meas.}, volume={68}, number={1}, pages={105--115}, year={2019},
+  doi={10.1109/TIM.2018.2833998}}
+
+% p. 137: "The probability of detection is 0.9, while the probability of false alarm is 0.1 for all
+% signal types" (channel detection time 2 s).
+@article{stevenson2009ieee,
+  title={{IEEE} 802.22: The First Cognitive Radio Wireless Regional Area Network Standard},
+  author={Stevenson, Carl R. and Chouinard, Gerald and Lei, Zhongding and Hu, Wendong and
+          Shellhammer, Stephen J. and Caldwell, Winston},
+  journal={IEEE Commun. Mag.}, volume={47}, number={1}, pages={130--138}, year={2009},
+  doi={10.1109/MCOM.2009.4752688}}

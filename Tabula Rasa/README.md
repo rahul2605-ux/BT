@@ -138,6 +138,7 @@ BT/
 │   ├── CLAUDE.md           <- operating rules for Claude Code (commands, contracts, gotchas)
 │   ├── m0/                 <- live code: the minimal model (coordination track, paused)
 │   ├── cgan/               <- live code: the CGAN exploratory track (§2.10), being built
+│   ├── final/              <- live code: the paper's final experiment (§3.4, §3.3q), copies of cgan/ code
 │   ├── sim08_ablation/     <- live code: new sweeps over the frozen sim08 stack, imported read-only (§3.3c)
 │   ├── source_papers/      <- PDFs the CGAN track reproduces/uses (IEEE-licensed; git-ignored)
 │   ├── cluster/README.md   <- cluster ops; read before submitting anything
@@ -220,6 +221,25 @@ per module as each lands. **Everything except `digitise_fig6.py` and `gan_figure
 | **`cgan/email_figures.py`** | jargon-free supervisor figures (login node; reuses `snr_figures`/`outlier_figures` loaders); `CGAN_RUN` picks the email. run001 (2026-09-24): the 15 dB CNN trade-off curve, and P(det) at matched BER + power vs SNR → `artifacts/cgan/snr_ablation/run001/email/`. **run003 (2026-09-28): CNN P(det) at matched BER vs the β = 0 control over SNR (no power panel, §2.7); broken frames per extra alarm, CNN vs one-sided power** → `artifacts/cgan/snr_ablation/run003/email/` |
 | **`cgan/arms_eval.py`** + `submit_arms_eval.sh`, **`arms_figures.py`**, `submit_arms_cnn.sh` | D6 round 1 (§3.3o): `submit_arms_cnn.sh` retrains the CNN per defender (`train_spectrogram_cnn.py --jsr-range / --extra-gens / --snr-db`) → `artifacts/cgan/baselines/arms/snr<SNR>_<arm>/`; `arms_eval.py` scores each (SNR, defender) on paired frames — one card type, pinned `titan_rtx` — plus Li et al.'s own classes → `…/arms/eval/round1/snr<SNR>_<arm>.json`; `arms_figures.py [--figs]` (login node) prints the cost and gain tables → `fig_gain.png`, `fig_cost.png` |
 | **`cgan/team_fading.py`**, **`team_policy.py`** + submits, **`team_figures.py`** | the multi-jammer track, **PAUSED 2026-09-26**. `team_fading`: E3 (K jammers under fading, §3.3h) and D4a (`--sigmas`, the delay-decay curve, §3.3i), by transfer. `team_policy`: D4b, the learned per-drone (u_k, δ_k) policy — `--mode train/eval/diag`, differentiable `frac_delay`, four evaluation arms (§3.3j). `team_figures` (login node): `--timing`, `--policy` tables. All three freeze `run001/task14_G.pt` |
+
+**Live code (final experiment, `final/`, built 2026-09-30):** copies of `cgan/` code, never imports
+(each copy's first line names its source at 68c97a4). Everything that imports Sionna runs via sbatch,
+pinned `titan_rtx`; `figures.py` runs on the login node. Results: §3.3q.
+
+| file | what |
+|---|---|
+| `final/env.py` | the six environments (σ_N, Rician K), SNR 15 dB = Es/N0 24 dB, N_SYM 128, α 0.05, artifact + net_scratch paths; `FINAL_SMOKE=1` redirects everything to `artifacts/final/_smoke/` |
+| `final/link.py`, `channel.py` | the Sionna QPSK link (`cgan/link.py` pruned; `fading_gain` = per-frame Rician amplitude, unit mean power; `scale_to_jsr` moved in) and the async jammer channel (`cgan/channel.py`, two imports changed) |
+| `final/attacks.py` | noise, pulsed (Amuru p ∈ {1…0.01}), omniscient genie, Li's tone / pulse comb, `gan_tx`, a simulated `onoff` (verify only), `frames` (+ fading, σ_N, per-frame DC share), the damage term with a per-frame noise variance |
+| `final/detectors.py`, `defender.py` | `energy` (mean \|z_k\|² after the MF, one- and two-sided), `energy_csi`, kurtosis, the spectrogram CNN; full-band `power` for the regression gate only. `Defender`, `measure`, `calibrate_env` (the CFAR thresholds on 20k clean frames of the environment) |
+| `final/models.py` | `Generator`, `load_generator` |
+| `final/train_cnn.py` + `submit_train_cnn.sh` | chain step 1: Li's CNN retrained on the environment + every CFAR threshold → `artifacts/final/<env>/cnn/` |
+| `final/bands.py` + `submit_bands.sh` | chain step 2: the JSR training band per target, S4's rule made automatic → `<env>/bands.json` (30 dB reference cached in `artifacts/final/bands_ref30.json`) |
+| `final/train_gan.py` + `submit_train_gan.sh` | chain step 3: 8 generators per environment (control ×3, `cnn_b10` ×3, `energy_b10`, `kurtosis_b10`), run003's recipe → `<env>/gan/` (checkpoints on net_scratch, symlinked) |
+| `final/evaluate.py` + `submit_evaluate.sh` | chain step 4: 22 attackers × JSR −50…+15 dB × 512 frames × every detector → `<env>/eval.json`. The random push (2026-09-30) is appended last (`added()`), so no earlier attacker's position seed moved; `--only random_push_e0.1` adds it to an existing `eval.json` |
+| `final/submit_env.sh <env> [--smoke]` | submits steps 1–4 as one `--dependency=afterok` chain (login node, sbatch only) |
+| `final/figures.py` | login node: `--env E` / `--all` → `fig1_vs_jsr` (excess BER, excess PER and P_det stacked on one JSR axis), `fig2_damage_vs_pdet`, `table.md`, `summary.json`; `--compare` → `artifacts/final/compare/` (P_det at matched damage across envs, the CNN-conditioned cGAN's gains over Amuru's best p and the vanilla cGAN, the DC share). The figures draw six attackers per detector column (`DRAWN`: genie flip, random push, barrage, Amuru at its best p, vanilla cGAN = control, the cGAN conditioned on that column's detector) over energy / kurtosis / CNN; tables hold every attacker and detector. The pre-2026-09-30 PNGs `fig1_damage_vs_jsr`, `fig2_pdet_vs_jsr`, `fig3_damage_vs_pdet` are left on disk, superseded |
+| `final/verify.py` + `regress.py` + `submit_verify.sh` | the test suite (closed forms, energy, Rician, σ_N, CFAR in all six envs, bands at base, baselines, one training step per target) and the regression gate vs S4 → `artifacts/final/regress/s4_gate.json`. **Run first**; job 2277992 (97/97), rerun with the random push job 2278412 (100/100), both exit 0 |
 
 **Live code (sim08 ablations, `sim08_ablation/`):** imports `simulation08/` and `simulation06/`
 read-only; every entry point is an sbatch script (Sionna).
@@ -710,6 +730,40 @@ losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
   paper). Its best value is usually the saturated corner 1/(1 − FAR) = 1.05, which hid S4's effect
   (§3.3m), and it is a maximum over noisy ratios (S2's first seed: 14.4, not replicated, §3.3l). E2,
   E2b, §3.3f and the older numbers in §3.1 still quote it; re-measuring them is on the list (§4.3).
+  **The final experiment (§3.4) reports only (1) and (2);** ξ and the delay are dropped there (user,
+  2026-09-29).
+- **P_det — the definition (settled 2026-09-29; answers the supervisor's "P_det not specified").**
+  - **Statistic and threshold.** Per frame (N = 128 symbols), each detector computes a statistic T,
+    larger = more suspicious. Its threshold τ_α is the (1 − α)-quantile of T over 20 000 clean frames.
+    α = 0.05, the same for every detector.
+  - **P_det.** P_det(JSR) = Pr[T(r) > τ_α | jammer present at received JSR], estimated on 512 frames
+    per JSR point. Both probabilities run over everything random in the environment: bits, noise, the
+    jammer's latent input, delay and phase, and the channel draws.
+  - **CFAR rule.** The clean frames that set τ_α come from the *same environment* the detector is
+    evaluated in, including every variation the defender cannot know (noise level, fading). The
+    false-alarm rate therefore stays α, and the threshold rises instead. That loss is the realistic
+    cost of not knowing. A detector calibrated on an idealised environment (S5's "naive") is never
+    reported as a P_det; at most its realised FAR is quoted.
+  - **Silent frames.** Frames on which an on/off jammer is silent count, for P_det and for damage alike.
+  - **Per frame.** P_det is not "the jammer is ever caught", which grows with the number of frames.
+  - **Damage** (excess BER / SER / PER over the same environment's clean frames) is measured on the
+    same frames.
+  - **P_det at matched damage:** find the JSR where the jammer reaches the damage level (damage vs JSR),
+    and read P_det there (P_det vs JSR).
+  - **Paper form:** P_det = Pr[T > τ | H1(JSR)], with τ such that Pr[T > τ | H0] = α. The soft P_det used
+    in training (`detectors.soft_pdet`) is a Methodology surrogate, not the reported quantity.
+- **SNR in the paper is Es/N0** (2026-09-29). `cgan/`'s SNR is power per sample over the 8× simulated
+  band, so **Es/N0 = SNR + 9.03 dB**: our 15 dB is Es/N0 24 dB and our 30 dB is 39 dB. README numbers
+  keep the code's SNR unless marked. Any literature SNR has to be converted before it is compared.
+- **The final experiment's figure set is frozen** (user, 2026-09-29: fix it once instead of
+  re-inventing measures). Per environment and detector:
+  - (1) damage vs JSR: BER with SER dashed, and PER on a second panel;
+  - (2) P_det vs JSR, α dotted;
+  - (3) damage vs P_det, the same points with JSR hidden. This is where equal damage is compared;
+    comparing at equal JSR is the matched-config trap above;
+  - (4) one table: P_det at excess PER 0.1 and excess BER 3e-4.
+
+  The supervisor's dual-axis request is (1) + (2).
 
 ## 2.8 Settled method decisions
 
@@ -1040,6 +1094,39 @@ projection; `--power learned` makes it a capped choice (≤ per frame, §3.3f ru
 
 ## 3.1 Status line
 
+**STATE 2026-09-30 (r2c, morning): the final experiment is built and run (session B). Results: §3.3q.
+Wed 30.9 is the read-out with the user; Thu–Fri writing; the supervisor meets the user Thu 1.10 17:00.**
+- **What exists.** `final/` (§1.3): copies of `cgan/` code, one `--dependency` chain per environment,
+  verify 100/100 + the regression gate vs S4 (job 2278412; 97/97 before the random push, job 2277992). All
+  six environments evaluated (22 attackers × JSR −50…+15 dB × 512 frames, Es/N0 24 dB), figures +
+  cross-environment comparison in `artifacts/final/`. Figures redrawn 2026-09-30 on the user's request:
+  damage and P_det stacked on one JSR axis, six attackers per detector (§1.3 `final/figures.py`). Nothing
+  committed.
+- **Report page (private), written for the user, who will ask questions about it in later sessions:**
+  <https://claude.ai/artifact/MDtg7r4sLU8rJ8ZwopBEGd>. Its HTML source is in git-untracked
+  `artifacts/final/report/index.html`; it loads its figures from `artifacts/final/<env>/fig*.png` +
+  `compare/fig_*.png` (published as `figs/…`) and builds its per-environment tables in the browser from
+  `artifacts/final/<env>/summary.json` (published as `data/<env>_summary.json`). To change it, read it
+  back with the Artifact tool (`action: read`, that URL) and republish to the same `url`.
+- **The outcome, bluntly (§3.3q):** against the CNN at matched damage the CNN-targeted GAN has **no
+  meaningful gain over the classical envelope** (within ±4 pp; −4.6 ± 0.9 pp only at `noise_1db`, where
+  the control reaches the same floor), **the detector term buys nothing** (the β = 0 control hides as well
+  or better), and the only large gain is over Zhou's CGAN (−86 to −93 pp, a weak baseline). What holds is
+  the detector side: **noise-level uncertainty blinds the CNN, not energy after the matched filter; fading
+  blinds the naive energy detector, not the CNN; a gain-aware energy detector is immune to fading.** At
+  excess BER 3e-4 the on/off jammer sits at the FAR on every detector.
+- **Two §3.4 premises were wrong and are corrected there:** energy vs full-band power white-noise
+  transitions are 10 dB apart (not ≈ 1), and energy's noise share is ≈ 1/10 of power's (not 1.35/8).
+- **Session A** (literature, in parallel) wrote `paper_drafts/sec_setup_operating_point.tex` and
+  `refs_new.bib` entries and edits §4.2 Q13; its report is its own.
+- **NEXT (user, today):** read both reports; choose the system model (recommendation: `both`, by
+  literature realism — no environment favours the GAN by more than 5 pp); decide what the paper claims
+  given the GAN shows no gain over the literature baselines (the detector-side finding is the robust one).
+- Earlier facts that still hold: P_det is defined in §2.7; D6 is parked (§3.4); `cgan/`'s SNR is power
+  per sample over the 8× band, so every "15 dB" in this README is Es/N0 24 dB.
+
+The block below is the state before the final experiment.
+
 **STATE 2026-09-29 (r2c). The whole background batch except S3 is done and merged into `main`'s working
 tree (uncommitted): Track 1's D6 round 1 (§3.3o, committed 79375cb) and Track 2's S2 / S4 / S5 (§3.3l–n,
 merged 2026-09-29; merged suite verify job 2277747, all 23 sections, exit 0). S3 (per-symbol detector) is
@@ -1095,16 +1182,20 @@ gain (S1) and a known noise level (S5, at 15 dB), and the "≈ 1 frame per alarm
 the claim changed. The first half (the CNN is the weak link) survives every probe, with D6's SNR
 condition (finding 2). Which story the paper tells is open — the user's call after the next discussion.
 
-**NEXT (single action): a new session with the user to decide which experiments follow** — the
-catalogue is §4.3 "Future experiments after the 2026-09-28 batch"; the lead candidate already specified
-is §3.4 "Next experiment" (D6 at 15 dB with 15 dB-trained attackers and CFAR energy); **the user has an
-idea of their own to bring**. Not blocked: S3 (per-symbol detector) is specified and unbuilt (§3.4 batch,
-Track 2). The user drafts Related Work and the Methodology meanwhile.
-**The week promised in the email:** Mon 28.9 D6 · Tue–Wed Results/Setup/Intro/Related Work, and the stale
-System Model items (§B.3) · **Wed 30.9 evening full draft to him** · Thu 1.10 his comments, cut to 6
-pages · **Fri 2.10 submit**.
-Waiting on (not blocking the week): the supervisor's reply — Friday with this scope? MARL out? which
-Overleaf? (§4.1 #0c).
+**NEXT: two parallel fresh sessions overnight 29/30.9, both specified in §3.4 "Final experiment".**
+- **Session A (literature and paper text):** verify Es/N0 24 dB, σ_N 0.5 / 1 dB, K 12 / 28 dB and
+  α 0.05 against the originals; write the Setup paragraph; publish a report.
+- **Session B (build and run):** `final/`, then verify, then the regression gate against S4, then the
+  six environment chains, figures and the cross-environment comparison; publish a report.
+
+A does not block B, because every value is already decided. S3 (the per-symbol detector) stays
+specified and unbuilt, outside the final experiment.
+
+**The week, re-planned by the user on 2026-09-29:** Wed 30.9 all experiments · Thu 1.10 writing, and the
+meeting at 17:00 · Fri 2.10 writing and submit. The email of 2026-09-27/28 had promised a full draft to
+him on Wednesday evening. Whether that still goes out is the user's call.
+The supervisor's reply came on 2026-09-29 (§B.1): a single-jammer paper is acceptable if it has
+outperformance quantification.
 
 **Where the pieces are.** Method: §2.10 "Decision 2026-09-27". Metric conventions: §2.7. Runs:
 §3.3f (run003 paper method · run004 grey-box · run005 learned power), §3.3g (E2 on run003 · E2b
@@ -2977,7 +3068,397 @@ training (exit 0) · evals 2275916 (30 dB r0), 2275960 (30 A), 2276002 (30 B), 2
 2275903 failed §23's first scale check (bit-exact, too tight), 2275904 cancelled with them; 2275953 the
 GPU-model RNG diagnostic.
 
+## 3.3q Final experiment — six environments: the CNN-targeted GAN gains nothing over the literature baselines; the realism factors split the detectors (2026-09-30)
+
+**What ran.** §3.4 "Final experiment", as specified, in `final/` (files: §1.3). Six environments at our
+15 dB (Es/N0 24 dB); per environment Li's CNN retrained + every detector CFAR-calibrated on 20k clean frames
+of that environment, automatic bands, 8 generators (control ×3, `cnn_b10` ×3, `energy_b10`,
+`kurtosis_b10`; run003 recipe), and 22 attackers × JSR −50…+15 dB × 512 frames (the random push added the
+same day, below). Everything on TITAN RTX.
+Figures and tables: `artifacts/final/<env>/` (`fig1_vs_jsr`, `fig2_damage_vs_pdet`, `table.md`,
+`summary.json`) and `artifacts/final/compare/` (`fig_compare_pdet`,
+`fig_compare_gains`, `fig_dc_share`, `compare.md`, `compare.json`). Report page (private):
+<https://claude.ai/artifact/MDtg7r4sLU8rJ8ZwopBEGd>; its source is `artifacts/final/report/index.html` (figures
+published as `figs/…`, per-environment tables built in the browser from `data/<env>_summary.json` =
+`artifacts/final/<env>/summary.json`).
+
+**Gates.** `verify.py` 97/97 and the regression gate vs S4 (0/2178 P(det) pairs beyond the √2-corrected
+4σ, mean z −0.005; BER 44 % positive, unbiased; clean FAR within z ±0.7), job 2277992, exit 0, before
+any training; rerun after the random push was added, 100/100 and the gate passes (job 2278412). Every
+environment's realised clean FAR on 4096 fresh frames: 0.043–0.057.
+Base's CNN reproduces S4/D6's 15 dB r0 (validation accuracy 0.922 vs 0.932, AUC 0.977 vs 0.978, Li's four
+types at P(det) 0.5 at the same JSRs); base's bands are S4's (CNN (−39.0, −7.0), energy (−25.1, 0) vs
+power (−24, 0)).
+
+**Two README premises were wrong and are corrected (verify §2):**
+- *"Energy and full-band power transition within ≈ 1 dB at 30 dB, so power's band reference serves for
+  energy"* (§3.4 decision 3, bands step): true for an in-band jammer (async matched QPSK: 1.4 dB, predicted
+  1.37), **false for white noise, the probe the band rule uses: 10.3 dB** (predicted 10 log10(1280/128) =
+  10). The matched filter passes 1/10 of a white jammer's frame energy while the clean signal × noise spread
+  is the same. `bands.py` therefore measures energy's shift on energy's own statistic (30 dB reference:
+  energy −16.9, power −27.2, kurtosis −13.6, CNN −29.9 dB).
+- *"Energy's noise share ≈ 1.35/8 of full-band power's"*, *"≈ 6× less noise"*: it is **(N/len + N0)/(c0² + N0)
+  ≈ 1/10** (measured 0.1035). The MF's noise-equivalent bandwidth is the symbol rate, 1/8 of the band, and
+  the frame's pulse tails (1280 samples for 128 symbols) add another 1.25×.
+
+**Result — P(det) at excess PER 0.1** (mean ± std over 3 seeds for `cnn_b10` and the control; `summary.json`
+has every attacker, both damage levels and every detector):
+
+| | base | noise | noise_1db | fading | fading_k28 | both |
+|---|---|---|---|---|---|---|
+| **CNN** — GAN vs CNN (β 10) | 0.107 ± 0.018 | 0.103 ± 0.036 | 0.052 ± 0.016 | 0.097 ± 0.012 | 0.132 ± 0.045 | 0.128 ± 0.067 |
+| **CNN** — control (β 0) | 0.171 ± 0.106 | 0.055 ± 0.006 | 0.057 ± 0.012 | 0.058 ± 0.007 | 0.075 ± 0.018 | 0.052 ± 0.008 |
+| **CNN** — classical envelope (min) | 0.102 (Amuru p 0.02) | 0.114 | 0.098 | 0.092 | 0.096 | 0.108 |
+| **CNN** — Zhou's CGAN | 1.000 | 1.000 | 0.984 | 0.999 | 1.000 | 0.990 |
+| **energy** (naive) — GAN vs CNN | 0.238 | 0.250 | 0.224 | 0.043 | 0.060 | 0.060 |
+| **energy** — classical envelope | 0.147 (on/off) | 0.150 | 0.151 | 0.042 | 0.050 | 0.042 |
+| **energy with CSI** — GAN vs CNN / control | — | — | — | 0.248 / 0.243 | 0.236 / 0.255 | 0.452 / 0.224 |
+| kurtosis — GAN vs CNN / envelope | 0.109 / 0.141 | 0.087 / 0.130 | 0.097 / 0.129 | 0.113 / 0.136 | 0.074 / 0.140 | 0.377 / 0.132 |
+| energy CFAR threshold over clean mean | +1.29 % | +1.29 % | +1.31 % | +60.7 % (CSI +1.27) | +9.5 % (CSI +1.28) | +60.4 % |
+
+At excess BER 3e-4 the classical envelope is the on/off jammer at the FAR on every detector in every
+environment (it jams ≈ 1 frame in 1500), so no attacker can beat it there; the attackers differ only at
+PER 0.1. The CNN-targeted GAN's gains against the CNN (Δ P(det), pp, ± SE over seeds, PER 0.1):
+
+| | base | noise | noise_1db | fading | fading_k28 | both |
+|---|---|---|---|---|---|---|
+| over the classical envelope | +0.5 ± 1.0 | −1.1 ± 2.1 | **−4.6 ± 0.9** | +0.6 ± 0.7 | +3.6 ± 2.6 | +2.0 ± 3.9 |
+| over Zhou's CGAN | −89.3 | −89.6 | −93.2 | −90.1 | −86.8 | −86.2 |
+| over the damage-only control | −6.4 ± 6.2 | +4.8 ± 2.1 | −0.5 ± 1.2 | +4.0 ± 0.8 | +5.7 ± 2.8 | +7.6 ± 3.9 |
+| room: genie flip over the envelope | −4.9 | −6.3 | −4.9 | −4.1 | −5.4 | −6.4 |
+
+1. **Against the CNN the CNN-targeted GAN has no meaningful gain over the literature baselines, in any
+   environment.** Over the classical envelope it is within ±4 pp except `noise_1db` (−4.6 ± 0.9 pp), where it
+   reaches the CNN's FAR floor and the envelope stays at 0.098 — but the control and the energy/kurtosis
+   GANs reach 0.057–0.078 there too, so the gain belongs to learned waveforms in general and to the CNN
+   losing sensitivity, not to the detector term. The room is small everywhere: the genie flip is only 4–6 pp
+   below the envelope. **The extended Amuru family closes the gap:** p 0.02 / 0.01 (new in this run) reach
+   0.09–0.12 on the CNN; p 0.1 alone (0.32 at base) would have suggested a large gain.
+2. **The detector term buys nothing.** The control is as hard or harder for the CNN to detect as `cnn_b10`
+   in every environment (+4 to +8 pp in the control's favour in four of six); base's −6.4 pp is one control
+   seed at 0.277 (the others 0.171, 0.066).
+3. **Zhou's CGAN is the only baseline the GAN beats by a lot** (−86 to −93 pp everywhere, largest at
+   `noise_1db`). It imitates the clean waveform and is detected like matched QPSK (≈ 1.0): a weak baseline.
+4. **Noise-level uncertainty hurts the CNN, not energy.** Energy after the MF keeps its CFAR threshold at
+   +1.3 % up to σ_N 1 dB and flags the generators at 0.22–0.25 as at base; the CNN's white-noise transition
+   rises +2.6 / +4.9 dB and it flags every learner at ≈ α at 1 dB (its argmax FAR on Li's classes 0 → 0.032).
+5. **Fading blinds the naive energy detector, not the CNN.** At K 12 dB every learned and Amuru jammer is at
+   ≈ α on naive energy; at K 28 dB still 0.05–0.08 (barrage 0.42, tone 1.0). Energy with the true gain is
+   unmoved (0.24–0.26 for the generators, S1's finding with Rician fading). The CNN is unmoved by fading.
+   Kurtosis is unmoved everywhere (scale-free).
+6. **On energy at base/noise, on/off beats every generator** at PER 0.1 (0.147–0.151 vs 0.22–0.38).
+7. **DC share:** every learner 3e-4–1.5e-2 (tone 1, matched QPSK 0.008, white noise 1e-3). No generator is
+   the supervisor's constant vector.
+8. **Against Amuru's best p alone (the figures' baseline since 2026-09-30) the verdict is the same.** At PER
+   0.1 on the CNN it IS the classical envelope in every environment. At BER 3e-4, where on/off made the
+   envelope unbeatable, the CNN-GAN's gain over Amuru's best p is −0.1 ± 1.1 / +0.4 ± 1.7 / **−4.0 ± 0.8**
+   / +1.5 ± 0.7 / +4.2 ± 2.2 / +1.1 ± 3.7 pp (base … both). The best p is 0.01 or 0.02 against the CNN and
+   kurtosis in every environment: the edge of the family, so p < 0.01 might do better still (not run).
+9. **The random push** (`random_push_e0.1`, user 2026-09-30: *"should've been random push, we don't know the
+   signal either"*): the genie push's timing and carrier phase without its data, +1.1·u on ⌊δN⌋ symbols,
+   δ = JSR/1.21, u uniform QPSK independent of s, not scaled by the fading gain. verify: BER 0.03693 vs
+   0.03688 predicted, SER 0.0567 vs 0.0564, one-sided energy flags it (0.98) at −10 dB. **It is the most
+   damaging attacker per dB** (BER ≈ JSR/2.4 vs the genie flip's JSR/4) and **the CNN barely sees it**: at
+   −20 dB, its first damaging point, P_det(CNN) = 0.082 / 0.061 / 0.074 / 0.047 / 0.047 / 0.062, below the
+   CNN-GAN at PER 0.1 in five of six environments. Energy flags it 0.41–0.44 without fading (CSI 0.42–0.44),
+   kurtosis 0.23–0.29. **But it overshoots:** the hard per-frame power cap means whole symbols, nothing below
+   −20.2 dB and PER 0.55–0.72 at −20 dB, so every matched-damage number of it is read at that first point and
+   overstates its P_det at PER 0.1 (diluted over frames like on/off, energy at base would be ≈ 0.10 — our
+   construction, not computed). It needs synchronisation no asynchronous attacker has: a reference, not a
+   jammer.
+
+**§3.4's predictions, blunt:** "at base the detector term may buy nothing" — held, everywhere. "Large gain over
+Zhou" — held. "Large gain over the classical envelope (Amuru p 0.1: energy 0.88, CNN 0.23)" — **failed**: p 0.1
+is where predicted (0.80 / 0.32), but the envelope with p down to 0.01 and on/off is level with the GAN.
+"Energy after the MF shrinks S5's effect" — held (margin +1.29/1.29/1.31 % vs S5's full-band 1.25/1.49/2.08 %).
+"Naive energy near-blind under fading even at K 28; energy_csi unmoved; the CNN open" — held; the CNN is unmoved.
+
+**Where is the gain against the CNN largest?** At `noise_1db` on all three gains, and nowhere by much. The
+system-model choice stays by literature realism (`both`, §3.4 "Open"): no environment favours the GAN by more
+than 5 pp. What holds robustly is the detector side (findings 4–5).
+
+**Caveats.**
+- **The band rule can starve a generator of low-power training.** Where the target only reacts at high JSR
+  the band follows it up: `energy_b10` under fading trained on (−8, 0) dB (`fading_k28`: (−16, 0)) and reaches
+  PER 0.1 only at −10 / −13 dB, flagged 1.00 / 0.25 by the CNN. In `both`, 2 of 3 `cnn_b10` seeds (band
+  (−35.8, −3.8)) ended with a damage onset at −11 / −12 dB instead of −21; seed r1 (0.054 on the CNN) ties the
+  control. Training outcomes, not crashes; nothing was rerun (it would change the recipe).
+- One CNN per environment (seed 11), one seed for `energy_b10` / `kurtosis_b10`; `energy_csi` is handed the
+  true gain; fading and noise level drawn independently per frame (changes no per-frame number).
+- On/off is analytic; its silent frames are charged the measured clean FAR, not exactly α.
+- The figures (redrawn 2026-09-30) draw six attackers per detector column, Amuru as its single best p at PER
+  0.1 (`best_p`); the envelope, all seven p and every other attacker are in the tables only. The genie
+  push is table-only, replaced in the figures by the random push.
+
+**Jobs** (all exit 0 unless noted): 2277992 verify + gate · smoke chain on `both` 2277993–2277996 (2277995_7
+`TaskProlog` → 2278004, eval 2278005) · chains: base 2278006 / 2278007 / 2278008 / 2278009; noise 2278010 /
+2278011 / 2278012 / eval 2278063; noise_1db 2278014 / 2278015 / 2278016 / 2278064; fading 2278018 / 2278019 /
+2278020 / 2278069; fading_k28 2278022 / 2278023 / 2278024 / 2278076; both 2278026 / 2278027 / 2278028 /
+2278084. **Failed: 2278012_7, 2278016_7, 2278020_7, 2278024_7, 2278028_7** (every kurtosis generator but
+base's): `TaskProlog failed status=1` at 0 s, always the last task of an eight-task burst (the node TaskProlog
+runs `nvidia-smi` + an `scontrol` comment update); resubmitted unchanged as 2278057, 2278059, 2278068,
+2278075, 2278083, all fine; the waiting evaluates 2278013 / 17 / 21 / 25 / 29 were cancelled and resubmitted.
+Random push (2026-09-30): verify + gate 2278412, then `evaluate.py --only random_push_e0.1` per environment
+2278413 (base) … 2278418 (both), chained `afterok`, ≈ 21 s of sweep each.
+CNN retrain 8.5–9 min, generator 1.7 min (analytic) / 6.5 min (CNN), evaluate 6.5 min, verify 6.6 min.
+Checkpoints (2.0 GB) on net_scratch `final/<env>/`, symlinked.
+
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
+
+### Final experiment — one pipeline, six environments (`final/`; DECIDED 2026-09-29, BUILT AND RUN 2026-09-30 — results §3.3q)
+
+> **STATUS 2026-09-30 (session B done).** `final/` built (§1.3); verify 100/100 + the regression gate vs S4
+> pass (job 2278412, after the random push was added); all six chains complete, figures + cross-environment
+> comparison drawn (§3.3q; redrawn the same day: stacked damage/P_det vs JSR, six attackers per detector). Blunt
+> outcome: the CNN-targeted GAN has no gain over the classical envelope against the CNN beyond 4.6 pp
+> (`noise_1db`) and the detector term buys nothing; the realism factors split the detectors (noise
+> uncertainty → the CNN, fading → naive energy). Two premises below were wrong and are corrected in
+> place (marked *corrected 2026-09-30*): energy and full-band power do NOT transition alike for white
+> noise (10 dB apart), and energy's noise share is ≈ 1/10 of power's, not 1.35/8. The rest of the spec is
+> what ran. **Open:** the system-model choice and what goes into the paper (Wed 30.9 read-out; §4.2 Q14).
+
+**Why (user, 2026-09-29):** put the results into *one* experiment. Every attacker runs against every
+detector, with jammers and detectors retrained at one realistic operating point. The same comparison is
+then repeated under noise-level uncertainty, under fading, and under both. It answers the supervisor's
+2026-09-29 points (§B.1):
+- P_det is specified (§2.7).
+- Outperformance is quantified against literature baselines.
+- His naive constant-vector attack is in the baseline set.
+- Channel uncertainty and time variance are the realism axes.
+- The modulation is fixed.
+
+**The question:** in which environment is the CNN-targeted GAN's gain over the baselines, *against
+the CNN*, largest? And what does each realism factor do to each detector?
+
+**Schedule (user):** sessions A and B (below) run overnight 29/30.9, and each ends in a report. Wed 30.9
+is the read-out with the user. Thu–Fri are for writing (meeting Thu 17:00).
+
+**Not part of it:**
+- **D6 (the defender retrains on the attacker) is PARKED.** User: *"we keep the D6 part for later, it
+  really depends on how this goes and i want to make a clear distinction here"*. Its 15 dB spec is the
+  next subsection. When it resumes, it runs on `final/`'s pipeline.
+- **The noise LRT is dropped.** It is exact only for barrage, and the supervisor was not convinced by
+  the detector model.
+- **The D2a shaped control is left out** (user, 2026-09-29). It is optimised separately at each JSR,
+  ≈ 33 CMA-ES runs per detector per environment, and it answered a different question: shaping vs a
+  GAN (§3.3e).
+- ξ, the SPRT detection delay and the naive (non-CFAR) defenders are not reported.
+
+**Decisions (user, 2026-09-29):**
+1. **Operating point.** Our SNR 15 dB = **Es/N0 24 dB** (Eb/N0 21 dB). `cgan/`'s SNR is power per
+   sample over the 8× simulated band ([cgan/link.py:31-33](cgan/link.py#L31-L33), sps 8), so
+   Es/N0 = SNR + 9.03 dB. The paper states Es/N0. The literature case is a fixed-QPSK UAS control link
+   with link margin (§4.2 Q13). The adaptive-modulation argument goes: at Es/N0 24 dB the CQI mapping
+   would pick 64QAM.
+2. **P_det** is defined in §2.7. Under the CFAR rule, every detector is calibrated on 20k clean frames
+   drawn from the environment it is evaluated in.
+3. **Energy is measured after the matched filter.** The statistic is `energy` = mean_k |z_k|², the mean
+   received symbol energy.
+   - Why: the full-band power (`cgan` `detectors.power`) also collects the noise outside the signal's
+     band. Relative to the signal, full-band power holds ≈ 10× the noise the MF output does: the MF's
+     noise-equivalent bandwidth is the symbol rate (1/8 of the band), and the frame's pulse tails
+     (1280 samples for 128 symbols) add 1.25× (measured 0.1035, verify §2; *corrected 2026-09-30 — this
+     bullet first said "1.35/8, ≈ 6×"*).
+   - Consequence: noise-level uncertainty barely moves energy's CFAR threshold (+1.29 / 1.29 / 1.31 % at
+     σ_N 0 / 0.5 / 1 dB; S5's full-band power: +1.25 / 1.49 / 2.08 %, §3.3n, §3.3q).
+   - The clean spreads coincide (the signal × noise cross term), **but the jammer side does not** (*corrected
+     2026-09-30; this bullet first said "the two nearly coincide"*): an in-band jammer is seen alike (async
+     matched QPSK: energy's transition 1.4 dB above power's), a white jammer is not (10.3 dB above: the MF
+     passes 1/10 of its frame energy). §3.3q.
+   - The one-sided form is the detector the energy-targeted GAN trains against. The **two-sided form is
+     evaluated but not trained against** (added at r2c 2026-09-29). It is the same statistic, and the
+     genie *push* lowers received power: only a two-sided test sees it (§3.3d).
+   - The CNN keeps Li et al.'s full-band spectrogram. Kurtosis stays on r (it is scale-free).
+4. **The victim-link factor is per-frame Rician block fading, not S1's log-normal shadowing.**
+   - Shadowing is slow. It decorrelates over tens of metres, i.e. thousands of frames, and the
+     receiver's AGC tracks it. The frame-to-frame variation is small-scale fading.
+   - **K = 12 dB is the main value, 28 dB the extra level.** Matolak & Sun's NASA air–ground
+     measurements of UAS control-link (CNPC) channels, in the two CNPC bands, gave K ≈ 12–13 dB in
+     L-band (~970 MHz) and ≈ 27–31 dB in C-band (~5 GHz), over urban, hilly and sea terrain (§4.2 Q13).
+   - Frame-power std ≈ 1.5 dB at K = 12 dB and ≈ 0.24 dB at K = 28 dB.
+   - Amplitude only, at unit mean power. The receiver knows its phase (System Model), so there is no
+     equaliser and clean BER stays ≈ 0.
+   - **Per-frame P_det and damage depend only on the per-frame marginal of the gain.** Drawing it
+     independently per frame therefore changes no reported number, only multi-frame reasoning.
+     Consecutive frames are in fact correlated: the coherence time is milliseconds, and a frame is
+     128 µs at 1 MBd.
+   - Energy is bracketed by two detectors. `energy` is calibrated on faded clean frames. `energy_csi` is
+     handed the true gain and subtracts (g² − 1)·c0², as `power_csi` did. A real receiver lies between
+     them, so no gain estimator is built.
+5. **Noise-level uncertainty: σ_N = 0.5 dB is the main value, 1 dB the extra level.** It is a per-frame
+   log-normal factor on the noise variance, as in S5.
+   - 0.5 dB: a calibrated receiver (Tandra & Sahai's ±1 dB ≈ σ 0.5; Nikonowicz et al.'s 0.5 dB RMSE on
+     real ISM traces).
+   - 1 dB: in-band interference, which has to be argued in the paper.
+   - Sources: §4.2 Q13.
+6. **The figure set is frozen**, identical for every environment and detector (§2.7): (1) damage vs JSR,
+   (2) P_det vs JSR, (3) damage vs P_det, (4) one table of P_det at excess PER 0.1 and excess BER 3e-4.
+7. **Seeds.** 3 for the CNN-targeted GAN and 3 for the damage-only control; 1 each for the energy- and
+   kurtosis-targeted GANs.
+   - The control's 3 seeds were added at r2c 2026-09-29, after the user said *"showing the damage only
+     GAN could still be interesting"*.
+   - "What the detector term buys" is the difference between those two generators, and S2 showed one
+     seed can mislead.
+8. **Every implemented baseline stays in** (user: *"we can always decide which to leave out for
+   paper"*).
+9. **Folder** `final/`.
+
+**Open, for after the run:** which environment becomes the paper's system model. The recommendation
+(2026-09-29) is to choose by literature realism (`both`) and report the other five as ablations, not to
+pick the one that favours the GAN. The user's question stands: where the GAN's gain against the CNN is
+largest.
+
+**Environments** (`final/env.py`). All are at our SNR 15 dB = Es/N0 24 dB. Run all six regardless of
+how the others come out: an interaction can flip a sign.
+
+| env | σ_N | victim-link fading | role |
+|---|---|---|---|
+| `base` | 0 | none | the ideal link at the operating point |
+| `noise` | 0.5 dB | none | noise-level uncertainty, calibrated receiver |
+| `noise_1db` | 1 dB | none | the same with in-band interference (extra level) |
+| `fading` | 0 | Rician K 12 dB | L-band fading |
+| `fading_k28` | 0 | Rician K 28 dB | C-band fading (extra level) |
+| `both` | 0.5 dB | Rician K 12 dB | the combination: the candidate system model |
+
+**Attackers** (every environment):
+
+| role | attacker | code | note |
+|---|---|---|---|
+| upper bound | genie flip, `omniscient` η = 1 | `attacks.omniscient_rx` | received law = clean law, BER = δ, invisible to every test; in every figure (§2.9) |
+| reference | genie push, `omniscient` η = 0.1 | same | cheapest per bit; lowers received power, so only two-sided energy and kurtosis see it (§3.3d). Table only since 2026-09-30 |
+| reference | random push, `random_push` η = 0.1 (added 2026-09-30) | `attacks.random_push_rx` | the genie push without the data: +1.1·u, u random QPSK, on ⌊δN⌋ symbols; knows timing and carrier phase only. BER ≈ δ/2, raises received power. Drawn in the figures in place of the genie push (§3.3q finding 9) |
+| classical | barrage `noise` (= Li's `barrage`) | `attacks.noise_tx` | |
+| classical, literature | Amuru pulsed, p ∈ {1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01} | `attacks.pulsed_tx` | p = 1 is matched QPSK (Zhou's "optimal"); p = 0.25 is Li's `protocol_aware`, so that type is not run twice. In graph 3 it is ONE line, the envelope over p: needed before any "beats Amuru" claim (§4.3) |
+| classical | on/off: matched QPSK at +15 dB on a fraction f of frames | analytic, from the p = 1 point at +15 dB, as E2b (§3.3g) | P_det = f·P_det(+15) + (1 − f)·α, damage = f·damage(+15). Graphs 1–2 plot against mean JSR +15 + 10 log10 f. Wins on average BER (§2.7) |
+| the supervisor's naive baseline | constant IQ vector = Li's `tone` (constant complex baseband, phase uniform per frame) | `attacks.li_tx("tone")` | the CNN is trained on this type; say so. **Diagnostic** for *"how do we know the learner does not learn exactly this?"*: each generator's per-frame DC share \|mean_n j\|² / mean_n \|j\|² (1 for `tone`) |
+| classical | Li's pulse comb | `attacks.li_tx("pulse_comb")` | impulses every 64 samples |
+| literature generator | Zhou's plain CGAN `artifacts/cgan/run001_G.pt` | evaluated, not retrained | trained to imitate the clean waveform, with no link or detector, so independent of SNR |
+| learned control | GAN, damage only (β = 0; `cgan` task 0) | trained per env, **3 seeds** | isolates what the detector term buys |
+| learned | GAN vs `energy` one-sided, β 10 (`cgan` task 2, target → the new energy) | 1 seed | |
+| learned | GAN vs kurtosis, β 10 (`cgan` task 10) | 1 seed | |
+| **learned, headline** | **GAN vs CNN, β 10 (`cgan` task 14)** | **3 seeds** | |
+
+The recipe is run003's: `--init random --steps 4000`, α = 0.05, trained white-box against *that
+environment's* CNN and calibration, with that environment's σ_N and K applied to the training frames.
+In `final/train_gan.py` the tasks are named `control`, `energy_b10`, `kurtosis_b10` and `cnn_b10`
+rather than numbered.
+
+**Detectors** (every environment):
+- `energy`, one-sided, after the matched filter;
+- `energy_2s`, two-sided, evaluated only;
+- kurtosis, two-sided, on r;
+- the CNN, retrained per environment on that environment's frames. Li et al.'s recipe, seed 11,
+  jammed-frame JSR [−20, +10] dB (Li's own range; at our 15 dB it is scaled to the noise, §3.3o caveat);
+- `energy_csi`, in the three fading environments only.
+
+**Pipeline per environment** (one `--dependency=afterok` chain; the six chains run in parallel):
+1. **`train_cnn.py --env E`** → `artifacts/final/E/cnn/`: `detector_spec.pt`, `thresholds.json` (every
+   detector's CFAR threshold and clean quantiles on 20k clean frames of E), and the training report.
+   ≈ 10 min.
+2. **`bands.py --env E`** → `bands.json`, the JSR band each target is trained on.
+   - The rule is S4's (§3.3m), made automatic. Take the 30 dB band (`cgan/train_gan.JSR_BANDS`: CNN
+     (−48, −16), others (−32, 0)) and shift it by how far that target's transition moved. The transition
+     is the JSR where white noise reaches P_det 0.5, measured against E's defender vs the deployed 30 dB
+     one. Cap the upper edge of analytic targets at 0 dB. The control keeps (−32, 0).
+   - Energy's 30 dB reference is energy's own transition, calibrated on 20k clean 30 dB frames (−16.9 dB),
+     not power's (−27.2 dB): for white noise the two are 10 dB apart (*corrected 2026-09-30; this bullet
+     first said they transition within ≈ 1 dB, so power's reference would serve*). The shift is what the
+     rule uses, and it came out as S4's (base: (−25.1, 0) vs S4's (−24, 0)). §3.3q.
+   - **Known weakness (found 2026-09-30):** where the target only reacts at high JSR the band follows it up
+     and the generator never trains at low power (fading: energy band (−8, 0) → a loud generator). §3.3q
+     caveats; §4.2 Q14.
+   - Why it matters: trap 1 of §3.1. A band outside the target's transition gives the detector term
+     no gradient.
+3. **`train_gan.py --env E --task T --rep r`**: 8 generators (control × 3, `cnn_b10` × 3, `energy_b10`,
+   `kurtosis_b10`). Output goes to `artifacts/final/E/gan/`, with checkpoints on net_scratch
+   `/itet-stor/rrahman/net_scratch/final/E/`, symlinked (home quota). ≈ 7 min each, in parallel.
+4. **`evaluate.py --env E`** → `artifacts/final/E/eval.json`, pinned `--constraint=titan_rtx` (§C.4).
+   ≈ 20–40 min.
+   - Every attacker over JSR −50…+15 dB in 1 dB steps, 512 frames per point.
+   - Per point: BER, SER, PER (with the clean values of E, for the excess), P_det of each detector at
+     α = 0.05, and the DC share.
+   - No confirmation pass: no pick at α is reported.
+5. **`figures.py --env E`** (login node) produces the outputs of decision 6 (since 2026-09-30 graphs 1 and 2
+   are one stacked figure, and the graphs draw six attackers per detector; §1.3).
+   **`figures.py --compare`** gives, per detector, every attacker's P_det at matched damage across the
+   six environments, plus three gains of the CNN-targeted GAN (mean ± std over seeds):
+   - over the classical envelope: the minimum over barrage, the Amuru envelope, on/off, `tone` and the
+     pulse comb;
+   - over Zhou's CGAN;
+   - over the damage-only control, i.e. what the detector term buys.
+
+**What goes into `final/` (session B).** Code is copied, never imported from `cgan/`: both folders have
+`link.py`, and flat sibling imports collide. Each copy's first line reads
+`# copied from cgan/<file> at 68c97a4 (2026-09-29), pruned`. Keep the mitsuba `set_variant` preamble
+wherever Sionna is imported.
+
+| file | from | keep / change |
+|---|---|---|
+| `env.py` | new | the six environments, N_SYM = 128, artifact and net_scratch paths |
+| `link.py` | `cgan/link.py` | `Link`, `noise_scale`; `shadow_gain` → `fading_gain(K)` (Rician amplitude, unit mean power); drop the Zhou-calibration helpers |
+| `channel.py` | as is | async delay and phase |
+| `attacks.py` | `cgan/attacks.py` | noise, pulsed, omniscient, `li_tx`, `gan_tx`, `frames`, error counts, `log_expected_ber` / `_per`; drop shaped, learned power and the team `rx` hook |
+| `detectors.py` | `cgan/detectors.py` | + `energy` (mean \|z_k\|²) and `energy_csi`; kurtosis, `two_sided`, spectrogram + CNN, `calibrate`, `p_detect`, `soft_pdet`, `stat_quantiles`; keep `power` (full band) for the regression gate only; drop the LRT |
+| `defender.py` | `Defender` and `measure` from `cgan/baselines.py` | detectors `energy`, `energy_2s`, `kurtosis`, `spec_cnn` (+ `energy_csi`) |
+| `models.py` | as is | `Generator`, `load_generator` |
+| `train_cnn.py` | `cgan/train_spectrogram_cnn.py` | `--env`; σ_N and fading on training AND calibration frames; the new thresholds; drop the LRT parts |
+| `train_gan.py` | `cgan/train_gan.py` | `--env`, named tasks, bands from `bands.json`; drop sync, learned power, shadow |
+| `bands.py`, `evaluate.py`, `figures.py` | new; `matched_per` & co from `cgan/probe_readout.py` | as above |
+| `verify.py` + `submit_*.sh` | new; S5's checks from `cgan/verify.py` §22 | below; `submit_env.sh E` chains steps 1–4 |
+
+**`final/verify.py`** is the gate for everything:
+- closed forms: clean BER = Q(√(Es/N0)) with Es/N0 = SNR + 9.03 dB; the white-noise BER closed form;
+- `energy`: clean mean = c0² + N0; noise share (N/len + N0)/(c0² + N0) ≈ 1/10 of full-band power's; at
+  30 dB, `energy`'s white-noise transition 10 log10(1280/128) = 10 dB above `power`'s and its async
+  matched-QPSK transition ≈ 1.4 dB above (*as built and passed; the spec first said "1.35/8" and "within
+  ≈ 1 dB", both wrong, §3.3q*);
+- Rician: unit mean power; K → ∞ gives g = 1; the empirical K matches; clean BER ≈ 0 at K = 12 dB;
+- σ_N: S5's factor law, and σ_N = 0 draws nothing;
+- CFAR: each detector's realised FAR on fresh clean frames of every environment within binomial
+  tolerance of α;
+- `bands.py` at `base` returns ≈ S4's bands (CNN (−39, −7), power (−24, 0));
+- `tone` has DC share 1; the analytic on/off matches a simulated on/off at one f; the genie flip has
+  BER = δ and P_det ≈ α on every detector; two-sided energy flags the genie push; the random push matches
+  its BER and SER closed forms and one-sided energy flags it (added 2026-09-30).
+
+**Regression gate, before any training.** Use the copied code with full-band `power`. Evaluate S4's four
+generators (`artifacts/cgan/gan/snr15_003`) against S4's defender (`artifacts/cgan/baselines/arms/
+snr15_r0`), and compare with `artifacts/cgan/snr_ablation/snr15_run003/snr_snr_15.json` on
+one-sided power, kurtosis and the CNN:
+- P(det) within the √2-corrected 4σ binomial band;
+- BER compared as error counts, as `cgan/regress_snr30.py` does.
+
+The gate is statistical: it is bit-exact only when both jobs run on the same GPU model (§3.3n). **No
+environment runs on a copy that fails the gate.**
+
+**Sessions** (user: one fresh session each, overnight, each ending in a report):
+- **A — literature and paper text** (in parallel with B, and not blocking it: every value is decided).
+  - Verify every value above against the originals: Es/N0 24 dB, σ_N 0.5 / 1 dB, K 12 / 28 dB, α 0.05.
+  - Write the Experiment Setup paragraph that argues them, with citations, into
+    `paper_drafts/sec_setup_operating_point.tex`, with the bib entries in `paper_drafts/refs_new.bib`.
+  - Draw explanatory figures (numpy only, login node) into `artifacts/final/literature/`.
+  - Update §4.2 Q13 and publish a report page.
+  - If a source contradicts a decided value, it goes at the top of the report. A never edits `final/`.
+- **B — build and run.** `final/`, verify, the regression gate, the six chains, all figures, the
+  cross-environment comparison, the results in a new §3.3q (§3.3p is reserved for S3), the §A.0 rows,
+  and a report page.
+- **Wed 30.9, with the user:** both reports, the system-model choice, and what goes into the paper.
+
+**Predictions, stated before running (from transfer data at our 15 dB; blunt)** — *checked 2026-09-30 in
+§3.3q: all held except the large gain over the classical envelope, which failed (the envelope with Amuru
+p down to 0.01 and on/off is level with the GAN).*
+- **At `base` the detector term may buy nothing against the CNN.** In S4's 15 dB-trained generators
+  against the 15 dB CNN, at PER 0.1, the damage-only control and CNN β 10 are *both* flagged on 0.11 of
+  frames (one seed each, §3.3m). The large gains should be the other two:
+  - over Zhou's CGAN: E2 run002 D1 at 15 dB, CNN 0.94 / power 1.00 at matched BER, §3.3g;
+  - over the classical envelope: Amuru p 0.1 flagged by energy on 0.88 at PER 0.1 (§3.3m), and by the
+    15 dB CNN on 0.23 at matched BER (§3.3o).
+- **`energy` after the matched filter should shrink S5's noise-uncertainty effect.** §3.3n's numbers
+  used full-band power, so at σ_N 0.5 dB the effect may be small.
+- **Under fading, the naive `energy` should be near-blind even at K = 28 dB.** Its clean margin at our
+  15 dB is ≈ 1.25 % of frame power (≈ 0.05 dB), against a fading spread of 0.24–1.5 dB. `energy_csi`
+  should be unmoved. Only the CNN's fate is open.
+- One CNN per environment, with no retrain seed (the §3.3o caveat).
 
 ### Background batch 2026-09-28 — five experiments, two tracks (TODO, for fresh sessions)
 
@@ -3089,7 +3570,18 @@ merged suite verify job 2277747, all 23 sections, exit 0). The literature measur
 **Once all five are in:** one comparison with the user of what each changes, then decide the system
 model and the paper's story (§4.1 #0c).
 
-### Next experiment — D6 at the realistic operating point: 15 dB, 15 dB-trained attackers, CFAR energy (PROPOSED 2026-09-29; after Track 2 is merged; user go-ahead pending)
+### D6 at the realistic operating point: 15 dB, 15 dB-trained attackers, CFAR energy (PARKED 2026-09-29 — after the final experiment)
+
+**Parked (user, 2026-09-29):** *"we keep the D6 part for later, it really depends on how this goes and i
+want to make a clear distinction here. but pls do remark it somewhere we will get there eventually."*
+It is kept separate from the final experiment above. When it resumes:
+- it runs on `final/`'s pipeline, in the environment the final experiment settles on;
+- the defender arms are §3.3o's (r0 / A / B′), and the stopping rule is the supervisor's
+  2026-09-29 question.
+
+The proposed rule: stop the alternation when a defender retrain no longer moves P_det at matched
+damage beyond the seed spread. At our 15 dB that already happened in round 1 (§3.3o). The spec
+below predates `final/` and the matched-filter energy detector.
 
 **Why (user, 2026-09-29):** 15 dB is the defensible operating point for a QPSK UAV link (§4.2 Q13), so
 redo damage vs P(det) against the baselines there, retrain the CNN on the attacker, and measure whether
@@ -3719,74 +4211,197 @@ policy should find those levers itself.
   #8), so σ is swept rather than derived. A stated assumption is owed in the Methodology if D4 reaches
   the paper.
 
-**Q13 — Which SNR and which noise-level uncertainty are realistic for a QPSK UAV link? Literature
-collected 2026-09-29; not yet adopted.** User, 2026-09-29: *"as long as we can argue that 15 dB is
-realistic, that is good, especially with higher dB you would use more fine grained modulation schemes"*.
-D6 (§3.3o), S4 and S5 all turn on these two numbers. Every source below was opened and the cited passage
-checked, except the two marked "not read".
-- **SNR — the literature supports 15 dB as a design point, not as THE realistic value.**
-  - **Kakar, *UAV Communications: Spectral Requirements, MAV and SUAV Channel Modeling, OFDM Waveform
-    Parameters, Performance and Spectrum Management*, M.S. thesis, Virginia Tech, 2015, Table 4.3.** LoS
-    link budget for MAV/SUAV command-and-control links (QPSK-OFDM, 1 and 5 GHz): required receive SNR
-    **14 dB** = 6 dB theoretical minimum + 2 dB implementation loss + 6 dB aviation safety margin, 0 dB
-    excess margin, i.e. the link closes at ≈ 14 dB at the edge of its range. A thesis, not a standard.
-    <https://vtechworks.lib.vt.edu/server/api/core/bitstreams/a4ec2d22-7a08-40e1-91e9-efbbee7c10f4/content>
-  - **Lin et al., "The Sky Is Not the Limit: LTE for Unmanned Aerial Vehicles", IEEE Commun. Mag. 56(4),
-    204–210, 2018, Sec. IV and Fig. 5** (3GPP-based system simulation, the TR 36.777 study). Aerial UEs at
-    40 / 120 m have median downlink SINR 10.9 / 11.3 dB below ground UEs and "may be out of coverage due to
-    interference" (LTE needs −6 dB). Read off Fig. 5 (approximate): aerial median ≈ 3–5 dB, 90th
-    percentile ≈ 12 dB, almost nothing above 20 dB. Interference-limited SINR, not thermal SNR.
-    <https://arxiv.org/pdf/1707.07534>
-  - **Adaptive modulation uses QPSK only at low SNR.** 3GPP TS 36.213 (Rel. 8) CQI table: QPSK = CQI 1–6.
-    Wang & Abdelhadi, "Optimal Power Allocation for LTE Users with Different Modulations", arXiv 2015,
-    Table I and Eq. (1) (mapping CQI = 0.5223·SNR + 4.6176, from Li, Fang & Shi 2011): QPSK below ≈ 4.6 dB,
-    16QAM to ≈ 10.3 dB, 64QAM above. So an adaptive link at 30 dB would not be QPSK. The mapping's primary
-    source is a weak conference paper; the CQI table is the standard. <https://arxiv.org/pdf/1507.07159>
-  - **Against:** a 2024 *Ad Hoc Networks* survey ("Non-Terrestrial UAV Clients for Beyond 5G Networks: A
-    Comprehensive Survey") reportedly recommends CNPC SNR > 20 dB — not read (paywalled).
-    <https://www.sciencedirect.com/science/article/pii/S1570870524000519> And free-space loss (−6 dB per
-    doubling of distance) puts a link that closes at 14 dB at the edge near 30 dB at 1/6 of the range:
-    30 dB is a short-range case, not an unrealistic one.
-  - **Reading:** argue 15 dB as the design point (edge of coverage, QPSK regime; the D6/S4 15 dB rows),
-    keep E2's 0–40 dB sweep as the evaluation.
-- **Noise-level uncertainty — ≈ 0.5 dB (std) for a calibrated receiver; ≥ 1 dB needs in-band
-  interference.**
-  - **Tandra & Sahai, "SNR walls for signal detection", IEEE JSTSP 2(1), 4–17, 2008.** Sec. III: noise
-    = thermal + out-of-band leakage + filter aliasing + interference from licensed and opportunistic
-    users; "reasonable to assume that there is always some residual uncertainty in our noise estimate,
-    even after run-time calibration". Fig. 3: "x=1 dB of device level noise uncertainty". Fig. 5: an
-    interference case at x = 10 dB, where noise calibration "effectively reduces the uncertainty to
-    x = 1 dB". <https://people.eecs.berkeley.edu/~sahai/Papers/tandra_sahai_revised_submission.jstsp.final.pdf>
-  - **He, Yan, Zhou & Lau, "On Covert Communication with Noise Uncertainty", IEEE Commun. Lett., 2017,
-    Sec. II-B** — the same problem from the hider's side: sources "temperature change, environmental noise
-    change, and calibration error"; a log-normal (unbounded) model = S5's model, σ swept 0.5–1.5 dB.
-    <https://arxiv.org/pdf/1612.09027>
-  - **Nikonowicz, Mahmood, Sisinni & Gidlund, "Quantitative Benchmarks and New Directions for Noise Power
-    Estimation Methods in ISM Radio Environment", arXiv 2017.** Real noise traces, IEEE 802.15.4 channel
-    26 (2.48 GHz ISM), industrial plant: the best estimator reaches 0.5 dB RMSE; real noise behaves
-    "completely different" from white Gaussian. <https://arxiv.org/pdf/1711.05642>
-  - Not read: Sonnenschein & Fishman, "Radiometric detection of spread-spectrum signals in noise of
-    uncertain power", IEEE TAES 28(3), 654–660, 1992 (the classic, paywalled,
-    <https://ieeexplore.ieee.org/document/256287/>); Shellhammer & Tandra, "Performance of the power
-    detector with noise uncertainty", IEEE 802.22-06/0134r0, 2006 (IEEE login,
-    <https://mentor.ieee.org/802.22/dcn/06/22-06-0134-00-0000-performance-of-the-power-detector-with-noise-uncertainty.ppt>).
-    Also Tandra & Sahai, "Noise calibration, delay coherence and SNR walls for signal detection", DySPAN
-    2008 <https://people.eecs.berkeley.edu/~sahai/Papers/DelayCoherenceDySpAN08.pdf> (not yet read).
-  - **Units trap:** Tandra–Sahai's x is a ± bound on the noise variance; S5's σ_N is a log-normal
-    standard deviation. ±1 dB ≈ σ_N 0.5 dB (±2σ).
-  - **Reading:** σ_N ≈ 0.5 dB for a calibrated receiver in a quiet band; ≥ 1 dB needs in-band
-    interference (crowded 2.4 GHz ISM, other UAVs), which then has to be stated and cited (Tandra & Sahai's
-    interference case; Lin et al. for interference-limited UAV links). Report S5 (§3.3n) as a curve over
-    σ_N with these ranges marked, not as one "realistic" value.
+**Q13 — Which SNR, noise-level uncertainty and fading are realistic for a QPSK UAV link? DECIDED
+2026-09-29 (user); VERIFIED 2026-09-30 (session A of the final experiment, §3.4).** The values: our SNR
+15 dB = Es/N0 24 dB · σ_N 0.5 dB main, 1 dB extra · Rician K 12 dB main, 28 dB extra · α = 0.05.
+**No source contradicts a decided value.** Every source below was read in full text unless it is marked
+otherwise; the page of each cited passage is given. Paper text: `paper_drafts/sec_setup_operating_point.tex`
+(its bib entries are in `paper_drafts/refs_new.bib`). Figures and their script (numpy, login node):
+`artifacts/final/literature/`. Local copies of the PDFs: `source_papers/` (git-ignored). The report page
+is linked at the end of this entry. User, 2026-09-29: *"as long as we can argue that 15 dB is realistic,
+that is good, especially with higher dB you would use more fine grained modulation schemes"*.
+- **What the 2026-09-29 notes had wrong (corrected here; do not quote the old versions).**
+  - The 2024 *Ad Hoc Networks* survey does NOT recommend CNPC SNR > 20 dB. Qazzaz et al., "Non-Terrestrial
+    UAV Clients for Beyond 5G Networks: A Comprehensive Survey", Ad Hoc Netw. 157:103440, 2024, was read in
+    full (the open copy at <https://eprints.whiterose.ac.uk/209662/>). It gives no SNR value at all, and the
+    string "dB" does not occur in it. Dropped.
+  - The Tandra & Sahai quotes came from the Berkeley preprint. The published JSTSP text differs: "residual
+    uncertainty … even after run-time calibration" is not in it, and "device level" is missing from the
+    Fig. 4 caption. The "Fig. 5" of the preprint is Fig. 8 of the paper. Cite the published pages below.
+  - 960–977 MHz is not a WRC-12 allocation. WRC-12 added a new AM(R)S allocation at 5030–5091 MHz for
+    line-of-sight CNPC. 960–977 MHz is the portion of the existing 960–1164 MHz AM(R)S allocation that is
+    *proposed* for CNPC.
+  - Khawaja et al.'s K-factors are running text (Sec. IV-C), not a table. The "near-urban 13.1 / 28.7 dB"
+    snippet is in none of the four papers; Part III gives 12.0 / 27.4 dB. Dropped.
+- **Two weak spots in the framing, not in the values** (stated in the paper text, top of the report).
+  - **CNPC prototype radios use GMSK, not QPSK.** Bishop et al., NASA/CR-2017-219380, 2017, §3.1–3.5 and
+    Tables I–II (pp. 2–3): GMSK with BT 0.2, 1 bit/symbol, 103,500 or 138,000 symbols/s in 90 or 120 kHz.
+    RTCA DO-362 is waveform-agnostic (public description; the standard itself was not read, it is
+    paywalled). So "fixed modulation" is supported and "QPSK" is our stand-in. The draft says so. MSK is
+    offset-QPSK with half-sine pulses, and GMSK is a smoothed MSK.
+  - **The K-factors come from a manned aircraft high above the ground.** The aircraft was NASA's piloted
+    S-3B Viking at 500–1000 m above ground and 75–92 m/s, with a 20 m ground mast and 5 MHz (L) / 50 MHz (C)
+    sounders (Part I pp. 29–31 and 35; Part III p. 6617). A low-flying small UAS (lower elevation angle; Khawaja
+    p. 2373: K grows with elevation) and a narrower-band receiver (it cannot resolve multipath off the LOS
+    tap) would both see a *lower* K. K = 12 dB is therefore not the defender's worst case. Airframe
+    shadowing "strongly affects" K (Part II p. 1919) and is not modelled.
+- **Units.**
+  - Our SNR is power per sample over the 8× band, so Es/N0 = SNR + 9.03 dB and Eb/N0 = Es/N0 − 3.01 dB.
+    Our 15 dB is therefore Es/N0 24.03 dB and Eb/N0 21.02 dB, and our 30 dB is Es/N0 39 dB.
+  - Kakar's 14 dB is SNR in the channel bandwidth. That equals Es/N0 when the noise bandwidth equals the
+    symbol rate, and is within 1.3 dB of it for the RRC-0.35 occupied bandwidth. It is ≈ our 5 dB.
+  - A ±x bound is not a log-normal std. The equivalents of ±1 dB are:
+    - σ 0.50 dB, reading the bound as ±2σ (95.4 % of frames inside);
+    - σ 0.58 dB, the std of a uniform draw on ±1 dB (Shellhammer & Tandra's and He et al.'s bounded
+      model);
+    - σ 0.61 dB, Sonnenschein & Fishman's tail rule at a 0.05 tail (0.32 dB at their 10⁻³ tail);
+    - σ 0.41 dB, the RSS of Shellhammer & Tandra's three components. They add them linearly, to 0.70 dB.
+
+    σ_N 0.5 dB sits in the middle of that range.
+- **SNR: Es/N0 24 dB = a fixed-modulation control link 10 dB inside its range-edge requirement.**
+  - **Kakar, M.S. thesis, Virginia Tech, 2015, Table 4.3 (p. 41), re-read.** A LoS budget for MAV/SUAV C2
+    links (QPSK-OFDM, 1 / 5 GHz, 12.5 / 37.5 kHz channels): RX SNR 14 dB = 6 dB theoretical minimum + 2 dB
+    implementation loss + 6 dB aviation safety margin, excess margin 0 dB, at 30.0 / 23.8 km (1 GHz) and
+    10.1 / 7.1 km (5 GHz). The 6 dB "theoretical minimum" is not derived in the thesis (p. 40). It is a
+    thesis, not a standard. Handle <http://hdl.handle.net/10919/53512>.
+  - **The argument.** 24 dB is 10 dB above that range edge: 1/√10 ≈ 0.32 of the range in free space.
+    Uncoded QPSK has clean BER 2.7·10⁻⁷ at 14 dB and 3·10⁻⁵⁷ at 24 dB, so every counted error is the
+    jammer's.
+  - **Shalkhauser et al., NASA/TM-2017-219379, 2017, p. 28** (CNPC prototype flight test). At 100 nmi with
+    partial terrain obstruction, excess path losses of 18.3–20.4 dB caused the random frame losses, so
+    ≈ 20 dB of margin over free space would have avoided them. The report says this "compares favorably
+    with" DO-362 App. L and is "likely a far too conservative approach for many flight situations". It
+    rests on one flight segment. In the bib, but not in the draft text; kept for a rebuttal.
+  - **Adaptive-modulation argument: dropped.** It argues against us: Wang & Abdelhadi, arXiv 1507.07159,
+    Eq. (1) and Table I, re-read: CQI = 0.5223·SNR + 4.6176, and QPSK is CQI 1–6, i.e. SNR < 4.56 dB. An
+    adaptive link at Es/N0 24 dB would run 64QAM.
+  - Lin et al., IEEE Commun. Mag. 56(4), 2018, Sec. IV and Fig. 5 (read 2026-09-29): cellular aerial UEs
+    are interference-limited, with a median SINR of ≈ 3–5 dB. That is a different link (LTE, not CNPC). Use
+    it only to argue that UAV links can be interference-limited (the 1 dB level).
+  - What the literal, unconverted reading would have meant: E2 at our 5 dB (Es/N0 14 dB) flags every
+    structured jammer on ≤ 0.08 of frames (CNN) and ≤ 0.22 (one-sided power) at matched BER (§3.3g).
+- **Noise-level uncertainty: σ_N 0.5 dB (calibrated receiver), 1 dB (in-band interference).**
+  - **Shellhammer & Tandra, IEEE 802.22-06/0134r0, July 2006 (public .ppt, read in full), slides 4–9 and
+    11.** This is where the "1 dB" comes from:
+    - temperature +20 K gives 0.28 dB, LNA gain at 0.01 dB/°C gives 0.2 dB, and a 1 ms calibration
+      estimate has std 0.22 dB;
+    - together "at least 0.7 dB", then "Rounding up … Noise Uncertainty 1 dB" without interference;
+    - "With interference the noise uncertainty may be much larger";
+    - the range is N̄ ± Δ, with a uniform prior on the PSD;
+    - conclusions: "may be larger than the 1 to 2 dB used in these simulations".
+    - This is an engineering estimate for a TV-band sensor, not a measurement.
+  - **Tandra & Sahai, IEEE JSTSP 2(1), 4–17, 2008.**
+    - p. 7: σ² ∈ [σ_n²/ρ, ρσ_n²], x = 10 log₁₀ ρ, and Fig. 4 marks x = 1 dB (SNR wall −3.3 dB).
+    - p. 13, Fig. 8: "ρ = 10 (to account for potentially significant interference)", which noise
+      calibration reduces to λ = 10^0.1, i.e. 1 dB.
+    - p. 5: background noise = thermal + leakage + aliasing + quantization + interference.
+  - **Tandra & Sahai, DySPAN 2008, Fig. 2:** x = 1 dB with P_FA = P_MD = 0.1.
+  - **Sonnenschein & Fishman, IEEE TAES 28(3), 654–660, 1992.**
+    - p. 658: a log-normal noise-level error, "standard deviation of σ dB". The example σ = 1 dB gives
+      "±3 dB" at the 10⁻³ tails.
+    - p. 659 names the sources: antenna temperature varies "as a function of weather, pointing angle, and
+      frequency" (an airborne antenna changes attitude), plus finite averaging and nonstationary noise.
+  - **He, Yan, Zhou & Lau, IEEE Commun. Lett. 21(4), 941–944, 2017.**
+    - p. 942: sources "temperature change, environmental noise change, and calibration error"; the bounded
+      model is log-uniform, the unbounded one log-normal (citing Sonnenschein & Fishman).
+    - p. 944: σ_Δ ∈ {0.5, 1, 1.5} dB (Fig. 1), swept over 0–2 dB (Fig. 2).
+  - **Nikonowicz, Mahmood, Sisinni & Gidlund, IEEE TIM 68(1), 105–115, 2019** (the journal version of arXiv
+    1711.05642). Abstract p. 105 and Sec. VII: on industrial ISM noise measured with a USRP, the best
+    estimator reaches < 0.5 dB RMSE (std 0.075 dB).
+  - **The argument.** σ_N 0.5 dB keeps 95 % of frames inside the ±1 dB bound, and it equals a good
+    estimator's error.
+  - **Weak spots.** No source measures this for a UAS receiver. "1 dB = in-band interference" is our
+    assignment (Shellhammer & Tandra's "1 to 2 dB" with interference, Tandra & Sahai's ρ = 10 case). The
+    model is S5's and `final/link.noise_scale`'s: unit mean, per frame.
+- **Victim-link fading: Rician K 12 dB (L-band) and 28 dB (C-band).**
+  - **Matolak & Sun, IEEE TVT 66(1), 26–44, 2017 (Part I, over water).**
+    - Table V (p. 37), mean K over sea 12.5 (L) / 31.3 (C) dB and over fresh water 12.8 / 27.3 dB;
+      medians 12.7 / 31.0 and 12.9 / 27.0.
+    - Sec. VI (p. 41): "mean K-factors ∼12 dB for L-band and 27–30 dB for C-band".
+    - The stationarity distance is 15 m, and the fading is "unfiltered (memoryless) Rician".
+  - **Sun & Matolak, IEEE TVT 66(3), 1913–1925, 2017 (Part II, hilly and mountainous).** Abstract (p. 1913)
+    and p. 1919: 12.8 (L) / 29.4 (C) dB, K "almost independent of environment" because LOS is almost
+    always present.
+  - **Matolak & Sun, IEEE TVT 66(8), 6607–6618, 2017 (Part III, suburban and near-urban).**
+    - Table V (p. 6613): near-urban median 12.0 (L) / 27.4 (C) dB; suburban medians 13.2–14.7 / 27.5–29.6.
+    - The K spread around the fit is σ_Y 0.7–2.3 dB. Minima are far lower (−86 dB in L-band, i.e. LOS
+      blockage).
+  - **Khawaja et al., IEEE COMST 21(3), 2361–2391, 2019, Sec. IV-C (p. 2373).** Reports 12 / 27.4 ("urban";
+    Part III says near-urban median), 12.8 / 29.4 and 12.5 / 31.3 dB. It says K "does not strongly depend
+    on the GS environment", and that C > L partly because the C-band sounder bandwidth was larger.
+  - **Bands.**
+    - Kerczewski et al., IEEE Aerospace Conf. 2015, abstract: WRC-12's 5030–5091 MHz plus 960–977 MHz of
+      the existing L-band allocation.
+    - Bishop et al., NASA/CR-2017-219380 §3.1 (p. 2): ITU-R M.2171 set the requirement at 34 MHz.
+    - Matolak Part I (p. 27): "tentatively granted"; the maximum UAS link range is ≈ 129 km.
+  - **The argument.** 12 dB is the lowest L-band median, hence the strongest measured fading, and 28 dB lies
+    inside the C-band range 27.3–31.3 dB.
+  - **Why one draw per frame is enough.** P_det and damage are per-frame averages, so they depend only on
+    the per-frame marginal of g. For the energy detector block fading is also the hard case: fading within
+    a frame would be averaged out.
+  - **Coherence time vs frame.** f_D = v·f_c/c, T_c = 0.179/f_D … 0.423/f_D. §3.4 decision 4's "the
+    coherence time is milliseconds" holds only for L-band at small-UAS speeds:
+
+    | band, speed | T_c | frames of 128 symbols at 1 MBd | at the CNPC radio's 103.5 kBd |
+    |---|---|---|---|
+    | L-band, 33 m/s (Kakar's SUAV, 120 km/h) | 1.7–3.9 ms | 13–31 | 1.3–3.2 |
+    | C-band, 33 m/s | 0.32–0.75 ms | 2.5–5.9 | 0.26–0.61 |
+    | the measurement aircraft, 90 m/s, C-band | 0.12–0.28 ms | 0.9–2.2 | — |
+
+    The diffuse share of power is 5.9 % at K 12 dB and 0.16 % at 28 dB, so fading within a frame barely
+    changes the frame's power.
+  - **In numbers** (closed form / 2·10⁶ draws, `literature_figures.py`):
+    - frame-power std 1.57 dB at K 12 dB (5th / 95th percentiles −3.04 / +2.05 dB) and 0.245 dB at 28 dB
+      (−0.41 / +0.39 dB);
+    - the post-matched-filter `energy` detector's clean margin at our 15 dB is exactly +1.29 % = 0.056 dB
+      (noncentral χ², N = 128, α = 0.05). S5 measured +1.25 % for full-band power (§3.3n).
+- **α = 0.05 — there is no standard value for jamming detection; say so.**
+  - Stevenson et al., IEEE Commun. Mag. 47(1), 2009, p. 137 (IEEE 802.22): "The probability of detection is
+    0.9, while the probability of false alarm is 0.1", per 2 s sensing decision.
+  - Arcangeloni, Testi & Giorgetti, IEEE ISSE 2024, p. 6: learned (VAE) jamming detector at "Pfa = 0.05".
+  - Mehrabian & Kaddoum, arXiv 2507.20504 (2025): p_fa = 0.01. Tandra & Sahai, DySPAN 2008: 0.1.
+  - The draft's wording: equal α for every detector, so they are compared at equal false-alarm rates. It
+    does not claim the ranking holds at every α (that is D2b, §3.4).
+  - Weak spot: per frame, α = 0.05 is ≈ 390 false alarms/s at 1 MBd (≈ 40/s at 103.5 kBd). A deployed
+    monitor would integrate frames.
 - **What "CFAR" means here** (explained to the user 2026-09-29): the honest energy detector's threshold
   is calibrated on clean frames that include the noise-level variation, so its false-alarm rate stays at α
   and it gives up sensitivity instead — the NP convention every detector here already follows. It is a
   fixed-threshold CFAR; an adaptive CFAR that estimates the noise per frame (e.g. from the unused band
   edges of the RRC 0.35 spectrum) would be stronger, and a reviewer may ask for it.
+- **Report page** (session A, 2026-09-30; private): <https://claude.ai/artifact/Tci2S5xPvXAzAVnVj8PygF>. It has
+  every source with its quoted passage, the four figures with captions, the judgement calls and the drafted paragraph.
+
+**Q14 — Open after the final experiment (2026-09-30, §3.3q). None blocks the read-out; each is the user's call.**
+- **The band rule can starve a generator of low-power training.** It shifts the band with the target's
+  white-noise transition. Where that transition moves far above the damage onset (naive energy under
+  fading: band (−8, 0); `both`'s CNN band (−35.8, −3.8) for 2 of 3 seeds), the generator ends up damaging
+  only when loud (PER 0.1 at −10 to −12 dB instead of −21). Options: (a) report as is (done); (b) extend
+  the lower edge to the control's damage onset minus ≈ 5 dB and retrain only the affected generators
+  (`fading`/`fading_k28`/`both` `energy_b10`, `both` `cnn_b10_r0/r2`; ≈ 30 min on the cluster). (b) is a recipe
+  change, so it needs the user's go.
+- **The paper's claim.** The CNN-targeted GAN has no gain over the classical envelope against the CNN
+  (≤ 5 pp of room exists at all) and the detector term buys nothing; the robust finding is the detector
+  side (σ_N → CNN, fading → naive energy). Which of these the paper leads with is open.
+- **`energy_csi` is handed the true gain.** A decision-directed gain estimate from the frame's own symbols
+  would place a real receiver between naive and CSI energy (S1's untested argument, §3.3k). One eval-only
+  job on the existing generators.
+- **Adaptive CFAR** (noise estimated per frame from the RRC band edges, Q13 above) would be a stronger
+  energy detector under σ_N; not needed for the MF energy detector, whose threshold σ_N barely moves.
 
 ## 4.3 Ideas on the shelf — specified, not adopted
 
 ### Future experiments after the 2026-09-28 batch — catalogue for the next discussion (2026-09-29)
+
+**2026-09-29: the user chose the final experiment (§3.4) instead of picking from this list.**
+- **Absorbed into it:** A2 (the `noise` environment trains its generators against its CFAR-calibrated
+  defender) · A3 (the matched 15 dB column, for every target) · A4 (seeds, 3 for the CNN-targeted GAN)
+  · B4 (the CNN retrained under noise uncertainty) · C3 (the Amuru envelope down to p = 0.01) · C4
+  (evaluations pinned to one GPU model) · the supervisor's constant-vector baseline (as Li's `tone`)
+  · B3 in a new form (Rician fading instead of shadowing, crossed with noise uncertainty).
+- **Parked:** A1 (D6 at 15 dB, §3.4).
+- **Not in it:** B1, B2 (energy is bracketed by naive and true-gain versions instead), B5, B6/S3, C1,
+  C2, C5.
 
 Everything that could follow D6 / S2 / S4 / S5, in one list, for the user to choose from (the user also
 has an idea of their own to bring). Measures for all of them: §2.7. Costs are GPU wall time with an idle
@@ -3848,11 +4463,15 @@ queue. Items specified elsewhere are only pointed to.
 ### Earlier shelf items
 
 - **Supervisor 2026-09-29 follow-ons (§B.1) — noted, not scheduled unless marked.**
-  - **Pulsed baseline below 10 % duty — needed before any "beats Amuru" claim.** `pulsed_qpsk(p)` ran only
+  - **Pulsed baseline below 10 % duty — needed before any "beats Amuru" claim. → In the final
+    experiment (§3.4), 2026-09-29.** `pulsed_qpsk(p)` ran only
     at p ∈ {1, .5, .25, .1} (§3.3d), while the CNN-targeted generator puts 97 % of its power in 5 % of the
     symbols (§3.3f). Evaluate p ∈ {0.05, 0.02, 0.01} (eval only) and draw Amuru as ONE line, the envelope
     over p. This is his "does the learner just learn a simple strategy?" question in its dangerous form.
-  - **Random-direction / constant IQ vector attack (user: study it).** The jammer picks one of four
+  - **Random-direction / constant IQ vector attack (user: study it). → In the final experiment (§3.4),
+    2026-09-29, as Li's `tone`, which is exactly this: a constant complex baseband vector with its phase
+    uniform per frame, i.e. a uniformly random direction rather than one of four. The CNN is trained on
+    it. A DC-share diagnostic runs on every generator.** The jammer picks one of four
     mutually perpendicular directions, independent of the symbol, with enough power to cross the boundary.
     Diagonal directions (|d| ≥ 1, JSR ≥ 0 dB): the push is aligned with s w.p. 1/4 (no error), opposite
     w.p. 1/4 (2 bit errors), perpendicular w.p. 1/2 (1 bit error), so **SER 0.75, BER 0.5** (the link
@@ -4113,6 +4732,9 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | **cgan_team** | run001 | **E3 pre-check**: K = 1/2/4 jammers, jammer→R fading (lossless/rician10/rayleigh) × SNR 15/30 dB, aligned vs random timing, 5 jammers; transfer (no retrain) | **fading helps a single jammer (frame-level pulsing artifact), so no gap for a team; the only lever is TIMING** — aligned K = 4 ≈ one jammer at 7.3 dB less per drone, random timing loses ~6 dB / 19–35 pp; lossless K = 1 reproduces E2; §3.3h | 2273604, 2273605, 2273606 |
 | **cgan_team_timing** | run001 | **D4a delay-decay curve**: lossless, K = 1/2/4, SNR 15/30 dB, three generators (spec_cnn_b10, plain_run001, kurtosis_b1); followers' timing error σ ∈ {0 … 64} symbols + uncoordinated; transfer (no retrain) | **the team stops matching one jammer at σ ≈ 0.5–1 symbol**; half the gain is gone by σ ≈ 2 and it reaches the floor by 8–16; an uncompensated team in the test drops sits at 1.1 symbols rms, so δ matters; σ = 0 and shifted reproduce E3 within ±0.06 / ±0.7 dB; §3.3i | 2273650 (verify §16–17), 2273651 |
 | **cgan_team_policy** | run001 | **D4b learned policy**: shared MLP → (u_k, δ_k) per drone, direct gradient through `frac_delay`, K = 4, SNR 15/30 dB × β 0/10; four training variants, only the last on disk (bounded δ, effective batch 256, 600 updates); pooled over the 50 test drops | **learns u → 1, not δ = τ**: loses to the δ = τ heuristic at σ = 0 (30 dB β 10: 0.794 vs 0.705 CNN P(det), −1.2 dB) and matches it for σ ≥ 1; a one-drone δ = τ minimum exists but is ~0.6 loss units deep; conditional on the under-trained `task14_G`; **paused**; §3.3j | 2273734 (verify §16–18), 2273735/36 (smoke), 2273737/38, 2273906/07, 2273924/25, 2273922/23 (diag), **2273939/43** |
+| **final** | verify · regress | **`final/` test suite + regression gate vs S4**: closed forms, energy after the MF, Rician, σ_N, CFAR in all six envs, bands at base, baselines, one training step per target; S4's 4 generators + 7 classical vs `arms/snr15_r0` | **97/97 (100/100 with the random push, job 2278412); gate 0/2178 P(det) pairs beyond the √2-corrected 4σ**; corrects two §3.4 premises (energy vs power white-noise transition 10.3 dB apart; noise share ≈ 1/10); §3.3q | 2277992 |
+| **final** | `_smoke/both` | end-to-end smoke of the chain (2 epochs, 20 steps, 4 JSR points) | pipeline runs; outputs deleted after the check | 2277993–96, 2278004/05 |
+| **final** | base · noise · noise_1db · fading · fading_k28 · both | **the final experiment**: per env CNN retrain + CFAR thresholds → bands → 8 generators (control ×3, cnn_b10 ×3, energy_b10, kurtosis_b10; run003 recipe) → 21 attackers × JSR −50…+15 × 512 frames, 15 dB (Es/N0 24 dB), TITAN RTX; + the random push (22nd attacker, 2278413–18) | **CNN-targeted GAN vs the CNN at PER 0.1: within ±4 pp of the classical envelope except noise_1db (−4.6 ± 0.9); no gain over the damage-only control; −86…−93 pp over Zhou's CGAN; σ_N blinds the CNN, fading blinds naive energy (CSI energy unmoved)**; §3.3q | chains 2278006–2278029 (evaluates 2278009, 2278063, 2278064, 2278069, 2278076, 2278084); TaskProlog reruns 2278057/59/68/75/83 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
 appendix states it nowhere and two findings below are properties of the objective, not of the
@@ -4971,6 +5593,20 @@ clock-event reasons 0x68: HW slowdown + SW/HW thermal), about 15× slow — a CN
 to ~55 s per epoch and would have hit its time limit. Check from inside the allocation with
 `srun --jobid=<JOBID> --overlap nvidia-smi --query-gpu=clocks.sm,temperature.gpu,clocks_throttle_reasons.active --format=csv`,
 resubmit with `--exclude=<node>`, and tell ISG.
+
+**Array bursts and chained dependencies (2026-09-30, `final/`).**
+- **`TaskProlog failed status=1` hit the last task of an eight-task array burst** in 5 of 6 environments
+  (always index 7, 0 s). `/home/sladmitet/slurm/taskprolog.sh` runs `nvidia-smi` and an `scontrol` update of
+  the job comment; a race when several tasks start on one node is the plausible cause. Resubmitting the
+  single task (`--array=7`) always worked.
+- **An `afterok` on an array waits forever once one task failed**, and `sbatch --dependency=afterok:<id>_<t>`
+  on a task that already COMPLETED is refused ("Job dependency problem"). Re-chain on the resubmitted
+  task plus only the still-running tasks.
+- **Dependent jobs queue behind younger arrays**: a job's age counts from when its dependency cleared.
+  `scontrol top` is not permitted for users; `scontrol update jobid=<id> nice=20` on your own competing
+  array is, and it reorders them.
+- **The login node's `/tmp` (and with it the session scratchpad) was cleared overnight.** Keep anything a
+  later session needs (e.g. a report page's source) under the repo.
 
 ## C.5 Knowledge graph (`graphify-out/`)
 
