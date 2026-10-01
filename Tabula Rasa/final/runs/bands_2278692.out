@@ -1,0 +1,9 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+30 dB reference from ../artifacts/final/bands_ref30.json
+  30 dB white-noise transitions (P_det 0.5): power_one_sided -27.17  kurtosis -13.57  spec_cnn -29.93  energy -16.88
+  env base white-noise transitions: energy -9.91  kurtosis -13.27  spec_cnn -20.71
+  band[control] = [-32.0, 0.0]
+  band[energy] = [-25.0, 0.0]  (shift +6.96 dB)
+  band[kurtosis] = [-31.7, 0.0]  (shift +0.29 dB)
+  band[spec_cnn] = [-38.8, -6.8]  (shift +9.22 dB)
+wrote ../artifacts/final/base/bands_cnn_s12.json in 26s

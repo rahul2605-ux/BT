@@ -86,8 +86,9 @@ class Defender:
 def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512):
     """
     One sweep point. spec None = clean. Returns a JSON-able dict: BER, SER, PER with
-    their counts, P(det) of each detector at each alpha, the mean of each statistic and,
-    for a jammer, the mean and std over frames of its DC share.
+    their counts, P(det) of each detector at each alpha (the CNN also at its argmax,
+    key "argmax"), the mean of each statistic and, for a jammer, the mean and std over
+    frames of its DC share.
     """
     counts = np.zeros(4, dtype=np.int64)
     frame_errors = 0
@@ -104,6 +105,8 @@ def measure(L, dfd, spec, jsr_db_k, n_frames, batch=512):
     stats = {k: torch.cat(v) for k, v in stats.items()}
     pdet = {det: {str(a): detectors.p_detect(s, dfd.threshold(det, a)) for a in detectors.ALPHAS}
             for det, s in stats.items()}
+    if "spec_cnn" in stats:     # Li et al.'s own decision: argmax of the two-class head, logit diff > 0
+        pdet["spec_cnn"]["argmax"] = detectors.p_detect(stats["spec_cnn"], 0.0)
     e, b, se, sb = (int(c) for c in counts)
     res = dict(ber=e / b, ser=se / sb, per=frame_errors / n_frames, errors=e, bits=b, sym_errors=se,
                symbols=sb, frame_errors=frame_errors, frames=n_frames, pdet=pdet,

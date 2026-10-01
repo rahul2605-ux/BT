@@ -22,12 +22,17 @@ Attackers (README §3.4 table):
     pulse_comb        Li's pulse comb
     zhou_cgan         Zhou's plain CGAN, artifacts/cgan/run001_G.pt, evaluated, not retrained
     control_r*, cnn_b10_r*, energy_b10_r0, kurtosis_b10_r0     this environment's generators
+    cnn_li_r*         the cnnGAN continued at Li's damage level, where trained (appended last)
+    cnn_b10_grey_r*, cnn_li_grey_r*   the same two, grey-box (trained on the surrogate cnn_s12),
+                      evaluated like every attacker against the DEPLOYED CNN
 The on/off baseline is analytic (figures.py), from pulsed_p1 at +15 dB.
 
 Each attacker is re-seeded by position, so every attacker sees the same bits, noise and
 channel draws in the first draws of each sweep (common random numbers within a job).
 
-Output: artifacts/final/<env>/eval.json, rewritten after every attacker.
+Output: artifacts/final/<env>/eval.json, rewritten after every attacker. --out eval_li.json
+writes the Li-style rerun (the CNN's argmax decision added, README §3.3q) beside it and leaves
+eval.json, which §3.3q cites, untouched.
 """
 
 import mitsuba as mi
@@ -73,10 +78,25 @@ def generators(env):
                                       for t, r in train_gan.ARRAY]
 
 
+def extra_generators(env):
+    """train_gan.ARRAY_EXTRA (cnn_li, then the grey-box cnn_b10_grey / cnn_li_grey), where trained;
+    appended last in that order, so no earlier attacker's seed moves."""
+    tags = [train_gan.tag(t, r) for t, r in train_gan.ARRAY_EXTRA]
+    return [(t, E.art(env, "gan", f"{t}_G.pt")) for t in tags if os.path.exists(E.art(env, "gan", f"{t}_G.pt"))]
+
+
+def suite_generators(env):
+    """train_gan.ARRAY_SUITE (exploratory suite-trained generators), appended last so no earlier seed
+    moves. Intended for --out eval_suite.json, not the cited eval.json."""
+    tags = [train_gan.tag(t, r) for t, r in train_gan.ARRAY_SUITE]
+    return [(t, E.art(env, "gan", f"{t}_G.pt")) for t in tags if os.path.exists(E.art(env, "gan", f"{t}_G.pt"))]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--env", required=True, choices=list(E.ENVS))
     ap.add_argument("--only", default=None, help="comma list of attacker tags to (re)measure into eval.json")
+    ap.add_argument("--out", default="eval.json", help="file under artifacts/final/<env>/ (eval_li.json: the Li-style rerun)")
     args = ap.parse_args()
     grid = [-30.0, -10.0, 0.0, 15.0] if E.SMOKE else JSR_GRID
     n = 64 if E.SMOKE else N_FRAMES
@@ -86,7 +106,7 @@ def main():
     dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, "cnn"))
     with open(E.art(args.env, "bands.json")) as f:
         bands = json.load(f)["bands"]
-    out_path = E.art(args.env, "eval.json")
+    out_path = E.art(args.env, args.out)
     only = None if args.only is None else set(args.only.split(","))
     if only and os.path.exists(out_path):
         with open(out_path) as f:
@@ -115,7 +135,9 @@ def main():
         dump()
 
     entries = ([(t, "classical", s) for t, s in classical()] + [(t, "generator", p) for t, p in generators(args.env)]
-               + [(t, "classical", s) for t, s in added()])
+               + [(t, "classical", s) for t, s in added()]
+               + [(t, "generator", p) for t, p in extra_generators(args.env)]
+               + [(t, "generator", p) for t, p in suite_generators(args.env)])
     for i, (tag, group, what) in enumerate(entries):
         if only is not None and tag not in only:
             continue

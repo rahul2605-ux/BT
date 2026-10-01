@@ -1,0 +1,6 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env base = {'noise_unc_db': 0.0, 'rician_k_db': None} | detectors ['energy', 'energy_2s', 'kurtosis', 'spec_cnn'] | 66 JSR points x 512 frames | NVIDIA TITAN RTX
+  cnn_li_r0          done (23s): max BER 3.156e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00, DC share 0.000
+  cnn_li_r1          done (19s): max BER 5.064e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.85 spec_cnn 1.00, DC share 0.000
+  cnn_li_r2          done (19s): max BER 4.510e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.80 spec_cnn 1.00, DC share 0.000
+wrote ../artifacts/final/base/eval_li.json in 62s

@@ -224,7 +224,7 @@ def dc_share(link, j, n_sym):
     return (a.mean(-1).abs().pow(2) / a.abs().pow(2).mean(-1).clamp_min(1e-30)).double()
 
 
-def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
+def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False, keep_jammer=False):
     """
     One batch of received frames: the victim's burst of n_sym symbols + AWGN at
     snr_db + the jammers at R. spec None or name 'none' -> clean.
@@ -239,6 +239,8 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
 
     With link.noise_unc_db > 0 each frame's noise variance is noise_var(snr_db) times
     link.noise_scale and out["noise_scale"] [F] holds the factor.
+
+    keep_jammer=True also returns out["j"], the jammer's waveform at R (iq_plots.py).
     """
     n_sym = N_SYM if n_sym is None else n_sym
     bits, sym, x = link.modulate(n_frames, n_sym)
@@ -257,6 +259,8 @@ def frames(link, n_frames, spec, jsr_db_k, snr_db, n_sym=None, noiseless=False):
     out = dict(bits=bits, bits_hat=link.decide(z), r=r, z=z)
     if j is not None:
         out["dc_share"] = dc_share(link, j, n_sym)
+        if keep_jammer:
+            out["j"] = j
     if g is not None:
         out["gain"] = g
     if u is not None:

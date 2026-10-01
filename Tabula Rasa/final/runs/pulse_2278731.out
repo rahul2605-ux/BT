@@ -1,0 +1,19 @@
+node: tikgpu05.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+  pulsed_p1          JSR   -5.2 dB: p_eff 0.8197, 90 % of energy on 74.98 % of symbols, hard pushes/frame 79.43, frames with none 0.000, PER 0.531
+  pulsed_p0.5        JSR   -7.3 dB: p_eff 0.4952, 90 % of energy on 45.49 % of symbols, hard pushes/frame 44.65, frames with none 0.000, PER 0.531
+  pulsed_p0.25       JSR   -9.3 dB: p_eff 0.2748, 90 % of energy on 25.72 % of symbols, hard pushes/frame 26.17, frames with none 0.000, PER 0.529
+  pulsed_p0.1        JSR  -12.3 dB: p_eff 0.1144, 90 % of energy on 11.22 % of symbols, hard pushes/frame 11.78, frames with none 0.004, PER 0.451
+  pulsed_p0.05       JSR  -14.6 dB: p_eff 0.0510, 90 % of energy on 5.47 % of symbols, hard pushes/frame 5.99, frames with none 0.012, PER 0.506
+  pulsed_p0.02       JSR  -16.6 dB: p_eff 0.0181, 90 % of energy on 2.26 % of symbols, hard pushes/frame 2.79, frames with none 0.074, PER 0.498
+  pulsed_p0.01       JSR  -16.0 dB: p_eff 0.0079, 90 % of energy on 1.19 % of symbols, hard pushes/frame 1.74, frames with none 0.225, PER 0.521
+  noise              JSR   +0.1 dB: p_eff 0.4969, 90 % of energy on 58.57 % of symbols, hard pushes/frame 18.03, frames with none 0.000, PER 0.564
+  tone               JSR   -3.5 dB: p_eff 1.0000, 90 % of energy on 89.93 % of symbols, hard pushes/frame 128.00, frames with none 0.000, PER 0.588
+  omniscient_e1      JSR  -15.0 dB: p_eff 0.0078, 90 % of energy on 0.70 % of symbols, hard pushes/frame 1.00, frames with none 0.000, PER 1.000
+  cnn_b10_grey_r0    JSR  -19.0 dB: p_eff 0.0105, 90 % of energy on 0.98 % of symbols, hard pushes/frame 1.32, frames with none 0.000, PER 0.439
+  cnn_b10_grey_r1    JSR  -17.2 dB: p_eff 0.0118, 90 % of energy on 1.35 % of symbols, hard pushes/frame 1.35, frames with none 0.000, PER 0.514
+  cnn_b10_grey_r2    JSR  -17.0 dB: p_eff 0.0117, 90 % of energy on 1.34 % of symbols, hard pushes/frame 1.37, frames with none 0.000, PER 0.482
+  cnn_b10_r0         JSR  -18.6 dB: p_eff 0.0105, 90 % of energy on 0.98 % of symbols, hard pushes/frame 1.31, frames with none 0.000, PER 0.477
+  cnn_b10_r1         JSR  -18.2 dB: p_eff 0.0115, 90 % of energy on 1.21 % of symbols, hard pushes/frame 1.28, frames with none 0.000, PER 0.463
+  cnn_b10_r2         JSR  -17.7 dB: p_eff 0.0114, 90 % of energy on 1.19 % of symbols, hard pushes/frame 1.33, frames with none 0.000, PER 0.510
+wrote ../artifacts/final/base/li/fig_pulses.png
+wrote ../artifacts/final/Li_base/fig_pulses_cnnGAN1.png

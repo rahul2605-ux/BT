@@ -125,7 +125,10 @@ def bands_from(ref, trans_env):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--env", required=True, choices=list(E.ENVS))
+    ap.add_argument("--cnn", default="cnn", help="the CNN folder whose transition sets the band; cnn_s12 = the "
+                    "grey-box attacker's surrogate -> bands_cnn_s12.json")
     args = ap.parse_args()
+    out_name = "bands.json" if args.cnn == "cnn" else f"bands_{args.cnn}.json"
     t0 = time.time()
     n = 64 if E.SMOKE else N_FRAMES
     n_cal = 2048 if E.SMOKE else defender.N_CALIBRATION
@@ -148,7 +151,7 @@ def main():
 
     lk.setup(device, seed=REF_SEED + 1)
     L = E.apply(lk.Link(**lk.LINK), args.env)
-    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, "cnn"))
+    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, args.cnn))
     dets = ["energy", "kurtosis", "spec_cnn"]
     curves = noise_curve(L, dfd, dets, E.SNR_DB, GRID, n)
     trans = {d: crossing(GRID, c) for d, c in curves.items()}
@@ -163,9 +166,10 @@ def main():
     res = dict(env=args.env, env_config=E.ENVS[args.env], snr_db=E.SNR_DB, grid=GRID, n_frames=n,
                level=LEVEL, curves=curves, transition=trans, bands=bands, notes=notes,
                band30=BAND30, control_band=CONTROL_BAND, runtime_s=time.time() - t0)
-    with open(E.art(args.env, "bands.json"), "w") as f:
+    res["cnn"] = args.cnn
+    with open(E.art(args.env, out_name), "w") as f:
         json.dump(res, f, indent=2)
-    print(f"wrote {os.path.relpath(E.art(args.env, 'bands.json'))} in {time.time() - t0:.0f}s")
+    print(f"wrote {os.path.relpath(E.art(args.env, out_name))} in {time.time() - t0:.0f}s")
 
 
 if __name__ == "__main__":

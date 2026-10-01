@@ -1,0 +1,168 @@
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="grp">Answer</div>
+  <a href="#summary">Short answer</a>
+  <div class="grp">Setup</div>
+  <a href="#protocol">Li's protocol, on our link</a>
+  <a href="#jammers">Jammers</a>
+  <a href="#greybox">Grey-box attacker</a>
+  <div class="grp">Results · base</div>
+  <a href="#figures">Figures</a>
+  <a href="#matched">Matched damage (main)</a>
+  <a href="#window">Li's window</a>
+  <a href="#lidamage">The cGAN at Li's damage</a>
+  <a href="#iq">IQ of the jammers</a>
+  <div class="grp">Notes</div>
+  <a href="#vector">Constant vector: fixed or random</a>
+  <a href="#amuru">Amuru</a>
+  <a href="#caveats">Caveats</a>
+  <a href="#repro">Jobs and files</a>
+</nav>
+<main>
+<header>
+<div class="eyebrow">Tabula Rasa · final experiment · env base · SNR 15 dB = Es/N0 24 dB · 30 Sep 2026</div>
+<h1>Li-Protocol CNN Readout</h1>
+<p class="lede">The CNN of Li et al. (IEEE Access 2022), retrained on our link, scored the way Li et al. score it: per sample, with the network's own argmax decision, by detection rate, precision, recall, F-score and false-alarm rate. Jammers: Li's four types and our CNN-targeted cGANs. The attacker is grey-box: it trains against its own copy of the CNN and never sees the deployed weights.</p>
+</header>
+
+<section id="summary" class="answer">
+<h2>The short answer</h2>
+<ul>
+<li><span class="pill good">matches Li</span> <strong>Our CNN, scored Li's way, behaves like Li's.</strong> Pooled over Li's four types it gets DR 92.6 % (Li: 100 %) at a false-alarm rate of 0.78 % (Li: 0.03 %). Per type it flags 67–94 % of jammed samples over −20…+10 dB. It is lower because at 15 dB the bottom of that range lies below the noise.</li>
+<li><span class="pill good">holds grey-box</span> <strong>At partial damage the cGAN breaks the CNN without knowing its weights.</strong> Trained on a surrogate CNN, it is flagged on {{V:cnn_b10_grey/argmax/matched/0.1/recall}} of samples where it breaks 10 % of frames and {{V:cnn_b10_grey/argmax/matched/0.5/recall}} where it breaks 50 %. The white-box version: 0.023 and 0.068. Li's jammers at the same damage: 37–100 % and 52–100 %.</li>
+<li><span class="pill bad">caught</span> <strong>At Li's damage it does not.</strong> Li's jammers cause a complete loss of signal; here that is 90 % of frames broken. The grey-box cGAN gets there at −4.6 dB and is caught on every sample. Li's protocol-aware type does better there (0.67).</li>
+<li><span class="pill bad">does not transfer</span> <strong>The cGAN trained at Li's damage only works white-box.</strong> Trained on the deployed weights, it was invisible to the CNN while breaking up to 93 % of frames. Trained on the surrogate, two of three seeds are flagged on 93–100 % of samples across its band. The third is flagged on 10–31 % from −8 to −2 dB. Its blind spot belongs to one set of weights.</li>
+<li><strong>Most damage while flagged on at most half the samples:</strong> grey-box cGAN PER {{V:cnn_b10_grey/argmax/under_budget/max_excess_per}}; protocol-aware 0.32; barrage, tone and pulse comb 0. The grey-box cGAN at Li's damage: 0.88, 0 and 0 per seed.</li>
+<li><strong>What the IQ plots show:</strong> the cGAN is a sparse burst jammer matched to the victim's pulse. It lands 6× more energy on the decision points than white noise, and it pushes only 1–3 % of symbols hard: close to Amuru's low-duty pulsed jammer. The variant at Li's damage puts most of its energy where the receiver's filter does not listen (0.7–0.8×), which costs it about 9 dB.</li>
+</ul>
+</section>
+
+<h2 id="protocol">Li's protocol, on our link</h2>
+<p>Li et al. never count symbols. Their unit is a <em>sample</em>: one spectrogram image, a screenshot of GNU Radio's waterfall display. They report detection rate DR = correctly predicted samples / all samples (their eq. 2a), precision, recall, F-score, and FAR = FP / (FP + TN). What we copy, and what we cannot:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Li et al.</th><th>here</th></tr></thead>
+<tbody>
+<tr><td>one sample = one waterfall image; the time it spans is stated neither in the paper nor in their dataset repository</td><td>one sample = one 128-symbol frame (128 µs at 1 MBd), rendered at Li's 422 × 248 image size. The CNN and every generator were trained on this window</td></tr>
+<tr><td>two-class softmax, decided by argmax</td><td>the same: a frame is flagged when logit(jammed) &gt; logit(clean). Clean FAR on 4096 frames: 0.78 %</td></tr>
+<tr><td>762 clean : 204 per jammer type, 70/30 split</td><td>the CNN was trained that way. The metrics below apply Li's 762 : 204 balance to the measured rates (TP = 204 × recall, FP = 762 × FAR)</td></tr>
+<tr><td>EfficientNet-B0: DR 100 % two-class, 99.79 % five-class, weighted FAR 0.03 % (five-class)</td><td>our CNN on its own validation set (JSR −20…+10 dB): accuracy 92.2 %, jammed samples detected 85.4 %, 0 false alarms in 220 clean samples</td></tr>
+<tr><td>jammed samples recorded at the distance where every jammer causes "a complete loss of signal"</td><td>read as matched damage: each jammer at the JSR where it breaks 90 % of frames (excess PER 0.9), with PER 0.1 and 0.5 for the partial-damage range</td></tr>
+</tbody></table></div>
+<p>Our CNN is less accurate than Li's because at 15 dB the bottom third of its training range lies below the noise. There, a jammed frame looks like a clean one, and it does no damage either.</p>
+<p><strong>Two windows.</strong> <em>Li's window</em> puts every jammer at the same powers, uniform in dB over −20…+10 dB, as a direct comparison with Li's numbers. That compares jammers at matched configuration, where they do very different damage, so it is one row per jammer and not the result. <em>Matched damage</em> reads each jammer where it breaks 10, 50 and 90 % of frames. That is the main table.</p>
+
+<h2 id="jammers">Jammers</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>jammer</th><th>what it is on our link</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-noise"></span>Li: barrage</td><td>white complex Gaussian noise over the band</td></tr>
+<tr><td><span class="key k-grey"></span>Li: single tone</td><td>a tone at the carrier is a constant complex baseband value: the supervisor's constant IQ vector. Its direction is random per frame (no carrier-phase knowledge)</td></tr>
+<tr><td><span class="key k-dash"></span>Li: successive pulse</td><td>an impulse every 64 samples (a comb of 64 lines over the band)</td></tr>
+<tr><td><span class="key k-amuru"></span>Li: protocol-aware</td><td>the victim's own RRC-QPSK waveform with random symbols, each on with probability 0.25 at amplitude 2. This is Amuru &amp; Buehrer's pulsed jammer at p 0.25. Li give no duty cycle, so p 0.25 is our adaptation</td></tr>
+<tr><td><span class="key k-cnn"></span>cGAN vs CNN</td><td>Zhou's generator, trained on log E[BER] − 10 · P<sub>det</sub> (soft) against a CNN, JSR band −39…−7 dB, 3 seeds</td></tr>
+<tr><td><span class="key k-li"></span>cGAN at Li's damage</td><td>each cGAN seed trained further on lost frames, log E[PER] − 10 · P<sub>det</sub> (soft), only at −10…0 dB where Li's jammers break 90 % of frames, 4000 steps; see <a href="#lidamage">below</a></td></tr>
+<tr><td><span class="key k-genie"></span>genie flip</td><td>the upper bound: knows every symbol and flips it. The received signal has exactly the clean statistics, so no detector can see it</td></tr>
+</tbody></table></div>
+
+<h2 id="greybox">Grey-box attacker</h2>
+<p>A jammer that knows the deployed network's weights is not realistic. The grey-box attacker knows what the defender runs (Li's CNN, trained Li's way) but not its weights. It trains its own copy, the <em>surrogate</em>: same recipe, different seed (12 instead of 11), validation accuracy 93.7 % vs the deployed CNN's 92.2 %. Everything it needs for training comes from the surrogate: the detection term, the threshold, and the JSR band (−38.8…−6.8 dB, vs −39.0…−7.0 dB from the deployed CNN). It is then evaluated against the deployed CNN like every other jammer. The white-box generators (trained on the deployed CNN) stay in the tables and are drawn dashed; they use the same seeds, so the weights are the only difference.</p>
+
+<h2 id="figures">Figures</h2>
+<figure><div class="plate"><img src="figs/base_fig_li_vs_jsr.png" alt="Excess BER, excess PER and the CNN's detection rate against JSR for Li's four jammers, the cGANs and the genie flip" loading="lazy"></div>
+<figcaption><b>Read down.</b> Barrage, tone and pulse comb are flagged on nearly every frame before they break any; they reach PER 0.1 only at −4 to −2 dB. Protocol-aware breaks frames from −11 dB while flagged on 37–67 %. The cGAN (blue) breaks frames from −23 dB and is caught from about −14 dB up; grey-box and white-box lie on top of each other. The cGAN at Li's damage (orange) breaks frames from −11 dB. White-box (dashed), the CNN misses it from −7 to +1 dB, its training band. Grey-box (solid), two seeds are caught across the band and the seed mean stays at 0.7–1.0.</figcaption></figure>
+<figure><div class="plate"><img src="figs/base_fig_li_damage_vs_dr.png" alt="Excess PER and BER against the CNN's detection rate" loading="lazy"></div>
+<figcaption><b>Read:</b> up and to the left is better for the jammer. The dashed orange curve runs up the left edge from PER 0.3 to 0.9 at recall ≈ 0: the white-box variant inside its band. Its grey-box counterpart sits to the right. The cGAN (blue, both versions) reaches PER ≈ 0.7 at recall below 0.5, then runs right. Barrage, tone and pulse comb sit on the right edge.</figcaption></figure>
+
+<h2 id="matched">Matched damage (main table)</h2>
+<p>Recall is the share of that jammer's samples the CNN flags, at the JSR where the jammer breaks 10 / 50 / 90 % of frames (interpolated between 1 dB grid points). DR and F-score at PER 0.9 are Li's eq. 2a and 2d on a 762 clean : 204 jammed set. Argmax decision; darker cells = more often caught. Dashed key = white-box.</p>
+{{TABLE:B:argmax}}
+<details><summary>The same at α 0.05 (the paper's operating point, realised FAR 5.3 %)</summary>
+{{TABLE:B:0.05}}
+</details>
+
+<h2 id="window">Li's window: every jammer at the same powers</h2>
+<p>Recall averaged over JSR −20…+10 dB (the CNN's training range, uniform in dB), next to the damage each jammer does there. The pooled row is Li's own two-class setting: clean against their four types together.</p>
+{{TABLE:A:argmax}}
+<details><summary>The same at α 0.05</summary>
+{{TABLE:A:0.05}}
+</details>
+<p>Pooled, Li's four give DR 92.6 % at FAR 0.78 %, against Li's 100 % and 0.03 %. The cGAN is flagged more often than protocol-aware here ({{V:cnn_b10_grey/argmax/window_a/recall}} grey-box vs {{V:pulsed_p0.25/argmax/window_a/recall}}), because in this window it is mostly loud: it breaks {{V:cnn_b10_grey/argmax/window_a/mean_excess_per}} of frames on average, protocol-aware {{V:pulsed_p0.25/argmax/window_a/mean_excess_per}}. Jammers doing different damage at the same power is why this window is not the comparison.</p>
+
+<h2 id="lidamage">The cGAN at Li's damage</h2>
+<p><strong>Why it exists.</strong> The cGAN was trained on bit errors at −39…−7 dB. A bit objective rewards piling more errors into frames that are already broken, not breaking every frame. So its damage curve is flat: it breaks half the frames at −18 dB and needs 14 dB more to break 90 %, where it is loud. Li's damage is a lost link, so the variant is trained on lost frames where Li's jammers lose the link.</p>
+<p><strong>How it was trained.</strong> <code>train_gan.py</code> tasks <code>cnn_li</code> (white-box) and <code>cnn_li_grey</code>: the loss is −(log E[PER] − 10 · P<sub>det</sub> (soft)), with E[PER] exact over the noise. The JSR is drawn uniformly from −10…0 dB, where Li's four break 90 % of frames (protocol-aware at −7.7 dB, tone −2.1, pulse comb +0.6, barrage +1.7). Each seed starts from the matching cGAN seed of the same kind, 4000 steps. A random start would not learn: at these powers the CNN flags every frame, and the detection term then has no gradient. It departs from the settled BER − β · detections reward only in counting lost frames instead of bits, as run005 did.</p>
+<p><strong>Per seed</strong> (argmax decision):</p>
+<div class="tablewrap"><table class="res">
+<thead><tr><th>seed</th><th class="num">PER 0.5 at</th><th class="num">recall</th><th class="num">PER 0.9 at</th><th class="num">recall</th><th class="num">max PER with recall ≤ 0.5</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-li-d"></span>white-box r0</td><td class="num">−8.2 dB</td><td class="num" style="--v:2.9">0.029</td><td class="num">−1.6 dB</td><td class="num" style="--v:0">0.000</td><td class="num">0.95 at +2 dB</td></tr>
+<tr><td><span class="key k-li-d"></span>white-box r1</td><td class="num">−5.8 dB</td><td class="num" style="--v:0">0.000</td><td class="num">+2.1 dB</td><td class="num" style="--v:13.8">0.138</td><td class="num">0.90 at +1 dB</td></tr>
+<tr><td><span class="key k-li-d"></span>white-box r2</td><td class="num">−5.8 dB</td><td class="num" style="--v:0">0.000</td><td class="num">+2.6 dB</td><td class="num" style="--v:36.9">0.369</td><td class="num">0.89 at +1 dB</td></tr>
+<tr><td><span class="key k-li"></span>grey-box r0</td><td class="num">−8.9 dB</td><td class="num" style="--v:44.1">0.441</td><td class="num">−1.0 dB</td><td class="num" style="--v:52.3">0.523</td><td class="num">0.88 at −3 dB</td></tr>
+<tr><td><span class="key k-li"></span>grey-box r1</td><td class="num">−5.7 dB</td><td class="num" style="--v:95.2">0.952</td><td class="num">+0.6 dB</td><td class="num" style="--v:99.6">0.996</td><td class="num">0 (flagged before it damages)</td></tr>
+<tr><td><span class="key k-li"></span>grey-box r2</td><td class="num">−6.3 dB</td><td class="num" style="--v:100">1.000</td><td class="num">+0.1 dB</td><td class="num" style="--v:100">1.000</td><td class="num">0 (flagged before it damages)</td></tr>
+</tbody></table></div>
+<p><strong>Why it fails grey-box.</strong> The grey-box variants did fool the network they trained on: at the end of training their soft detection on the surrogate was 0.09–0.24 near −1…−3 dB. On the deployed CNN two of the three are caught on 93–100 % of samples. The cGAN's own stealth transfers because it is quiet: at partial damage it works below the power at which any copy of the CNN reacts. The variant is loud and hides by shaping its spectrogram so one particular network reads it as clean. Another seed of the same network reads it differently. Two more signs that this is a narrow blind spot: even white-box, the detection returns on both sides of the training band, and one-sided energy flags the variant on 86–96 % of frames at −1 dB.</p>
+
+<h2 id="iq">IQ of the jammers</h2>
+<p>Each jammer at the JSR where it breaks 50 % of frames (first figure) and 90 % (second), on fresh frames, seed r0 for the generators. Three panels per jammer:</p>
+<ol class="steps">
+<li>its waveform at the receiver, one dot per sample, scaled to its own RMS: the shape of the signal;</li>
+<li>what it adds at the victim's decision points: the matched-filter output of the jammer alone at the symbol instants, in units of the symbol amplitude (+ = the QPSK points, 0.71 from the decision boundaries on the axes);</li>
+<li>the received constellation, symbol errors in black.</li>
+</ol>
+<div class="tablewrap"><table class="res">
+<thead><tr><th>jammer (at PER 0.5)</th><th class="num">JSR</th><th class="num">energy on the decision points, × white noise</th><th class="num">symbols pushed &gt; 0.5</th><th class="num">CNN flags</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-noise"></span>Li: barrage</td><td class="num">+0.1 dB</td><td class="num">1.0</td><td class="num">14 %</td><td class="num">1.00</td></tr>
+<tr><td><span class="key k-grey"></span>Li: single tone</td><td class="num">−3.5 dB</td><td class="num">8.0</td><td class="num">100 %</td><td class="num">1.00</td></tr>
+<tr><td><span class="key k-dash"></span>Li: successive pulse</td><td class="num">−2.2 dB</td><td class="num">1.0</td><td class="num">12 %</td><td class="num">1.00</td></tr>
+<tr><td><span class="key k-amuru"></span>Li: protocol-aware</td><td class="num">−9.3 dB</td><td class="num">7.3</td><td class="num">21 %</td><td class="num">0.52</td></tr>
+<tr><td><span class="key k-genie"></span>genie flip</td><td class="num">−15.0 dB</td><td class="num">7.9</td><td class="num">0.8 %</td><td class="num">0.01</td></tr>
+<tr><td><span class="key k-cnn"></span>cGAN vs CNN, grey-box</td><td class="num">−19.0 dB</td><td class="num">6.3</td><td class="num">1.1 %</td><td class="num">0.04</td></tr>
+<tr><td><span class="key k-cnn-d"></span>cGAN vs CNN, white-box</td><td class="num">−18.6 dB</td><td class="num">6.1</td><td class="num">1.0 %</td><td class="num">0.05</td></tr>
+<tr><td><span class="key k-li"></span>cGAN at Li's damage, grey-box</td><td class="num">−8.9 dB</td><td class="num">0.8</td><td class="num">1.7 %</td><td class="num">0.44</td></tr>
+<tr><td><span class="key k-li-d"></span>cGAN at Li's damage, white-box</td><td class="num">−8.2 dB</td><td class="num">0.7</td><td class="num">1.8 %</td><td class="num">0.03</td></tr>
+</tbody></table></div>
+<p>White noise puts 1/8 of its energy into the victim's band; a jammer matched to the victim's pulse puts nearly all of it there, which is why the tone, protocol-aware and the genie read ≈ 7–8. The cGAN is close to that (6.1–6.4) and concentrates it on about 1 % of symbols: short bursts shaped like the victim's pulse, the strategy of Amuru's low-duty pulsed jammer. The variant at Li's damage lands less on the decision points than white noise does: most of its energy is outside the band the receiver listens to, and a few sparse pushes do the damage. That wastes about 9 dB, the same gap as its later damage onset (−8 vs −19 dB at PER 0.5), and it is the extra power energy detection sees.</p>
+<figure><div class="plate"><img src="figs/base_fig_iq_per50.png" alt="IQ scatter of each jammer at the JSR where it breaks 50 % of frames: waveform, contribution at the decision points, received constellation" loading="lazy"></div>
+<figcaption><b>At PER 0.5.</b> Barrage: a Gaussian cloud, spread over every symbol. Tone: the same offset on every symbol, so each QPSK point becomes a ring of radius √JSR. Protocol-aware: QPSK-shaped bursts on a quarter of the symbols. Genie: one symbol per frame moved onto another QPSK point, so the errors (black) sit on the clean points. cGAN: mostly near zero with rare large bursts. Variant at Li's damage: a noise-like waveform whose contribution at the decision points is mostly small.</figcaption></figure>
+<figure><div class="plate"><img src="figs/base_fig_iq_per90.png" alt="IQ scatter of each jammer at the JSR where it breaks 90 % of frames" loading="lazy"></div>
+<figcaption><b>At PER 0.9, Li's damage.</b> The same shapes at higher power. The cGAN now needs −3.6 dB (white-box) and −5.1 dB (grey-box), its bursts reach ±5 symbol amplitudes, and the CNN flags it on every sample.</figcaption></figure>
+
+<h2 id="vector">Constant vector: fixed or random direction</h2>
+<p>A constant IQ vector adds an offset of √JSR (in units of the symbol amplitude) to every matched-filter sample. The damage follows in closed form at Es/N0 24 dB; the random-direction row matches the measured tone (PER 0.1 at −4.4 dB predicted, −4.3 dB measured).</p>
+<div class="tablewrap"><table class="res">
+<thead><tr><th>vector</th><th class="num">PER 0.1</th><th class="num">PER 0.5</th><th class="num">PER 0.9</th></tr></thead>
+<tbody>
+<tr><td>random direction per frame (Li's tone, measured here)</td><td class="num">−4.4 dB</td><td class="num">−3.6 dB</td><td class="num">−2.0 dB</td></tr>
+<tr><td>fixed, along one axis (needs the carrier phase)</td><td class="num">−4.7 dB</td><td class="num">−4.3 dB</td><td class="num">−4.0 dB</td></tr>
+<tr><td>fixed, diagonal</td><td class="num">−1.9 dB</td><td class="num">−1.5 dB</td><td class="num">−1.2 dB</td></tr>
+</tbody></table></div>
+<p>The random and the on-axis vector are 0.3 dB apart where damage starts and 2 dB apart at PER 0.9. The CNN sees only the magnitude of the spectrogram, so the direction is invisible to it, and it flags the tone on 99 % of frames at −8 dB and on every frame from −6 dB, before either vector breaks a single frame (from −5 dB). Both variants therefore sit at recall 1.00 at every damage level. The random direction stays, because it needs no knowledge of the victim's carrier phase.</p>
+
+<h2 id="amuru">Amuru</h2>
+<p>Amuru appears only as Li's protocol-aware type (p 0.25), as decided for this readout. Two consequences:</p>
+<ul class="tight">
+<li>Zhou's "optimal" baseline is matched QPSK, which is Amuru's family at p 1. Amuru &amp; Buehrer show that at low JSR the jammer that maximises BER against a coherent receiver is pulsed with p &lt; 1, so the family is the stronger classical reference.</li>
+<li>Lower duty cycles tie the cGAN at partial damage. In the §3.3q run, Amuru at p 0.01–0.02 is flagged by this CNN on 0.10–0.12 of frames at PER 0.1 (α 0.05), level with the cGAN, and the IQ plots show why: the cGAN is itself a low-duty burst jammer. So this page supports "beats Li's four", not "beats Amuru".</li>
+</ul>
+
+<h2 id="caveats">Caveats</h2>
+<ul class="tight">
+<li>base only. Noise uncertainty (σ<sub>N</sub> 0.5 and 1 dB) is next.</li>
+<li>One deployed CNN (seed 11) and one surrogate (seed 12). The metrics use Li's class balance applied to measured rates, not a literal 30 % test split.</li>
+<li>The genie flip changes a whole number of symbols per frame (⌊δN⌋), so its PER jumps from 0 to 1 at −15 dB and every matched level reads the same point.</li>
+<li>Li's image spans an unknown time. If it covers many of our frames, a CNN that sees a partially damaging jammer in any of them would flag the image more often than one frame does.</li>
+<li>The cGAN at Li's damage was trained and evaluated on the same band; the grey-box seeds disagree with each other (0.44 / 0.95 / 1.00 at PER 0.5), so three seeds do not pin down how often it transfers. A black-box attacker (a different detector architecture) is untested throughout.</li>
+</ul>
+
+<h2 id="repro">Jobs and files</h2>
+<ul class="tight">
+<li>verify 103/103 and the regression gate vs S4 pass (jobs 2278626, 2278683, 2278690). The base rerun into <code>eval_li.json</code> (job 2278627) reproduces <code>eval.json</code> exactly: 0 of 13,068 values differ. <code>eval.json</code>, which §3.3q cites, is untouched.</li>
+<li>White-box variant: training 2278684 (array 8–10), evaluation 2278685. Grey-box: surrogate CNN 2278691 (<code>train_cnn.py --seed 12 --name cnn_s12</code>), its band 2278692 (<code>bands.py --cnn cnn_s12</code>), cGAN 2278693 (array 11–13), variant 2278694 (array 14–16), evaluation 2278695. IQ: 2278697. All on TITAN RTX, 6.5–9 min per training job.</li>
+<li>Code: <code>final/defender.py</code> records the CNN's argmax decision; <code>final/evaluate.py --out</code>; <code>final/train_gan.py</code> tasks <code>cnn_li</code>, <code>cnn_b10_grey</code>, <code>cnn_li_grey</code>; <code>final/train_cnn.py --name</code>; <code>final/bands.py --cnn</code>; <code>final/attacks.frames(keep_jammer=True)</code>; <code>final/verify.py</code> §8 checks the frame-damage term and the returned jammer; <code>final/li_figures.py</code> and <code>final/iq_plots.py</code> draw this page's figures and tables.</li>
+<li>Data: <code>artifacts/final/base/eval_li.json</code>, <code>artifacts/final/base/li/</code> (<code>li.json</code>, <code>table.md</code>, <code>iq_samples.npz</code>, four figures), <code>artifacts/final/base/cnn_s12/</code>, <code>bands_cnn_s12.json</code>.</li>
+</ul>
+</main>
+</div>

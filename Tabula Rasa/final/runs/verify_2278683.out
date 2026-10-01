@@ -1,0 +1,164 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+device: cuda:0 (NVIDIA TITAN RTX)
+
+1. Closed forms: Es/N0 = SNR + 9.03 dB, the clean BER and the white-noise BER
+  [PASS] Es/N0 offset = 10 log10(sps) [dB]                                  got=9.0309      want=9.0309      tol=1e-12
+  [PASS] ber_clean(-6 dB) == Q(sqrt(Es/N0)), Es/N0 = SNR + 9.03 dB          got=1           want=1           tol=0.001   Q = 0.0782
+  [PASS] ber_clean(15 dB) == Q(sqrt(Es/N0)), Es/N0 = SNR + 9.03 dB          got=1           want=1           tol=0.001   Q = 2.91e-57
+  [PASS] clean BER at SNR -6 dB (Es/N0 3.03 dB) vs Q(sqrt(Es/N0))           got=0.078261    want=0.078158    tol=0.00105
+  [PASS] clean BER at SNR -3 dB (Es/N0 6.03 dB) vs Q(sqrt(Es/N0))           got=0.022636    want=0.022622    tol=0.000582
+  [PASS] clean BER at our 15 dB (Es/N0 24 dB) is 0 in 1 Mbit (closed form ~1e-56) got=0           want=0           tol=0
+  [PASS] white noise JSR +0 dB at 15 dB: BER vs Q(c0/sqrt(N0 + JSR P_s))    got=0.0026703   want=0.0026785   tol=0.000203
+  [PASS] white noise JSR +5 dB at 15 dB: BER vs Q(c0/sqrt(N0 + JSR P_s))    got=0.057036    want=0.056751    tol=0.000905
+
+2. energy = mean |z_k|^2: clean mean, noise share, transitions vs full-band power at 30 dB
+  [PASS] 15 dB: clean energy mean == c0^2 + N0                              got=1.0038      want=1.004       tol=0.000424
+  [PASS] 15 dB: the noise adds N0 to the energy (noisy - noiseless mean)    got=0.0038411   want=0.0039528   tol=0.000234
+  [PASS] energy's noise share / full-band power's == (N/len + N0)/(c0^2 + N0) got=0.10354     want=0.10354     tol=0.01   README §3.4 said ~1.35/8 = 0.169: corrected, see the docstring
+  [PASS] 30 dB white noise: energy's P_det-0.5 transition - power's [dB]    got=10.318      want=10          tol=1   energy -16.96, power -27.28; README §3.4 expected ~0: corrected
+  [PASS] 30 dB async matched QPSK: energy's transition - power's [dB]       got=1.403       want=1.3668      tol=1   energy -25.37, power -26.77: an in-band jammer is seen alike
+
+3. Rician block fading: unit mean power, K -> inf, empirical K, clean BER, plumbing
+  [PASS] K 12 dB: mean power gain E[g^2]                                    got=1.0003      want=1           tol=0.00215
+  [PASS] K 12 dB: empirical K (moment estimator) [dB]                       got=11.997      want=12          tol=0.2
+  [PASS] K 12 dB: std of the frame power gain == sqrt(1 + 2K)/(K + 1)       got=0.33959     want=0.33938     tol=0.00339   = 1.57 dB std
+  [PASS] K 28 dB: mean power gain E[g^2]                                    got=1.0001      want=1           tol=0.000355
+  [PASS] K 28 dB: empirical K (moment estimator) [dB]                       got=28.019      want=28          tol=0.2
+  [PASS] K 28 dB: std of the frame power gain == sqrt(1 + 2K)/(K + 1)       got=0.056116    want=0.056234    tol=0.000562   = 0.24 dB std
+  [PASS] K -> inf (300 dB): g == 1                                          got=0           want=0           tol=1e-05
+  [PASS] no fading: fading_gain is None and frames carry no gain            got=1           want=1           tol=0
+  [PASS] K 12 dB at 15 dB: clean BER ~ 0 (the receiver knows its phase)     got=0           want=1.9165e-14  tol=1e-05   closed form 1.9e-14
+  [PASS] K 12 dB at -3 dB: BER == mean_f Q(g_f c0 / sqrt(N0)) (gain on the measurement path) got=0.030869    want=0.0308      tol=0.00118
+  [PASS] K 12 dB: decision-point noise stays N0 (only the signal is faded)  got=1.0007      want=1           tol=0.0139
+  [PASS] K 12 dB: energy_csi removes the fading (its clean std / base energy's) got=1.0029      want=1           tol=0.1   naive energy std is 43.0x base
+
+4. sigma_N: S5's factor law, sigma_N = 0 draws nothing, the damage term per frame
+  [PASS] sigma_N 1 dB: mean variance factor                                 got=1.0003      want=1           tol=0.005
+  [PASS] sigma_N 1 dB: std of the factor [dB]                               got=1.0007      want=1           tol=0.01
+  [PASS] sigma_N 0: noise_scale is None and frames carry no factor          got=1           want=1           tol=0
+  [PASS] sigma_N 3 dB: exact E[BER] with the per-frame noise == the measured BER got=0.0077286   want=0.0078163   tol=0.000755
+  [PASS] ... and with the nominal N0 it would be biased (control: |bias| > tol) got=1           want=1           tol=0   nominal-N0 E[BER] 0.003499
+
+5. CFAR: every detector's realised FAR on fresh clean frames of each environment (20000 calibration + 8192 test frames; S4's CNN weights as the proxy)
+  calibrated on 20000 clean frames: energy mean 1.00396 (c0^2 + N0 = 1.00395), thresholds@0.05 energy 1.017 energy_2s 0.01552 kurtosis 0.048957 spec_cnn -1.4507, clean BER 0.00e+00 PER 0.0000
+  [PASS] base: energy realised FAR at alpha 0.05                            got=0.047729    want=0.05        tol=0.0114
+  [PASS] base: energy_2s realised FAR at alpha 0.05                         got=0.050049    want=0.05        tol=0.0114
+  [PASS] base: kurtosis realised FAR at alpha 0.05                          got=0.056641    want=0.05        tol=0.0114
+  [PASS] base: spec_cnn realised FAR at alpha 0.05                          got=0.048706    want=0.05        tol=0.0114
+         base: energy threshold margin over the clean mean +1.30 %
+  calibrated on 20000 clean frames: energy mean 1.00395 (c0^2 + N0 = 1.00395), thresholds@0.05 energy 1.017 energy_2s 0.015496 kurtosis 0.049744 spec_cnn -0.34848, clean BER 0.00e+00 PER 0.0000
+  [PASS] noise: energy realised FAR at alpha 0.05                           got=0.049194    want=0.05        tol=0.0114
+  [PASS] noise: energy_2s realised FAR at alpha 0.05                        got=0.048706    want=0.05        tol=0.0114
+  [PASS] noise: kurtosis realised FAR at alpha 0.05                         got=0.04895     want=0.05        tol=0.0114
+  [PASS] noise: spec_cnn realised FAR at alpha 0.05                         got=0.049561    want=0.05        tol=0.0114
+         noise: energy threshold margin over the clean mean +1.30 %
+  calibrated on 20000 clean frames: energy mean 1.00394 (c0^2 + N0 = 1.00395), thresholds@0.05 energy 1.0171 energy_2s 0.015728 kurtosis 0.052194 spec_cnn 2.2393, clean BER 0.00e+00 PER 0.0000
+  [PASS] noise_1db: energy realised FAR at alpha 0.05                       got=0.050293    want=0.05        tol=0.0114
+  [PASS] noise_1db: energy_2s realised FAR at alpha 0.05                    got=0.0448      want=0.05        tol=0.0114
+  [PASS] noise_1db: kurtosis realised FAR at alpha 0.05                     got=0.047363    want=0.05        tol=0.0114
+  [PASS] noise_1db: spec_cnn realised FAR at alpha 0.05                     got=0.04541     want=0.05        tol=0.0114
+         noise_1db: energy threshold margin over the clean mean +1.31 %
+  calibrated on 20000 clean frames: energy mean 1.00256 (c0^2 + N0 = 1.00395), thresholds@0.05 energy 1.6081 energy_2s 0.64926 kurtosis 0.05866 spec_cnn 0.84036 energy_csi 1.017, clean BER 0.00e+00 PER 0.0000
+  [PASS] fading: energy realised FAR at alpha 0.05                          got=0.050537    want=0.05        tol=0.0114
+  [PASS] fading: energy_2s realised FAR at alpha 0.05                       got=0.054077    want=0.05        tol=0.0114
+  [PASS] fading: kurtosis realised FAR at alpha 0.05                        got=0.050781    want=0.05        tol=0.0114
+  [PASS] fading: spec_cnn realised FAR at alpha 0.05                        got=0.047852    want=0.05        tol=0.0114
+  [PASS] fading: energy_csi realised FAR at alpha 0.05                      got=0.050537    want=0.05        tol=0.0114
+         fading: energy threshold margin over the clean mean +60.40 %
+  calibrated on 20000 clean frames: energy mean 1.00427 (c0^2 + N0 = 1.00395), thresholds@0.05 energy 1.0998 energy_2s 0.11065 kurtosis 0.050219 spec_cnn -1.5703 energy_csi 1.0168, clean BER 0.00e+00 PER 0.0000
+  [PASS] fading_k28: energy realised FAR at alpha 0.05                      got=0.04834     want=0.05        tol=0.0114
+  [PASS] fading_k28: energy_2s realised FAR at alpha 0.05                   got=0.053223    want=0.05        tol=0.0114
+  [PASS] fading_k28: kurtosis realised FAR at alpha 0.05                    got=0.044434    want=0.05        tol=0.0114
+  [PASS] fading_k28: spec_cnn realised FAR at alpha 0.05                    got=0.051514    want=0.05        tol=0.0114
+  [PASS] fading_k28: energy_csi realised FAR at alpha 0.05                  got=0.055176    want=0.05        tol=0.0114
+         fading_k28: energy threshold margin over the clean mean +9.51 %
+  calibrated on 20000 clean frames: energy mean 1.00264 (c0^2 + N0 = 1.00395), thresholds@0.05 energy 1.6106 energy_2s 0.65138 kurtosis 0.058779 spec_cnn 1.4348 energy_csi 1.0169, clean BER 0.00e+00 PER 0.0000
+  [PASS] both: energy realised FAR at alpha 0.05                            got=0.048706    want=0.05        tol=0.0114
+  [PASS] both: energy_2s realised FAR at alpha 0.05                         got=0.049561    want=0.05        tol=0.0114
+  [PASS] both: kurtosis realised FAR at alpha 0.05                          got=0.049683    want=0.05        tol=0.0114
+  [PASS] both: spec_cnn realised FAR at alpha 0.05                          got=0.050781    want=0.05        tol=0.0114
+  [PASS] both: energy_csi realised FAR at alpha 0.05                        got=0.051147    want=0.05        tol=0.0114
+         both: energy threshold margin over the clean mean +60.63 %
+
+6. bands.py at base ~ S4's bands (CNN (-39, -7), energy vs S4's power (-24, 0)); S4's CNN as base proxy
+         30 dB transitions: power_one_sided -27.17  kurtosis -13.57  spec_cnn -29.93  energy -16.88
+         base bands: control [-32.0, 0.0]  energy [-25.1, 0.0]  kurtosis [-31.5, 0.0]  spec_cnn [-38.8, -6.8]
+  [PASS] base: CNN band lower edge vs S4's -39 dB                           got=-38.8       want=-39         tol=2
+  [PASS] base: CNN band upper edge vs S4's -7 dB                            got=-6.8        want=-7          tol=2
+  [PASS] base: energy band lower edge vs S4's power band -24 dB             got=-25.1       want=-24         tol=2
+  [PASS] base: energy band upper edge (capped) vs S4's 0 dB                 got=0           want=0           tol=0
+
+7. tone's DC share, on/off analytic vs simulated, the genie flip and push, the random push
+  [PASS] tone: DC share == 1                                                got=1           want=1           tol=0.0001
+  [PASS] white noise: DC share ~ 1/len(active window)                       got=0.0009901   want=0.00097656  tol=0.00293
+  [PASS] on/off f 0.3: P_det energy == f P_det(+15) + (1-f) FAR             got=0.32202     want=0.33418     tol=0.0395
+  [PASS] on/off f 0.3: P_det energy_2s == f P_det(+15) + (1-f) FAR          got=0.32104     want=0.33384     tol=0.0395
+  [PASS] on/off f 0.3: P_det kurtosis == f P_det(+15) + (1-f) FAR           got=0.32666     want=0.33828     tol=0.0396
+  [PASS] on/off f 0.3: P_det spec_cnn == f P_det(+15) + (1-f) FAR           got=0.32788     want=0.33777     tol=0.0396
+  [PASS] on/off f 0.3: PER == f PER(+15)                                    got=0.29028     want=0.3         tol=0.0286
+  [PASS] on/off f 0.3: BER == f BER(+15)                                    got=0.12851     want=0.13327     tol=0.0128
+  [PASS] base: genie flip JSR -6 dB: BER == floor(delta N)/N                got=0.0625      want=0.0625      tol=0.002
+  [PASS] base: genie flip JSR -6 dB: P_det energy ~ alpha                   got=0.046875    want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR -6 dB: P_det energy_2s ~ alpha                got=0.04834     want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR -6 dB: P_det kurtosis ~ alpha                 got=0.052979    want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR -6 dB: P_det spec_cnn ~ alpha                 got=0.049316    want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR +0 dB: BER == floor(delta N)/N                got=0.25        want=0.25        tol=0.002
+  [PASS] base: genie flip JSR +0 dB: P_det energy ~ alpha                   got=0.050049    want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR +0 dB: P_det energy_2s ~ alpha                got=0.047363    want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR +0 dB: P_det kurtosis ~ alpha                 got=0.053955    want=0.05        tol=0.0236
+  [PASS] base: genie flip JSR +0 dB: P_det spec_cnn ~ alpha                 got=0.053467    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR -6 dB: BER == floor(delta N)/N                got=0.0625      want=0.0625      tol=0.002
+  [PASS] both: genie flip JSR -6 dB: P_det energy ~ alpha                   got=0.049316    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR -6 dB: P_det energy_2s ~ alpha                got=0.050537    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR -6 dB: P_det kurtosis ~ alpha                 got=0.047363    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR -6 dB: P_det spec_cnn ~ alpha                 got=0.052979    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR -6 dB: P_det energy_csi ~ alpha               got=0.051025    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR +0 dB: BER == floor(delta N)/N                got=0.25        want=0.25        tol=0.002
+  [PASS] both: genie flip JSR +0 dB: P_det energy ~ alpha                   got=0.054932    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR +0 dB: P_det energy_2s ~ alpha                got=0.052979    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR +0 dB: P_det kurtosis ~ alpha                 got=0.044922    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR +0 dB: P_det spec_cnn ~ alpha                 got=0.052734    want=0.05        tol=0.0236
+  [PASS] both: genie flip JSR +0 dB: P_det energy_csi ~ alpha               got=0.049316    want=0.05        tol=0.0236
+  [PASS] genie push -10 dB: two-sided energy flags it (P_det >= 0.9)        got=1           want=1           tol=0   P_det 1.000
+  [PASS] genie push -10 dB: one-sided energy does not (P_det <= alpha + 4 sigma) got=1           want=1           tol=0   P_det 0.000
+  [PASS] random push -10 dB: BER == floor(delta N)/N (1 - Q(eta c0/(sqrt2 sigma)))/2 got=0.036926    want=0.036881    tol=0.00206
+  [PASS] random push -10 dB: SER == floor(delta N)/N (1/4 (1-q^2) + 1/2 (1-q)) got=0.056744    want=0.056351    tol=0.00285
+  [PASS] random push -10 dB: one-sided energy flags it (P_det >= 0.9)       got=1           want=1           tol=0   P_det 0.982
+
+8. One training step per target in env `both` (noise factor + fading): finite loss, gradient reaches G;
+   cnn_li's frame-damage term against measured PER
+  [PASS] target None: loss finite and ||grad G|| > 0                        got=1           want=1           tol=0   loss 46.151, ||grad|| 206
+  [PASS] target energy: loss finite and ||grad G|| > 0                      got=1           want=1           tol=0   loss 37.563, ||grad|| 267
+  [PASS] target kurtosis: loss finite and ||grad G|| > 0                    got=1           want=1           tol=0   loss 37.809, ||grad|| 268
+  [PASS] target spec_cnn: loss finite and ||grad G|| > 0                    got=1           want=1           tol=0   loss 48.344, ||grad|| 328
+  [PASS] target spec_cnn: loss finite and ||grad G|| > 0 (PER damage, -5 dB) got=1           want=1           tol=0   loss 15.700, ||grad|| 561
+  [PASS] barrage 0 dB, base: exp(log_expected_per) == measured PER          got=0.48828     want=0.49559     tol=0.0442   2048 frames
+
+ALL CHECKS PASS
+regression gate vs S4 (../artifacts/cgan/snr_ablation/snr15_run003/snr_snr_15.json): 66 JSR points x 512 frames, SNR 15 dB, detectors ['power_one_sided', 'kurtosis', 'spec_cnn']
+  measured noise (23s)
+  measured pulsed_p1 (42s)
+  measured pulsed_p0.5 (60s)
+  measured pulsed_p0.25 (78s)
+  measured pulsed_p0.1 (97s)
+  measured omniscient_e0.1 (115s)
+  measured omniscient_e1 (133s)
+  measured eff (152s)
+  measured power_one_sided_b10 (172s)
+  measured spec_cnn_b1 (191s)
+  measured spec_cnn_b10 (210s)
+  [OK ] classical noise                P(det): 0/198 beyond 4 sigma (max |z| 2.08) | BER: 0/18 outside the band (max 0.24 band units)
+  [OK ] classical pulsed_p1            P(det): 0/198 beyond 4 sigma (max |z| 2.61) | BER: 0/23 outside the band (max 0.51 band units)
+  [OK ] classical pulsed_p0.5          P(det): 0/198 beyond 4 sigma (max |z| 3.28) | BER: 0/25 outside the band (max 0.22 band units)
+  [OK ] classical pulsed_p0.25         P(det): 0/198 beyond 4 sigma (max |z| 3.32) | BER: 0/27 outside the band (max 0.18 band units)
+  [OK ] classical pulsed_p0.1          P(det): 0/198 beyond 4 sigma (max |z| 2.49) | BER: 0/31 outside the band (max 0.69 band units)
+  [OK ] classical omniscient_e0.1      P(det): 0/198 beyond 4 sigma (max |z| 2.66) | BER: 0/36 outside the band (max 0.05 band units)
+  [OK ] classical omniscient_e1        P(det): 0/198 beyond 4 sigma (max |z| 2.61) | BER: 0/31 outside the band (max 0.00 band units)
+  [OK ] generator eff                  P(det): 0/198 beyond 4 sigma (max |z| 2.85) | BER: 0/38 outside the band (max 0.56 band units)
+  [OK ] generator power_one_sided_b10  P(det): 0/198 beyond 4 sigma (max |z| 2.54) | BER: 0/37 outside the band (max 0.38 band units)
+  [OK ] generator spec_cnn_b1          P(det): 0/198 beyond 4 sigma (max |z| 2.07) | BER: 0/39 outside the band (max 0.44 band units)
+  [OK ] generator spec_cnn_b10         P(det): 0/198 beyond 4 sigma (max |z| 2.84) | BER: 0/38 outside the band (max 0.25 band units)
+  clean FAR new vs S4: power_one_sided 0.0469 vs 0.0459 (z +0.15)  kurtosis 0.0439 vs 0.0420 (z +0.31)  spec_cnn 0.0483 vs 0.0527 (z -0.64)
+  global: P(det) mean z -0.005 over 2178 pairs (2 beyond 3 sigma, 5.9 expected by chance) | BER 0.44 positive, mean -0.003 band units over 343 points -> unbiased
+
+GATE PASSES -- the copy reproduces S4

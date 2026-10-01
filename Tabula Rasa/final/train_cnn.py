@@ -17,7 +17,10 @@ Pruned from cgan/train_spectrogram_cnn.py: the noise LRT, the D6 arms options
 detector (final/ writes only under artifacts/final/<env>/). Step 5 is
 defender.calibrate_env, which adds the matched-filter energy detectors.
 
-Outputs, artifacts/final/<env>/cnn/:
+--seed 12 --name cnn_s12 trains the grey-box attacker's SURROGATE (same recipe, independent
+seed, as cgan's run004): the attacker knows the detector's type and recipe, not its weights.
+
+Outputs, artifacts/final/<env>/cnn/ (or --name):
     detector_spec.pt         weights + colour scale (net_scratch, symlinked)
     thresholds.json          every detector's CFAR threshold, clean mean, clean quantiles
     spec_cnn_training.json   loss/accuracy per epoch, validation metrics, ROC,
@@ -97,10 +100,14 @@ def main():
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--seed", type=int, default=11)
     ap.add_argument("--n-cal", type=int, default=defender.N_CALIBRATION)
+    ap.add_argument("--name", default="cnn",
+                    help="folder under artifacts/final/<env>/; cnn_s12 = the grey-box attacker's surrogate")
     args = ap.parse_args()
+    if args.name == "cnn" and args.seed != 11:
+        raise SystemExit("refusing to write a non-default seed over the deployed CNN: pass --name")
     if E.SMOKE:
         args.epochs, args.n_cal = 2, 2048
-    out_dir = E.art(args.env, "cnn")
+    out_dir = E.art(args.env, args.name)
     os.makedirs(out_dir, exist_ok=True)
 
     device = lk.setup(seed=args.seed)
@@ -179,7 +186,7 @@ def main():
 
     E.save_big(dict(state_dict=net.state_dict(), scale=scale.to_dict(), env=args.env,
                     epochs=args.epochs, seed=args.seed, history=history),
-               args.env, os.path.join("cnn", "detector_spec.pt"))
+               args.env, os.path.join(args.name, "detector_spec.pt"))
     report = dict(
         env=args.env, env_config=E.ENVS[args.env],
         config=dict(model="EfficientNet-B0 (torchvision, ImageNet init)", optimiser="SGD", lr=1e-3,

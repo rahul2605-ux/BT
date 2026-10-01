@@ -326,24 +326,45 @@ def test_baselines(dfds):
 
 # ---------------------------------------------------------------- 8. the training path
 def test_training_step(dfds):
-    print("\n8. One training step per target in env `both` (noise factor + fading): finite loss, gradient reaches G")
+    print("\n8. One training step per target in env `both` (noise factor + fading): finite loss, gradient reaches G;"
+          "\n   cnn_li's frame-damage term against measured PER")
     import train_gan
     dfd = dfds["both"]
     L = dfd.L
     n0 = L.noise_var(E.SNR_DB)
-    for target in (None, "energy", "kurtosis", "spec_cnn"):
+    # (target, damage, JSR): the paper's four, then cnn_li's frame damage at Li's damage level
+    for target, damage, jsr in ((None, "ber", -20.0), ("energy", "ber", -20.0), ("kurtosis", "ber", -20.0),
+                                ("spec_cnn", "ber", -20.0), ("spec_cnn", "per", -5.0)):
         G = models.Generator(n_classes=1).to(L.device)
         G.train()
         spec = dict(name="gan", G=G, scale=1.0, grad=True)
-        out = attacks.frames(L, train_gan.FRAMES[target], spec, [-20.0], E.SNR_DB, noiseless=True)
-        loss = -attacks.log_expected_ber(out, attacks.frame_noise_var(out, n0))
+        out = attacks.frames(L, train_gan.FRAMES[target], spec, [jsr], E.SNR_DB, noiseless=True)
+        log_damage = attacks.log_expected_per if damage == "per" else attacks.log_expected_ber
+        loss = -log_damage(out, attacks.frame_noise_var(out, n0))
         if target is not None:
             s = dfd.statistics(out["r"], out["z"], dets=[target], grad=True, gain=out.get("gain"))
             loss = loss + 10.0 * detectors.soft_pdet(s[target], dfd.threshold(target, E.ALPHA), 1.0)
         loss.backward()
         gn = math.sqrt(sum(float(p.grad.pow(2).sum()) for p in G.parameters() if p.grad is not None))
-        check(f"target {target}: loss finite and ||grad G|| > 0", float(math.isfinite(float(loss)) and gn > 0), 1.0, 0,
+        label = f"target {target}: loss finite and ||grad G|| > 0" + ("" if damage == "ber" else f" (PER damage, {jsr:+g} dB)")
+        check(label, float(math.isfinite(float(loss)) and gn > 0), 1.0, 0,
               note=f"loss {float(loss):.3f}, ||grad|| {gn:.3g}")
+
+    # cnn_li's damage term is exact over the AWGN: predicted E[PER] == measured frame errors (barrage, base)
+    Lb = dfds["base"].L
+    lk.setup(Lb.device, seed=4321)
+    with torch.no_grad():
+        out = batches(Lb, 2048, dict(name="noise"), [0.0], E.SNR_DB, noiseless=True)
+        pred = float(torch.exp(attacks.log_expected_per(out, attacks.frame_noise_var(out, Lb.noise_var(E.SNR_DB)))))
+    meas = float((out["bits"] != out["bits_hat"]).any(dim=-1).double().mean())
+    check("barrage 0 dB, base: exp(log_expected_per) == measured PER", meas, pred, mc_tol(pred, 2048),
+          note="2048 frames")
+
+    # iq_plots.py: frames(keep_jammer=True) hands back the jammer that was added, at exactly its JSR
+    with torch.no_grad():
+        out = attacks.frames(Lb, 256, dict(name="pulsed", p=0.25), [-10.0], E.SNR_DB, keep_jammer=True)
+    pj = float(out["j"][:, Lb.active(E.N_SYM)].abs().pow(2).mean(dim=-1).mean() / Lb.p_s)
+    check("keep_jammer: returned jammer's power over the active window == JSR (-10 dB)", pj, 0.1, 1e-4)
 
 
 def main():

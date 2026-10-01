@@ -14,4 +14,4 @@ source /itet-stor/rrahman/net_scratch/bt_env/bin/activate
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p runs
 echo "node: $(hostname -f) | gpu: $(nvidia-smi --query-gpu=name --format=csv,noheader)"
-python -u bands.py --env "$1"
+python -u bands.py --env "$1" "${@:2}"

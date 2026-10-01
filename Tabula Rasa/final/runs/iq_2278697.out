@@ -1,0 +1,4 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+wrote ../artifacts/final/base/li/iq_samples.npz (74 arrays)
+wrote ../artifacts/final/base/li/fig_iq_per50.png
+wrote ../artifacts/final/base/li/fig_iq_per90.png

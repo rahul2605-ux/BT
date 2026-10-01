@@ -1,0 +1,278 @@
+<title>Li-Protocol CNN Readout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~70ch) with a sticky contents rail on wide screens; figures break out to full width on a light plate. */
+:root {
+  --bg: #f4f6f8;
+  --paper: #ffffff;
+  --fg: #15191d;
+  --fg2: #4a525b;
+  --muted: #7b848e;
+  --rule: #d9dee3;
+  --accent: #2a78d6;          /* the CNN-conditioned cGAN's series colour */
+  --accent-ink: #1c5cab;
+  --warn: #a8660b;
+  --good: #16762a;
+  --bad: #b3322f;
+  --plate: #fcfcfb;
+  --shade: 42, 120, 214;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --k-genie: #0b0b0b; --k-cnn: #2a78d6; --k-control: #eb6834;
+  --k-amuru: #1baf7a; --k-noise: #4a3aa7; --k-grey: #898781; --k-env: #52514e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111417; --paper: #181c20; --fg: #e7eaed; --fg2: #b3bac2; --muted: #8a939c; --rule: #2c3238;
+    --accent: #5aa0f0; --accent-ink: #8dbdf5; --warn: #e3a44a; --good: #58c46b; --bad: #ef7b77; --plate: #fcfcfb;
+    --shade: 90, 160, 240; --k-genie: #e7eaed; --k-env: #b3bac2; color-scheme: dark;
+    --k-cnn: #3987e5; --k-control: #d95926; --k-amuru: #199e70; --k-noise: #9085e9;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111417; --paper: #181c20; --fg: #e7eaed; --fg2: #b3bac2; --muted: #8a939c; --rule: #2c3238;
+  --accent: #5aa0f0; --accent-ink: #8dbdf5; --warn: #e3a44a; --good: #58c46b; --bad: #ef7b77; --plate: #fcfcfb;
+  --shade: 90, 160, 240; --k-genie: #e7eaed; --k-env: #b3bac2; color-scheme: dark;
+  --k-cnn: #3987e5; --k-control: #d95926; --k-amuru: #199e70; --k-noise: #9085e9;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+       padding-inline: 16px; padding-block: 0 64px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 40px; }
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; padding-top: 40px;
+          font-family: var(--font-display); font-size: 13px; line-height: 1.4; }
+nav.toc a { display: block; color: var(--fg2); text-decoration: none; padding: 3px 0 3px 10px; border-left: 2px solid var(--rule); }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent-ink); border-left-color: var(--accent); }
+nav.toc .grp { margin-top: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+main { min-width: 0; }
+main > header { padding-block: 40px 8px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+.eyebrow { font-family: var(--font-display); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-stretch: 80%; font-weight: 800; font-size: clamp(34px, 5vw, 54px); line-height: 1.02;
+     margin: 8px 0 12px; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-stretch: 85%; font-weight: 700; font-size: 28px; line-height: 1.15; margin: 56px 0 12px; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 700; font-size: 22px; margin: 44px 0 8px; text-wrap: balance; }
+h3 .sub { font-weight: 500; color: var(--muted); font-size: 16px; margin-left: 6px; }
+h4 { font-family: var(--font-display); font-weight: 600; font-size: 15px; margin: 22px 0 6px; color: var(--fg2); }
+p, li { max-width: 72ch; }
+p { margin: 0 0 12px; }
+.lede { font-size: 19px; color: var(--fg2); max-width: 70ch; }
+.small { font-size: 14px; color: var(--fg2); }
+code { font-family: var(--font-mono); font-size: 0.86em; background: color-mix(in srgb, var(--rule) 45%, transparent); padding: 1px 4px; border-radius: 3px; }
+a { color: var(--accent-ink); }
+strong { font-weight: 600; }
+.steps { padding-left: 22px; }
+.steps li { margin-bottom: 6px; }
+.answer { background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 18px 22px; margin: 22px 0; border-radius: 2px; }
+.answer h2 { margin-top: 0; font-size: 22px; }
+.answer li { margin-bottom: 8px; }
+.defbox { background: var(--paper); border: 1px solid var(--rule); padding: 16px 20px; border-radius: 2px; }
+.defbox p:last-child { margin-bottom: 0; }
+.tablewrap { overflow-x: auto; margin: 10px 0 18px; }
+table { border-collapse: collapse; font-size: 14px; line-height: 1.4; min-width: 100%; background: var(--paper); }
+th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--font-display); font-weight: 600; font-size: 12.5px; color: var(--fg2); background: color-mix(in srgb, var(--rule) 30%, var(--paper)); }
+td.num, th.num { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.res td.num { background: rgba(var(--shade), calc(var(--v) * 0.0045)); text-align: right; }
+td.na { color: var(--muted); text-align: right; }
+.pm { color: var(--fg2); font-size: 11.5px; margin-left: 3px; }
+.key { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 8px; background: var(--k-grey); }
+.k-genie { background: var(--k-genie); height: 4px; } .k-cnn { background: var(--k-cnn); } .k-control { background: var(--k-control); }
+.k-amuru { background: var(--k-amuru); } .k-noise { background: var(--k-noise); }
+.k-push { background: repeating-linear-gradient(90deg, var(--k-env) 0 6px, transparent 6px 9px); }
+figure { margin: 18px 0 26px; }
+.plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 3px; overflow-x: auto; }
+.plate img { display: block; width: 100%; min-width: 760px; height: auto; }
+figcaption { font-size: 14.5px; color: var(--fg2); margin-top: 8px; max-width: 80ch; }
+figcaption b { color: var(--fg); font-weight: 600; }
+.pill { display: inline-block; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        padding: 2px 8px; border-radius: 99px; border: 1px solid currentColor; vertical-align: 2px; }
+.pill.good { color: var(--good); } .pill.warn { color: var(--warn); } .pill.bad { color: var(--bad); }
+.envsec { border-top: 1px solid var(--rule); margin-top: 36px; }
+ul.tight li { margin-bottom: 4px; }
+.loading { color: var(--muted); font-size: 14px; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  nav.toc { display: none; }
+  body { font-size: 16px; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.k-li { background: var(--k-control); } .k-grey { background: var(--k-grey); }
+.k-dash { background: repeating-linear-gradient(90deg, var(--k-grey) 0 6px, transparent 6px 9px); }
+.k-cnn-d { background: repeating-linear-gradient(90deg, var(--k-cnn) 0 6px, transparent 6px 9px); }
+.k-li-d { background: repeating-linear-gradient(90deg, var(--k-control) 0 6px, transparent 6px 9px); }
+table.res td.lbl { white-space: nowrap; }
+details { margin: 8px 0 18px; } summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; color: var(--fg2); }
+</style>
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <div class="grp">Answer</div>
+  <a href="#summary">Short answer</a>
+  <div class="grp">Setup</div>
+  <a href="#protocol">Li's protocol, on our link</a>
+  <a href="#jammers">Jammers</a>
+  <a href="#greybox">Grey-box attacker</a>
+  <div class="grp">Results · base</div>
+  <a href="#figures">Figures</a>
+  <a href="#matched">Matched damage (main)</a>
+  <a href="#window">Li's window</a>
+  <a href="#lidamage">The cGAN at Li's damage</a>
+  <a href="#iq">IQ of the jammers</a>
+  <div class="grp">Notes</div>
+  <a href="#vector">Constant vector: fixed or random</a>
+  <a href="#amuru">Amuru</a>
+  <a href="#caveats">Caveats</a>
+  <a href="#repro">Jobs and files</a>
+</nav>
+<main>
+<header>
+<div class="eyebrow">Tabula Rasa · final experiment · env base · SNR 15 dB = Es/N0 24 dB · 30 Sep 2026</div>
+<h1>Li-Protocol CNN Readout</h1>
+<p class="lede">The CNN of Li et al. (IEEE Access 2022), retrained on our link, scored the way Li et al. score it: per sample, with the network's own argmax decision, by detection rate, precision, recall, F-score and false-alarm rate. Jammers: Li's four types and our CNN-targeted cGANs. The attacker is grey-box: it trains against its own copy of the CNN and never sees the deployed weights.</p>
+</header>
+
+<section id="summary" class="answer">
+<h2>The short answer</h2>
+<ul>
+<li><span class="pill good">matches Li</span> <strong>Our CNN, scored Li's way, behaves like Li's.</strong> Pooled over Li's four types it gets DR 92.6 % (Li: 100 %) at a false-alarm rate of 0.78 % (Li: 0.03 %). Per type it flags 67–94 % of jammed samples over −20…+10 dB. It is lower because at 15 dB the bottom of that range lies below the noise.</li>
+<li><span class="pill good">holds grey-box</span> <strong>At partial damage the cGAN breaks the CNN without knowing its weights.</strong> Trained on a surrogate CNN, it is flagged on 0.026 ± 0.013 of samples where it breaks 10 % of frames and 0.090 ± 0.042 where it breaks 50 %. The white-box version: 0.023 and 0.068. Li's jammers at the same damage: 37–100 % and 52–100 %.</li>
+<li><span class="pill bad">caught</span> <strong>At Li's damage it does not.</strong> Li's jammers cause a complete loss of signal; here that is 90 % of frames broken. The grey-box cGAN gets there at −4.6 dB and is caught on every sample. Li's protocol-aware type does better there (0.67).</li>
+<li><span class="pill bad">does not transfer</span> <strong>The cGAN trained at Li's damage only works white-box.</strong> Trained on the deployed weights, it was invisible to the CNN while breaking up to 93 % of frames. Trained on the surrogate, two of three seeds are flagged on 93–100 % of samples across its band. The third is flagged on 10–31 % from −8 to −2 dB. Its blind spot belongs to one set of weights.</li>
+<li><strong>Most damage while flagged on at most half the samples:</strong> grey-box cGAN PER 0.676 ± 0.049; protocol-aware 0.32; barrage, tone and pulse comb 0. The grey-box cGAN at Li's damage: 0.88, 0 and 0 per seed.</li>
+<li><strong>What the IQ plots show:</strong> the cGAN is a sparse burst jammer matched to the victim's pulse. It lands 6× more energy on the decision points than white noise, and it pushes only 1–3 % of symbols hard: close to Amuru's low-duty pulsed jammer. The variant at Li's damage puts most of its energy where the receiver's filter does not listen (0.7–0.8×), which costs it about 9 dB.</li>
+</ul>
+</section>
+
+<h2 id="protocol">Li's protocol, on our link</h2>
+<p>Li et al. never count symbols. Their unit is a <em>sample</em>: one spectrogram image, a screenshot of GNU Radio's waterfall display. They report detection rate DR = correctly predicted samples / all samples (their eq. 2a), precision, recall, F-score, and FAR = FP / (FP + TN). What we copy, and what we cannot:</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Li et al.</th><th>here</th></tr></thead>
+<tbody>
+<tr><td>one sample = one waterfall image; the time it spans is stated neither in the paper nor in their dataset repository</td><td>one sample = one 128-symbol frame (128 µs at 1 MBd), rendered at Li's 422 × 248 image size. The CNN and every generator were trained on this window</td></tr>
+<tr><td>two-class softmax, decided by argmax</td><td>the same: a frame is flagged when logit(jammed) &gt; logit(clean). Clean FAR on 4096 frames: 0.78 %</td></tr>
+<tr><td>762 clean : 204 per jammer type, 70/30 split</td><td>the CNN was trained that way. The metrics below apply Li's 762 : 204 balance to the measured rates (TP = 204 × recall, FP = 762 × FAR)</td></tr>
+<tr><td>EfficientNet-B0: DR 100 % two-class, 99.79 % five-class, weighted FAR 0.03 % (five-class)</td><td>our CNN on its own validation set (JSR −20…+10 dB): accuracy 92.2 %, jammed samples detected 85.4 %, 0 false alarms in 220 clean samples</td></tr>
+<tr><td>jammed samples recorded at the distance where every jammer causes "a complete loss of signal"</td><td>read as matched damage: each jammer at the JSR where it breaks 90 % of frames (excess PER 0.9), with PER 0.1 and 0.5 for the partial-damage range</td></tr>
+</tbody></table></div>
+<p>Our CNN is less accurate than Li's because at 15 dB the bottom third of its training range lies below the noise. There, a jammed frame looks like a clean one, and it does no damage either.</p>
+<p><strong>Two windows.</strong> <em>Li's window</em> puts every jammer at the same powers, uniform in dB over −20…+10 dB, as a direct comparison with Li's numbers. That compares jammers at matched configuration, where they do very different damage, so it is one row per jammer and not the result. <em>Matched damage</em> reads each jammer where it breaks 10, 50 and 90 % of frames. That is the main table.</p>
+
+<h2 id="jammers">Jammers</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>jammer</th><th>what it is on our link</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-noise"></span>Li: barrage</td><td>white complex Gaussian noise over the band</td></tr>
+<tr><td><span class="key k-grey"></span>Li: single tone</td><td>a tone at the carrier is a constant complex baseband value: the supervisor's constant IQ vector. Its direction is random per frame (no carrier-phase knowledge)</td></tr>
+<tr><td><span class="key k-dash"></span>Li: successive pulse</td><td>an impulse every 64 samples (a comb of 64 lines over the band)</td></tr>
+<tr><td><span class="key k-amuru"></span>Li: protocol-aware</td><td>the victim's own RRC-QPSK waveform with random symbols, each on with probability 0.25 at amplitude 2. This is Amuru &amp; Buehrer's pulsed jammer at p 0.25. Li give no duty cycle, so p 0.25 is our adaptation</td></tr>
+<tr><td><span class="key k-cnn"></span>cGAN vs CNN</td><td>Zhou's generator, trained on log E[BER] − 10 · P<sub>det</sub> (soft) against a CNN, JSR band −39…−7 dB, 3 seeds</td></tr>
+<tr><td><span class="key k-li"></span>cGAN at Li's damage</td><td>each cGAN seed trained further on lost frames, log E[PER] − 10 · P<sub>det</sub> (soft), only at −10…0 dB where Li's jammers break 90 % of frames, 4000 steps; see <a href="#lidamage">below</a></td></tr>
+<tr><td><span class="key k-genie"></span>genie flip</td><td>the upper bound: knows every symbol and flips it. The received signal has exactly the clean statistics, so no detector can see it</td></tr>
+</tbody></table></div>
+
+<h2 id="greybox">Grey-box attacker</h2>
+<p>A jammer that knows the deployed network's weights is not realistic. The grey-box attacker knows what the defender runs (Li's CNN, trained Li's way) but not its weights. It trains its own copy, the <em>surrogate</em>: same recipe, different seed (12 instead of 11), validation accuracy 93.7 % vs the deployed CNN's 92.2 %. Everything it needs for training comes from the surrogate: the detection term, the threshold, and the JSR band (−38.8…−6.8 dB, vs −39.0…−7.0 dB from the deployed CNN). It is then evaluated against the deployed CNN like every other jammer. The white-box generators (trained on the deployed CNN) stay in the tables and are drawn dashed; they use the same seeds, so the weights are the only difference.</p>
+
+<h2 id="figures">Figures</h2>
+<figure><div class="plate"><img src="figs/base_fig_li_vs_jsr.png" alt="Excess BER, excess PER and the CNN's detection rate against JSR for Li's four jammers, the cGANs and the genie flip" loading="lazy"></div>
+<figcaption><b>Read down.</b> Barrage, tone and pulse comb are flagged on nearly every frame before they break any; they reach PER 0.1 only at −4 to −2 dB. Protocol-aware breaks frames from −11 dB while flagged on 37–67 %. The cGAN (blue) breaks frames from −23 dB and is caught from about −14 dB up; grey-box and white-box lie on top of each other. The cGAN at Li's damage (orange) breaks frames from −11 dB. White-box (dashed), the CNN misses it from −7 to +1 dB, its training band. Grey-box (solid), two seeds are caught across the band and the seed mean stays at 0.7–1.0.</figcaption></figure>
+<figure><div class="plate"><img src="figs/base_fig_li_damage_vs_dr.png" alt="Excess PER and BER against the CNN's detection rate" loading="lazy"></div>
+<figcaption><b>Read:</b> up and to the left is better for the jammer. The dashed orange curve runs up the left edge from PER 0.3 to 0.9 at recall ≈ 0: the white-box variant inside its band. Its grey-box counterpart sits to the right. The cGAN (blue, both versions) reaches PER ≈ 0.7 at recall below 0.5, then runs right. Barrage, tone and pulse comb sit on the right edge.</figcaption></figure>
+
+<h2 id="matched">Matched damage (main table)</h2>
+<p>Recall is the share of that jammer's samples the CNN flags, at the JSR where the jammer breaks 10 / 50 / 90 % of frames (interpolated between 1 dB grid points). DR and F-score at PER 0.9 are Li's eq. 2a and 2d on a 762 clean : 204 jammed set. Argmax decision; darker cells = more often caught. Dashed key = white-box.</p>
+<div class="tablewrap"><table class="res"><thead><tr><th rowspan="2">jammer</th><th colspan="2" class="num">PER 0.1</th><th colspan="2" class="num">PER 0.5</th><th colspan="4" class="num">PER 0.9 = Li's damage</th></tr><tr><th class="num">JSR dB</th><th class="num">recall</th><th class="num">JSR dB</th><th class="num">recall</th><th class="num">JSR dB</th><th class="num">recall</th><th class="num">DR %</th><th class="num">F-score</th></tr></thead><tbody><tr><td class="lbl"><span class="key k-genie"></span>genie flip (upper bound)</td><td class="num">-15.0</td><td class="num" style="--v:1.0">0.010</td><td class="num">-15.0</td><td class="num" style="--v:1.0">0.010</td><td class="num">-15.0</td><td class="num" style="--v:1.0">0.010</td><td class="num">78.5</td><td class="num">0.019</td></tr><tr><td class="lbl"><span class="key k-grey"></span>Li: single tone (constant vector)</td><td class="num">-4.3</td><td class="num" style="--v:100.0">1.000</td><td class="num">-3.5</td><td class="num" style="--v:100.0">1.000</td><td class="num">-2.1</td><td class="num" style="--v:100.0">1.000</td><td class="num">99.4</td><td class="num">0.986</td></tr><tr><td class="lbl"><span class="key k-dash"></span>Li: successive pulse</td><td class="num">-4.2</td><td class="num" style="--v:100.0">1.000</td><td class="num">-2.2</td><td class="num" style="--v:100.0">1.000</td><td class="num">0.6</td><td class="num" style="--v:100.0">1.000</td><td class="num">99.4</td><td class="num">0.986</td></tr><tr><td class="lbl"><span class="key k-noise"></span>Li: barrage</td><td class="num">-1.6</td><td class="num" style="--v:100.0">1.000</td><td class="num">0.1</td><td class="num" style="--v:100.0">1.000</td><td class="num">1.7</td><td class="num" style="--v:100.0">1.000</td><td class="num">99.4</td><td class="num">0.986</td></tr><tr><td class="lbl"><span class="key k-amuru"></span>Li: protocol-aware (Amuru p 0.25)</td><td class="num">-11.0</td><td class="num" style="--v:37.3">0.373</td><td class="num">-9.3</td><td class="num" style="--v:52.1">0.521</td><td class="num">-7.7</td><td class="num" style="--v:66.8">0.668</td><td class="num">92.4</td><td class="num">0.787</td></tr><tr><td class="lbl"><span class="key k-li-d"></span>cGAN at Li&#x27;s damage, white-box</td><td class="num">-9.1<span class="pm">± 1.8</span></td><td class="num" style="--v:18.1">0.181<span class="pm">± 0.270</span></td><td class="num">-6.6<span class="pm">± 1.4</span></td><td class="num" style="--v:1.0">0.010<span class="pm">± 0.017</span></td><td class="num">1.0<span class="pm">± 2.3</span></td><td class="num" style="--v:16.9">0.169<span class="pm">± 0.186</span></td><td class="num">81.8<span class="pm">± 3.9</span></td><td class="num">0.255<span class="pm">± 0.264</span></td></tr><tr><td class="lbl"><span class="key k-cnn-d"></span>cGAN vs CNN, white-box</td><td class="num">-21.7<span class="pm">± 0.6</span></td><td class="num" style="--v:2.3">0.023<span class="pm">± 0.006</span></td><td class="num">-18.2<span class="pm">± 0.5</span></td><td class="num" style="--v:6.8">0.068<span class="pm">± 0.022</span></td><td class="num">-4.3<span class="pm">± 0.7</span></td><td class="num" style="--v:100.0">1.000<span class="pm">± 0.000</span></td><td class="num">99.4<span class="pm">± 0.0</span></td><td class="num">0.986<span class="pm">± 0.000</span></td></tr><tr><td class="lbl"><span class="key k-li"></span>cGAN at Li&#x27;s damage, grey-box</td><td class="num">-9.5<span class="pm">± 2.2</span></td><td class="num" style="--v:92.5">0.925<span class="pm">± 0.118</span></td><td class="num">-7.0<span class="pm">± 1.7</span></td><td class="num" style="--v:79.8">0.798<span class="pm">± 0.310</span></td><td class="num">-0.1<span class="pm">± 0.8</span></td><td class="num" style="--v:83.9">0.839<span class="pm">± 0.274</span></td><td class="num">96.0<span class="pm">± 5.8</span></td><td class="num">0.881<span class="pm">± 0.180</span></td></tr><tr><td class="lbl"><span class="key k-cnn"></span>cGAN vs CNN, grey-box</td><td class="num">-21.6<span class="pm">± 0.7</span></td><td class="num" style="--v:2.6">0.026<span class="pm">± 0.013</span></td><td class="num">-17.8<span class="pm">± 1.1</span></td><td class="num" style="--v:9.0">0.090<span class="pm">± 0.042</span></td><td class="num">-4.6<span class="pm">± 0.6</span></td><td class="num" style="--v:100.0">1.000<span class="pm">± 0.000</span></td><td class="num">99.4<span class="pm">± 0.0</span></td><td class="num">0.986<span class="pm">± 0.000</span></td></tr></tbody></table></div>
+<details><summary>The same at α 0.05 (the paper's operating point, realised FAR 5.3 %)</summary>
+<div class="tablewrap"><table class="res"><thead><tr><th rowspan="2">jammer</th><th colspan="2" class="num">PER 0.1</th><th colspan="2" class="num">PER 0.5</th><th colspan="4" class="num">PER 0.9 = Li's damage</th></tr><tr><th class="num">JSR dB</th><th class="num">recall</th><th class="num">JSR dB</th><th class="num">recall</th><th class="num">JSR dB</th><th class="num">recall</th><th class="num">DR %</th><th class="num">F-score</th></tr></thead><tbody><tr><td class="lbl"><span class="key k-genie"></span>genie flip (upper bound)</td><td class="num">-15.0</td><td class="num" style="--v:5.3">0.053</td><td class="num">-15.0</td><td class="num" style="--v:5.3">0.053</td><td class="num">-15.0</td><td class="num" style="--v:5.3">0.053</td><td class="num">75.8</td><td class="num">0.084</td></tr><tr><td class="lbl"><span class="key k-grey"></span>Li: single tone (constant vector)</td><td class="num">-4.3</td><td class="num" style="--v:100.0">1.000</td><td class="num">-3.5</td><td class="num" style="--v:100.0">1.000</td><td class="num">-2.1</td><td class="num" style="--v:100.0">1.000</td><td class="num">95.8</td><td class="num">0.910</td></tr><tr><td class="lbl"><span class="key k-dash"></span>Li: successive pulse</td><td class="num">-4.2</td><td class="num" style="--v:100.0">1.000</td><td class="num">-2.2</td><td class="num" style="--v:100.0">1.000</td><td class="num">0.6</td><td class="num" style="--v:100.0">1.000</td><td class="num">95.8</td><td class="num">0.910</td></tr><tr><td class="lbl"><span class="key k-noise"></span>Li: barrage</td><td class="num">-1.6</td><td class="num" style="--v:100.0">1.000</td><td class="num">0.1</td><td class="num" style="--v:100.0">1.000</td><td class="num">1.7</td><td class="num" style="--v:100.0">1.000</td><td class="num">95.8</td><td class="num">0.910</td></tr><tr><td class="lbl"><span class="key k-amuru"></span>Li: protocol-aware (Amuru p 0.25)</td><td class="num">-11.0</td><td class="num" style="--v:62.2">0.622</td><td class="num">-9.3</td><td class="num" style="--v:75.8">0.758</td><td class="num">-7.7</td><td class="num" style="--v:86.3">0.863</td><td class="num">92.9</td><td class="num">0.838</td></tr><tr><td class="lbl"><span class="key k-li-d"></span>cGAN at Li&#x27;s damage, white-box</td><td class="num">-9.1<span class="pm">± 1.8</span></td><td class="num" style="--v:52.7">0.527<span class="pm">± 0.372</span></td><td class="num">-6.6<span class="pm">± 1.4</span></td><td class="num" style="--v:12.1">0.121<span class="pm">± 0.160</span></td><td class="num">1.0<span class="pm">± 2.3</span></td><td class="num" style="--v:54.9">0.549<span class="pm">± 0.487</span></td><td class="num">86.3<span class="pm">± 10.3</span></td><td class="num">0.542<span class="pm">± 0.470</span></td></tr><tr><td class="lbl"><span class="key k-cnn-d"></span>cGAN vs CNN, white-box</td><td class="num">-21.7<span class="pm">± 0.6</span></td><td class="num" style="--v:10.7">0.107<span class="pm">± 0.018</span></td><td class="num">-18.2<span class="pm">± 0.5</span></td><td class="num" style="--v:23.3">0.233<span class="pm">± 0.058</span></td><td class="num">-4.3<span class="pm">± 0.7</span></td><td class="num" style="--v:100.0">1.000<span class="pm">± 0.000</span></td><td class="num">95.8<span class="pm">± 0.0</span></td><td class="num">0.910<span class="pm">± 0.000</span></td></tr><tr><td class="lbl"><span class="key k-li"></span>cGAN at Li&#x27;s damage, grey-box</td><td class="num">-9.5<span class="pm">± 2.2</span></td><td class="num" style="--v:99.7">0.997<span class="pm">± 0.006</span></td><td class="num">-7.0<span class="pm">± 1.7</span></td><td class="num" style="--v:99.3">0.993<span class="pm">± 0.012</span></td><td class="num">-0.1<span class="pm">± 0.8</span></td><td class="num" style="--v:99.9">0.999<span class="pm">± 0.002</span></td><td class="num">95.8<span class="pm">± 0.0</span></td><td class="num">0.910<span class="pm">± 0.001</span></td></tr><tr><td class="lbl"><span class="key k-cnn"></span>cGAN vs CNN, grey-box</td><td class="num">-21.6<span class="pm">± 0.7</span></td><td class="num" style="--v:11.7">0.117<span class="pm">± 0.028</span></td><td class="num">-17.8<span class="pm">± 1.1</span></td><td class="num" style="--v:29.3">0.293<span class="pm">± 0.116</span></td><td class="num">-4.6<span class="pm">± 0.6</span></td><td class="num" style="--v:100.0">1.000<span class="pm">± 0.000</span></td><td class="num">95.8<span class="pm">± 0.0</span></td><td class="num">0.910<span class="pm">± 0.000</span></td></tr></tbody></table></div>
+</details>
+
+<h2 id="window">Li's window: every jammer at the same powers</h2>
+<p>Recall averaged over JSR −20…+10 dB (the CNN's training range, uniform in dB), next to the damage each jammer does there. The pooled row is Li's own two-class setting: clean against their four types together.</p>
+<div class="tablewrap"><table class="res"><thead><tr><th>jammer</th><th class="num">recall</th><th class="num">mean excess PER</th><th class="num">DR (eq. 2a) %</th><th class="num">precision</th><th class="num">F-score</th></tr></thead><tbody><tr><td class="lbl"><span class="key k-genie"></span>genie flip (upper bound)</td><td class="num" style="--v:0.7">0.007</td><td class="num">0.84</td><td class="num">78.4</td><td class="num">0.204</td><td class="num">0.014</td></tr><tr><td class="lbl"><span class="key k-grey"></span>Li: single tone (constant vector)</td><td class="num" style="--v:89.8">0.898</td><td class="num">0.45</td><td class="num">97.2</td><td class="num">0.969</td><td class="num">0.932</td></tr><tr><td class="lbl"><span class="key k-dash"></span>Li: successive pulse</td><td class="num" style="--v:94.4">0.944</td><td class="num">0.41</td><td class="num">98.2</td><td class="num">0.970</td><td class="num">0.957</td></tr><tr><td class="lbl"><span class="key k-noise"></span>Li: barrage</td><td class="num" style="--v:93.9">0.939</td><td class="num">0.34</td><td class="num">98.1</td><td class="num">0.970</td><td class="num">0.954</td></tr><tr><td class="lbl"><span class="key k-amuru"></span>Li: protocol-aware (Amuru p 0.25)</td><td class="num" style="--v:67.4">0.674</td><td class="num">0.64</td><td class="num">92.5</td><td class="num">0.959</td><td class="num">0.792</td></tr><tr><td class="lbl"><span class="key k-li-d"></span>cGAN at Li&#x27;s damage, white-box</td><td class="num" style="--v:41.2">0.412<span class="pm">± 0.005</span></td><td class="num">0.51<span class="pm">± 0.05</span></td><td class="num">87.0<span class="pm">± 0.1</span></td><td class="num">0.934<span class="pm">± 0.001</span></td><td class="num">0.571<span class="pm">± 0.005</span></td></tr><tr><td class="lbl"><span class="key k-cnn-d"></span>cGAN vs CNN, white-box</td><td class="num" style="--v:78.3">0.783<span class="pm">± 0.013</span></td><td class="num">0.82<span class="pm">± 0.01</span></td><td class="num">94.8<span class="pm">± 0.3</span></td><td class="num">0.964<span class="pm">± 0.001</span></td><td class="num">0.864<span class="pm">± 0.008</span></td></tr><tr><td class="lbl"><span class="key k-li"></span>cGAN at Li&#x27;s damage, grey-box</td><td class="num" style="--v:81.2">0.812<span class="pm">± 0.181</span></td><td class="num">0.53<span class="pm">± 0.05</span></td><td class="num">95.4<span class="pm">± 3.8</span></td><td class="num">0.964<span class="pm">± 0.009</span></td><td class="num">0.874<span class="pm">± 0.117</span></td></tr><tr><td class="lbl"><span class="key k-cnn"></span>cGAN vs CNN, grey-box</td><td class="num" style="--v:78.5">0.785<span class="pm">± 0.026</span></td><td class="num">0.82<span class="pm">± 0.01</span></td><td class="num">94.9<span class="pm">± 0.5</span></td><td class="num">0.964<span class="pm">± 0.001</span></td><td class="num">0.865<span class="pm">± 0.016</span></td></tr><tr><td class="lbl"><strong>Li's four pooled</strong> (Li's two-class set, 762 : 816)</td><td class="num">0.864</td><td class="na">—</td><td class="num">92.6</td><td class="num">0.992</td><td class="num">0.923</td></tr></tbody></table></div>
+<details><summary>The same at α 0.05</summary>
+<div class="tablewrap"><table class="res"><thead><tr><th>jammer</th><th class="num">recall</th><th class="num">mean excess PER</th><th class="num">DR (eq. 2a) %</th><th class="num">precision</th><th class="num">F-score</th></tr></thead><tbody><tr><td class="lbl"><span class="key k-genie"></span>genie flip (upper bound)</td><td class="num" style="--v:4.8">0.048</td><td class="num">0.84</td><td class="num">75.7</td><td class="num">0.195</td><td class="num">0.077</td></tr><tr><td class="lbl"><span class="key k-grey"></span>Li: single tone (constant vector)</td><td class="num" style="--v:96.1">0.961</td><td class="num">0.45</td><td class="num">95.0</td><td class="num">0.829</td><td class="num">0.890</td></tr><tr><td class="lbl"><span class="key k-dash"></span>Li: successive pulse</td><td class="num" style="--v:98.2">0.982</td><td class="num">0.41</td><td class="num">95.4</td><td class="num">0.832</td><td class="num">0.901</td></tr><tr><td class="lbl"><span class="key k-noise"></span>Li: barrage</td><td class="num" style="--v:98.1">0.981</td><td class="num">0.34</td><td class="num">95.4</td><td class="num">0.832</td><td class="num">0.901</td></tr><tr><td class="lbl"><span class="key k-amuru"></span>Li: protocol-aware (Amuru p 0.25)</td><td class="num" style="--v:77.3">0.773</td><td class="num">0.64</td><td class="num">91.0</td><td class="num">0.796</td><td class="num">0.784</td></tr><tr><td class="lbl"><span class="key k-li-d"></span>cGAN at Li&#x27;s damage, white-box</td><td class="num" style="--v:62.4">0.624<span class="pm">± 0.008</span></td><td class="num">0.51<span class="pm">± 0.05</span></td><td class="num">87.9<span class="pm">± 0.2</span></td><td class="num">0.759<span class="pm">± 0.002</span></td><td class="num">0.685<span class="pm">± 0.006</span></td></tr><tr><td class="lbl"><span class="key k-cnn-d"></span>cGAN vs CNN, white-box</td><td class="num" style="--v:85.2">0.852<span class="pm">± 0.016</span></td><td class="num">0.82<span class="pm">± 0.01</span></td><td class="num">92.7<span class="pm">± 0.3</span></td><td class="num">0.811<span class="pm">± 0.003</span></td><td class="num">0.831<span class="pm">± 0.009</span></td></tr><tr><td class="lbl"><span class="key k-li"></span>cGAN at Li&#x27;s damage, grey-box</td><td class="num" style="--v:95.9">0.959<span class="pm">± 0.028</span></td><td class="num">0.53<span class="pm">± 0.05</span></td><td class="num">95.0<span class="pm">± 0.6</span></td><td class="num">0.829<span class="pm">± 0.004</span></td><td class="num">0.889<span class="pm">± 0.015</span></td></tr><tr><td class="lbl"><span class="key k-cnn"></span>cGAN vs CNN, grey-box</td><td class="num" style="--v:85.5">0.855<span class="pm">± 0.027</span></td><td class="num">0.82<span class="pm">± 0.01</span></td><td class="num">92.8<span class="pm">± 0.6</span></td><td class="num">0.812<span class="pm">± 0.005</span></td><td class="num">0.833<span class="pm">± 0.015</span></td></tr><tr><td class="lbl"><strong>Li's four pooled</strong> (Li's two-class set, 762 : 816)</td><td class="num">0.924</td><td class="na">—</td><td class="num">93.5</td><td class="num">0.949</td><td class="num">0.937</td></tr></tbody></table></div>
+</details>
+<p>Pooled, Li's four give DR 92.6 % at FAR 0.78 %, against Li's 100 % and 0.03 %. The cGAN is flagged more often than protocol-aware here (0.785 ± 0.026 grey-box vs 0.674), because in this window it is mostly loud: it breaks 0.815 ± 0.009 of frames on average, protocol-aware 0.642. Jammers doing different damage at the same power is why this window is not the comparison.</p>
+
+<h2 id="lidamage">The cGAN at Li's damage</h2>
+<p><strong>Why it exists.</strong> The cGAN was trained on bit errors at −39…−7 dB. A bit objective rewards piling more errors into frames that are already broken, not breaking every frame. So its damage curve is flat: it breaks half the frames at −18 dB and needs 14 dB more to break 90 %, where it is loud. Li's damage is a lost link, so the variant is trained on lost frames where Li's jammers lose the link.</p>
+<p><strong>How it was trained.</strong> <code>train_gan.py</code> tasks <code>cnn_li</code> (white-box) and <code>cnn_li_grey</code>: the loss is −(log E[PER] − 10 · P<sub>det</sub> (soft)), with E[PER] exact over the noise. The JSR is drawn uniformly from −10…0 dB, where Li's four break 90 % of frames (protocol-aware at −7.7 dB, tone −2.1, pulse comb +0.6, barrage +1.7). Each seed starts from the matching cGAN seed of the same kind, 4000 steps. A random start would not learn: at these powers the CNN flags every frame, and the detection term then has no gradient. It departs from the settled BER − β · detections reward only in counting lost frames instead of bits, as run005 did.</p>
+<p><strong>Per seed</strong> (argmax decision):</p>
+<div class="tablewrap"><table class="res">
+<thead><tr><th>seed</th><th class="num">PER 0.5 at</th><th class="num">recall</th><th class="num">PER 0.9 at</th><th class="num">recall</th><th class="num">max PER with recall ≤ 0.5</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-li-d"></span>white-box r0</td><td class="num">−8.2 dB</td><td class="num" style="--v:2.9">0.029</td><td class="num">−1.6 dB</td><td class="num" style="--v:0">0.000</td><td class="num">0.95 at +2 dB</td></tr>
+<tr><td><span class="key k-li-d"></span>white-box r1</td><td class="num">−5.8 dB</td><td class="num" style="--v:0">0.000</td><td class="num">+2.1 dB</td><td class="num" style="--v:13.8">0.138</td><td class="num">0.90 at +1 dB</td></tr>
+<tr><td><span class="key k-li-d"></span>white-box r2</td><td class="num">−5.8 dB</td><td class="num" style="--v:0">0.000</td><td class="num">+2.6 dB</td><td class="num" style="--v:36.9">0.369</td><td class="num">0.89 at +1 dB</td></tr>
+<tr><td><span class="key k-li"></span>grey-box r0</td><td class="num">−8.9 dB</td><td class="num" style="--v:44.1">0.441</td><td class="num">−1.0 dB</td><td class="num" style="--v:52.3">0.523</td><td class="num">0.88 at −3 dB</td></tr>
+<tr><td><span class="key k-li"></span>grey-box r1</td><td class="num">−5.7 dB</td><td class="num" style="--v:95.2">0.952</td><td class="num">+0.6 dB</td><td class="num" style="--v:99.6">0.996</td><td class="num">0 (flagged before it damages)</td></tr>
+<tr><td><span class="key k-li"></span>grey-box r2</td><td class="num">−6.3 dB</td><td class="num" style="--v:100">1.000</td><td class="num">+0.1 dB</td><td class="num" style="--v:100">1.000</td><td class="num">0 (flagged before it damages)</td></tr>
+</tbody></table></div>
+<p><strong>Why it fails grey-box.</strong> The grey-box variants did fool the network they trained on: at the end of training their soft detection on the surrogate was 0.09–0.24 near −1…−3 dB. On the deployed CNN two of the three are caught on 93–100 % of samples. The cGAN's own stealth transfers because it is quiet: at partial damage it works below the power at which any copy of the CNN reacts. The variant is loud and hides by shaping its spectrogram so one particular network reads it as clean. Another seed of the same network reads it differently. Two more signs that this is a narrow blind spot: even white-box, the detection returns on both sides of the training band, and one-sided energy flags the variant on 86–96 % of frames at −1 dB.</p>
+
+<h2 id="iq">IQ of the jammers</h2>
+<p>Each jammer at the JSR where it breaks 50 % of frames (first figure) and 90 % (second), on fresh frames, seed r0 for the generators. Three panels per jammer:</p>
+<ol class="steps">
+<li>its waveform at the receiver, one dot per sample, scaled to its own RMS: the shape of the signal;</li>
+<li>what it adds at the victim's decision points: the matched-filter output of the jammer alone at the symbol instants, in units of the symbol amplitude (+ = the QPSK points, 0.71 from the decision boundaries on the axes);</li>
+<li>the received constellation, symbol errors in black.</li>
+</ol>
+<div class="tablewrap"><table class="res">
+<thead><tr><th>jammer (at PER 0.5)</th><th class="num">JSR</th><th class="num">energy on the decision points, × white noise</th><th class="num">symbols pushed &gt; 0.5</th><th class="num">CNN flags</th></tr></thead>
+<tbody>
+<tr><td><span class="key k-noise"></span>Li: barrage</td><td class="num">+0.1 dB</td><td class="num">1.0</td><td class="num">14 %</td><td class="num">1.00</td></tr>
+<tr><td><span class="key k-grey"></span>Li: single tone</td><td class="num">−3.5 dB</td><td class="num">8.0</td><td class="num">100 %</td><td class="num">1.00</td></tr>
+<tr><td><span class="key k-dash"></span>Li: successive pulse</td><td class="num">−2.2 dB</td><td class="num">1.0</td><td class="num">12 %</td><td class="num">1.00</td></tr>
+<tr><td><span class="key k-amuru"></span>Li: protocol-aware</td><td class="num">−9.3 dB</td><td class="num">7.3</td><td class="num">21 %</td><td class="num">0.52</td></tr>
+<tr><td><span class="key k-genie"></span>genie flip</td><td class="num">−15.0 dB</td><td class="num">7.9</td><td class="num">0.8 %</td><td class="num">0.01</td></tr>
+<tr><td><span class="key k-cnn"></span>cGAN vs CNN, grey-box</td><td class="num">−19.0 dB</td><td class="num">6.3</td><td class="num">1.1 %</td><td class="num">0.04</td></tr>
+<tr><td><span class="key k-cnn-d"></span>cGAN vs CNN, white-box</td><td class="num">−18.6 dB</td><td class="num">6.1</td><td class="num">1.0 %</td><td class="num">0.05</td></tr>
+<tr><td><span class="key k-li"></span>cGAN at Li's damage, grey-box</td><td class="num">−8.9 dB</td><td class="num">0.8</td><td class="num">1.7 %</td><td class="num">0.44</td></tr>
+<tr><td><span class="key k-li-d"></span>cGAN at Li's damage, white-box</td><td class="num">−8.2 dB</td><td class="num">0.7</td><td class="num">1.8 %</td><td class="num">0.03</td></tr>
+</tbody></table></div>
+<p>White noise puts 1/8 of its energy into the victim's band; a jammer matched to the victim's pulse puts nearly all of it there, which is why the tone, protocol-aware and the genie read ≈ 7–8. The cGAN is close to that (6.1–6.4) and concentrates it on about 1 % of symbols: short bursts shaped like the victim's pulse, the strategy of Amuru's low-duty pulsed jammer. The variant at Li's damage lands less on the decision points than white noise does: most of its energy is outside the band the receiver listens to, and a few sparse pushes do the damage. That wastes about 9 dB, the same gap as its later damage onset (−8 vs −19 dB at PER 0.5), and it is the extra power energy detection sees.</p>
+<figure><div class="plate"><img src="figs/base_fig_iq_per50.png" alt="IQ scatter of each jammer at the JSR where it breaks 50 % of frames: waveform, contribution at the decision points, received constellation" loading="lazy"></div>
+<figcaption><b>At PER 0.5.</b> Barrage: a Gaussian cloud, spread over every symbol. Tone: the same offset on every symbol, so each QPSK point becomes a ring of radius √JSR. Protocol-aware: QPSK-shaped bursts on a quarter of the symbols. Genie: one symbol per frame moved onto another QPSK point, so the errors (black) sit on the clean points. cGAN: mostly near zero with rare large bursts. Variant at Li's damage: a noise-like waveform whose contribution at the decision points is mostly small.</figcaption></figure>
+<figure><div class="plate"><img src="figs/base_fig_iq_per90.png" alt="IQ scatter of each jammer at the JSR where it breaks 90 % of frames" loading="lazy"></div>
+<figcaption><b>At PER 0.9, Li's damage.</b> The same shapes at higher power. The cGAN now needs −3.6 dB (white-box) and −5.1 dB (grey-box), its bursts reach ±5 symbol amplitudes, and the CNN flags it on every sample.</figcaption></figure>
+
+<h2 id="vector">Constant vector: fixed or random direction</h2>
+<p>A constant IQ vector adds an offset of √JSR (in units of the symbol amplitude) to every matched-filter sample. The damage follows in closed form at Es/N0 24 dB; the random-direction row matches the measured tone (PER 0.1 at −4.4 dB predicted, −4.3 dB measured).</p>
+<div class="tablewrap"><table class="res">
+<thead><tr><th>vector</th><th class="num">PER 0.1</th><th class="num">PER 0.5</th><th class="num">PER 0.9</th></tr></thead>
+<tbody>
+<tr><td>random direction per frame (Li's tone, measured here)</td><td class="num">−4.4 dB</td><td class="num">−3.6 dB</td><td class="num">−2.0 dB</td></tr>
+<tr><td>fixed, along one axis (needs the carrier phase)</td><td class="num">−4.7 dB</td><td class="num">−4.3 dB</td><td class="num">−4.0 dB</td></tr>
+<tr><td>fixed, diagonal</td><td class="num">−1.9 dB</td><td class="num">−1.5 dB</td><td class="num">−1.2 dB</td></tr>
+</tbody></table></div>
+<p>The random and the on-axis vector are 0.3 dB apart where damage starts and 2 dB apart at PER 0.9. The CNN sees only the magnitude of the spectrogram, so the direction is invisible to it, and it flags the tone on 99 % of frames at −8 dB and on every frame from −6 dB, before either vector breaks a single frame (from −5 dB). Both variants therefore sit at recall 1.00 at every damage level. The random direction stays, because it needs no knowledge of the victim's carrier phase.</p>
+
+<h2 id="amuru">Amuru</h2>
+<p>Amuru appears only as Li's protocol-aware type (p 0.25), as decided for this readout. Two consequences:</p>
+<ul class="tight">
+<li>Zhou's "optimal" baseline is matched QPSK, which is Amuru's family at p 1. Amuru &amp; Buehrer show that at low JSR the jammer that maximises BER against a coherent receiver is pulsed with p &lt; 1, so the family is the stronger classical reference.</li>
+<li>Lower duty cycles tie the cGAN at partial damage. In the §3.3q run, Amuru at p 0.01–0.02 is flagged by this CNN on 0.10–0.12 of frames at PER 0.1 (α 0.05), level with the cGAN, and the IQ plots show why: the cGAN is itself a low-duty burst jammer. So this page supports "beats Li's four", not "beats Amuru".</li>
+</ul>
+
+<h2 id="caveats">Caveats</h2>
+<ul class="tight">
+<li>base only. Noise uncertainty (σ<sub>N</sub> 0.5 and 1 dB) is next.</li>
+<li>One deployed CNN (seed 11) and one surrogate (seed 12). The metrics use Li's class balance applied to measured rates, not a literal 30 % test split.</li>
+<li>The genie flip changes a whole number of symbols per frame (⌊δN⌋), so its PER jumps from 0 to 1 at −15 dB and every matched level reads the same point.</li>
+<li>Li's image spans an unknown time. If it covers many of our frames, a CNN that sees a partially damaging jammer in any of them would flag the image more often than one frame does.</li>
+<li>The cGAN at Li's damage was trained and evaluated on the same band; the grey-box seeds disagree with each other (0.44 / 0.95 / 1.00 at PER 0.5), so three seeds do not pin down how often it transfers. A black-box attacker (a different detector architecture) is untested throughout.</li>
+</ul>
+
+<h2 id="repro">Jobs and files</h2>
+<ul class="tight">
+<li>verify 103/103 and the regression gate vs S4 pass (jobs 2278626, 2278683, 2278690). The base rerun into <code>eval_li.json</code> (job 2278627) reproduces <code>eval.json</code> exactly: 0 of 13,068 values differ. <code>eval.json</code>, which §3.3q cites, is untouched.</li>
+<li>White-box variant: training 2278684 (array 8–10), evaluation 2278685. Grey-box: surrogate CNN 2278691 (<code>train_cnn.py --seed 12 --name cnn_s12</code>), its band 2278692 (<code>bands.py --cnn cnn_s12</code>), cGAN 2278693 (array 11–13), variant 2278694 (array 14–16), evaluation 2278695. IQ: 2278697. All on TITAN RTX, 6.5–9 min per training job.</li>
+<li>Code: <code>final/defender.py</code> records the CNN's argmax decision; <code>final/evaluate.py --out</code>; <code>final/train_gan.py</code> tasks <code>cnn_li</code>, <code>cnn_b10_grey</code>, <code>cnn_li_grey</code>; <code>final/train_cnn.py --name</code>; <code>final/bands.py --cnn</code>; <code>final/attacks.frames(keep_jammer=True)</code>; <code>final/verify.py</code> §8 checks the frame-damage term and the returned jammer; <code>final/li_figures.py</code> and <code>final/iq_plots.py</code> draw this page's figures and tables.</li>
+<li>Data: <code>artifacts/final/base/eval_li.json</code>, <code>artifacts/final/base/li/</code> (<code>li.json</code>, <code>table.md</code>, <code>iq_samples.npz</code>, four figures), <code>artifacts/final/base/cnn_s12/</code>, <code>bands_cnn_s12.json</code>.</li>
+</ul>
+</main>
+</div>
