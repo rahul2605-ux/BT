@@ -23,8 +23,9 @@ clean frames of the SAME environment (`calibrate`, the CFAR rule of README §2.7
                 Scale-free, so it sees the SHAPE of the amplitude distribution.
     spec_cnn    Li et al., IEEE Access 2022: EfficientNet-B0 on a fixed-scale spectrogram
                 image of the full band, retrained per environment (train_cnn.py).
-    power       mean |r|^2 over the full band. KEPT ONLY FOR THE REGRESSION GATE against
-                S4 (regress.py); no environment reports it.
+    power       mean |r|^2 over the full band, before the matched filter. One-sided. The
+                regression gate against S4 (regress.py, as power_one_sided) and, since
+                2026-10-01 (user), a reported detector (defender.calibrate_power).
 
 Pruned from cgan/detectors.py: the noise LRT (dropped by the final experiment) and
 power_csi. Added: energy, energy_csi.
@@ -88,7 +89,7 @@ def energy_csi(z, gain, c0):
 
 
 def power(r):
-    """Full-band mean |r|^2 -- the regression gate only."""
+    """Full-band mean |r|^2, before the matched filter."""
     return r.abs().pow(2).double().mean(dim=-1)
 
 

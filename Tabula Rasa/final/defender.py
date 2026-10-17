@@ -4,8 +4,10 @@ Final experiment -- the defender of one environment, and one measured sweep poin
 
 `Defender` and `measure` are cgan/baselines.py's, pruned to what the final experiment
 reports: the detectors `energy`, `energy_2s`, `kurtosis`, `spec_cnn`, plus `energy_csi`
-in the fading environments. `power_one_sided` (full band) is readable only so that
-regress.py can load S4's cgan-format thresholds.json. The noise LRT, the K > 1 sweeps
+in the fading environments. `power` (one-sided, full band, before the matched filter; user
+2026-10-01) is calibrated by evaluate.py through `calibrate_power` where thresholds.json lacks
+it. `power_one_sided` is the same statistic under S4's name, so that regress.py can load S4's
+cgan-format thresholds.json. The noise LRT, the K > 1 sweeps
 and the confirmation pass are gone: no pick at alpha is reported (README §3.4).
 
 `calibrate_env` is step 5 of cgan/train_spectrogram_cnn.py with the environment's
@@ -72,11 +74,22 @@ class Defender:
             s[CSI] = detectors.energy_csi(z, gain, self.c0)
         if "power_one_sided" in want:
             s["power_one_sided"] = detectors.power(r)
+        if "power" in want:
+            s["power"] = detectors.power(r)
         if "kurtosis" in want:
             s["kurtosis"] = detectors.two_sided(detectors.kurtosis(r), self.thr["kurtosis_clean_mean"])
         if "spec_cnn" in want:
             s["spec_cnn"] = detectors.cnn_statistic(self.net, r, self.scale, grad=grad)
         return {k: v for k, v in s.items() if k in want}
+
+    @torch.no_grad()
+    def calibrate_power(self, n_cal=N_CALIBRATION, batch=1024):
+        """Adds `power`'s CFAR thresholds from n_cal clean frames of this environment (as calibrate_env)."""
+        p = torch.cat([detectors.power(attacks.frames(self.L, min(batch, n_cal - i), None, None, self.snr_db)["r"])
+                       for i in range(0, n_cal, batch)])
+        self.thr.update(power={str(a): detectors.calibrate(p, a) for a in detectors.ALPHAS},
+                        power_clean_mean=float(p.mean()), power_clean_std=float(p.std()), power_n_cal=n_cal)
+        self.dets.append("power")
 
     def threshold(self, det, alpha):
         key = det if det in self.thr else _KEY.get(det, det)

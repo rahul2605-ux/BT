@@ -34,6 +34,9 @@ Outputs, artifacts/final/<env>/li/:
     fig_li_damage_vs_dr.png   the same points with JSR hidden: excess PER and BER against the
                               detection rate -- where equal damage is compared
     table.md, li.json
+--clean writes the same two graphs for the clean roster into artifacts/final/Li_<env>/, once per detector
+(VIEWS: the CNN at argmax as fig_li_*, one-sided full-band power and kurtosis at α 0.01 as fig_power_*,
+fig_kurtosis_*).
 """
 
 import argparse
@@ -72,6 +75,15 @@ AMURU_LOW = {   # Li_<env>/ only (user, 2026-10-01): the duty cycles that beat c
 }
 CLEAN = ["omniscient_e1", "tone", "pulse_comb", "noise", "pulsed_p0.25", "pulsed_p0.05", "pulsed_p0.02",
          "cnn_b10_grey"]
+VIEWS = {   # det -> (decision, name, file stem, title, statistic). Li_<env>/ draws the roster against all three
+    # (user, 2026-10-01), power before the matched filter (user, same day). Power and kurtosis have no argmax: α 0.01
+    # is the threshold closest to the CNN's argmax FAR (0.0078 in base), so the three are read at about the same FAR.
+    "spec_cnn": ("argmax", "CNN", "li", "The CNN scored Li et al.'s way", ""),
+    "power":    ("0.01", "power", "power", "The one-sided power detector",
+                 " Statistic: mean |r|² over the full band, before the matched filter."),
+    "kurtosis": ("0.01", "kurtosis", "kurtosis", "The kurtosis detector",
+                 " Statistic: |E|r|⁴ / (E|r|²)² − clean mean|, full band."),
+}
 
 
 def clean_mode():
@@ -94,8 +106,12 @@ def seeds(d, key):
     return [d["attackers"][key]["points"]] if key in d["attackers"] else []
 
 
-def rate(p, k):
-    return p["pdet"]["spec_cnn"][k]
+def rate(p, k, det="spec_cnn"):
+    return p["pdet"][det][k]
+
+
+def decision(k):
+    return "argmax decision" if k == "argmax" else f"threshold at α {k}"
 
 
 def li_metrics(recall, far, n_jam=N_JAM, n_clean=N_CLEAN):
@@ -208,7 +224,9 @@ def table_md(s):
     return "\n".join(L)
 
 
-def fig_vs_jsr(env, d, far, out):
+def fig_vs_jsr(env, d, out, det="spec_cnn"):
+    k, name, stem, title, stat = VIEWS[det]
+    far = rate(d["clean"], k, det)
     jsr = np.array(d["meta"]["jsr_db"], float)
     fig, ax = F.new_fig(3, 1, 7.6, 9.4, sharex=True, gridspec_kw=dict(height_ratios=[1.1, 1, 1]))
     ax = ax[:, 0]
@@ -223,7 +241,7 @@ def fig_vs_jsr(env, d, far, out):
         X = np.tile(jsr, (len(S), 1))
         F.draw_role(ax[0], X, np.array([F.excess(p, "ber", d["clean"]) for p in S]), col, lw, kw, lab, logy=True)
         F.draw_role(ax[1], X, np.array([F.excess(p, "per", d["clean"]) for p in S]), col, lw, kw, None)
-        F.draw_role(ax[2], X, np.array([[rate(q, "argmax") for q in p] for p in S]), col, lw, kw, None)
+        F.draw_role(ax[2], X, np.array([[rate(q, k, det) for q in p] for p in S]), col, lw, kw, None)
     ax[0].set_yscale("log")
     ax[0].set_ylim(1e-6, 1.2)
     ax[1].set_ylim(-0.02, 1.02)
@@ -232,25 +250,27 @@ def fig_vs_jsr(env, d, far, out):
     ax[1].text(-34.5, 0.915, "PER 0.9 = Li's damage (complete loss of signal)", fontsize=7.5, color=F.INK2, va="bottom")
     ax[2].set_ylim(-0.02, 1.02)
     ax[2].axhline(far, color=F.MUTED, ls=":", lw=1.2)
-    ax[2].text(-34.5, 0.8, f"argmax decision\nclean FAR {far:.4f} dotted\nshaded: Li's window\n"
+    ax[2].text(-34.5, 0.8, f"{decision(k)}\nclean FAR {far:.4f} dotted\nshaded: Li's window\n"
                f"[{WINDOW_A[0]:+g}, {WINDOW_A[1]:+g}] dB (the CNN's\ntraining range)", fontsize=7.5, color=F.INK2, va="top")
     ax[0].set_ylabel("excess BER (log)")
     ax[1].set_ylabel("excess PER")
-    ax[2].set_ylabel("CNN detection rate (recall)")
+    ax[2].set_ylabel(f"{name} detection rate (recall)")
     ax[2].set_xlabel("received JSR [dB]")
     ax[2].set_xlim(-35, 15)
     fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=2, fontsize=8, frameon=False,
                labelcolor=F.INK2, bbox_to_anchor=(0.5, 0.0))
-    fig.suptitle(f"The CNN scored Li et al.'s way — env {env} ({E.LABEL[env]}), SNR 15 dB = Es/N0 24 dB\n"
+    fig.suptitle(f"{title} — env {env} ({E.LABEL[env]}), SNR 15 dB = Es/N0 24 dB\n"
                  "One sample = one 128-symbol frame. Read down: at one JSR, how much damage and how often flagged.\n"
-                 f"Thick: seed mean; thin: seeds.\n{BOX}", fontsize=9.5, color=F.INK, x=0.01, ha="left", y=0.995)
+                 f"Thick: seed mean; thin: seeds.{stat}\n{BOX}", fontsize=9.5, color=F.INK, x=0.01, ha="left", y=0.995)
     fig.tight_layout(rect=(0, 0.1, 1, 0.97))
     fig.subplots_adjust(top=0.885)
-    fig.savefig(os.path.join(out, "fig_li_vs_jsr.png"), dpi=150, facecolor=F.SURFACE)
+    fig.savefig(os.path.join(out, f"fig_{stem}_vs_jsr.png"), dpi=150, facecolor=F.SURFACE)
     F.plt.close(fig)
 
 
-def fig_damage_vs_dr(env, d, far, out):
+def fig_damage_vs_dr(env, d, out, det="spec_cnn"):
+    k, name, stem, _, stat = VIEWS[det]
+    far = rate(d["clean"], k, det)
     fig, ax = F.new_fig(2, 1, 7.6, 8.2)
     ax = ax[:, 0]
     for key, (lab, col, kw) in ROSTER.items():
@@ -259,7 +279,7 @@ def fig_damage_vs_dr(env, d, far, out):
             continue
         kw = dict(kw)
         lw = kw.pop("lw", 1.6)
-        X = np.array([[rate(q, "argmax") for q in p] for p in S])
+        X = np.array([[rate(q, k, det) for q in p] for p in S])
         F.draw_role(ax[0], X, np.array([F.excess(p, "per", d["clean"]) for p in S]), col, lw, kw, lab)
         F.draw_role(ax[1], X, np.array([F.excess(p, "ber", d["clean"]) for p in S]), col, lw, kw, None, logy=True)
     for l in LEVELS:
@@ -270,18 +290,19 @@ def fig_damage_vs_dr(env, d, far, out):
     for a in ax:
         a.axvline(far, color=F.MUTED, ls=":", lw=1.2)
         a.set_xlim(-0.02, 1.02)
-        a.set_xlabel("CNN detection rate (recall), argmax decision")
+        a.set_xlabel(f"{name} detection rate (recall), {decision(k)}")
     ax[0].set_ylabel("excess PER")
     ax[1].set_ylabel("excess BER (log)")
     ax[0].text(0.03, 0.915, "PER 0.9 = Li's damage", fontsize=7.5, color=F.INK2, va="bottom")
     fig.legend(*ax[0].get_legend_handles_labels(), loc="lower center", ncol=2, fontsize=8, frameon=False,
                labelcolor=F.INK2, bbox_to_anchor=(0.5, 0.0))
-    fig.suptitle(f"Damage against detection, JSR hidden — env {env} ({E.LABEL[env]})\n"
-                 f"Up and to the left is better for the jammer; clean FAR {far:.4f} dotted\n{BOX}",
+    fig.suptitle(f"Damage against {name} detection, JSR hidden — env {env} ({E.LABEL[env]})\n"
+                 f"Up and to the left is better for the jammer; clean FAR {far:.4f} dotted\n"
+                 + (f"{stat.strip()}\n" if stat else "") + BOX,
                  fontsize=9.5, color=F.INK, x=0.01, ha="left", y=0.995)
     fig.tight_layout(rect=(0, 0.11, 1, 0.97))
-    fig.subplots_adjust(top=0.9)
-    fig.savefig(os.path.join(out, "fig_li_damage_vs_dr.png"), dpi=150, facecolor=F.SURFACE)
+    fig.subplots_adjust(top=0.88 if stat else 0.9)
+    fig.savefig(os.path.join(out, f"fig_{stem}_damage_vs_dr.png"), dpi=150, facecolor=F.SURFACE)
     F.plt.close(fig)
 
 
@@ -296,10 +317,10 @@ def main():
         clean_mode()
         out = os.path.join(E.ART_ROOT, f"Li_{args.env}")
         os.makedirs(out, exist_ok=True)
-        far = rate(d["clean"], "argmax")
-        fig_vs_jsr(args.env, d, far, out)
-        fig_damage_vs_dr(args.env, d, far, out)
-        print(f"wrote {os.path.relpath(out)}/: fig_li_vs_jsr.png, fig_li_damage_vs_dr.png")
+        for det in VIEWS:
+            fig_vs_jsr(args.env, d, out, det)
+            fig_damage_vs_dr(args.env, d, out, det)
+        print(f"wrote {os.path.relpath(out)}/: fig_{{li,power,kurtosis}}_{{vs_jsr,damage_vs_dr}}.png")
         return
     out = E.art(args.env, "li")
     os.makedirs(out, exist_ok=True)
@@ -309,8 +330,8 @@ def main():
     md = table_md(s)
     with open(os.path.join(out, "table.md"), "w") as f:
         f.write(md)
-    fig_vs_jsr(args.env, d, s["far"]["argmax"], out)
-    fig_damage_vs_dr(args.env, d, s["far"]["argmax"], out)
+    fig_vs_jsr(args.env, d, out)
+    fig_damage_vs_dr(args.env, d, out)
     print(md)
     print(f"\nwrote {os.path.relpath(out)}/: fig_li_vs_jsr.png, fig_li_damage_vs_dr.png, table.md, li.json")
 

@@ -233,14 +233,15 @@ pinned `titan_rtx`; `figures.py` runs on the login node. Results: §3.3q.
 | `final/attacks.py` | noise, pulsed (Amuru p ∈ {1…0.01}), omniscient genie, Li's tone / pulse comb, `gan_tx`, a simulated `onoff` (verify only), `frames` (+ fading, σ_N, per-frame DC share; `keep_jammer=True` also returns the jammer at R), the damage terms (log E[BER], log E[PER]) with a per-frame noise variance |
 | `final/detectors.py`, `defender.py` | `energy` (mean \|z_k\|² after the MF, one- and two-sided), `energy_csi`, kurtosis, the spectrogram CNN; full-band `power` for the regression gate only. `Defender`, `measure` (also records the CNN's argmax decision, key `argmax`), `calibrate_env` (the CFAR thresholds on 20k clean frames of the environment) |
 | `final/models.py` | `Generator`, `load_generator` |
-| `final/train_cnn.py` + `submit_train_cnn.sh` | chain step 1: Li's CNN retrained on the environment + every CFAR threshold → `artifacts/final/<env>/cnn/`; `--seed 12 --name cnn_s12` = the grey-box attacker's surrogate (refuses a non-default seed into `cnn/`) |
+| `final/train_cnn.py` + `submit_train_cnn.sh` | chain step 1: Li's CNN retrained on the environment + every CFAR threshold → `artifacts/final/<env>/cnn/`; `--seed 12 --name cnn_s12` = the grey-box attacker's surrogate (refuses a non-default seed into `cnn/`); `--extra-gens TAG … --name cnn_d6` adds generators as a fifth jammed type (204 frames, `--extra-jsr`, default −22…+10 dB; the quick D6, §3.3s) |
 | `final/bands.py` + `submit_bands.sh` | chain step 2: the JSR training band per target, S4's rule made automatic → `<env>/bands.json` (30 dB reference cached in `artifacts/final/bands_ref30.json`); `--cnn cnn_s12` → `bands_cnn_s12.json` from the surrogate |
 | `final/train_gan.py` + `submit_train_gan.sh` | chain step 3: 8 generators per environment (control ×3, `cnn_b10` ×3, `energy_b10`, `kurtosis_b10`), run003's recipe → `<env>/gan/` (checkpoints on net_scratch, symlinked). Extra indices, by hand (§3.3r): 8–10 `cnn_li` (cnnGAN2, dropped), 11–13 `cnn_b10_grey` (cnnGAN1 grey-box, against `cnn_s12`), 14–16 `cnn_li_grey` (dropped); task fields `damage`, `band`, `init` (warm start), `defender` |
-| `final/evaluate.py` + `submit_evaluate.sh` | chain step 4: 22 attackers × JSR −50…+15 dB × 512 frames × every detector → `<env>/eval.json`. The random push (2026-09-30) is appended last (`added()`), so no earlier attacker's position seed moved; `--only random_push_e0.1` adds it to an existing `eval.json`. `--out eval_li.json` writes the Li-protocol rerun beside it; the extra generators (`train_gan.ARRAY_EXTRA`, where trained) are appended last |
+| `final/evaluate.py` + `submit_evaluate.sh` | chain step 4: 22 attackers × JSR −50…+15 dB × 512 frames × every detector → `<env>/eval.json`. The random push (2026-09-30) is appended last (`added()`), so no earlier attacker's position seed moved; `--only random_push_e0.1` adds it to an existing `eval.json`. `--out eval_li.json` writes the Li-protocol rerun beside it; the extra generators (`train_gan.ARRAY_EXTRA`, where trained) are appended last. `--cnn cnn_d6 --out eval_d6.json` scores the same frames against another defender folder (§3.3s) |
+| `final/d6_figures.py` | login node, the quick D6 (§3.3s): `eval_li.json` (deployed CNN) vs `eval_d6.json` (`cnn_d6`) on the same frames → `<env>/d6/` (`fig_d6_accuracy`: detection rate per jammer before/after, Li's window and matched PER 0.5, at argmax and α 0.05; `table.md` with every attacker; `d6.json`) |
 | `final/submit_env.sh <env> [--smoke]` | submits steps 1–4 as one `--dependency=afterok` chain (login node, sbatch only) |
 | `final/figures.py` | login node: `--env E` / `--all` → `fig1_vs_jsr` (excess BER, excess PER and P_det stacked on one JSR axis), `fig2_damage_vs_pdet`, `table.md`, `summary.json`; `--compare` → `artifacts/final/compare/` (P_det at matched damage across envs, the CNN-conditioned cGAN's gains over Amuru's best p and the vanilla cGAN, the DC share). The figures draw six attackers per detector column (`DRAWN`: genie flip, random push, barrage, Amuru at its best p, vanilla cGAN = control, the cGAN conditioned on that column's detector) over energy / kurtosis / CNN; tables hold every attacker and detector. The pre-2026-09-30 PNGs `fig1_damage_vs_jsr`, `fig2_pdet_vs_jsr`, `fig3_damage_vs_pdet` are left on disk, superseded |
 | `final/verify.py` + `regress.py` + `submit_verify.sh` | the test suite (closed forms, energy, Rician, σ_N, CFAR in all six envs, bands at base, baselines, one training step per target) and the regression gate vs S4 → `artifacts/final/regress/s4_gate.json`. **Run first**; job 2277992 (97/97), with the random push 2278412 (100/100), with the Li-protocol additions 2278690 (103/103), all exit 0 |
-| `final/li_figures.py` | login node, the Li-protocol readout (§3.3r) from `<env>/eval_li.json`: `--env E` → `<env>/li/` (`fig_li_vs_jsr`, `fig_li_damage_vs_dr`, `table.md`, `li.json`: recall at the CNN's argmax and α 0.05, Li's window, matched PER 0.1/0.5/0.9, most damage at recall ≤ 0.5); `--clean` → `artifacts/final/Li_<env>/`, graphs only, roster = Li's four + Amuru p 0.05 / 0.02 + genie flip + cnnGAN1 grey-box (the IQ graphs keep the older roster, without p 0.05 / 0.02) |
+| `final/li_figures.py` | login node, the Li-protocol readout (§3.3r) from `<env>/eval_li.json`: `--env E` → `<env>/li/` (`fig_li_vs_jsr`, `fig_li_damage_vs_dr`, `table.md`, `li.json`: recall at the CNN's argmax and α 0.05, Li's window, matched PER 0.1/0.5/0.9, most damage at recall ≤ 0.5); `--clean` → `artifacts/final/Li_<env>/`, graphs only, roster = Li's four + Amuru p 0.05 / 0.02 + genie flip + cnnGAN1 grey-box (the IQ graphs keep the older roster, without p 0.05 / 0.02), drawn once per detector (`VIEWS`): `fig_li_*` the CNN at argmax, `fig_power_*` / `fig_kurtosis_*` one-sided full-band power (before the matched filter) and kurtosis at α 0.01 |
 | `final/iq_plots.py` + `submit_iq.sh`, `final/pulse_plots.py` + `submit_pulse.sh` | Sionna jobs (`--plot-only` replots on the login node): IQ of each jammer at matched PER 0.5 / 0.9 (waveform, its matched-filter output at the decision points, the received constellation) and where cnnGAN1 puts its energy in time (rasters, pushes per frame, p_eff on Amuru's axis) → `<env>/li/` and `Li_<env>/` |
 | `final/submit_li_env.sh <env>` | the Li-protocol chain: surrogate CNN (`train_cnn.py --seed 12 --name cnn_s12`) → `bands.py --cnn cnn_s12` → cnnGAN1 grey-box (`train_gan` array 11–13) → `evaluate.py --out eval_li.json` → IQ + pulse jobs (§3.4) |
 
@@ -3325,6 +3326,32 @@ transfer and dropped with it (cnnGAN1 has no gap to close).
   clean graphs `Li_<env>/` draw p 0.05 and p 0.02 next to Li's p 0.25, because leaving them out overstates the
   learner. The IQ graphs and `li/`'s full roster do not. Whether the paper keeps them is still open (§4.3 L1–L2 are
   the ways to make the learner compete).
+- **The same roster against power and kurtosis** (user, 2026-10-01; `Li_base/fig_{power,kurtosis}_*`). Both
+  before the matched filter: `power` = one-sided mean |r|² over the full band (user: energy after the MF "makes no
+  sense" next to the CNN), kurtosis was already full-band. Neither has an argmax, so α 0.01 is used, the threshold
+  closest to the CNN's argmax FAR 0.0078. Detection rate at matched excess PER 0.1 / 0.5 / 0.9 (MF energy for
+  comparison):
+
+  | | power (full band) | energy (after MF) | kurtosis | CNN (argmax, above) |
+  |---|---|---|---|---|
+  | cnnGAN1 grey-box | 0.19 / 0.49 / 1.00 | 0.12 / 0.34 / 1.00 | 0.05 / 0.23 / 1.00 | 0.03 / 0.09 / 1.00 |
+  | Amuru p 0.05 | 0.54 / 0.80 / 0.96 | 0.45 / 0.71 / 0.92 | 0.15 / 0.52 / 0.93 | 0.04 / 0.08 / 0.18 |
+  | Amuru p 0.02 | 0.27 / 0.57 / 0.95 | 0.22 / 0.48 / 0.94 | 0.07 / 0.37 / 0.95 | 0.04 / 0.05 / 0.68 |
+  | Li: protocol-aware (p 0.25) | 0.98 / 1.00 / 1.00 | 0.94 / 0.98 / 0.99 | 0.92 / 0.99 / 1.00 | 0.37 / 0.52 / 0.67 |
+  | Li: barrage, pulse comb, tone | 1.00 | 0.85–1.00 | 0.88–1.00 | 1.00 |
+  | genie flip | 0.02 | 0.01 | 0.02 | 0.01 |
+
+  **Moving power before the filter makes it detect more, not less.** Full-band power reaches P_det 0.5 at
+  −18 ± 0.4 dB for every jammer in the roster; MF energy at −17.2 to −15.6 dB for the in-band ones and −8 dB for
+  barrage and pulse comb. The clean spreads coincide (relative std 0.0077 vs 0.0078), and full-band power counts
+  all of a jammer's power, where the MF passes 1/10 of a white jammer's (§3.4 decision 3, verify §2). **The
+  ranking depends on the detector.** At PER 0.1–0.5, cnnGAN1 (trained only against a CNN) is the least detected
+  of the roster by power and kurtosis. Amuru p 0.02–0.05 is the least detected only by the CNN. Nothing except
+  the genie survives PER 0.9 under power or kurtosis. Against the in-band jammers the CNN is the weakest of
+  the three at low JSR. A power test with a known noise level fires on a 1.8 % rise in frame power (α 0.01,
+  ≈ 0.08 dB); our reading, not tested, is that the spectrogram image does not resolve that. The tone's kurtosis
+  rate falls to 0.2 near +2 dB, where (our reading, not tested) the tone-plus-QPSK sum crosses the clean
+  kurtosis, so the two-sided statistic is blind there. By then every frame is already lost.
 - **What cnnGAN1 learned (`pulse_plots.py`, `li/pulses.json`):** effective duty cycle p_eff = (E e_k)² / E e_k²
   of its energy at the decision points = **0.010–0.012** (calibrated: Amuru p 0.01 → 0.008, p 0.25 → 0.27, genie
   1/128 → 0.008), 90 % of its in-band energy on ≈ 1 % of symbols, unchanged with power. **It is ONE burst per
@@ -3346,13 +3373,65 @@ transfer and dropped with it (cnnGAN1 has no gap to close).
 
 **Code and checks.** `defender.measure` records the CNN's argmax (`pdet["spec_cnn"]["argmax"]`); `evaluate.py
 --out eval_li.json` (the base rerun reproduces `eval.json` exactly, 0 / 13 068 values, same GPU model; `eval.json`
-untouched); `train_cnn.py --name` (refuses a non-default seed into `cnn/`), `bands.py --cnn`; `train_gan.py` tasks
+untouched; since 2026-10-01 it also carries full-band `power`, calibrated on 20k clean frames by
+`defender.calibrate_power`, job 2280026, every earlier value reproduced, 0 / 49 514 changed); `train_cnn.py --name` (refuses a non-default seed into `cnn/`), `bands.py --cnn`; `train_gan.py` tasks
 `cnn_li` (8–10), `cnn_b10_grey` (11–13), `cnn_li_grey` (14–16) with `damage`, `band`, `init` (warm start),
 `defender` fields; `attacks.frames(keep_jammer=True)`; verify 103/103 (§8: the PER damage term vs measured PER,
 0.496 vs 0.488; the returned jammer's power = its JSR). Jobs: verify 2278626 / 2278683 / 2278690; base rerun
 2278627; cnn_li 2278684 + eval 2278685; surrogate 2278691, bands 2278692, cnn_b10_grey 2278693, cnn_li_grey
 2278694, eval 2278695; IQ 2278696 / 2278697; pulse 2278731. Artifacts: `artifacts/final/base/{eval_li.json, li/,
 cnn_s12/, bands_cnn_s12.json, gan/cnn_*grey*, gan/cnn_li*}`, `artifacts/final/Li_base/` (the clean graphs).
+
+## 3.3s Quick D6 at base — retraining the CNN on cnnGAN1 costs nothing at the calibrated threshold and catches it only partly (2026-10-01)
+
+**User (2026-10-01):** *"a quick retrain of the cnn against cnnGAN symbols and show through a figure how it
+decreases its accuracy … its accuracy against all jammers before and after"*. One round, the defender only
+(attackers frozen), at `base`. Not the parked §3.4 D6 spec: no range widening (arm A), no rounds.
+
+**Design.** `train_cnn.py --name cnn_d6 --extra-gens cnn_b10_grey_r0 cnn_b10_grey_r1`: Li's recipe and seed 11,
+Li's frames exactly the deployed CNN's (drawn first; the generators' weight init is fenced off with `fork_rng`),
+plus cnnGAN1 grey-box seeds r0 and r1 as a fifth jammed type: 204 frames, JSR U[−22, +10] dB (from where cnnGAN1
+starts breaking frames to the top of Li's range, so no harmless frame is labelled jammed, §3.3o lesson 3). Seed
+r2 is **held out**: its burst sits on another symbol (§3.3r). `evaluate.py --cnn cnn_d6 --out eval_d6.json`
+re-scores all 31 attackers of `eval_li.json` on the same frames (paired by position, titan_rtx).
+`d6_figures.py` → `artifacts/final/base/d6/` (`fig_d6_accuracy.png`, `table.md` with every attacker, `d6.json`).
+
+**Training (validation split).** Accuracy 0.922 → 0.920, AUC 0.977 → 0.968, argmax FAR 0.000 → 0.033 (clean
+correct 1.000 → 0.967). The new class is learnable at 15 dB: 0.82 correct on both cnnGAN1 seeds, unlike §3.3o's
+30 dB-trained generators (0.52, chance), because cnnGAN1's single burst stands well above the noise.
+
+**Result** (detection rate per frame; matched = at excess PER 0.5; before → after):
+
+| | argmax, Li's window | argmax, matched | α 0.05, Li's window | α 0.05, matched |
+|---|---|---|---|---|
+| clean (1 − FAR) | 0.992 → 0.980 | — | 0.947 → 0.948 | — |
+| Li's four, pooled DR (eq. 2a) | 92.6 % → 93.8 % | — | 93.5 % → 93.6 % | — |
+| protocol-aware (Amuru p 0.25) | 0.67 → 0.72 | 0.52 → 0.64 | 0.77 → 0.77 | 0.76 → 0.77 |
+| Amuru p 0.05 / p 0.02 | 0.62 / 0.56 → 0.66 / 0.59 | 0.08 / 0.05 → 0.15 / 0.09 | 0.71 / 0.66 → 0.71 / 0.66 | 0.24 / 0.14 → 0.25 / 0.14 |
+| cnnGAN1 grey, seen (r0, r1) | 0.78 → 0.85 | 0.08 → 0.26 | 0.85 → 0.88 | 0.26 → 0.39 |
+| cnnGAN1 grey, held out (r2) | 0.80 → 0.88 | 0.12 → 0.40 | 0.87 → 0.91 | 0.37 → 0.56 |
+
+1. **The predicted accuracy drop is small and appears only at Li's argmax.** That cost is false alarms:
+   clean accuracy 99.2 → 98.0 % (FAR 0.8 → 2.0 %). The same looser boundary lifts detection of *every*
+   jammer by 2–5 pp in Li's window, so Li's pooled DR rises (92.6 → 93.8 %). At the calibrated α 0.05,
+   where both CNNs have the same FAR, Li's four move by −1.6…+1.3 pp and pooled DR is flat (93.5 → 93.6 %).
+   Those moves are within one training draw (the surrogate seed differs by 1.5 pp of validation accuracy).
+   **So there is no measurable adaptation cost at the operating point; the user's prior did not hold here.**
+   It held at 15 dB in §3.3o, but there most of the cost came from widening the range, which this round
+   does not do.
+2. **The gain is specific to the learned jammers and partial.** At α 0.05 the classical jammers do not move
+   (Amuru ±0.01). cnnGAN1 at matched PER 0.5 rises 0.26 → 0.39 (seen) and 0.37 → 0.56 (held out). The
+   other generators of the same family rise with it (`table.md`: white-box cnnGAN1 +9…+17 pp, cnnGAN2 +10…+38
+   pp). cnnGAN1 is **still flagged on fewer than 60 % of frames at half damage**, against 0.77 for
+   protocol-aware.
+3. **Exposure to a seed does not matter; the seed does.** The held-out seed gains *more* than the seen pair.
+   Per seed at α, matched: r0 0.16 → 0.24, r1 0.35 → 0.53, r2 0.37 → 0.56. r1 and r2 behave alike, while r0
+   was and stays the stealthiest. The retrain learned the family (one burst per frame), not a burst position.
+4. **Amuru's low duty cycles are untouched** (p 0.02 / 0.05 at 0.14 / 0.25 at α, matched). After this round
+   they are even more clearly the stealthiest jammers against the CNN (§3.3r).
+
+Caveats: one retrain, one seed, base only; the attacker does not answer (round 2). Jobs: train 2279746 (10 min),
+eval 2279747 (10.5 min).
 
 ## 3.4 The plan (20 days) — re-cut 2026-09-12 for the pivot
 
@@ -3388,7 +3467,8 @@ is the read-out with the user. Thu–Fri are for writing (meeting Thu 17:00).
 
 **Not part of it:**
 - **D6 (the defender retrains on the attacker) is PARKED.** User: *"we keep the D6 part for later, it
-  really depends on how this goes and i want to make a clear distinction here"*. Its 15 dB spec is the
+  really depends on how this goes and i want to make a clear distinction here"*. One quick round at base
+  against cnnGAN1 was run on 2026-10-01 at the user's request (§3.3s). Its 15 dB spec is the
   next subsection. When it resumes, it runs on `final/`'s pipeline.
 - **The noise LRT is dropped.** It is exact only for barrage, and the supervisor was not convinced by
   the detector model.
@@ -4953,6 +5033,7 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | **final** | `_smoke/both` | end-to-end smoke of the chain (2 epochs, 20 steps, 4 JSR points) | pipeline runs; outputs deleted after the check | 2277993–96, 2278004/05 |
 | **final** | base · noise · noise_1db · fading · fading_k28 · both | **the final experiment**: per env CNN retrain + CFAR thresholds → bands → 8 generators (control ×3, cnn_b10 ×3, energy_b10, kurtosis_b10; run003 recipe) → 21 attackers × JSR −50…+15 × 512 frames, 15 dB (Es/N0 24 dB), TITAN RTX; + the random push (22nd attacker, 2278413–18) | **CNN-targeted GAN vs the CNN at PER 0.1: within ±4 pp of the classical envelope except noise_1db (−4.6 ± 0.9); no gain over the damage-only control; −86…−93 pp over Zhou's CGAN; σ_N blinds the CNN, fading blinds naive energy (CSI energy unmoved)**; §3.3q | chains 2278006–2278029 (evaluates 2278009, 2278063, 2278064, 2278069, 2278076, 2278084); TaskProlog reruns 2278057/59/68/75/83 |
 | **final** | base · Li readout (`eval_li.json`, `li/`, `Li_base/`) | **the CNN scored per sample the way Li et al. do** (argmax, DR/precision/recall/F, matched PER 0.1/0.5/0.9, damage at detection budget); surrogate CNN seed 12 → grey-box cnnGAN1; cnnGAN2 (frame damage at −10…0 dB, warm start) white + grey, dropped; IQ and pulse pictures | **grey-box cnnGAN1 flagged 0.026 / 0.09 at PER 0.1 / 0.5 (Li's four 0.37–1.00 / 0.52–1.00), 1.00 at PER 0.9; Amuru p 0.02–0.05 beats it at every budget; it is one pulse per frame at a fixed symbol (p_eff 0.011); cnnGAN2's white-box stealth does not transfer**; §3.3r | 2278626–27, 2278683–85, 2278690–97, 2278731 |
+| **final** | base · quick D6 (`cnn_d6/`, `eval_d6.json`, `d6/`) | the CNN retrained once with cnnGAN1 grey-box r0, r1 as a fifth jammed type (r2 held out), all 31 attackers re-scored on the same frames | **at α 0.05 no cost on Li's four (pooled DR 93.5 → 93.6 %); cnnGAN1 at matched PER 0.5 0.26 → 0.39 seen, 0.37 → 0.56 held out; at argmax clean FAR 0.8 → 2.0 %**; §3.3s | 2279746, 2279747 |
 | **final** | base · suite training (`eval_suite.json`; exploratory) | **does penalising the whole detector suite help?** new `suite_*` task (detector term = worst-of-three soft P_det per frame), white-box, β 10/30/100 + a CNN-band control, 1500 steps | **no — worse than single-target `cnn_b10` at matched damage (worst detector 0.46 vs 0.24 at PER 0.1); the 3 detectors transition ≈ 11 dB apart, so at low damage only the CNN is active and single-target already evades the suite; "detector term buys nothing" is structural**; §3.3q | 2279480 (17–19), 2279481, 2279509, 2279510 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
@@ -5805,7 +5886,10 @@ returns, instead of waiting to submit the next stage by hand.
 different frames on an RTX 3090 and a 2080 Ti (seed-11 colour-scale floor −44.25 vs −44.28 dB; on one
 card two code paths are bit-identical, job 2275953). An evaluation that claims paired frames across jobs
 must pin one card type (`cgan/submit_arms_eval.sh` pins `titan_rtx`); for anything else a re-run on
-another card is statistically equivalent.
+another card is statistically equivalent. **Pin the card in `--gres`, not only the node (found 2026-10-01):**
+tikgpu05 holds 5 TITAN RTX and 2 V100, and `--constraint=titan_rtx --gres=gpu:1` can land on a V100 there
+(job 2280024: 29 159 / 49 514 values changed). `--gres=gpu:titan_rtx:1` pins the card. Every `final/submit_*.sh`
+has used it since 2026-10-01; the rerun on a TITAN RTX (2280026) reproduced all 49 514.
 
 **A throttled GPU looks like a slow job (2026-09-28).** One RTX 3090 on tikgpu06 ran at 112 MHz (84 °C,
 clock-event reasons 0x68: HW slowdown + SW/HW thermal), about 15× slow — a CNN retrain went from 3.5 s

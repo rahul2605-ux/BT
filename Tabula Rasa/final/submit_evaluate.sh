@@ -4,7 +4,7 @@
 #SBATCH --job-name=final_eval
 #SBATCH --output=runs/evaluate_%j.out
 #SBATCH --error=runs/evaluate_%j.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:titan_rtx:1   # the card, not just the node: tikgpu05 also holds V100s (2026-10-01)
 # ONE card type for every evaluation (CUDA's random streams differ between models, §C.4)
 #SBATCH --constraint=titan_rtx
 #SBATCH --cpus-per-task=2

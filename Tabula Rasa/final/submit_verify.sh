@@ -4,7 +4,7 @@
 #SBATCH --job-name=final_verify
 #SBATCH --output=runs/verify_%j.out
 #SBATCH --error=runs/verify_%j.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:titan_rtx:1   # the card, not just the node: tikgpu05 also holds V100s (2026-10-01)
 # titan_rtx: 24 GB (cgan's verify OOMed an 11 GB card, README §C.4) and the card type the
 # chains are pinned to, so the verify and the runs draw the same CUDA random streams.
 #SBATCH --constraint=titan_rtx

@@ -64,6 +64,8 @@ def spec_name(spec):
         return f"{n}_e{spec['eta']:g}"
     if n == "onoff":
         return f"onoff_f{spec['f']:g}"
+    if n == "pulsed_sync":
+        return f"pulsed_sync_k{spec['hits']}"
     if n == "gan":
         return spec.get("tag", "gan")
     return n
@@ -94,6 +96,29 @@ def pulsed_tx(link, n_frames, n_sym, p):
     if p < 1.0:
         on = (torch.rand(n_frames, n_tot, device=link.device) < p).to(sym.dtype)
         sym = sym * on / math.sqrt(p)
+    x = link.filt(link.upsample(sym), padding="full")
+    start = extra * link.sps - channel.PAD
+    return x[:, start:start + _padded_length(link, n_sym)]
+
+
+def pulsed_sync_tx(link, n_frames, n_sym, hits):
+    """
+    Frame-synced pulsed QPSK: EXACTLY `hits` random symbols ON per frame, the rest off --
+    vs pulsed_tx's Bernoulli(p), which at low p misses whole frames (p 0.01 -> 27.7 % of
+    frames get 0 hits, no damage). The per-frame power projection (link.scale_to_jsr) then
+    puts the frame's whole JSR budget on those `hits` symbols. This is the ONLY thing the
+    GAN knows that Amuru's async model does not: the frame period, so no hit is wasted
+    (README §4.3 L3 / L4). Blind otherwise -- random positions, random QPSK symbols, and it
+    still takes the async sub-symbol delay + phase in jammer_at_rx.
+    """
+    extra = channel.PAD // link.sps + 1
+    n_tot = n_sym + 2 * extra
+    bits = link.source([n_frames, 2 * n_tot])
+    sym = link.mapper(bits).reshape(n_frames, n_tot)
+    pos = torch.rand(n_frames, n_sym, device=link.device).argsort(dim=1)[:, :hits] + extra
+    mask = torch.zeros(n_frames, n_tot, device=link.device)
+    mask.scatter_(1, pos, 1.0)
+    sym = sym * mask                                   # power set by the per-frame projection
     x = link.filt(link.upsample(sym), padding="full")
     start = extra * link.sps - channel.PAD
     return x[:, start:start + _padded_length(link, n_sym)]
@@ -199,6 +224,9 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
         elif name == "pulsed":
             delay, phase = channel.async_draw(link, F)
             j = channel.receive(link, pulsed_tx(link, F, N, spec["p"]), jsr[:, k], delay, phase)
+        elif name == "pulsed_sync":
+            delay, phase = channel.async_draw(link, F)
+            j = channel.receive(link, pulsed_sync_tx(link, F, N, spec["hits"]), jsr[:, k], delay, phase)
         elif name == "onoff":
             delay, phase = channel.async_draw(link, F)
             j = channel.receive(link, pulsed_tx(link, F, N, 1.0), jsr[:, k], delay, phase)

@@ -4,7 +4,7 @@
 #SBATCH --job-name=final_cnn
 #SBATCH --output=runs/train_cnn_%j.out
 #SBATCH --error=runs/train_cnn_%j.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:titan_rtx:1   # the card, not just the node: tikgpu05 also holds V100s (2026-10-01)
 #SBATCH --constraint=titan_rtx
 #SBATCH --cpus-per-task=2
 # a CNN retrain peaks at 2.3 GB (sacct MaxRSS, jobs 2274865/2274946; README §C.4)

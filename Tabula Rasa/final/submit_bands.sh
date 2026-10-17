@@ -4,7 +4,7 @@
 #SBATCH --job-name=final_bands
 #SBATCH --output=runs/bands_%j.out
 #SBATCH --error=runs/bands_%j.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:titan_rtx:1   # the card, not just the node: tikgpu05 also holds V100s (2026-10-01)
 #SBATCH --constraint=titan_rtx
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=6G

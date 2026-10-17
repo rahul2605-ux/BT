@@ -20,6 +20,12 @@ defender.calibrate_env, which adds the matched-filter energy detectors.
 --seed 12 --name cnn_s12 trains the grey-box attacker's SURROGATE (same recipe, independent
 seed, as cgan's run004): the attacker knows the detector's type and recipe, not its weights.
 
+--extra-gens TAG ... --name cnn_d6 is the quick D6 retrain (README §3.3s): the defender sees
+the named generators (<env>/gan/<TAG>_G.pt) as ONE extra jammed type, N_PER_TYPE frames in
+total split evenly, at JSR uniform over --extra-jsr (default -22 ... +10 dB: from where
+cnnGAN1 starts breaking frames to the top of Li's range). Li's frames are drawn first, so
+they are the deployed CNN's frames exactly; only the split and the extra type differ.
+
 Outputs, artifacts/final/<env>/cnn/ (or --name):
     detector_spec.pt         weights + colour scale (net_scratch, symlinked)
     thresholds.json          every detector's CFAR threshold, clean mean, clean quantiles
@@ -43,6 +49,7 @@ import defender
 import detectors
 import env as E
 import link as lk
+import models
 
 N_CLEAN, N_PER_TYPE, TRAIN_FRACTION = 762, 204, 0.7
 JSR_RANGE_DB = (-20.0, 10.0)
@@ -60,8 +67,14 @@ def batched_frames(L, n, kind, jsr_db, snr_db, batch=512):
                       for i in range(0, n, batch)])
 
 
-def dataset(L, gen, snr_db, n_clean=N_CLEAN, n_per_type=N_PER_TYPE):
-    """Li et al.'s class balance: 762 clean + 204 per jammer type, JSR uniform in dB."""
+def gen_frames(L, n, spec, jsr_db, snr_db, batch=512):
+    return torch.cat([attacks.frames(L, min(batch, n - i), spec, jsr_db[i:i + batch].reshape(-1, 1), snr_db)["r"]
+                      for i in range(0, n, batch)])
+
+
+def dataset(L, gen, snr_db, n_clean=N_CLEAN, n_per_type=N_PER_TYPE, extra=(), extra_jsr=None):
+    """Li et al.'s class balance: 762 clean + 204 per jammer type, JSR uniform in dB. `extra`:
+    [(tag, gan spec)], appended after Li's frames as one more jammed type of n_per_type frames."""
     parts = [("clean", n_clean)] + [(t, n_per_type) for t in attacks.LI_TYPES]
     rs, labels, kinds = [], [], []
     for kind, n in parts:
@@ -69,6 +82,12 @@ def dataset(L, gen, snr_db, n_clean=N_CLEAN, n_per_type=N_PER_TYPE):
         rs.append(batched_frames(L, n, kind, jsr, snr_db))
         labels += [0 if kind == "clean" else 1] * n
         kinds += [kind] * n
+    for i, (tag, spec) in enumerate(extra):
+        n = n_per_type // len(extra) + (i < n_per_type % len(extra))
+        jsr = torch.empty(n, device=L.device).uniform_(*extra_jsr, generator=gen)
+        rs.append(gen_frames(L, n, spec, jsr, snr_db))
+        labels += [1] * n
+        kinds += [tag] * n
     return torch.cat(rs), torch.tensor(labels, device=L.device), np.array(kinds)
 
 
@@ -102,9 +121,12 @@ def main():
     ap.add_argument("--n-cal", type=int, default=defender.N_CALIBRATION)
     ap.add_argument("--name", default="cnn",
                     help="folder under artifacts/final/<env>/; cnn_s12 = the grey-box attacker's surrogate")
+    ap.add_argument("--extra-gens", nargs="*", default=[],
+                    help="generator tags under <env>/gan/, one extra jammed type (the quick D6 retrain)")
+    ap.add_argument("--extra-jsr", nargs=2, type=float, default=[-22.0, 10.0])
     args = ap.parse_args()
-    if args.name == "cnn" and args.seed != 11:
-        raise SystemExit("refusing to write a non-default seed over the deployed CNN: pass --name")
+    if args.name == "cnn" and (args.seed != 11 or args.extra_gens):
+        raise SystemExit("refusing to write a non-default seed or extra types over the deployed CNN: pass --name")
     if E.SMOKE:
         args.epochs, args.n_cal = 2, 2048
     out_dir = E.art(args.env, args.name)
@@ -124,7 +146,12 @@ def main():
 
     # 2. Li et al.'s dataset and split
     k = 8 if E.SMOKE else 1
-    r, y, kinds = dataset(L, gen, snr, N_CLEAN // k, N_PER_TYPE // k)
+    extra = []
+    with torch.random.fork_rng():      # a Generator's init draws weights: keep Li's frames the deployed CNN's
+        for tag in args.extra_gens:
+            G, gscale, _ = models.load_generator(E.art(args.env, "gan", f"{tag}_G.pt"), device)
+            extra.append((tag, dict(name="gan", G=G, scale=gscale, tag=tag)))
+    r, y, kinds = dataset(L, gen, snr, N_CLEAN // k, N_PER_TYPE // k, extra, args.extra_jsr)
     perm = torch.randperm(r.shape[0], generator=gen, device=device)
     n_train = int(round(TRAIN_FRACTION * r.shape[0]))
     tr, va = perm[:n_train], perm[n_train:]
@@ -166,13 +193,14 @@ def main():
     va_kinds = kinds[va.cpu().numpy()]
     per_type_val = {kk: float((pred[torch.as_tensor(va_kinds == kk, device=device)] ==
                                (0 if kk == "clean" else 1)).double().mean())
-                    for kk in ["clean"] + attacks.LI_TYPES}
+                    for kk in ["clean"] + attacks.LI_TYPES + list(args.extra_gens)}
     del r
 
     # 5. every detector's CFAR threshold, on fresh clean frames of this environment
     dets = defender.env_dets(E.faded(args.env))
     thr = defender.calibrate_env(L, net, scale, snr, dets, n_cal=args.n_cal)
-    thr.update(env=args.env, jsr_range_db=list(JSR_RANGE_DB), seed=args.seed, epochs=args.epochs)
+    thr.update(env=args.env, jsr_range_db=list(JSR_RANGE_DB), seed=args.seed, epochs=args.epochs,
+               extra_gens=list(args.extra_gens))
     with open(os.path.join(out_dir, "thresholds.json"), "w") as f:
         json.dump(thr, f, indent=2)
 
@@ -192,7 +220,8 @@ def main():
         config=dict(model="EfficientNet-B0 (torchvision, ImageNet init)", optimiser="SGD", lr=1e-3,
                     momentum=0.0, batch=32, epochs=args.epochs, n_clean=N_CLEAN // k,
                     n_per_type=N_PER_TYPE // k, train_fraction=TRAIN_FRACTION,
-                    jsr_range_db=list(JSR_RANGE_DB), types=attacks.LI_TYPES, snr_db=snr, seed=args.seed),
+                    jsr_range_db=list(JSR_RANGE_DB), types=attacks.LI_TYPES, snr_db=snr, seed=args.seed,
+                    extra_gens=list(args.extra_gens), extra_jsr_db=args.extra_jsr if args.extra_gens else None),
         history=history,
         validation=dict(accuracy=vacc, detection_rate_jammed=dr_jammed, far_argmax=far_argmax,
                         auc=auc, per_type_correct=per_type_val, roc_fpr=fpr, roc_tpr=tpr),

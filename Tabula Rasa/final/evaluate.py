@@ -32,7 +32,8 @@ channel draws in the first draws of each sweep (common random numbers within a j
 
 Output: artifacts/final/<env>/eval.json, rewritten after every attacker. --out eval_li.json
 writes the Li-style rerun (the CNN's argmax decision added, README §3.3q) beside it and leaves
-eval.json, which §3.3q cites, untouched.
+eval.json, which §3.3q cites, untouched. --cnn cnn_d6 --out eval_d6.json scores the same frames
+(same tags, same seeds) against another defender folder: the quick D6 retrain (README §3.3s).
 """
 
 import mitsuba as mi
@@ -73,6 +74,13 @@ def added():
     return [("random_push_e0.1", dict(name="random_push", eta=0.1))]
 
 
+def frame_sync():
+    """Frame-synced pulsed baselines (exploratory, 2026-10-01): exactly k hits per frame, the
+    frame-period-aware counterpart of Amuru's async Bernoulli pulsing. For --out eval_frame.json
+    / --only; appended last so no earlier attacker's seed moves."""
+    return [(f"pulsed_sync_k{k}", dict(name="pulsed_sync", hits=k)) for k in (1, 2, 3)]
+
+
 def generators(env):
     return [("zhou_cgan", ZHOU_G)] + [(train_gan.tag(t, r), E.art(env, "gan", f"{train_gan.tag(t, r)}_G.pt"))
                                       for t, r in train_gan.ARRAY]
@@ -97,13 +105,17 @@ def main():
     ap.add_argument("--env", required=True, choices=list(E.ENVS))
     ap.add_argument("--only", default=None, help="comma list of attacker tags to (re)measure into eval.json")
     ap.add_argument("--out", default="eval.json", help="file under artifacts/final/<env>/ (eval_li.json: the Li-style rerun)")
+    ap.add_argument("--cnn", default="cnn", help="defender folder under artifacts/final/<env>/ (cnn_d6: the quick D6 retrain)")
     args = ap.parse_args()
     grid = [-30.0, -10.0, 0.0, 15.0] if E.SMOKE else JSR_GRID
     n = 64 if E.SMOKE else N_FRAMES
     t0 = time.time()
     device = lk.setup(seed=SEED)
     L = E.apply(lk.Link(**lk.LINK), args.env)
-    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, "cnn"))
+    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, args.cnn))
+    if "power" not in dfd.thr:  # full-band power (user, 2026-10-01): its own clean frames, seed apart
+        lk.setup(device, seed=SEED - 2)
+        dfd.calibrate_power(n_cal=1024 if E.SMOKE else defender.N_CALIBRATION)
     with open(E.art(args.env, "bands.json")) as f:
         bands = json.load(f)["bands"]
     out_path = E.art(args.env, args.out)
@@ -114,7 +126,7 @@ def main():
     else:
         res = dict(meta=dict(env=args.env, env_config=E.ENVS[args.env], snr_db=E.SNR_DB,
                              esn0_db=E.SNR_DB + E.ESN0_OFFSET_DB, jsr_db=grid, n_frames=n, n_clean=N_CLEAN,
-                             alphas=[0.01, 0.05], alpha=E.ALPHA, dets=dfd.dets, seed=SEED,
+                             alphas=[0.01, 0.05], alpha=E.ALPHA, dets=dfd.dets, seed=SEED, cnn=args.cnn,
                              n_sym=E.N_SYM, thresholds={k: v for k, v in dfd.thr.items() if k != "clean_stat_q"},
                              bands=bands, gpu=torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"),
                    clean=None, attackers={})
@@ -137,7 +149,8 @@ def main():
     entries = ([(t, "classical", s) for t, s in classical()] + [(t, "generator", p) for t, p in generators(args.env)]
                + [(t, "classical", s) for t, s in added()]
                + [(t, "generator", p) for t, p in extra_generators(args.env)]
-               + [(t, "generator", p) for t, p in suite_generators(args.env)])
+               + [(t, "generator", p) for t, p in suite_generators(args.env)]
+               + [(t, "classical", s) for t, s in frame_sync()])
     for i, (tag, group, what) in enumerate(entries):
         if only is not None and tag not in only:
             continue

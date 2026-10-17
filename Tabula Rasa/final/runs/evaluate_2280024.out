@@ -1,0 +1,35 @@
+node: tikgpu05.ee.ethz.ch | gpu: Tesla V100-PCIE-32GB
+env base = {'noise_unc_db': 0.0, 'rician_k_db': None} | detectors ['energy', 'energy_2s', 'kurtosis', 'spec_cnn', 'power'] | 66 JSR points x 512 frames | Tesla V100-PCIE-32GB
+clean: BER 0.00e+00 PER 0.0000 | realised FAR energy 0.0530 energy_2s 0.0461 power 0.0549 kurtosis 0.0522 spec_cnn 0.0493
+  omniscient_e1      done (15s): max BER 1.000e+00, PER at +15 dB 1.000, P_det at +15 dB energy 0.04 energy_2s 0.04 kurtosis 0.07 spec_cnn 0.05 power 0.05, DC share 0.008
+  omniscient_e0.1    done (15s): max BER 9.454e-01, PER at +15 dB 1.000, P_det at +15 dB energy 0.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.00 power 0.00, DC share 0.008
+  noise              done (15s): max BER 3.100e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.001
+  pulsed_p1          done (15s): max BER 4.458e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  pulsed_p0.5        done (15s): max BER 3.425e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  pulsed_p0.25       done (15s): max BER 2.490e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  pulsed_p0.1        done (15s): max BER 1.444e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  pulsed_p0.05       done (15s): max BER 9.131e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  pulsed_p0.02       done (15s): max BER 4.131e-02, PER at +15 dB 0.926, P_det at +15 dB energy 0.93 energy_2s 0.93 kurtosis 0.94 spec_cnn 0.93 power 0.93, DC share 0.007
+  pulsed_p0.01       done (15s): max BER 2.495e-02, PER at +15 dB 0.760, P_det at +15 dB energy 0.78 energy_2s 0.78 kurtosis 0.77 spec_cnn 0.78 power 0.78, DC share 0.006
+  tone               done (15s): max BER 4.594e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 1.000
+  pulse_comb         done (15s): max BER 1.076e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.016
+  zhou_cgan          done (16s): max BER 4.324e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.59 spec_cnn 1.00 power 1.00, DC share 0.015
+  control_r0         done (16s): max BER 5.514e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.007
+  control_r1         done (16s): max BER 1.565e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.011
+  control_r2         done (16s): max BER 3.087e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.009
+  cnn_b10_r0         done (16s): max BER 5.624e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  cnn_b10_r1         done (16s): max BER 7.285e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.006
+  cnn_b10_r2         done (16s): max BER 5.922e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.004
+  energy_b10_r0      done (16s): max BER 2.040e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.005
+  kurtosis_b10_r0    done (16s): max BER 2.412e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.003
+  random_push_e0.1   done (15s): max BER 4.746e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.008
+  cnn_li_r0          done (16s): max BER 3.183e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.000
+  cnn_li_r1          done (16s): max BER 5.108e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.84 spec_cnn 1.00 power 1.00, DC share 0.000
+  cnn_li_r2          done (16s): max BER 4.456e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.80 spec_cnn 1.00 power 1.00, DC share 0.000
+  cnn_b10_grey_r0    done (16s): max BER 4.752e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.007
+  cnn_b10_grey_r1    done (16s): max BER 7.959e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.004
+  cnn_b10_grey_r2    done (16s): max BER 8.128e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.004
+  cnn_li_grey_r0     done (16s): max BER 2.378e-02, PER at +15 dB 0.998, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 1.00 power 1.00, DC share 0.000
+  cnn_li_grey_r1     done (16s): max BER 7.657e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.87 spec_cnn 1.00 power 1.00, DC share 0.000
+  cnn_li_grey_r2     done (16s): max BER 7.697e-02, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.71 spec_cnn 1.00 power 1.00, DC share 0.000
+wrote ../artifacts/final/base/eval_li_power.json in 496s
