@@ -1,0 +1,28 @@
+% ETH bachelor thesis build: the same body as paper.tex, plus the author, the acknowledgement and
+% the appendices (the full experiment history). The ETH wrapper (title page, declaration of originality,
+% the Distributed Computing group's template) is still to be added: \todo below.
+\documentclass[conference]{IEEEtran}
+\input{preamble}
+\thesistrue
+
+\begin{document}
+
+\input{title}
+\author{\IEEEauthorblockN{Rahul Rahman}
+\IEEEauthorblockA{\textit{Department of Computer Science, ETH Zurich}\\
+Supervisor: Antonio Di Maio}}
+
+\maketitle
+\input{abstract}
+\input{body}
+
+\section*{Acknowledgment}
+\todo{Acknowledgment (thesis only; omitted from the anonymous submission).}
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,bib/lit,bib/project}
+
+\appendices
+\input{app/history}
+
+\end{document}

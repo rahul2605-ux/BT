@@ -1,0 +1,17 @@
+% Shared by paper.tex (SECON 2027, anonymous, 9 pages incl. references) and thesis.tex (named, + appendices).
+% Package set = the IEEE conference template of 2024-06-27, plus booktabs for tables.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+\graphicspath{{figs/}}
+
+% \todo{...}: every spot that needs the author's input or a number (brief, item 8). Must be gone before submission.
+\newcommand{\todo}[1]{\textcolor{magenta}{[TODO: #1]}}
+
+% \ifthesis selects the build: false = SECON submission, true = ETH thesis.
+\newif\ifthesis
+\thesisfalse

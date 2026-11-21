@@ -19,6 +19,13 @@ at our SNR 15 dB (Es/N0 24 dB), in six environments: `base`, `noise` (σ_N 0.5 d
 `fading` (Rician K 12 dB), `fading_k28` and `both`. D6 (defender retraining) is parked and is not part
 of it.
 
+**Since 2026-11-21 the paper is being written for IEEE SECON 2027, due Mon 30 Nov 2026 together with the
+thesis** (README §1.4, §3.1). It is a performance-evaluation study of the final experiment, and no new
+experiments are planned. It lives in `paper_drafts/secon27/`: one body, two builds. `paper.tex` is the anonymous
+submission (IEEEtran, 9 pages **including** references). `thesis.tex` adds the author and the full experiment
+history appendix. Mark gaps with `\todo{}`. Build on the login node (LaTeX is not compute):
+`cd paper_drafts/secon27 && latexmk -g -pdf paper.tex thesis.tex`.
+
 **`README.md` is the single source of truth** for goals, state, results and open questions. Read it
 before planning anything. It is deliberately structured as: 1. whole picture · 2. goal & approach ·
 3. current state · 4. open questions · then Appendix A (experiment history), B (supervisor record),

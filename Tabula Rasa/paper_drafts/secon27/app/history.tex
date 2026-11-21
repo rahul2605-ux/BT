@@ -1,0 +1,57 @@
+% THESIS ONLY: the overview ADM asked to keep updated. Part 1 (history_ported.tex) is ../sec_exphist.tex,
+% i.e. the Overleaf appendix A--M, ported 2026-11-21 (TODO-key cites filled: bash2013limits, hansen2016cma;
+% \textit paragraph heads -> subsections; old closing paragraph replaced below because final/ has no LRT).
+% Part 2 (this file) adds every experiment after 2026-09-27, each with its README section in a comment.
+% Withdrawn metric "frames per extra alarm" is NOT quoted anywhere (README 2.7).
+\input{app/history_ported}
+
+\subsection{A learned team policy}
+A shared network that gave each of four jammers its power and transmit advance, trained by direct gradient, learned to transmit at full power rather than to compensate the delays between them.
+It lost to simply advancing each jammer by its known delay when timing was exact ($0.794$ against $0.705$ detection probability at $30$\,dB) and matched it for timing errors of one symbol or more.
+We paused the team direction here.
+% README 3.3j (D4b, jobs 2273939/43). Conditional on the under-trained 400-step task14_G.
+
+\subsection{Shadowing on the victim's link}
+With per-frame log-normal shadowing of the victim's link at $30$\,dB, an energy detector calibrated without it lost the CNN-targeted generator already at $\sigma=0.1$\,dB and was blind to it at $1$\,dB, while one that knew the gain was unaffected at every level and the retrained CNN stayed the weakest detector.
+Shadowing is slow and tracked by the receiver's gain control, so the final experiment models the frame-to-frame variation as small-scale Rician fading instead.
+% README 3.3k (S1, jobs 2274945-2274952); 3.4 decision 4.
+
+\subsection{A listening jammer}
+Placing the jammer on the receiver's symbol grid and retraining the generators synchronously gave no measurable gain: at a frame error rate of $0.1$ the CNN flagged the CNN-targeted generator ($\beta=1$) on $0.135\pm0.080$ of frames synchronously and $0.128\pm0.022$ asynchronously over three seeds, and a first single-seed gain did not replicate.
+% README 3.3l (S2). Synchronous matched QPSK costs 3.6 dB.
+
+\subsection{Training at the operating point}
+Retrained at the operating point of Sec.~\ref{sec:method:env}, against a CNN retrained there, the best generators were flagged by the full-band energy detector on about $25\%$ of frames at a frame error rate of $0.1$, against about $63\%$ at $30$\,dB, whether they had been trained at the lower or the higher SNR; the CNN flagged them on $7$--$8\%$.
+% README 3.3m (S4, jobs 2275923-2275975). Its generators and defender are the final experiment's regression reference.
+
+\subsection{Noise-level uncertainty}
+At the same operating point, a per-frame uncertainty of the noise level of $\sigma_N=2$\,dB raised the false-alarm rate of a power detector calibrated at the nominal level from $0.05$ to $0.23$ ($0.42$ two-sided).
+Re-calibrated on frames that carry the uncertainty, so that it keeps its false-alarm rate, it flagged the CNN-targeted generator at a frame error rate of $0.1$ on $0.25$, $0.14$ and $0.09$ of frames for $\sigma_N=0$, $1$ and $2$\,dB.
+This is why every detector of the final experiment is calibrated in the environment it is deployed in, and why its energy detector sits after the matched filter, which keeps out the noise outside the signal's band.
+% README 3.3n (S5, jobs 2275921-2276029): full-band power, honest CFAR; naive values in brackets there.
+
+\subsection{The defender retrains once}
+Retraining the CNN once, on Li et al.'s jammer types with their JSR range widened downward but without the attacker, raised its detection of three independently trained generators at matched damage from $0.16$--$0.18$ to $0.58$--$0.74$ at $30$\,dB, level with the energy detector, at no cost.
+At the operating point nothing moved (at most $0.09$), and retraining cost $4$--$5$ points of detection on Li et al.'s own types.
+% README 3.3o (D6 round 1). The attacker's next round was parked.
+
+\subsection{The final experiment}
+Sections~\ref{sec:method} and~\ref{sec:results} report it: one pipeline in six environments at the operating point, every attacker against every detector, and the generators retrained in each environment.
+
+\subsection{The defender retrains on the grey-box generator}
+At the ideal link, retraining the CNN with two seeds of the grey-box CNN-targeted generator as a fifth jammer type cost nothing on Li et al.'s types at $\alpha=0.05$ (pooled detection rate $93.5\%\to93.6\%$) and caught the generator only partly: at an excess frame error rate of $0.5$, from $0.26$ to $0.39$ for a seed it was trained on and from $0.37$ to $0.56$ for a held-out seed.
+At the network's own decision rule its false-alarm rate rose from $0.8\%$ to $2.0\%$.
+% README 3.3s (jobs 2279746/2279747).
+
+\subsection{Naive baselines at symbol level}
+After the final experiment, the study restarted from the simplest attacks on the one-symbol model of Sec.~\ref{sec:exphist-minimal}: QPSK in white noise, with the jammer added per symbol at equal average power.
+The simulated symbol error rate matched its closed form at every noise level.
+At signal-to-jammer ratios of $0$, $5$, $10$ and $15$\,dB and low noise, the symbol-aware minimum push across the nearest decision boundary~\cite{xie2022adversarial} reached symbol error rates of $1.00$, $0.33$, $0.11$ and $0.033$, against $0.29$, $0.078$, $0.0027$ and $0$ for barrage noise.
+A blind push in a random direction did exactly half the damage of the symbol-aware one; a random legitimate symbol did nothing alone above $0$\,dB.
+Because the minimum push lands just past the boundary, any receiver noise sends half of the pushed symbols back.
+No detector has been applied to this model yet.
+% README 3.1 steps 0-1, A.0 (m0/noise_baseline.py, m0/baselines.py, 2026-10-18). These are the results emailed
+% to the supervisor after the 2026-10-01 meeting. Xie et al. = xie2022adversarial (added to bib/project.bib 2026-11-21).
+
+\subsection*{What these steps fixed}
+These steps fixed the design of Sections~\ref{sec:system}--\ref{sec:method}: a jammer learned by direct gradient through the link and the detector rather than by policy gradient, a hard power budget instead of a power penalty, every detector calibrated to the same false-alarm rate in the environment it is deployed in, comparison at matched damage rather than at matched power or configuration, and an operating point with impairments the defender cannot know.

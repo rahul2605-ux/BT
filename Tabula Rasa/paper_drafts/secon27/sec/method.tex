@@ -1,0 +1,100 @@
+% ~1.25 pages. Ported 2026-11-21 from ../sec_methodology.tex (cgan/ run003 method) + ../sec_setup_operating_point.tex
+% (operating point, environments, checked in full text in Session A, 2026-09-30) and updated to final/:
+% roster = final/evaluate.py; recipe = final/train_gan.py; CNN = final/train_cnn.py; metrics = README Sec. 2.7;
+% matched damage = final/figures.py matched(); gates = README Sec. 3.3q. Values belong here, not in Sec. system.
+\section{Evaluation Methodology}\label{sec:method}
+
+\subsection{Attackers}\label{sec:method:attackers}
+Table~\ref{tab:attackers} lists the attackers, ordered by the information they use.
+Three come from Li et al.'s jammer types~\cite{li2022jamming_ofdm}: barrage noise, a tone (a constant complex baseband value, its phase drawn per frame) and a pulse comb (an impulse every 64 samples).
+The pulsed jammer transmits the victim's modulation and pulse with its own random symbols, each on with probability $p$ at amplitude $1/\sqrt p$, so that its mean power does not depend on $p$.
+At $p=1$ it is the matched jammer that Zhou et al.\ call optimal~\cite{11184988}, at $p=0.25$ it is Li et al.'s protocol-aware type, and $p<1$ spans the pulsed family that contains the error-maximizing jammer against known modulation~\cite{amuru2015optimal}.
+The on/off jammer uses the matched jammer at $+15$\,dB on a fraction $f$ of the frames and stays silent on the rest; its damage and $P_{\mathrm{det}}$ follow from the $+15$\,dB point by averaging over frames.
+% analytic: P_det = f P_det(+15) + (1-f) FAR, damage = f damage(+15) (final/figures.py onoff()).
+We call the lowest $P_{\mathrm{det}}$ any of these classical jammers reaches at a given damage the classical envelope.
+
+Two references are not realizable.
+The genie flip sends $-2s[k]$ on a fraction $\delta$ of the symbols, synchronously; it inverts them, leaves the received law unchanged and so is invisible to any detector, which makes it the upper bound on damage at any $P_{\mathrm{det}}$.
+The random push needs the genie's timing and carrier phase but not its data: it adds $1.1\,u[k]$, with $u[k]$ a random QPSK symbol, to a fraction of the symbols.
+% genie push (eta 0.1) is table-only; random push: +1.1 u on floor(delta N) symbols, delta = JSR/1.21 (README 3.3q #9).
+
+Zhou et al.'s generator~\cite{11184988}, trained to imitate the victim's waveform without a link or detector, is evaluated as published, in our reproduction.
+Our own generators are trained per environment: a damage-only control ($\beta=0$, three seeds) and detector-aware generators with $\beta=10$ against one-sided energy and against kurtosis (one seed each) and against the classifier (three seeds).
+% seeds: README 3.4 decision 7. "What the detector term buys" = cnn_b10 - control, three seeds each.
+The control shares everything with the detector-aware generators except the detection term, so their difference is what that term buys.
+
+\begin{table}[t]
+\caption{Attackers, ordered by the information they use}\label{tab:attackers}
+\centering\footnotesize
+\begin{tabular}{@{}lll@{}}
+\toprule
+Attacker & Information & Parameters \\
+\midrule
+Genie flip & T0: symbols, sync & fraction $\delta$ \\
+Random push & timing and phase & fraction \\
+Pulsed~\cite{amuru2015optimal} & T1 & $p\in\{1,0.5,0.25,0.1,0.05,0.02,0.01\}$ \\
+On/off & T1 & fraction $f$ of frames \\
+Zhou et al.\ CGAN~\cite{11184988} & T1 & as published \\
+Generators (ours) & T1, simulation & target, $\beta\in\{0,10\}$ \\
+Barrage, tone, pulse comb~\cite{li2022jamming_ofdm} & T2 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Training the Generators}\label{sec:method:training}
+The generator takes its layout from Zhou et al.~\cite{11184988}, a convolutional network with a dense output layer of about $8.6\times10^6$ parameters in all, but not their training: it starts from random weights and learns only from a differentiable form of~\eqref{eq:problem}, back-propagated through the link and the frozen detector.
+No discriminator is trained.
+% Zhou's imitation start biases G toward the victim's modulation: CNN P_det 0.48 vs 0.15 at matched BER,
+% 4 seeds, 30 dB (README 3.3f) -- thesis appendix.
+Two quantities are replaced by surrogates.
+First, $\mathbb{E}[\mathrm{BER}]$ is numerically zero wherever the jammer is weak, so we maximize $\log\mathbb{E}[\mathrm{BER}]$, computed exactly over the receiver noise: a bit whose noiseless matched-filter sample lies at signed distance $m_b$ from its decision boundary is in error with probability $Q(m_b/\sigma)$, with $\sigma^2=\nu N_0/2$, and the logarithm of the mean is evaluated with a log-sum-exp so that it never underflows.
+Second, $P_{\mathrm{det}}$ is replaced by
+\begin{equation}
+\tilde P_{\mathrm{det}}=\mathbb{E}\Bigl[\bigl(1+e^{-(T(r)-\tau_\alpha)/s_T}\bigr)^{-1}\Bigr],
+\label{eq:softpdet}
+\end{equation}
+with $s_T$ the standard deviation of $T$ on clean frames; it tends to the hard detection probability as $s_T\to0$.
+The generator minimizes
+\begin{equation}
+\mathcal{L}(G)=-\log\mathbb{E}[\mathrm{BER}]+\beta\,\tilde P_{\mathrm{det}},
+\label{eq:loss}
+\end{equation}
+so $\beta$ takes a different numerical range than in~\eqref{eq:problem}.
+The power constraint~\eqref{eq:power} is applied inside the forward pass: it removes the generator's overall gain, so the gradient acts only on the shape of the waveform.
+The classifier's input image maps the spectrogram onto a 256-level colour map, whose gradient is zero; a straight-through estimator~\cite{bengio2013estimating} keeps the exact image in the forward pass and substitutes the colour map's slope in the backward pass, so the attacker differentiates the deployed network itself.
+
+At each step the received JSR is drawn uniformly in decibels from a band that starts below the JSR at which the target detector begins to flag in that environment, because where it flags every frame the logistic term in~\eqref{eq:softpdet} is flat and carries no gradient.
+At the ideal link this band is $-39$ to $-7$\,dB for the classifier and $-25$ to $0$\,dB for energy; the control uses $-32$ to $0$\,dB.
+% bands.py: the 30 dB band shifted by how far the target's white-noise transition moved (README 3.4 step 2).
+We use Adam with learning rate $2\times10^{-4}$ for $4000$ steps of $128$ frames ($32$ for the classifier), and train on the environment's own fading and noise-level draws.
+% \todo{per-environment bands for all six, from bands.json?}
+
+\subsection{Operating Point and Environments}\label{sec:method:env}
+All experiments run at $E_s/N_0=24$\,dB, with $N=128$ symbols per frame, $L=8$ samples per symbol and a roll-off of $0.35$.
+We take the victim to be the command-and-control link of an unmanned aircraft, which uses one fixed modulation; prototype radios for it use Gaussian minimum-shift keying~\cite{bishop2017cnpc}, for which QPSK, with a closed-form error rate, stands in.
+A line-of-sight budget for such a link closes at the edge of its range at an SNR of $14$\,dB~\cite{kakar2015uav}; our operating point lies $10$\,dB above that edge, where uncoded QPSK makes practically no errors without a jammer, so the errors we count are the jammer's.
+
+Two impairments the defender cannot know are added, first alone and then together.
+Air-to-ground measurements in the bands allocated to these links~\cite{kerczewski2015cosite} found Rician K-factors of $12$--$15$\,dB in L-band and $27$--$31$\,dB in C-band across terrain types~\cite{matolak2017airground1,sun2017airground2,matolak2017airground3,khawaja2019survey}; we use $K=12$\,dB, the strongest L-band fading, and $K=28$\,dB.
+A receiver's noise level is uncertain to about $\pm1$\,dB after calibration~\cite{shellhammer2006noise,tandra2008snr}; we model it as log-normal~\cite{sonnenschein1992radiometric,he2017covert} with $\sigma_N=0.5$\,dB, which keeps $95\%$ of frames within $\pm1$\,dB~\cite{nikonowicz2019noise}, and use $\sigma_N=1$\,dB for a receiver facing in-band interference.
+This gives six environments: the ideal link (\emph{base}), noise-level uncertainty at $0.5$ and $1$\,dB (\emph{noise}, \emph{noise\,1\,dB}), fading at $K=12$ and $28$\,dB (\emph{fading}, \emph{fading\,K28}), and both at their main levels (\emph{both}).
+In each, every threshold is set from $20\,000$ clean frames of that environment at $\alpha=0.05$ per frame, the value at which learned jamming detectors have been evaluated~\cite{arcangeloni2024jamming}.
+The classifier is retrained in each environment by Li et al.'s recipe~\cite{li2022jamming_ofdm}: EfficientNet-B0, two classes, $762$ clean and $204$ jammed images per jammer type with the JSR uniform over $-20$ to $+10$\,dB, $100$ epochs.
+% SGD lr 1e-3, batch 32, 70/30 split, seed 11 (final/train_cnn.py). Seeds 13/14: jobs 2454497-2454521.
+
+\subsection{Metrics}\label{sec:method:metrics}
+Every attacker is swept over the JSR from $-50$ to $+15$\,dB in $1$\,dB steps, with $512$ frames per point.
+Damage is the excess bit and frame error rate over clean frames of the same environment.
+Because the jammer chooses its power, we compare attackers at matched damage: $P_{\mathrm{det}}$ is read at the first JSR where the excess damage reaches a level, interpolated in log damage.
+We report it at an excess frame error rate of $0.1$ and an excess bit error rate of $3\times10^{-4}$; at $P_{\mathrm{det}}=0.1$ the binomial standard error of a point is $1.3$ percentage points.
+Seeded generators are reported as mean $\pm$ standard deviation over seeds.
+The simulation is checked against closed forms before every run: the clean and white-noise error rates, the matched-filter energy, the fading and noise-level laws, and each detector's realized false-alarm rate on fresh clean frames, which lies between $0.043$ and $0.057$ in every environment.
+% final/verify.py 100/100 + regression gate vs an earlier independent run: 0/2178 P_det pairs beyond the
+% sqrt(2)-corrected 4 sigma band (job 2278412). One sentence max in the paper.
+
+\ifthesis
+Before this design, we tried to train jammers by policy-gradient reinforcement learning over raw I/Q samples against a frozen classifier, which never learned; Appendix~\ref{app:history} records that and every other step.
+\else
+Policy-gradient reinforcement learning over raw I/Q samples, tried first, never learned against a frozen classifier; direct gradient through the detector does.
+\fi
+% README A.5: every sampled action flagged -> zero advantage -> no gradient.

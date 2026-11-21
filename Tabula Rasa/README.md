@@ -1,9 +1,10 @@
 # Tabula Rasa — learned jamming under detection constraints
 
-**Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **a submission at the end of November
-2026** (decided at the 2026-10-01 meeting; the venue is named in his mail of 2026-10-02, not yet added, §B.1).
+**Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **IEEE SECON 2027 and the thesis, both due
+Mon 30 Nov 2026** (venue decided 2026-11-21; the paper is a performance-evaluation study built on the final
+experiment, no new experiments; §1.4, §3.1). The paper is built in `paper_drafts/secon27/`.
 Nothing was submitted to ICC 2026-10-02.
-Last consolidated: 2026-09-28.
+Last consolidated: 2026-11-21.
 
 > **This file is the single entry point.** It is organised as:
 > **[1. The whole picture](#part-1--the-whole-picture)** ·
@@ -21,8 +22,10 @@ Last consolidated: 2026-09-28.
 
 ## 1.1 What this is, in one page
 
-> **STATE 2026-10-17 — the current state is in [§3.1](#31-status-line); the blocks below are older and
-> kept as history.** The 2026-10-01 meeting (§B.1) moved the target to the end of November 2026 and restarted
+> **STATE 2026-11-21 — the current state is in [§3.1](#31-status-line); the blocks below are older and
+> kept as history.** The paper goes to IEEE SECON 2027 (due 30 Nov, the thesis deadline too) as a
+> performance-evaluation study of the final experiment (§3.3q–s); the draft is in `paper_drafts/secon27/` (§1.4).
+> **STATE 2026-10-17.** The 2026-10-01 meeting (§B.1) moved the target to the end of November 2026 and restarted
 > the study from the attacks: naive baselines first (noise, barrage, NWSE, a random symbol), BER/SER vs N0.
 >
 > **STATE 2026-09-28.** In short: the single-jammer study is re-done on the run003 method (§3.3f/§3.3g) and
@@ -152,6 +155,7 @@ BT/
 │   ├── graphify-out/       <- queryable knowledge graph of this repo (C.5); regenerable
 │   ├── .claude/skills/     <- project-local Claude Code skills; so far only `no-ai-slop` (C.6)
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
+│   │   └── secon27/        <- THE PAPER since 2026-11-21: paper.tex (SECON build) + thesis.tex, one body (§1.4)
 │   ├── proposal/           <- registration proposal; `*_reviewed_2026-09-12.tex` = his annotated copy
 │   ├── supervisor/         <- his meeting material; `2026-10-01_meeting_sketch.jpg` (transcribed in §B.1)
 │   ├── frontier/ simulation00..08/   <- FROZEN. Appendix material. Do not extend.
@@ -293,6 +297,35 @@ today's pull.)* Re-verify with the `git show ... | diff` one-liner before trusti
 moves independently and `paper/` only updates on an explicit pull. **The newest source on disk is the
 user's hand-saved copy `paper_drafts/overleaf.tex` (2026-09-27 22:16)** — far newer than `overleaf/main`
 here (2026-09-10), since `git fetch overleaf` needs credentials.
+
+**Since 2026-11-21 the paper is written in `paper_drafts/secon27/`, not in `paper/`.** One body, two builds:
+- `paper.tex`: the anonymous IEEE SECON 2027 submission (IEEEtran conference, 10 pt, **9 pages including
+  references and appendices**, double-blind);
+- `thesis.tex`: the same body with the author, an acknowledgment and Appendix A = the full experiment history
+  (`app/history_ported.tex` = the Overleaf appendix A–M via `../sec_exphist.tex`, plus `app/history.tex`, the
+  experiments after 2026-09-27). The ETH wrapper is still missing (§4.1 #9).
+
+Shared: `preamble.tex` (`\todo{}` in magenta, `\ifthesis`), `title.tex`, `abstract.tex`, `body.tex`, `sec/*.tex`.
+Bibliography: `bib/lit.bib` = Overleaf's `refs.bib` as the user pasted it on 2026-11-21 (abstract fields
+dropped; its header lists the superseded keys: cite `pirayesh2022jamming`, `li2022jamming_ofdm`, `11184988`), and
+`bib/project.bib` = `refs_patch.bib` + `refs_new.bib` + `xie2022adversarial` (NWSE; from `source_papers/NSWE.pdf`).
+Build on the login node (LaTeX is not compute): `cd paper_drafts/secon27 && latexmk -g -pdf paper.tex thesis.tex`.
+The user uploads the folder into the **thesis** Overleaf project, whose link ADM got on 2026-11-21, so his link
+always shows the latest draft ("keep it updated"). The old `main.tex` there stays untouched.
+
+**Venues checked 2026-11-21 (official pages; full comparison in the session's chat, not repeated):**
+
+| venue | paper due | format | review | note |
+|---|---|---|---|---|
+| **IEEE SECON 2027** (Lisbon, 5–7 May) | **30 Nov 2026** (time zone not stated: check EDAS N35491) | 9 pp incl. refs, IEEEtran | double-blind, EDAS; author list frozen at registration | **chosen**; decision 15 Feb 2027; CCF B / CORE B |
+| ACM WiSec 2027 (Singapore, 29 Jun–2 Jul) | 30 Nov 2026 **or 15 Feb 2027** (AoE, firm) | 10 pp + refs/appendix (12 total), `acmart` sigconf | double-blind | best topical fit (jamming, ML attack detection); round-2 = fallback, but SECON decides on 15 Feb |
+| IEEE WoWMoM 2027 (Irvine, 21–24 Jun) | 1 Dec 2026; WIP 4 pp same day; workshop papers 19 Feb 2027 | 10 pp incl. refs | double-blind, in-person | the 19 Feb workshop deadline is the realistic post-SECON fallback |
+| IEEE VCC 2027 (virtual, 2–4 Mar) | 27 Nov 2026 | 6 pp | single-blind | low value; dropped |
+| ACM MobiSys / CoNEXT 2027 | 27 Nov abstract / 4 Dec | ACM | — | out of scope (systems; CoNEXT excludes PHY-only work) |
+
+Pessimistic acceptance estimate given to the user: SECON main track ≈ 5–7 %, a workshop or WIP ≈ 20–30 %
+(simulation only, no new method, mostly negative headline; see the gap check in §3.1). The user can travel any
+time except mid-May to mid-June 2027.
 
 `BT-Paper` holds only `main.tex` + `refs.bib`. The `.md` research files in `paper/` are ours and are
 not synced. **Auth:** `BT-Paper` is private, so `git fetch overleaf` prompts for credentials and
@@ -830,6 +863,11 @@ detector is in the loop it needs soft binning or a KDE. `D_NP` is differentiable
 
 Full record and open items in [Appendix B](#appendix-b--supervisor-record).
 
+- **"If there's no novel method, it might still be possible to submit a performance evaluation study if
+  simulations are comprehensive and solid"** (2026-11-21, §B.1). This is the paper's framing; it supersedes, for
+  the SECON paper, the adaptation-cost headline and the E1/E2/E3 candidate list in the bullets below (D6 is
+  parked; the paper's main experiment is the final one, §3.1). He also said earlier that the paper can be
+  submitted as the thesis unchanged.
 - **"Simplify, as much as possible."** His reasoning is blunt: *the simple simulations already do not
   work, so the complicated ones certainly will not.* sim06–08 are **frozen**. Every layer the ladder
   added is now a liability for *understanding*, not an asset.
@@ -1117,6 +1155,47 @@ projection; `--power learned` makes it a capped choice (≤ per frame, §3.3f ru
 
 ## 3.1 Status line
 
+**STATE 2026-11-21: writing the paper. IEEE SECON 2027 and the thesis are both due Mon 30 Nov 2026; no new
+experiments (the user works full time elsewhere).** ADM's 2026-11-21 message and the reply sent the same day are
+in §B.1; venue facts and the draft's layout in §1.4.
+- **Framing (settled with the user):** a performance-evaluation study, no new-method claim, on the template of
+  Xu et al. MobiHoc 2005 (attacker ladder × detection statistics) and Flowers et al. TIFS 2020 (an ML attack
+  re-evaluated with wireless realism). Question: does learning make a jammer stealthier against deployed
+  detectors, at matched damage, under impairments the defender cannot know? Core evidence = the final experiment
+  (§3.3q), the Li readout (§3.3r) and the all-detectors training (§3.3q); ablations that defend it = the
+  steps/initialisation ablation (§3.3f), E2 (§3.3g), grey-box run004. Everything else is one paragraph of history
+  in the paper and the full Appendix A in the thesis. The multi-agent / MARL framing of the old Overleaf draft is
+  dropped from the paper (future work). Title draft: *"Does Learning Make a Jammer Stealthier? Generative versus
+  Classical Jamming Against Energy, Kurtosis and Learned Detectors"*; abstract and 3 contributions in
+  `secon27/abstract.tex` and the chat of 2026-11-21 (contributions: the matched-damage protocol; learning buys no
+  stealth, structurally, and a detector scored on its own training types overstates itself; impairments split
+  the detectors).
+- **Draft state (`paper_drafts/secon27/`, both builds compile, 0 errors, 0 undefined):** System and Threat Model
+  and Evaluation Methodology are **written** (≈ 2.5 of ≈ 8 text pages; ported from `sec_system_model_waveform.tex`,
+  `sec_setup_operating_point.tex`, `sec_methodology.tex` and updated to `final/`: one jammer, faded link + noise
+  factor, energy after the MF + gain-aware variant, no LRT, grey-box defined, attacker table, per-environment
+  bands). The thesis Appendix A is **written** (A–M + 9 new subsections: D4b, S1, S2, S4, S5, D6 round 1, final
+  pointer, quick D6, the October M0 baselines). **Stubs:** Introduction, Related Work (subset in the 2026-11-21
+  chat: pirayesh, xu2005, urkowitz, tandra, li2022, zhang2023, amuru, Zhou 11184988, erpek2019, flowers2020,
+  tramer2020, papernot2017, bash2013; table columns jammer · detector types · matched-damage comparison ·
+  impairments), Results (5 subsections planned: what each detector sees at base; learned vs classical at matched
+  damage in six environments; why the detector term buys nothing; impairments split the detectors; Li readout),
+  Discussion, Conclusion. Page budget in `body.tex`.
+- **New runs 2026-11-21 (done, NOT yet analysed): CNN seeds 13 and 14 in all six environments**, every attacker
+  re-evaluated against each → `artifacts/final/<env>/eval_cnn_s13.json`, `eval_cnn_s14.json` (§A.0). Two uses:
+  error bars on the CNN column (the paper's "one CNN per environment" gap), and a **grey-box readout in all six
+  environments**, because the generators were trained against seed 11. Read them with `final/figures.py`'s
+  `matched()` on the alternative eval file.
+- **Gap check (what a reviewer attacks):** no new method; simulation only, single carrier, flat fading; one CNN
+  seed per environment (fixed by the runs above); no KS test (ADM's 2026-10-01 sketch; skipped, the M0 model is
+  not the paper's); "your GAN is under-tuned" is answered by the steps/init ablation and the all-detectors
+  training. Missing baselines and "only kurtosis" are NOT gaps: the final roster has barrage, tone, pulse comb,
+  Amuru p 0.01–1, on/off, random push, genie flip and Zhou's CGAN against energy, kurtosis and the CNN.
+- **NEXT, in order:** (1) Results from §3.3q–r + the seed runs; (2) Introduction + Related Work; (3) the one-page
+  outline to ADM **Mon 23 Nov** (title, abstract, contributions, figure list); (4) full draft to ADM **Thu 26
+  Nov**; (5) the ETH wrapper once the template/guidelines arrive (§4.1 #9); (6) EDAS registration with the author
+  list ADM gives (§4.1 #10); (7) anonymise, submit, hand in the thesis **Mon 30 Nov**.
+
 **STATE 2026-10-17: reset after the 2026-10-01 meeting (§B.1). The target is a submission at the end of
 November 2026, and the study restarts from the attacks.** Nothing was submitted to ICC (2026-10-02).
 From now on there is a weekly meeting with the supervisor whenever there are results. The user will add more of
@@ -1162,7 +1241,7 @@ his mails, and the next steps get discussed before anything is built.
     | | SJR 0 dB | SJR 5 dB | SJR 10 dB | SJR 15 dB |
     |---|---|---|---|---|
     | NWSE | 1.00 / 0.91 / 0.72 | 0.33 / 0.32 / 0.47 | 0.11 / 0.10 / 0.35 | 0.033 / 0.033 / 0.31 |
-    | barrage | 0.29 / 0.31 / 0.42 | 0.078 / 0.12 / 0.35 | 0.0025 / 0.026 / 0.31 | 2e-6 / 0.0058 / 0.30 |
+    | barrage | 0.29 / 0.31 / 0.42 | 0.078 / 0.12 / 0.35 | 0.0027 / 0.025 / 0.31 | 0 / 0.0058 / 0.30 |
     | NWSE, blind | 0.50 / 0.45 / 0.44 | 0.17 / 0.16 / 0.35 | 0.053 / 0.051 / 0.31 | 0.017 / 0.017 / 0.30 |
     | random symbol | 0.44 / 0.44 / 0.46 | 4e-6 / 0.081 / 0.35 | 0 / 0.015 / 0.31 | 0 / 0.0048 / 0.30 |
     | noise only | 0 / 0.0016 / 0.29 | | | |
@@ -1203,9 +1282,9 @@ his mails, and the next steps get discussed before anything is built.
   `final/` has the waveform-level versions: `noise` (broadband), `random_push` (a random QPSK symbol on the
   victim's symbol grid; only η 0.1 was ever evaluated, §4.3 L4), `pulsed` p = 1 (random symbols, async),
   `omniscient_e1` (the genie flip), and the kurtosis detector. No KS test exists anywhere yet.
-- **The `final/` results (§3.3q–s) stand as measured.** Whether any of them enter the November paper is not
-  decided. The NEXT of the block below (the Li readout in noise and fading) is superseded.
-- **Open, on the user:** his mail of 2026-10-02, which names the venue (§B.1).
+- **The `final/` results (§3.3q–s) stand as measured.** *Decided 2026-11-21: they are the paper's core* (block
+  above). The NEXT of the block below (the Li readout in noise and fading) is superseded.
+- ~~**Open, on the user:** his mail of 2026-10-02, which names the venue (§B.1).~~ Resolved 2026-11-21: SECON 2027.
 
 The block below is the state before the 2026-10-01 meeting.
 
@@ -4194,6 +4273,9 @@ calibration for the m2 detector; extending the sim08 suite with more classical d
 | 5 | **Single-round evasion on a frozen detector, or fully co-adaptive?** | His 2026-08-03 phrasing leans co-adaptive (*"one can always fine-tune a defender on an attacker and vice versa"*) but was never a direct answer. RQ2 assumes round-based-and-offline. **Proposed 2026-09-28:** round-based co-adaptation, measured by D6 (§3.4). |
 | 6 | ~~**Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension?~~ **MOOT as posed, 2026-09-12.** The pivot answers it the other way round: the cooperative jammer *is* the core and characterisation is appendix. Still worth flagging in #0 that this is a reversal of the mid-July proposal he never answered. |
 | 7 | ~~**His September availability / feedback cadence**~~ **ANSWERED 2026-10-01: a weekly meeting whenever there are results** (§B.1). | — |
+| **9** | **The ETH thesis guidelines ("violet text") and the Distributed Computing group's thesis template** (OPEN 2026-11-21, on the user) | The thesis build needs its wrapper (title page, declaration of originality). The user sent only the template's README (`\frontmatter`/`\mainmatter`/`\appendix`, `\TODO`/`\REMARK`); the violet instructions are probably inside its `.tex`. Ask for the whole template folder. |
+| **10** | **Author list for SECON** (asked in the 2026-11-21 reply) | EDAS freezes it at registration; register early once he answers. |
+| **11** | **SECON deadline time zone** | Not stated on the site; visible in EDAS (N35491) after login. Do not assume AoE. |
 | 8 | ~~**Inter-jammer coordination assumption** — shared backhaul / shared clock only / fully independent?~~ **ANSWERED 2026-09-12, and reframed.** He does not pick from that menu; he says the interesting thing is that the inter-jammer link *"introduces desynchronization"* through **communication delay** (§B.2). So the assumption is a link with a delay parameter, and the delay is swept rather than assumed (§2.3 RQ1, §2.4). Residual open question, much smaller: what delay *range* is realistic — worth one line in the reply to #0. | — |
 
 **When his corrections come back — the four things most likely to be challenged**, recorded so the
@@ -5136,6 +5218,7 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | **final** | base · noise · noise_1db · fading · fading_k28 · both | **the final experiment**: per env CNN retrain + CFAR thresholds → bands → 8 generators (control ×3, cnn_b10 ×3, energy_b10, kurtosis_b10; run003 recipe) → 21 attackers × JSR −50…+15 × 512 frames, 15 dB (Es/N0 24 dB), TITAN RTX; + the random push (22nd attacker, 2278413–18) | **CNN-targeted GAN vs the CNN at PER 0.1: within ±4 pp of the classical envelope except noise_1db (−4.6 ± 0.9); no gain over the damage-only control; −86…−93 pp over Zhou's CGAN; σ_N blinds the CNN, fading blinds naive energy (CSI energy unmoved)**; §3.3q | chains 2278006–2278029 (evaluates 2278009, 2278063, 2278064, 2278069, 2278076, 2278084); TaskProlog reruns 2278057/59/68/75/83 |
 | **final** | base · Li readout (`eval_li.json`, `li/`, `Li_base/`) | **the CNN scored per sample the way Li et al. do** (argmax, DR/precision/recall/F, matched PER 0.1/0.5/0.9, damage at detection budget); surrogate CNN seed 12 → grey-box cnnGAN1; cnnGAN2 (frame damage at −10…0 dB, warm start) white + grey, dropped; IQ and pulse pictures | **grey-box cnnGAN1 flagged 0.026 / 0.09 at PER 0.1 / 0.5 (Li's four 0.37–1.00 / 0.52–1.00), 1.00 at PER 0.9; Amuru p 0.02–0.05 beats it at every budget; it is one pulse per frame at a fixed symbol (p_eff 0.011); cnnGAN2's white-box stealth does not transfer**; §3.3r | 2278626–27, 2278683–85, 2278690–97, 2278731 |
 | **final** | base · quick D6 (`cnn_d6/`, `eval_d6.json`, `d6/`) | the CNN retrained once with cnnGAN1 grey-box r0, r1 as a fifth jammed type (r2 held out), all 31 attackers re-scored on the same frames | **at α 0.05 no cost on Li's four (pooled DR 93.5 → 93.6 %); cnnGAN1 at matched PER 0.5 0.26 → 0.39 seen, 0.37 → 0.56 held out; at argmax clean FAR 0.8 → 2.0 %**; §3.3s | 2279746, 2279747 |
+| **final** | all six · CNN seeds 13 / 14 (`cnn_s13/`, `cnn_s14/`, `eval_cnn_s13.json`, `eval_cnn_s14.json`; 2026-11-21) | `train_cnn.py --seed 13/14 --name cnn_s13/14` (Li's recipe, the deployed CNN's only change is the seed), then `evaluate.py --cnn cnn_s1x --out eval_cnn_s1x.json`: every attacker on the same frames as `eval.json`, against the new CNN and its own CFAR thresholds | **done (all 25 jobs COMPLETED, verify passed first), NOT YET ANALYSED.** Gives the CNN-seed spread and a grey-box readout in every environment (generators were trained against seed 11) | 2454497 verify · train/eval pairs base 2454498/99, 2454500/01 · noise 02/03, 04/05 · noise_1db 06/07, 08/09 · fading 10/11, 12/13 · fading_k28 14/15, 16/17 · both 18/19, 20/21 (s13 first) |
 | **final** | base · suite training (`eval_suite.json`; exploratory) | **does penalising the whole detector suite help?** new `suite_*` task (detector term = worst-of-three soft P_det per frame), white-box, β 10/30/100 + a CNN-band control, 1500 steps | **no — worse than single-target `cnn_b10` at matched damage (worst detector 0.46 vs 0.24 at PER 0.1); the 3 detectors transition ≈ 11 dB apart, so at low damage only the CNN is active and single-target already evades the suite; "detector term buys nothing" is structural**; §3.3q | 2279480 (17–19), 2279481, 2279509, 2279510 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
@@ -5771,7 +5854,7 @@ and m0 rows are on the cluster; the sim06 and frontier rows are in git only (§1
     - **Assumptions.** The jammer is able to sync with the receiver; fixed modulation; no directional
       antennas. To do: a sweep to check the impact of NWSE's parameters.
 - **2026-10-02 — his first mail after the meeting.** It names the venue for the end-of-November target.
-  Text not yet added.
+  Text not yet added. *(The venue was settled on 2026-11-21 as SECON 2027, from his shortlist; see below.)*
 - **2026-10-07 — his second mail: naive baselines first, and a supervised problem instead of a GAN.** Verbatim, except that the LaTeX delimiters (`$`, `$$`, `\boxed{}` around the last form) are
   dropped and the equation numbers (1)–(4) are ours:
   ```text
@@ -5863,6 +5946,18 @@ and m0 rows are on the cluster; the sim06 and frontier rows are in git only (§1
      received law exactly only when the jammer knows the symbol.
   6. **No power budget appears.** C is "S" or "the IQ plane". Our convention imposes power as a hard
      constraint on c (§2.8). Without one, a per-symbol c(v) solves (3)–(4) trivially with c = k′ − v.
+
+- **2026-11-21 — his message, and the reply.** Paraphrased by the user (not verbatim): he wants the results
+  summarised into a draft **in the template of the chosen conference**, following his internal guidelines (the
+  "violet text" template instructions), and will then decide where and whether to submit; he did not know which
+  appendix was meant (he looks at a document about two months old plus the emailed plots, most likely the
+  *proposal* Overleaf rather than the thesis one); *"if there's no novel method, it might still be possible to
+  submit a performance evaluation study if simulations are comprehensive and solid"* (§2.9); his shortlist was
+  SECON, VCC, WoWMoM, CoNEXT, MobiSys, SECON preferred; ETH pays registration if accepted. **The user replied the
+  same day** (sent before the draft): the thesis Overleaf link, the performance-evaluation framing, SECON 2027
+  (30 Nov, 9 pages, double-blind), a one-page outline on Monday and the full draft by Thu 26 Nov, and a request
+  for the author list. "Keep it updated" (his phrase, as relayed) is read as: keep the Overleaf draft current.
+  The emailed post-meeting results are the October M0 baselines (§3.1 steps 0–1; user-confirmed 2026-11-21).
 
 *(A note for the record: earlier drafts of the project notes speculated about a "Thu 13 Aug" meeting,
 picked up from a date we had proposed to ourselves. That meeting never happened; **21 Aug is the real,

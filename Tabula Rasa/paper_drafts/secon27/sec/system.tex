@@ -1,0 +1,94 @@
+% ~1.25 pages. Ported 2026-11-21 from ../sec_system_model_waveform.tex (cgan/, 30 dB) and updated to final/
+% (README Sec. 3.4 "Final experiment", 2.7): one jammer (no team: every learned jammer in final/ is N_J = 1);
+% the victim link fades and the noise level is uncertain (the parked sentences of ../sec_setup_operating_point.tex);
+% energy after the matched filter, plus a gain-aware variant; the noise LRT is dropped (final/ has none).
+% Symbols: g = RRC pulse; rho = fading amplitude (NOT g, which the old parked text used); nu = noise factor;
+% T = a detector's statistic; tau_alpha its threshold. Style (ADM): one sentence per line, ~\cite before punctuation.
+\section{System and Threat Model}\label{sec:system}
+We consider a single-carrier link on which a legitimate node transmits QPSK to a second legitimate node, which also monitors the link for interference.
+A jammer seeks to raise the receiver's error rate while drawing as few detections as possible.
+The transmitter, the receiver and its detectors form one fixed target; only the jammer adapts.
+
+\subsection{Legitimate Link}\label{sec:link}
+The transmitter sends frames of $N$ unit-energy QPSK symbols $s[k]\in\{\tfrac{1}{\sqrt2}(\pm1\pm\mathrm{j})\}$, drawn independently and uniformly.
+Each frame is upsampled by $L$ samples per symbol and shaped by a unit-energy root-raised-cosine pulse $g$, giving the transmit waveform
+\begin{equation}
+x[n]=\sum_{k=1}^{N} s[k]\,g[n-kL].
+\label{eq:tx}
+\end{equation}
+The receiver applies the matched filter, samples it at the symbol instants to obtain $z_k$, and makes a hard decision on each axis.
+Because $g$ is real and even, the matched filter is $g$ itself, and because $g$ is root-Nyquist the cascade $g*g$ is free of inter-symbol interference up to truncation.
+
+\subsection{Channel and Received Signal}\label{sec:channel}
+The received frame is
+\begin{equation}
+r[n]=\rho\,x[n]+c[n]+w[n],\qquad w[n]\sim\mathcal{CN}(0,\nu N_0),
+\label{eq:rx}
+\end{equation}
+where $c$ is the jammer's waveform as it arrives at the receiver.
+The amplitude $\rho=|h|$, with $h$ Rician of factor $K$ and $\mathbb{E}[\rho^2]=1$, models small-scale fading of the victim's own link, and the factor $\nu>0$, log-normal with $\mathbb{E}[\nu]=1$ and standard deviation $\sigma_N$ in decibels, models a noise level the receiver does not know exactly.
+Both are drawn once per frame, and neither is known to the detectors.
+The receiver is synchronized to its transmitter and knows the link's phase, so no equalization is needed; $K\to\infty$ and $\sigma_N=0$ recover the ideal link.
+% final/link.py fading_gain (h = sqrt(K/(K+1)) + sqrt(1/(K+1)) CN(0,1)) and noise_scale (unit-mean log-normal).
+All powers are means per sample at the receiver input: with $P_{\mathrm{rx}}$ the mean received signal power, the signal-to-noise ratio is $P_{\mathrm{rx}}/N_0$ per sample, so that $E_s/N_0=L\,P_{\mathrm{rx}}/N_0$.
+The jammer is characterized by its jamming-to-signal ratio (JSR), its received power relative to $P_{\mathrm{rx}}$.
+Every realizable jammer is asynchronous: its timing offset is uniform over one symbol and its carrier phase uniform over $[0,2\pi)$, both drawn per frame.
+% Only the genie (T0) and the random push (Sec. method) arrive synchronously.
+
+\subsection{Attacker Model}\label{sec:attacker}
+Every attacker, closed-form or learned, is a conditional law $c\sim\pi(\cdot\mid\xi)$, where $\xi$ is the information available when it forms its signal; attackers differ only in $\xi$ and in the family $\pi$ ranges over.
+The power budget is a hard constraint: each frame is scaled so that the jammer's received power over the victim's $NL$-sample frame meets its target,
+\begin{equation}
+\frac{1}{NL}\sum_{n}|c[n]|^2=\mathrm{JSR}\cdot P_{\mathrm{rx}},
+\label{eq:power}
+\end{equation}
+so no attacker can trade effectiveness against a soft power penalty.
+Three information tiers define $\xi$: a genie (T0) knows the victim's current symbols and arrives synchronously; an informed attacker (T1) is asynchronous and knows the victim's modulation, pulse and symbol rate but not its symbols; a blind attacker (T2) is asynchronous and knows none of these.
+
+The learned jammer is generative: a neural network $G$ maps a latent vector $\mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ to a segment $G(\mathbf{z})\in\mathbb{C}^{M}$ of $M$ complex baseband samples.
+A jammer frame is a stream of independent segments, delayed and rotated asynchronously and scaled to its budget,
+\begin{equation}
+u=\bigl[G(\mathbf{z}_1),G(\mathbf{z}_2),\ldots\bigr],\qquad c[n]=a\,e^{\mathrm{j}\phi}\,u[n-\tau],
+\label{eq:gan}
+\end{equation}
+with $(\tau,\phi)$ the offset and phase of Sec.~\ref{sec:channel} and $a>0$ the amplitude that meets~\eqref{eq:power}.
+Its weights are learned in simulation (Sec.~\ref{sec:method}), which places it in tier T1; it never sees the victim's symbols.
+The classical and reference jammers are defined in Sec.~\ref{sec:method}.
+
+\subsection{Detector Model}\label{sec:detector}
+Detection is at the receiver, on one frame at a time, without channel state information or labels at run time.
+Each detector reduces the frame to a scalar statistic $T$ built so that larger is more suspicious, and decides alone.
+Its threshold $\tau_\alpha$ is the $(1-\alpha)$-quantile of $T$ over clean frames of the environment it is deployed in, including the fading and noise-level draws it cannot know, so the false-alarm rate stays at $\alpha$ and an impairment raises the threshold instead.
+The detection probability at a given JSR is
+\begin{equation}
+P_{\mathrm{det}}=\Pr\bigl[T(r)>\tau_\alpha\mid\text{jammer at JSR}\bigr],\qquad \Pr\bigl[T(r)>\tau_\alpha\mid\text{no jammer}\bigr]=\alpha,
+\label{eq:pdet}
+\end{equation}
+where both probabilities run over everything random in the environment: bits, noise, channel, and the jammer's latent input, delay and phase.
+It is a per-frame probability, not the probability that the jammer is ever caught.
+
+We deploy three detectors.
+The energy detector~\cite{urkowitz1967energy} thresholds the mean received symbol energy after the matched filter, $T_{\mathrm{E}}=\frac1N\sum_k|z_k|^2$, which excludes the noise outside the signal's band.
+Its one-sided form flags excess energy; a two-sided form, which also flags a deficit, is evaluated but not trained against.
+Under fading we also evaluate a gain-aware variant that is handed $\rho$ and removes its effect on the signal term; it bounds what a receiver that estimates its gain could achieve.
+% energy_csi subtracts (rho^2 - 1) c0^2 (final/detectors.py); not a deployable detector, a bracket.
+The kurtosis detector thresholds the deviation of $\kappa(r)=\mathbb{E}|r|^4/(\mathbb{E}|r|^2)^2$ from its clean mean, in both directions; $\kappa$ is scale-free, so it sees the shape of the amplitude distribution, which energy cannot.
+The learned detector is the spectrogram classifier of Li et al.~\cite{li2022jamming_ofdm}: a convolutional network applied to the two-sided complex spectrogram of $r$ on a fixed decibel scale, retrained on this link with their jammer types.
+% fixed dB scale, not a per-image contrast stretch: the stretch erases a jammer that lifts the band evenly (README A.4).
+Its statistic is the logit difference of its two classes.
+
+\subsection{Threat Model}\label{sec:threat}
+The detectors are calibrated, and the classifier trained, before any attack; they are then frozen, and a trained jammer is frozen at deployment, so any adaptation is offline.
+A white-box jammer differentiates the deployed detector's statistic, including the classifier's weights; this is the attacker's upper bound, and every generator in Sec.~\ref{sec:res-matched} is trained with it.
+A grey-box jammer knows the classifier's architecture and training recipe but not its weights, and trains against a surrogate of its own instead~\cite{papernot2017practical}.
+For the energy and kurtosis detectors the two coincide.
+A learned jammer sees the victim's error rate only in simulation, during training; a deployed jammer cannot measure it.
+
+\subsection{Problem Formulation}\label{sec:objective}
+The jammer maximizes the error rate it induces, penalized by detection,
+\begin{equation}
+\max_{\pi}\;\mathbb{E}[\mathrm{BER}]-\beta\,P_{\mathrm{det}}\quad\text{s.t.~\eqref{eq:power}},
+\label{eq:problem}
+\end{equation}
+where $\beta\ge0$ weighs detection against damage and power enters only through the hard constraint.
+Since each $\beta$ reaches only the upper concave envelope of the achievable set, the object of study is the whole trade-off between damage and $P_{\mathrm{det}}$ for each detector, compared at matched damage rather than at matched power or configuration.
