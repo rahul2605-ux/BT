@@ -1,6 +1,8 @@
 # Tabula Rasa — learned jamming under detection constraints
 
-**Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **ICC, deadline 2026-10-02.**
+**Bachelor's thesis (ETH D-INFK), supervisor A. Di Maio.** Target: **a submission at the end of November
+2026** (decided at the 2026-10-01 meeting; the venue is named in his mail of 2026-10-02, not yet added, §B.1).
+Nothing was submitted to ICC 2026-10-02.
 Last consolidated: 2026-09-28.
 
 > **This file is the single entry point.** It is organised as:
@@ -19,8 +21,11 @@ Last consolidated: 2026-09-28.
 
 ## 1.1 What this is, in one page
 
-> **STATE 2026-09-28 — the current state is in [§3.1](#31-status-line); the blocks below are older and
-> kept as history.** In short: the single-jammer study is re-done on the run003 method (§3.3f/§3.3g) and
+> **STATE 2026-10-17 — the current state is in [§3.1](#31-status-line); the blocks below are older and
+> kept as history.** The 2026-10-01 meeting (§B.1) moved the target to the end of November 2026 and restarted
+> the study from the attacks: naive baselines first (noise, barrage, NWSE, a random symbol), BER/SER vs N0.
+>
+> **STATE 2026-09-28.** In short: the single-jammer study is re-done on the run003 method (§3.3f/§3.3g) and
 > stress-tested under shadowing (S1, §3.3k). Its candidate story went to the supervisor in the first update
 > since 2026-09-12 (§B.1), with the proposal to leave MARL out of the ICC paper (§3.3j) and run one arms-race
 > round (D6) instead. ICC deadline Fri 2026-10-02.
@@ -148,6 +153,7 @@ BT/
 │   ├── .claude/skills/     <- project-local Claude Code skills; so far only `no-ai-slop` (C.6)
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
 │   ├── proposal/           <- registration proposal; `*_reviewed_2026-09-12.tex` = his annotated copy
+│   ├── supervisor/         <- his meeting material; `2026-10-01_meeting_sketch.jpg` (transcribed in §B.1)
 │   ├── frontier/ simulation00..08/   <- FROZEN. Appendix material. Do not extend.
 │   └── live.main.tex, first_results.py   <- scratch
 └── paper/                  <- git subtree of the Overleaf document (see 1.4)
@@ -187,6 +193,8 @@ BT/
 | `m0/train_detector.py` + `submit_train.sh` | one CNN per σ (job 2243867, 89 s) |
 | `m0/frontier_m0.py` + `submit_frontier.sh` | the E1 sweep, 8-task array (job 2243879, 8 s/task) |
 | `m0/figures.py`, `m0/figure_geometry.py` | all figures → `artifacts/m0/*.png` |
+| `m0/noise_baseline.py` | the attack study's step 0 (§3.1): simulated QPSK SER vs N0, noise only → `artifacts/m0/noise_baseline{,_linear}.png` + `.json` (the linear axis, 0 to 1, is the one the user prefers); CPU, ~1 min, login node |
+| `m0/baselines.py` | step 1 (§3.1): barrage, random symbol, NWSE (Xie et al. Alg. 1, knows the symbol) and blind NWSE at equal average power, SER vs N0 (−20…+30 dB), one column per SJR (0 / 5 / 10 / 15 dB), linear above log, each checked against its closed form → `artifacts/m0/baselines.{png,json}`; plus the received IQ of every jammer at every SJR (N0 −20 dB) → `baselines_iq.png`; CPU, ~1 min, login node |
 
 **Live code (CGAN track, `cgan/`):** being built. The planned modules and their order are in
 [§3.4](#34-the-plan-20-days--re-cut-2026-09-12-for-the-pivot) (items C0–C6); this table gets one row
@@ -1108,6 +1116,98 @@ projection; `--power learned` makes it a capped choice (≤ per frame, §3.3f ru
 # PART 3 — CURRENT STATE
 
 ## 3.1 Status line
+
+**STATE 2026-10-17: reset after the 2026-10-01 meeting (§B.1). The target is a submission at the end of
+November 2026, and the study restarts from the attacks.** Nothing was submitted to ICC (2026-10-02).
+From now on there is a weekly meeting with the supervisor whenever there are results. The user will add more of
+his mails, and the next steps get discussed before anything is built.
+- **Agreed order (meeting and his mail of 2026-10-07):** (1) a noise ablation, broadband noise and symbol-level
+  noise, BER and SER vs N0; (2) barrage and NWSE jamming on the same axes; (3) other naive baselines, e.g. a
+  random legitimate symbol (his mail: *"different than nwse"*); only then anything learned. The sketch names
+  kurtosis and a KS test as detectors, and assumes the jammer syncs with the receiver, a fixed modulation and no
+  directional antennas.
+- **Step 0 done (2026-10-18): the noise-only reference.** `m0/noise_baseline.py` →
+  `artifacts/m0/noise_baseline.png`: QPSK over AWGN, simulated SER vs N0 (dB, Es = 1) on M0's link
+  against the closed forms; they agree at every point (§A.0); the plot shows only the simulation. It runs on M0
+  because M0 is the sketch's model and the simplest code (the user asked to keep it simple). The user prefers SER
+  (*"we're trying to push symbols across the threshold"*) on a linear axis.
+- **Step 1 done (2026-10-18): three naive jammers at equal power.** `m0/baselines.py` →
+  `artifacts/m0/baselines.png`: SER vs N0 (−20…+30 dB), one column per SJR (0 / 5 / 10 / 15 dB, Xie's
+  range), linear SER on top and log SER below. `artifacts/m0/baselines_iq.png`: the received constellation of
+  each jammer at each SJR, N0 −20 dB, coloured by correct decision vs symbol error. Definitions (every
+  docstring detail is in the script):
+  - **Fair = equal average received jammer power per symbol**, P_J = E|c|², quoted as SJR = Es/P_J; each
+    jammer spends exactly P_J (measured, within 0.5 %). Equal power is not equal knowledge: NWSE knows the
+    symbol, the other two are blind.
+  - **Barrage** = CN(0, P_J) on every symbol (Xie's "noise jamming", Li's barrage); at one sample per symbol it
+    is extra AWGN. M0's `attacks.py` `barrage` is constant-modulus random phase (Xie's "fixed power
+    jamming"), a different jammer, not used here.
+  - **Random symbol** = √P_J · u, u a uniform QPSK point independent of s, every symbol, synchronised.
+  - **NWSE** = Xie et al. Alg. 1: the minimum push across one boundary toward an adjacent symbol (one of the
+    two on QPSK, drawn at random), ρ_min = (1 + η)/√2 with η = 0.01 for the paper's "numerical precision".
+    If P_J ≥ ρ_min² every symbol is pushed with the whole budget (Alg. 1 line 5); otherwise a fraction
+    t = P_J/ρ_min² is pushed by ρ_min (line 7, intermittent jamming). The paper writes t = P_J/P_S, which on
+    QPSK would spend only half the budget; t uses ρ_min² so the average power is P_J, as its text asks.
+    **We do not run the paper's adversarial search** (PGD on a trained demodulator). We implement the
+    solution it reports converging to, in closed form: its Fig. 1(c) puts the four pushed points exactly
+    on the decision boundaries around the symbol, "with only a difference in numerical precision", and on
+    QPSK's sign decisions the minimum-norm boundary crossing is known. The jammer **knows the symbol**: the
+    paper's AE is computed on the labelled transmitted waveform, and ours reads s to pick the direction.
+  - **NWSE, blind** (added 2026-10-18, user): the same push size and power rule, the direction drawn
+    uniformly from N / S / W / E without knowing s (M0's `boundary_blind`). On QPSK two of the four cross a
+    boundary and two push the symbol outward.
+  - **Result** (SER at N0 −20 / −10 / 0 dB; every jammer converges on the noise-only curve, 0.74, by
+    N0 ≈ +20 dB):
+
+    | | SJR 0 dB | SJR 5 dB | SJR 10 dB | SJR 15 dB |
+    |---|---|---|---|---|
+    | NWSE | 1.00 / 0.91 / 0.72 | 0.33 / 0.32 / 0.47 | 0.11 / 0.10 / 0.35 | 0.033 / 0.033 / 0.31 |
+    | barrage | 0.29 / 0.31 / 0.42 | 0.078 / 0.12 / 0.35 | 0.0025 / 0.026 / 0.31 | 2e-6 / 0.0058 / 0.30 |
+    | NWSE, blind | 0.50 / 0.45 / 0.44 | 0.17 / 0.16 / 0.35 | 0.053 / 0.051 / 0.31 | 0.017 / 0.017 / 0.30 |
+    | random symbol | 0.44 / 0.44 / 0.46 | 4e-6 / 0.081 / 0.35 | 0 / 0.015 / 0.31 | 0 / 0.0048 / 0.30 |
+    | noise only | 0 / 0.0016 / 0.29 | | | |
+
+    - **NWSE dominates everywhere**, as a symbol-aware jammer should. At SJR 0 dB it has the budget to push
+      every symbol 0.29 past the boundary (SER 1 at low noise); its SER then *falls* with N0 to 0.71 near
+      0 dB, because noise pushes some symbols back, before rising with the noise-only curve.
+    - **Its minimum push is a coin flip in noise.** From SJR ≈ 2.9 dB up (P_J < ρ_min²) it pushes a fraction
+      t = P_J/ρ_min² of the symbols, landing them 0.007 past the boundary. Even N0 −20 dB (σ 0.07 per axis)
+      sends half of them back, so its low-noise SER is ≈ t/2: 0.33 at 5 dB (t 0.62), 0.11 at 10 dB, 0.033 at
+      15 dB. The IQ figure shows it directly: those symbols sit on the axes, half orange. The paper computes
+      its push without receiver noise. This is the sketch's "sweep to check the impact of NWSE's parameters":
+      the margin η is the parameter.
+    - **Knowing the symbol is worth exactly a factor of two.** At low noise the blind NWSE does half the
+      damage of the symbol-aware one at every SJR (0.50 vs 1.00, 0.17 vs 0.33, 0.053 vs 0.11, 0.017 vs
+      0.033), because half of its pushes go outward (the IQ figure: clusters at ±1.7 on the axes, all
+      blue). It is still the most damaging *blind* jammer at low noise: at 0 dB it beats random symbol (0.44)
+      and barrage (0.29); at 5 and 10 dB it leads barrage 2× and 20×, and at 15 dB barrage does nothing measurable.
+    - **Random symbol does nothing alone above SJR 0 dB**: a QPSK point weaker than the signal cannot cross a
+      boundary (the IQ figure: 16 clusters, all inside their quadrant), so it needs receiver noise to help.
+      At 0 dB it lands symbols on the axes or at the origin, ties that the noise breaks: SER 0.44 = 7/16, the
+      closed form. It beats barrage only at SJR 0 dB.
+    - **Barrage** is extra receiver noise and nothing more: its SER is the noise-only curve shifted to
+      N0 + P_J.
+    - **Against the paper's own curve** (read off its Fig. 2(a), 16QAM, so not our setting): their
+      adversarial jammer falls from ≈ 0.56 at 7 dB to ≈ 0.23 at 16.5 dB. The same closed form on their
+      16QAM gives min(1, 10/SJR): 1 up to 10 dB, 0.22 at 16.5 dB. The endpoint agrees, the slope does not
+      (theirs is flatter); their receiver noise and power normalisation are unstated, so the cause is
+      open.
+- **Instead of a GAN** (his PhD student: GANs are troublesome to debug), a supervised problem: find the
+  jamming symbol c with hinge losses. His four formulations, verbatim, and a first reading of them are in §B.1.
+- **What already exists for these attacks.** Which code base the study uses is not decided. M0 is the sketch's
+  model (y = s + d + w, §2.4) and has `gaussian` (symbol-level noise), `barrage` (constant modulus, uniform
+  random phase), `boundary_genie` (a push toward one decision boundary on a fraction `duty` of the symbols:
+  NWSE as the shared paper defines it, its intermittent jamming included, §B.1), `boundary_blind` (the same push
+  in a random direction, without the symbol), and `permute` / `counter_flip` (the "sum of legitimate codewords"
+  idea; they need the symbol). M0 has no kurtosis.
+  `final/` has the waveform-level versions: `noise` (broadband), `random_push` (a random QPSK symbol on the
+  victim's symbol grid; only η 0.1 was ever evaluated, §4.3 L4), `pulsed` p = 1 (random symbols, async),
+  `omniscient_e1` (the genie flip), and the kurtosis detector. No KS test exists anywhere yet.
+- **The `final/` results (§3.3q–s) stand as measured.** Whether any of them enter the November paper is not
+  decided. The NEXT of the block below (the Li readout in noise and fading) is superseded.
+- **Open, on the user:** his mail of 2026-10-02, which names the venue (§B.1).
+
+The block below is the state before the 2026-10-01 meeting.
 
 **STATE 2026-10-01 (r2c): the final experiment is built and run in all six environments (§3.3q), the CNN has
 been re-read the way Li et al. score it at `base` with a grey-box attacker (§3.3r), and this session closed one
@@ -4086,14 +4186,14 @@ calibration for the m2 detector; extending the sim08 suite with more classical d
 |---|---|---|
 | **0** | ~~**Sign-off on the pivot** to coordination as RQ1 (2026-09-12)~~ **SUPERSEDED 2026-09-28 — never sent.** The 2026-09-28 email (#0c) replaced it: coordination is proposed out of the ICC paper (thesis/TWC), the literature collision (§2.1) was disclosed in one line, and the RQ1/RQ2 tension is resolved toward the single-jammer study + D6 (his adaptation question). | — |
 | **0b** | ~~**Sign-off on retiring stealth entirely + the GAN/MARL replacement** (2026-09-16; options A/B 2026-09-17)~~ **SUPERSEDED 2026-09-28 — never sent.** The 2026-09-28 email (#0c) went with option B (the detector-gap measurement, generator as instrument), dropped A's MARL from the paper, and introduced the CGAN track, which he had not seen. | — |
-| **0c** | **⚠ 2026-09-28 — email SENT; awaiting his reply.** It proposes (content in §B.1): the §3.1 story; MARL out of the paper, D6 as the one remaining experiment; a Friday 2026-10-02 submission with the full draft to him Wednesday evening. It asks: OK to submit this scope on Friday? a short call Mon/Tue? move to the separate paper Overleaf he planned? **Correction owed in the Wednesday draft:** the energy-floor claim needs the gain-aware qualifier (§3.1, S1). | His answer decides the paper's scope; the week's plan (§3.1) runs meanwhile. If he wants MARL in, one small experiment fits, likely negative. |
+| **0c** | ~~**2026-09-28 email: OK to submit this scope to ICC on Friday 2026-10-02?**~~ **RESOLVED at the 2026-10-01 meeting (§B.1): no.** The target moved to the end of November 2026 and the study restarts from the attacks (§3.1). | — |
 | 1 | **Supervisor of record for the ETH registration** | D-INFK professor requirement; may need Di Maio as co-supervisor. Needed on the myStudies form. |
 | 2 | **Title, start date, end date, task description** | All four gate registration. Open since 2026-09-01. |
 | 3 | ~~**Feedback on the proposal** (handed over 2026-09-01)~~ **RESOLVED 2026-09-12 — it arrived.** Nine inline `\adm{}` comments, transcribed in [B.2](#b2-his-verbatim-points-and-what-each-changed); consequences propagated to §2.1, §2.3, §2.4, §2.9, §3.4 and §4.3. Three prose fixes remain owed on the proposal itself (§B.3). | — |
 | 4 | **Which 2–3 experiments go in the main paper** | His call. Candidates **changed 2026-09-12**: E3 (coordination) now leads, E2 (noise ablation) is his mandated primary ablation, E1 demoted to calibration/appendix (§3.3). Ask as part of #0. **E2 is now DONE on the live models (§3.3g, 2026-09-23)** — and it is a stronger candidate than when it was proposed, because it does not merely ablate: it relocates the headline (the matched-BER gain is 5× larger at 15 dB SNR than at the 30 dB the D-series reported) and supplies the mechanism (the stealth edge falls with SNR). **Proposed 2026-09-28 (email):** the CNN result against its β = 0 control over SNR (run003, E2), the energy floor as damage per extra alarm (E2b, with S1's qualifier), grey-box transfer (run004) and D6; E3/D4 out. |
 | 5 | **Single-round evasion on a frozen detector, or fully co-adaptive?** | His 2026-08-03 phrasing leans co-adaptive (*"one can always fine-tune a defender on an attacker and vice versa"*) but was never a direct answer. RQ2 assumes round-based-and-offline. **Proposed 2026-09-28:** round-based co-adaptation, measured by D6 (§3.4). |
 | 6 | ~~**Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension?~~ **MOOT as posed, 2026-09-12.** The pivot answers it the other way round: the cooperative jammer *is* the core and characterisation is appendix. Still worth flagging in #0 that this is a reversal of the mid-July proposal he never answered. |
-| 7 | **His September availability / feedback cadence** | Asked twice, still unanswered. Short frequent rounds >> one large end-of-block review. |
+| 7 | ~~**His September availability / feedback cadence**~~ **ANSWERED 2026-10-01: a weekly meeting whenever there are results** (§B.1). | — |
 | 8 | ~~**Inter-jammer coordination assumption** — shared backhaul / shared clock only / fully independent?~~ **ANSWERED 2026-09-12, and reframed.** He does not pick from that menu; he says the interesting thing is that the inter-jammer link *"introduces desynchronization"* through **communication delay** (§B.2). So the assumption is a link with a delay parameter, and the delay is swept rather than assumed (§2.3 RQ1, §2.4). Residual open question, much smaller: what delay *range* is realistic — worth one line in the reply to #0. | — |
 
 **When his corrections come back — the four things most likely to be challenged**, recorded so the
@@ -5008,6 +5108,8 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | 08 | m2-suite | CNN ∨ energy per-sample | **suite ≡ CNN**; residual stealthy region BER 0.065–0.11 | 102319 |
 | 08 | dense | 9 powers × 11 n_active, B=512 | **refutes channel-aware > blind at matched detectability** | 102390 |
 | **M0** | E1 | 8-σ array + NP-optimal | **no realizable stealthy attack** (§3.3) | 2243867, 2243879 |
+| **M0** | noise baseline (`noise_baseline.{png,json}`) | QPSK, AWGN only, N0 −10…+30 dB (Es = 1), 10⁶ symbols per point, seed 0 | **simulation matches BER = Q(1/√N0) and SER = 1 − (1 − BER)² at every point** (SER levels off at 0.75, pure guessing; BER at 0.5); the reference for every excess-BER/SER curve of the attack study (§3.1) | login node, 2026-10-18 |
+| **M0** | baselines (`baselines.{png,json}`, `baselines_iq.png`) | barrage / random symbol / NWSE (Xie Alg. 1, η 0.01) / blind NWSE at equal average power, SJR 0 / 5 / 10 / 15 dB, N0 −20…+30 dB, 5·10⁵ symbols per point, seed 0; IQ at N0 −20 dB | **NWSE (symbol-aware) dominates everywhere: SER 1.00 / 0.33 / 0.11 / 0.033 at N0 −20 dB, vs barrage 0.29 / 0.078 / 0.0027 / 0; blind NWSE does exactly half (0.50 / 0.17 / 0.053 / 0.017) and is still the strongest blind jammer at low noise; the minimum push lands 0.007 past the boundary, so any receiver noise sends half the pushed symbols back; random symbol does nothing alone above SJR 0 dB**; every SER within 0.002 of its closed form, every jammer within 1.4 % of P_J; §3.1 | login node, 2026-10-18 |
 | **cgan_learned** | run001 (D2a) | shaped noise (48 params), CMA-ES, black-box score-based, per detector | **stealthy BER 0 against every detector**; CNN evaded to −20 dB only out of band (BER 0); shaping +15.9 dB effectiveness; power not waveform-blind (−0.06 near FAR, −0.19 at −20 dB); §3.3e | 2267049, 2267050, 2267051, 2267090 |
 | **cgan** | run001 | CGAN (Zhou 2025), NS-GAN+GP, weights 1 | **ordering not reproduced**: with one sync model GAN−Optimal −1.30 dB async / −4.47 locked (paper +1.31); Noise−GAN 6.66 / 4.38 dB. The first-reported 4.34 / +1.01 scored GAN locked vs Optimal async (withdrawn); §3.3b | 2259289, 2259409, 2260623 |
 | **cgan** | run002 | CGAN, reference-backed recipe (WGAN-GP, feat 2 / STFT 45) | worse imitation: EVM 0.70, no 1e-3 crossing in grid (BER 3.6e-3 at −10 dB), plateau 0.31; critic gap stalls ≈ 57; §3.3b | 2260624, 2260806 |
@@ -5650,6 +5752,117 @@ and m0 rows are on the cluster; the sim06 and frontier rows are in git only (§1
     uniform-symbol point rules out. **Decided by the user:** attack paper; kurtosis is stated as a
     baseline, Li et al.'s CNN as the main detector, the aim as motivating better and proactive defenses;
     localization stated as out of scope for ICC. Follow-ons: §4.3 "Supervisor 2026-09-29".
+- **2026-10-01 — meeting, his office, about 3 h.** The Friday ICC submission did not go ahead. Decided:
+  - **Target: a submission at the end of November 2026.**
+  - **Step back and start from the attacks.** Study them one at a time, the naive ones first. From now on
+    there is a weekly meeting whenever there are results.
+  - **First experiment: a simple noise ablation.** Then see what barrage and NWSE jamming look like. Plot
+    everything as BER (and SER) vs N0.
+  - His sketch: [`supervisor/2026-10-01_meeting_sketch.jpg`](supervisor/2026-10-01_meeting_sketch.jpg). It
+    was a discussion aid, not a specification (user, 2026-10-17). What it shows:
+    - **Model.** r(k) = s(k) + w(k) + c(k), w(k) ~ CN(0, ·), c(k) = the attack. Nodes T → R, T → J labelled
+      s(k) (the jammer hears the transmitted symbol), J → R labelled c(k). A constellation with noise clouds
+      and NWSE push vectors.
+    - **Attacks.** "NWSE attack eSER", "Noise broad[band]", "Noise symbol[-level]", "sum of legitimate
+      codeword/symbol", "sum of codewords? or OOD symbols", "BER w/o change in dist." (damage without changing
+      the received distribution).
+    - **Detectors.** Kurtosis and a KS test (Kolmogorov–Smirnov).
+    - **Plots.** Excess SER and excess BER vs N0 ("e" = excess, §2.7), with detection beside them.
+    - **Assumptions.** The jammer is able to sync with the receiver; fixed modulation; no directional
+      antennas. To do: a sweep to check the impact of NWSE's parameters.
+- **2026-10-02 — his first mail after the meeting.** It names the venue for the end-of-November target.
+  Text not yet added.
+- **2026-10-07 — his second mail: naive baselines first, and a supervised problem instead of a GAN.** Verbatim, except that the LaTeX delimiters (`$`, `$$`, `\boxed{}` around the last form) are
+  dropped and the equation numbers (1)–(4) are ours:
+  ```text
+  Other baselines could be for example sending a random symbol (which is different than nwse as proposed in
+  the paper I shared). In general you can first try how naive baselines work, and only after that, moving onto
+  more complex attacks. My PhD student, who worked with GANs said that they are troublesome to debug so an idea
+  is to formulate it as a simpler supervised problem, i.e. finding the jamming symbol c in the space S of
+  allowed symbols (if we want to avoid the "silence trap" tricks of the couple sender and receiver), or
+  generally the IQ plane, where v is the random variable indicating the received signal (possibly noisy), and
+  k(v) represents the associated codeword which minimizes the distance with other codewords, i.e.,
+
+  (1)  c^\star=
+       \arg\min_{c\in\mathcal C}
+       \mathbb E_v
+       \left[
+       \min_{k'\neq k(v)}
+       \left\{
+       \|v+c-k'\|_2^2
+       +
+       \lambda
+       \max\!\left(0,\,
+       \|v+c-k'\|_2^2-\|v+c-k(v)\|_2^2+\delta
+       \right)
+       \right\}
+       \right]
+
+  This ideally produces a distribution that is similar to the input, to reduce detection, even though may
+  output larger c.
+
+  If we don't care about the detection, i.e. not minimizing the distance to other codewords, could be:
+
+  Indicator function formulation:
+  (2)  c^\star = \arg\min_{c\in C} \mathbb{E}_{v} \left[ \min_{k'\in S\setminus\{k(v)\}}
+       \mathbf{1} \left\{ \left\|v+c-k'\right\|_2^2 < \left\|v+c-k(v)\right\|_2^2 \right\} \right]
+
+  Hinge loss formulation:
+  (3)  c^\star= \arg\min_{c\in\mathcal C} \mathbb E_{k,v} \left[ \min_{k'\neq k}
+       \max\left\{ 0,\, \|v+c-k'\|_2^2-\|v+c-k\|_2^2 \right\} \right]
+
+  Or hinge with some additional safety margin:
+  (4)  c^\star= \arg\min_{c\in\mathcal C} \mathbb E_v \left[ \min_{k'\neq k(v)}
+       \max\left\{ 0,\, \|v+c-k'\|_2^2-\|v+c-k(v)\|_2^2+\delta \right\} \right]   (boxed)
+
+  Mind that they are non-differentiable, so we'd have to make them differentiable.
+  ```
+  **"The paper I shared"** is `source_papers/NSWE.pdf` (git-ignored, not in `refs.bib`): H. Xie, Y. Xu,
+  Y. Chen, N. Ji, S. Yuan, N. Liu, X. Xiang, *"Adversarial Jamming for a More Effective Constellation Attack"*,
+  arXiv:2201.08052, January 2022, 3 pages. What it does:
+  - **The attack.** 16QAM. The demodulator is a trained classifier f, and the jammer is an adversarial example,
+    min ‖δ‖ s.t. f(x + δ) ≠ y (PGD and similar). The solution is "the displacement vector corresponding to the
+    nearest constellation point, which is the minimum necessary for jamming": one of four directions per
+    point, north, south, west or east (its Fig. 1(c)), hence NWSE. δ is computed on the transmitted waveform
+    x, so the jammer knows the symbol and is perfectly synchronised: a genie.
+  - **Power below the push.** It keeps the full push and jams only part of the time, *"t% ← P_Jamming /
+    P_Signal"* ("time intermittent jamming").
+  - **Its baselines** (Fig. 2, SER vs SJR 0–15 dB, 500 000 bits): noise jamming (Gaussian amplitude, uniform
+    phase), phase jamming (phase fixed by the constellation, Gaussian amplitude), fixed-power jamming (fixed
+    amplitude, uniform phase), fixed power and phase, and the adversarial jammer. The adversarial jammer is
+    best in simulation. On USRP hardware (NI-USRP-2954) the five curves nearly coincide, which the authors put
+    down to clock synchronisation.
+  - **Not in it:** any detector, or a stated receiver-noise level. Its "deception attack" (a targeted push
+    that swaps codes 1100 ↔ 1000) is the permute idea.
+  - **In our terms:** NWSE is M0 `boundary_genie` with `duty` < 1; its blind version (a random direction,
+    regardless of the symbol) is `boundary_blind`, which errs half the time. On QPSK only two of the four
+    directions point at a neighbour; the other two push the point away from every boundary. His "random
+    symbol" baseline needs no symbol knowledge, which is how it differs from NWSE. The paper's noise and
+    fixed-power jamming are M0 `gaussian` and `barrage`.
+
+  **First reading (session, 2026-10-17; not yet discussed with the user or with him):**
+  1. **One c, or c(v)?** The argmin sits outside the expectation, so as written c is one vector added to every
+     symbol. That is the blind constant-vector baseline he proposed on 2026-09-29 (Li's `tone` in `final/`).
+     A per-symbol c(v) needs the jammer to observe v, which the sketch's T → J link s(k) suggests. That makes
+     it the genie of §2.5 with noisy knowledge, the same knowledge the shared paper's NWSE assumes, and his
+     own uniform-symbol point (2026-09-29) applies to it. To settle with him.
+  2. **The indicator form (2) has its inequality reversed.** Minimising 1{‖v+c−k′‖² < ‖v+c−k(v)‖²} makes
+     errors toward k′ *less* likely. With ≥ instead, the min over k′ is 1 exactly when the decision stays
+     k(v), so the expectation is 1 − SER(c) and the argmin maximises SER. The hinge forms (3) and (4) are
+     then its convex surrogates: they push v + c past the nearest wrong codeword (by margin δ in (4)), which
+     is the right direction for an attacker.
+  3. **k(v) vs k.** (1), (2) and (4) count errors against k(v), the decision on the unjammed v (excess
+     errors). (3) counts them against the transmitted k (raw errors). The two coincide at N0 = 0.
+  4. **Differentiability.** For constant-modulus QPSK, ‖x−k′‖² − ‖x−k‖² = 2 Re⟨x, k − k′⟩, linear in c. Each
+     hinge is therefore piecewise linear and convex in c, and the min over k′ makes the whole non-convex. The
+     subgradient exists almost everywhere, so autograd runs on (1), (3) and (4) as written. Only (2) has zero
+     gradient almost everywhere (smooth it with a sigmoid). Softplus and a soft-min (log-sum-exp) are the
+     standard smooth versions of the hinge and the min.
+  5. **(1)'s distance term** pulls v + c onto a wrong codeword, so the received point looks legitimate. That
+     is the permute / genie-flip family (M0 `permute`, `final/` `omniscient_e1`, §4.3 L4). It keeps the
+     received law exactly only when the jammer knows the symbol.
+  6. **No power budget appears.** C is "S" or "the IQ plane". Our convention imposes power as a hard
+     constraint on c (§2.8). Without one, a per-symbol c(v) solves (3)–(4) trivially with c = k′ − v.
 
 *(A note for the record: earlier drafts of the project notes speculated about a "Thu 13 Aug" meeting,
 picked up from a date we had proposed to ourselves. That meeting never happened; **21 Aug is the real,

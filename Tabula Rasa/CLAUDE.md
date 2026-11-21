@@ -245,7 +245,8 @@ These silently break jobs rather than erroring usefully:
 
 ## Source papers (`source_papers/`, git-ignored)
 
-The CGAN track (README §2.10) is built on two papers. Read the PDF before changing anything that
+The CGAN track (README §2.10) is built on the first two papers below; the attack study restarted on
+2026-10-01 (README §3.1) starts from the third. Read the PDF before changing anything that
 claims to follow it; the known traps are listed here so they are not rediscovered.
 
 - **`L.Zhou 2025.pdf`** — Zhou, Tan & Xu, *"Communication Jamming Waveform Generation Technology Based
@@ -280,6 +281,18 @@ claims to follow it; the known traps are listed here so they are not rediscovere
     single-carrier QPSK it is an adaptation, and must be reported as "their architecture, retrained"
     (README §4.2 Q10);
   - `pywt` is not in the venv — write the CWT in torch.
+- **`NSWE.pdf`** — Xie, Xu, Chen, Ji, Yuan, Liu & Xiang, *"Adversarial Jamming for a More Effective
+  Constellation Attack"*, arXiv:2201.08052 (2022, 3 pages). No bibkey yet. The supervisor shared it after
+  the 2026-10-01 meeting; it defines the **NWSE** attack the restarted attack study begins with (README
+  §3.1, §B.1). What we take: the attack, a minimum-norm adversarial push toward the nearest constellation
+  point (north, south, west or east), kept at full size and sent on a fraction t = P_J/P_S of the time
+  when power is short; and its baseline ladder (noise, phase, fixed-power, fixed power and phase).
+  **Traps:**
+  - it is 16QAM — on QPSK only two of the four directions point at a neighbour;
+  - the push is computed on the transmitted waveform, so the jammer knows the symbol: it is M0
+    `boundary_genie` (with `duty`), not `boundary_blind`;
+  - it has no detector and states no receiver-noise level; its hardware curves nearly coincide;
+  - the supervisor writes "NWSE", the file is named "NSWE".
 
 ## `r2c` — ready to clear
 
