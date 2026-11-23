@@ -43,7 +43,9 @@ The power budget is a hard constraint: each frame is scaled so that the jammer's
 \label{eq:power}
 \end{equation}
 so no attacker can trade effectiveness against a soft power penalty.
-Three information tiers define $\xi$: a genie (T0) knows the victim's current symbols and arrives synchronously; an informed attacker (T1) is asynchronous and knows the victim's modulation, pulse and symbol rate but not its symbols; a blind attacker (T2) is asynchronous and knows none of these.
+The two synchronous references of Sec.~\ref{sec:method:attackers} are the exception: they act on whole symbols, so they meet the budget only up to rounding down to a whole number of symbols per frame, and the genie, which scales with the victim's fading, only on average.
+% final/attacks.py omniscient_rx / random_push_rx: floor(delta N) symbols, delta = JSR/(1+eta)^2; not scale_to_jsr.
+Three information tiers define $\xi$: a genie (T0) knows the victim's current symbols and channel gain and arrives synchronously; an informed attacker (T1) knows the victim's modulation, pulse, symbol rate and frame timing but not its symbols, and is asynchronous, so it knows the timing only to within one symbol; a blind attacker (T2) is asynchronous and knows none of these.
 
 The learned jammer is generative: a neural network $G$ maps a latent vector $\mathbf{z}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ to a segment $G(\mathbf{z})\in\mathbb{C}^{M}$ of $M$ complex baseband samples.
 A jammer frame is a stream of independent segments, delayed and rotated asynchronously and scaled to its budget,
@@ -52,6 +54,10 @@ u=\bigl[G(\mathbf{z}_1),G(\mathbf{z}_2),\ldots\bigr],\qquad c[n]=a\,e^{\mathrm{j
 \label{eq:gan}
 \end{equation}
 with $(\tau,\phi)$ the offset and phase of Sec.~\ref{sec:channel} and $a>0$ the amplitude that meets~\eqref{eq:power}.
+Each segment is exactly one victim frame long, $M=NL$, and the stream keeps a fixed position relative to the victim's frames before the offset $\tau$, so the generator can place its power on the same symbol of every frame.
+This use of the frame timing is what separates it from the pulsed jammer of Sec.~\ref{sec:method:attackers}, so we also give a pulsed jammer the same timing.
+% final/attacks.py gan_tx: 1024-sample segments tiled at a fixed offset to the victim's frame; channel.receive adds
+% only the sub-symbol delay and the phase. README 4.3 L3; the frame-timed pulsed jammer is attacks.pulsed_sync_tx.
 Its weights are learned in simulation (Sec.~\ref{sec:method}), which places it in tier T1; it never sees the victim's symbols.
 The classical and reference jammers are defined in Sec.~\ref{sec:method}.
 
@@ -79,8 +85,8 @@ Its statistic is the logit difference of its two classes.
 
 \subsection{Threat Model}\label{sec:threat}
 The detectors are calibrated, and the classifier trained, before any attack; they are then frozen, and a trained jammer is frozen at deployment, so any adaptation is offline.
-A white-box jammer differentiates the deployed detector's statistic, including the classifier's weights; this is the attacker's upper bound, and every generator in Sec.~\ref{sec:res-matched} is trained with it.
-A grey-box jammer knows the classifier's architecture and training recipe but not its weights, and trains against a surrogate of its own instead~\cite{papernot2017practical}.
+A white-box jammer differentiates the deployed detector's statistic, including the classifier's weights; this is the attacker's upper bound, and we report it only as a reference.
+A grey-box jammer knows the classifier's architecture and training recipe but not its weights, and trains against a surrogate of its own instead~\cite{papernot2017practical}; all our classifier results are grey-box.
 For the energy and kurtosis detectors the two coincide.
 A learned jammer sees the victim's error rate only in simulation, during training; a deployed jammer cannot measure it.
 

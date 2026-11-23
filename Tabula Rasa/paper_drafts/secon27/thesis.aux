@@ -19,7 +19,6 @@
 \citation{li2022jamming_ofdm}
 \citation{11184988}
 \citation{amuru2015optimal}
-\citation{11184988}
 \newlabel{eq:power}{{3}{2}{}{equation.3}{}}
 \newlabel{eq:gan}{{4}{2}{}{equation.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Detector Model}{2}{}\protected@file@percent }
@@ -34,6 +33,7 @@
 \newlabel{sec:method}{{IV}{2}{}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Attackers}{2}{}\protected@file@percent }
 \newlabel{sec:method:attackers}{{\mbox  {IV-A}}{2}{}{subsection.4.1}{}}
+\citation{11184988}
 \citation{amuru2015optimal}
 \citation{11184988}
 \citation{li2022jamming_ofdm}
@@ -56,12 +56,35 @@
 \newlabel{eq:loss}{{8}{3}{}{equation.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Operating Point and Environments}{3}{}\protected@file@percent }
 \newlabel{sec:method:env}{{\mbox  {IV-C}}{3}{}{subsection.4.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Metrics}{3}{}\protected@file@percent }
-\newlabel{sec:method:metrics}{{\mbox  {IV-D}}{3}{}{subsection.4.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Results}{3}{}\protected@file@percent }
-\newlabel{sec:results}{{V}{3}{}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}What each detector sees}{3}{}\protected@file@percent }
-\newlabel{sec:res-base}{{\mbox  {V-A}}{3}{}{subsection.5.1}{}}
+\citation{11184988}
+\citation{amuru2015optimal}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Metrics}{4}{}\protected@file@percent }
+\newlabel{sec:method:metrics}{{\mbox  {IV-D}}{4}{}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Results}{4}{}\protected@file@percent }
+\newlabel{sec:results}{{V}{4}{}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}What Each Detector Sees}{4}{}\protected@file@percent }
+\newlabel{sec:res-base}{{\mbox  {V-A}}{4}{}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Learned Versus Classical Jamming at Matched Damage}{4}{}\protected@file@percent }
+\newlabel{sec:res-matched}{{\mbox  {V-B}}{4}{}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Why the Detection Term Buys Nothing}{4}{}\protected@file@percent }
+\newlabel{sec:res-why}{{\mbox  {V-C}}{4}{}{subsection.5.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Damage (top) and per-frame detection probability (bottom) against the received JSR at the ideal link, $E_s/N_0=24$\,dB, one column per detector. Generators: thick lines are the mean over three seeds, thin lines single seeds; the blue generator is trained against the column's detector. The pulsed jammer is drawn at its best duty cycle $p$ for that detector. Classifier column: mean over the two deployed classifiers, which the generators never saw. Solid grey line: excess FER $0.1$; dotted: $\alpha =0.05$.}}{5}{}\protected@file@percent }
+\newlabel{fig:base}{{1}{5}{}{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces $P_{\mathrm  {det}}$ at matched damage (excess FER $0.1$) in the six environments; error bars are the standard deviation over generator seeds. Best classical: the classical envelope; frame-timed: the pulsed jammer with one pulse per frame. Zhou et al.'s generator ($0.98$--$1.00$ against the classifier) is off the scale. Dotted: $\alpha $.}}{5}{}\protected@file@percent }
+\newlabel{fig:envs}{{2}{5}{}{figure.2}{}}
+\citation{li2022jamming_ofdm}
+\citation{li2022jamming_ofdm}
+\citation{li2022jamming_ofdm}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces $P_{\mathrm  {det}}$ at matched damage (excess FER $0.1$), $\alpha =0.05$. Mean $\pm $ standard deviation over generator seeds (three for the control and the generator trained against the classifier, one otherwise). Classifier block: mean over the two deployed classifiers.}}{6}{}\protected@file@percent }
+\newlabel{tab:envs}{{II}{6}{}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces JSR [dB] at which white noise is flagged on half of the frames}}{6}{}\protected@file@percent }
+\newlabel{tab:transition}{{III}{6}{}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Impairments Split the Detectors}{6}{}\protected@file@percent }
+\newlabel{sec:res-impair}{{\mbox  {V-D}}{6}{}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Scored the Way Li et al.\ Score It}{6}{}\protected@file@percent }
+\newlabel{sec:res-li}{{\mbox  {V-E}}{6}{}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Discussion and Limitations}{6}{}\protected@file@percent }
+\newlabel{sec:discussion}{{VI}{6}{}{section.6}{}}
 \bibstyle{IEEEtran}
 \bibdata{IEEEabrv,bib/lit,bib/project}
 \bibcite{urkowitz1967energy}{1}
@@ -86,23 +109,16 @@
 \bibcite{bash2013limits}{20}
 \bibcite{hansen2016cma}{21}
 \bibcite{xie2022adversarial}{22}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Learned versus classical jamming at matched damage}{4}{}\protected@file@percent }
-\newlabel{sec:res-matched}{{\mbox  {V-B}}{4}{}{subsection.5.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Why the detection term buys nothing}{4}{}\protected@file@percent }
-\newlabel{sec:res-why}{{\mbox  {V-C}}{4}{}{subsection.5.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Impairments split the detectors}{4}{}\protected@file@percent }
-\newlabel{sec:res-impair}{{\mbox  {V-D}}{4}{}{subsection.5.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Scored the way Li et al.\ score it}{4}{}\protected@file@percent }
-\newlabel{sec:res-li}{{\mbox  {V-E}}{4}{}{subsection.5.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Discussion and Limitations}{4}{}\protected@file@percent }
-\newlabel{sec:discussion}{{VI}{4}{}{section.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{4}{}\protected@file@percent }
-\newlabel{sec:conclusion}{{VII}{4}{}{section.7}{}}
-\@writefile{toc}{\contentsline {section}{References}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  A: Experiment History}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  B: Experiment History}{4}{}\protected@file@percent }
-\newlabel{app:history}{{B}{4}{}{section.Appendix.B}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-A}}Statistical detectors}{4}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Classifier arg-max detection rate at matched damage, ideal link (Li et al.'s scoring; clean false-alarm rate $0.8\%$)}}{7}{}\protected@file@percent }
+\newlabel{tab:li}{{IV}{7}{}{table.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{7}{}\protected@file@percent }
+\newlabel{sec:conclusion}{{VII}{7}{}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{References}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  A: Experiment History}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{Appendix\nobreakspace  B: Experiment History}{7}{}\protected@file@percent }
+\newlabel{app:history}{{B}{7}{}{section.Appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-A}}Statistical detectors}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-B}}Two cooperating jammers}{7}{}\protected@file@percent }
 \citation{li2022jamming_ofdm}
 \citation{bash2013limits}
 \citation{11184988}
@@ -110,27 +126,26 @@
 \citation{hansen2016cma}
 \citation{11184988}
 \citation{11184988}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-B}}Two cooperating jammers}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-C}}Learned detection}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-D}}Policy gradient over raw IQ}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-E}}Detector characterisation}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-F}}Realistic channel}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-G}}A minimal model with an optimal detector}{5}{}\protected@file@percent }
-\newlabel{sec:exphist-minimal}{{\mbox  {B-G}}{5}{}{subsection.Appendix.B.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-H}}Reproducing a generative jammer}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-I}}Classical baselines on the waveform link}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-J}}A learned shaped-noise control}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-K}}Imitation as initialization}{5}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-L}}A first noise ablation}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-C}}Learned detection}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-D}}Policy gradient over raw IQ}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-E}}Detector characterisation}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-F}}Realistic channel}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-G}}A minimal model with an optimal detector}{8}{}\protected@file@percent }
+\newlabel{sec:exphist-minimal}{{\mbox  {B-G}}{8}{}{subsection.Appendix.B.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-H}}Reproducing a generative jammer}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-I}}Classical baselines on the waveform link}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-J}}A learned shaped-noise control}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-K}}Imitation as initialization}{8}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-L}}A first noise ablation}{8}{}\protected@file@percent }
 \citation{xie2022adversarial}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-M}}Timing among several jammers}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-N}}A learned team policy}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-O}}Shadowing on the victim's link}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-P}}A listening jammer}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-Q}}Training at the operating point}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-R}}Noise-level uncertainty}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-S}}The defender retrains once}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-T}}The final experiment}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-U}}The defender retrains on the grey-box generator}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-V}}Naive baselines at symbol level}{6}{}\protected@file@percent }
-\gdef \@abspage@last{6}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-M}}Timing among several jammers}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-N}}A learned team policy}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-O}}Shadowing on the victim's link}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-P}}A listening jammer}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-Q}}Training at the operating point}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-R}}Noise-level uncertainty}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-S}}The defender retrains once}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-T}}The final experiment}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-U}}The defender retrains on the grey-box generator}{9}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {B-V}}Naive baselines at symbol level}{9}{}\protected@file@percent }
+\gdef \@abspage@last{9}

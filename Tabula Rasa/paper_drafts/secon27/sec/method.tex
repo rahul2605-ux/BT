@@ -9,13 +9,16 @@ Table~\ref{tab:attackers} lists the attackers, ordered by the information they u
 Three come from Li et al.'s jammer types~\cite{li2022jamming_ofdm}: barrage noise, a tone (a constant complex baseband value, its phase drawn per frame) and a pulse comb (an impulse every 64 samples).
 The pulsed jammer transmits the victim's modulation and pulse with its own random symbols, each on with probability $p$ at amplitude $1/\sqrt p$, so that its mean power does not depend on $p$.
 At $p=1$ it is the matched jammer that Zhou et al.\ call optimal~\cite{11184988}, at $p=0.25$ it is Li et al.'s protocol-aware type, and $p<1$ spans the pulsed family that contains the error-maximizing jammer against known modulation~\cite{amuru2015optimal}.
+Its pulses ignore the frame, so at $p=0.01$ about $28\%$ of the frames receive none.
+The frame-timed pulsed jammer uses the frame timing that the generator exploits (Sec.~\ref{sec:attacker}): it sends exactly $k\in\{1,2,3\}$ random symbols at random positions in every frame, with the frame's whole budget on them.
+% attacks.pulsed_sync_tx; evaluated only against the deployed classifiers' eval files (eval_cnn_s13/14.json).
 The on/off jammer uses the matched jammer at $+15$\,dB on a fraction $f$ of the frames and stays silent on the rest; its damage and $P_{\mathrm{det}}$ follow from the $+15$\,dB point by averaging over frames.
 % analytic: P_det = f P_det(+15) + (1-f) FAR, damage = f damage(+15) (final/figures.py onoff()).
-We call the lowest $P_{\mathrm{det}}$ any of these classical jammers reaches at a given damage the classical envelope.
+We call the lowest $P_{\mathrm{det}}$ that barrage, tone, pulse comb, the pulsed and the on/off jammer reach at a given damage the classical envelope; the frame-timed pulsed jammer is reported beside it.
 
 Two references are not realizable.
-The genie flip sends $-2s[k]$ on a fraction $\delta$ of the symbols, synchronously; it inverts them, leaves the received law unchanged and so is invisible to any detector, which makes it the upper bound on damage at any $P_{\mathrm{det}}$.
-The random push needs the genie's timing and carrier phase but not its data: it adds $1.1\,u[k]$, with $u[k]$ a random QPSK symbol, to a fraction of the symbols.
+The genie flip sends $-2\rho\,s[k]$ on a fraction $\delta$ of the symbols, synchronously; it inverts them, leaves the received law unchanged and so is invisible to any detector, which makes it the upper bound on damage at any $P_{\mathrm{det}}$.
+The random push needs the genie's timing and carrier phase but neither its data nor the channel gain: it adds $1.1\,u[k]$, with $u[k]$ a random QPSK symbol, to a fraction of the symbols.
 % genie push (eta 0.1) is table-only; random push: +1.1 u on floor(delta N) symbols, delta = JSR/1.21 (README 3.3q #9).
 
 Zhou et al.'s generator~\cite{11184988}, trained to imitate the victim's waveform without a link or detector, is evaluated as published, in our reproduction.
@@ -33,6 +36,7 @@ Attacker & Information & Parameters \\
 Genie flip & T0: symbols, sync & fraction $\delta$ \\
 Random push & timing and phase & fraction \\
 Pulsed~\cite{amuru2015optimal} & T1 & $p\in\{1,0.5,0.25,0.1,0.05,0.02,0.01\}$ \\
+Pulsed, frame-timed & T1 & $k\in\{1,2,3\}$ per frame \\
 On/off & T1 & fraction $f$ of frames \\
 Zhou et al.\ CGAN~\cite{11184988} & T1 & as published \\
 Generators (ours) & T1, simulation & target, $\beta\in\{0,10\}$ \\
@@ -80,13 +84,17 @@ A receiver's noise level is uncertain to about $\pm1$\,dB after calibration~\cit
 This gives six environments: the ideal link (\emph{base}), noise-level uncertainty at $0.5$ and $1$\,dB (\emph{noise}, \emph{noise\,1\,dB}), fading at $K=12$ and $28$\,dB (\emph{fading}, \emph{fading\,K28}), and both at their main levels (\emph{both}).
 In each, every threshold is set from $20\,000$ clean frames of that environment at $\alpha=0.05$ per frame, the value at which learned jamming detectors have been evaluated~\cite{arcangeloni2024jamming}.
 The classifier is retrained in each environment by Li et al.'s recipe~\cite{li2022jamming_ofdm}: EfficientNet-B0, two classes, $762$ clean and $204$ jammed images per jammer type with the JSR uniform over $-20$ to $+10$\,dB, $100$ epochs.
-% SGD lr 1e-3, batch 32, 70/30 split, seed 11 (final/train_cnn.py). Seeds 13/14: jobs 2454497-2454521.
+We train three classifiers per environment that differ only in their random seed.
+The generators are trained against the first, which is the attacker's surrogate and also sets their JSR band, and every classifier result is the mean over the other two, the deployed classifiers; the surrogate gives the white-box reference.
+% SGD lr 1e-3, batch 32, 70/30 split (final/train_cnn.py). Surrogate seed 11 (cnn/), deployed seeds 13, 14
+% (cnn_s13/, cnn_s14/; jobs 2454497-2454521). README 3.3q "CNN seeds 13 and 14". Li readout (Sec. res-li): surrogate
+% seed 12, deployed seed 11.
 
 \subsection{Metrics}\label{sec:method:metrics}
 Every attacker is swept over the JSR from $-50$ to $+15$\,dB in $1$\,dB steps, with $512$ frames per point.
-Damage is the excess bit and frame error rate over clean frames of the same environment.
+Damage is the excess bit and frame error rate (BER, FER) over clean frames of the same environment.
 Because the jammer chooses its power, we compare attackers at matched damage: $P_{\mathrm{det}}$ is read at the first JSR where the excess damage reaches a level, interpolated in log damage.
-We report it at an excess frame error rate of $0.1$ and an excess bit error rate of $3\times10^{-4}$; at $P_{\mathrm{det}}=0.1$ the binomial standard error of a point is $1.3$ percentage points.
+We report it at an excess FER of $0.1$ and an excess BER of $3\times10^{-4}$; at $P_{\mathrm{det}}=0.1$ the binomial standard error of a point is $1.3$ percentage points.
 Seeded generators are reported as mean $\pm$ standard deviation over seeds.
 The simulation is checked against closed forms before every run: the clean and white-noise error rates, the matched-filter energy, the fading and noise-level laws, and each detector's realized false-alarm rate on fresh clean frames, which lies between $0.043$ and $0.057$ in every environment.
 % final/verify.py 100/100 + regression gate vs an earlier independent run: 0/2178 P_det pairs beyond the

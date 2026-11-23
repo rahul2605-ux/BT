@@ -4,9 +4,9 @@
 Generative models are increasingly proposed for jamming-waveform design, and learned classifiers for jamming detection, but whether learning makes a jammer harder to detect has not been tested against a fair baseline.
 We compare broadband noise, tone, pulsed and on/off jamming, a published generative jammer, and generators trained against each detector, on a single-carrier QPSK link at a symbol signal-to-noise ratio of 24 dB.
 Each is scored against three detectors, matched-filter energy, kurtosis and a convolutional spectrogram classifier, calibrated to the same false-alarm rate in each of six environments with noise-level uncertainty and Rician fading.
-At matched damage, the detector-aware generator stays within 5 percentage points of the best classical jammer in every environment, and is no harder to detect than the same generator trained without a detection term, even with white-box access to the classifier.
+At matched damage, the detector-aware generator is never more than 5 percentage points harder to detect than the best classical jammer, a pulsed jammer at a low duty cycle, and is no harder to detect than the same generator trained without a detection term, whether it is tested on the classifier it trained against or on independently trained ones.
 Training against all three detectors at once makes it worse, because their sensitivity onsets lie about 11 dB apart.
-The impairments split the detectors instead: noise-level uncertainty blinds the classifier, and fading blinds the energy detector unless it knows the channel gain.
+The impairments split the detectors instead: noise-level uncertainty weakens the classifier, and fading blinds the energy detector unless it knows the channel gain.
 \end{abstract}
 
 \begin{IEEEkeywords}
