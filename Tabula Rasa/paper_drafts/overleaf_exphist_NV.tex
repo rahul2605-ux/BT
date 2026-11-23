@@ -1,0 +1,71 @@
+% ============================================================================================================
+% PASTE-READY for the Overleaf draft (thesis project, main.tex): Experiment History, entries N--V, to go
+% directly after "M. Timing among several jammers". Written 2026-11-23 from secon27/app/history.tex, made
+% self-contained: no \ref to the new paper, the final experiment written out (T). One sentence per line.
+% Sources (README): N 3.3j | O 3.3k | P 3.3l | Q 3.3m | R 3.3n | S 3.3o | T 3.3q (+ "CNN seeds 13 and 14",
+% "The frame-timed pulsed jammer", suite paragraph) and 3.3r | U 3.3s | V 3.1 steps 0-1.
+% Cite keys li2022jamming_ofdm, 11184988, amuru2015optimal are already in Overleaf's refs.bib.
+% xie2022adversarial is NOT: paste this entry into refs.bib first.
+%
+% @misc{xie2022adversarial,
+%   title         = {Adversarial Jamming for a More Effective Constellation Attack},
+%   author        = {Xie, Haidong and Xu, Yizhou and Chen, Yuanqing and Ji, Nan and Yuan, Shuai and Liu, Naijin and Xiang, Xueshuang},
+%   year          = {2022},
+%   eprint        = {2201.08052},
+%   archivePrefix = {arXiv},
+%   primaryClass  = {cs.CR},
+%   howpublished  = {arXiv:2201.08052}
+% }
+% ============================================================================================================
+
+\subsection{A learned team policy}
+A shared network that gave each of four jammers its power and transmit advance, trained by direct gradient, learned to transmit at full power rather than to compensate the delays between them.
+It lost to simply advancing each jammer by its known delay when timing was exact ($0.794$ against $0.705$ detection probability at $30$\,dB) and matched it for timing errors of one symbol or more.
+We paused the team direction here.
+
+\subsection{Shadowing on the victim's link}
+With per-frame log-normal shadowing of the victim's link at $30$\,dB, an energy detector calibrated without it lost the CNN-targeted generator already at $\sigma=0.1$\,dB and was blind to it at $1$\,dB, while one that knew the gain was unaffected at every level and the retrained CNN stayed the weakest detector.
+Shadowing is slow and tracked by the receiver's gain control, so the final experiment models the frame-to-frame variation as small-scale Rician fading instead.
+
+\subsection{A listening jammer}
+Placing the jammer on the receiver's symbol grid and retraining the generators synchronously gave no measurable gain: at a frame error rate of $0.1$ the CNN flagged the CNN-targeted generator ($\beta=1$) on $0.135\pm0.080$ of frames synchronously and $0.128\pm0.022$ asynchronously over three seeds, and a first single-seed gain did not replicate.
+
+\subsection{Training at the operating point}
+We moved the operating point from $30$\,dB to $15$\,dB SNR ($E_s/N_0=24$\,dB).
+Retrained there, against a CNN retrained there, the best generators were flagged by the full-band energy detector on about $25\%$ of frames at a frame error rate of $0.1$, against about $63\%$ at $30$\,dB, whether they had been trained at the lower or the higher SNR; the CNN flagged them on $7$--$8\%$.
+
+\subsection{Noise-level uncertainty}
+At the same operating point, a per-frame uncertainty of the noise level of $\sigma_N=2$\,dB raised the false-alarm rate of a power detector calibrated at the nominal level from $0.05$ to $0.23$ ($0.42$ two-sided).
+Re-calibrated on frames that carry the uncertainty, so that it keeps its false-alarm rate, it flagged the CNN-targeted generator at a frame error rate of $0.1$ on $0.25$, $0.14$ and $0.09$ of frames for $\sigma_N=0$, $1$ and $2$\,dB.
+This is why every detector of the final experiment is calibrated in the environment it is deployed in, and why its energy detector sits after the matched filter, which keeps out the noise outside the signal's band.
+
+\subsection{The defender retrains once}
+Retraining the CNN once, on the jammer types of Li et al.~\cite{li2022jamming_ofdm} with their JSR range widened downward but without the attacker, raised its detection of three independently trained generators at matched damage from $0.16$--$0.18$ to $0.58$--$0.74$ at $30$\,dB, level with the energy detector, at no cost.
+At $15$\,dB nothing moved (at most $0.09$), and retraining cost $4$--$5$ points of detection on Li et al.'s own types.
+
+\subsection{The final experiment}
+The final experiment runs every attacker against every detector in one pipeline, at $15$\,dB SNR, in six environments: the ideal link, noise-level uncertainty of $\sigma_N=0.5$ and $1$\,dB, Rician fading of the victim's link with $K=12$ and $28$\,dB (values measured on air-to-ground UAV links in L- and C-band), and noise uncertainty and fading together.
+In each environment the CNN is retrained by Li et al.'s recipe, every detector (one-sided energy after the matched filter, kurtosis, the CNN) is calibrated on clean frames of that environment at $\alpha=0.05$, and the generators are trained from random weights by direct gradient: a damage-only control ($\beta=0$) and generators against each detector ($\beta=10$).
+The generators train against one CNN and are tested against two others trained with different seeds, so the attacker never has the deployed weights (grey-box).
+The classical attackers are barrage, a tone, a pulse comb, Amuru's pulsed jammer~\cite{amuru2015optimal} at duty cycles $p$ from $1$ to $0.01$, on/off jamming and the generator of Zhou et al.~\cite{11184988}; a random push and a genie that inverts symbols are references.
+Every attacker is swept over the JSR, and detection is compared at matched damage, an excess frame error rate of $0.1$.
+
+Against the CNN, the CNN-targeted generator was never more than $5$ percentage points harder to detect than the best classical jammer, which is the pulsed jammer at $p=0.01$--$0.02$ in every environment ($0.05$--$0.14$ against $0.09$--$0.11$; worse in the combined environment, where two of its three seeds trained poorly).
+The detection term bought nothing: the damage-only control was detected no more often in five of six environments.
+The generator had learned one short burst per frame, i.e.\ pulsed jamming timed to the frame, and a pulsed jammer given the same frame timing was flagged by the CNN on only $5$--$7\%$ of frames.
+Training against all three detectors at once was worse at the ideal link ($46\%$ against $24\%$ for the most-detecting detector), because the three become sensitive about $11$\,dB apart.
+Zhou et al.'s generator, which imitates the victim's waveform, was flagged on $98$--$100\%$ of frames.
+The impairments split the detectors instead: noise-level uncertainty weakened the CNN, fading with $K=12$\,dB blinded the energy detector unless it was given the channel gain, and kurtosis was unaffected by both.
+Scored the way Li et al.\ score their classifier, it detected their four jammer types $92.6\%$ of the time, but at half the frames lost it flagged the generator on $9\%$ and the pulsed jammer at $p=0.02$ on $5\%$ of frames.
+
+\subsection{The defender retrains on the grey-box generator}
+At the ideal link, retraining the CNN with two seeds of the grey-box CNN-targeted generator as a fifth jammer type cost nothing on Li et al.'s types at $\alpha=0.05$ (pooled detection rate $93.5\%\to93.6\%$) and caught the generator only partly: at an excess frame error rate of $0.5$, from $0.26$ to $0.39$ for a seed it was trained on and from $0.37$ to $0.56$ for a held-out seed.
+At the network's own decision rule its false-alarm rate rose from $0.8\%$ to $2.0\%$.
+
+\subsection{Naive baselines at symbol level}
+After the final experiment, the study restarted from the simplest attacks on the one-symbol model above: QPSK in white noise, with the jammer added per symbol at equal average power.
+The simulated symbol error rate matched its closed form at every noise level.
+At signal-to-jammer ratios of $0$, $5$, $10$ and $15$\,dB and low noise, the symbol-aware minimum push across the nearest decision boundary (NWSE)~\cite{xie2022adversarial} reached symbol error rates of $1.00$, $0.33$, $0.11$ and $0.033$, against $0.29$, $0.078$, $0.0027$ and $0$ for barrage noise.
+A blind push in a random direction did exactly half the damage of the symbol-aware one; a random legitimate symbol did nothing alone above $0$\,dB.
+Because the minimum push lands just past the boundary, any receiver noise sends half of the pushed symbols back.
+No detector has been applied to this model yet.
