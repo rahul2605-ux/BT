@@ -4,7 +4,7 @@
 Mon 30 Nov 2026** (venue decided 2026-11-21; the paper is a performance-evaluation study built on the final
 experiment, no new experiments; §1.4, §3.1). The paper is built in `paper_drafts/secon27/`.
 Nothing was submitted to ICC 2026-10-02.
-Last consolidated: 2026-11-21.
+Last consolidated: 2026-11-25.
 
 > **This file is the single entry point.** It is organised as:
 > **[1. The whole picture](#part-1--the-whole-picture)** ·
@@ -22,7 +22,7 @@ Last consolidated: 2026-11-21.
 
 ## 1.1 What this is, in one page
 
-> **STATE 2026-11-21 — the current state is in [§3.1](#31-status-line); the blocks below are older and
+> **STATE 2026-11-25 — the current state is in [§3.1](#31-status-line); the blocks below are older and
 > kept as history.** The paper goes to IEEE SECON 2027 (due 30 Nov, the thesis deadline too) as a
 > performance-evaluation study of the final experiment (§3.3q–s); the draft is in `paper_drafts/secon27/` (§1.4).
 > **STATE 2026-10-17.** The 2026-10-01 meeting (§B.1) moved the target to the end of November 2026 and restarted
@@ -155,7 +155,8 @@ BT/
 │   ├── graphify-out/       <- queryable knowledge graph of this repo (C.5); regenerable
 │   ├── .claude/skills/     <- project-local Claude Code skills; so far only `no-ai-slop` (C.6)
 │   ├── paper_drafts/       <- LaTeX sections drafted here, pasted into Overleaf by hand
-│   │   └── secon27/        <- THE PAPER since 2026-11-21: paper.tex (SECON build) + thesis.tex, one body (§1.4)
+│   │   ├── secon27/        <- THE PAPER since 2026-11-21: paper.tex (SECON build) + thesis.tex, one body (§1.4)
+│   │   └── overleaf_exphist_NV.tex <- paste-ready Experiment History N–V for the thesis Overleaf (2026-11-23, §1.4)
 │   ├── proposal/           <- registration proposal; `*_reviewed_2026-09-12.tex` = his annotated copy
 │   ├── supervisor/         <- his meeting material; `2026-10-01_meeting_sketch.jpg` (transcribed in §B.1)
 │   ├── frontier/ simulation00..08/   <- FROZEN. Appendix material. Do not extend.
@@ -240,7 +241,7 @@ pinned `titan_rtx`; `figures.py` runs on the login node. Results: §3.3q.
 
 | file | what |
 |---|---|
-| `final/env.py` | the six environments (σ_N, Rician K), SNR 15 dB = Es/N0 24 dB, N_SYM 128, α 0.05, artifact + net_scratch paths; `FINAL_SMOKE=1` redirects everything to `artifacts/final/_smoke/` |
+| `final/env.py` | the six environments (σ_N, Rician K), SNR 15 dB = Es/N0 24 dB, N_SYM 128, α 0.05, artifact + net_scratch paths; `FINAL_SMOKE=1` redirects everything to `artifacts/final/_smoke/`. **Since 2026-11-25:** a seventh environment `snr30` (base at SNR 30 dB = Es/N0 39 dB), `E.snr(env)` replaces the global `SNR_DB` in every entry point (verify keeps 15 dB), `PAPER_ENVS` = the six in Table II |
 | `final/link.py`, `channel.py` | the Sionna QPSK link (`cgan/link.py` pruned; `fading_gain` = per-frame Rician amplitude, unit mean power; `scale_to_jsr` moved in) and the async jammer channel (`cgan/channel.py`, two imports changed) |
 | `final/attacks.py` | noise, pulsed (Amuru p ∈ {1…0.01}), omniscient genie, Li's tone / pulse comb, `gan_tx`, a simulated `onoff` (verify only), `frames` (+ fading, σ_N, per-frame DC share; `keep_jammer=True` also returns the jammer at R), the damage terms (log E[BER], log E[PER]) with a per-frame noise variance |
 | `final/detectors.py`, `defender.py` | `energy` (mean \|z_k\|² after the MF, one- and two-sided), `energy_csi`, kurtosis, the spectrogram CNN; full-band `power` for the regression gate only. `Defender`, `measure` (also records the CNN's argmax decision, key `argmax`), `calibrate_env` (the CFAR thresholds on 20k clean frames of the environment) |
@@ -311,18 +312,84 @@ Bibliography: `bib/lit.bib` = Overleaf's `refs.bib` as the user pasted it on 202
 dropped; its header lists the superseded keys: cite `pirayesh2022jamming`, `li2022jamming_ofdm`, `11184988`), and
 `bib/project.bib` = `refs_patch.bib` + `refs_new.bib` + `xie2022adversarial` (NWSE; from `source_papers/NSWE.pdf`).
 Build on the login node (LaTeX is not compute): `cd paper_drafts/secon27 && latexmk -g -pdf paper.tex thesis.tex`.
-The user uploads the folder into the **thesis** Overleaf project, whose link ADM got on 2026-11-21, so his link
-always shows the latest draft ("keep it updated"). The old `main.tex` there stays untouched.
+**THE PAPER IS IN `overleaf/` (2026-11-25):** an Overleaf-git clone of the project ADM already had the link to
+(project 6936be81…, the old "Cooperative Multi-Agent Generative Jamming" draft), restructured into his template
+v0.18 in local commit 58e9882 (**not pushed yet**; push only on the user's yes). The old `main.tex` and `refs.bib`
+are in `archive/`; after the push the user sets Overleaf's main document to `paper.tex`. Layout: `paper.tex` →
+`content.tex` → `sections/{intro,related,sysmodel,problem,method,expsetup,results,conclusion}.tex`; `abstract.tex`,
+`acronyms.tex`, `appendix.tex` (history A–V), `guidelines.tex` (his; one fix: an unclosed `\begingroup` in its
+example problem), `figures/{styles,tikz,data}`, `bibtex/bib/references.bib` (refs.bib + project.bib, 84 entries).
+Our labels avoid the guidelines' (`sec:system`, `sec:methodology`, `sec:setup`, `sec:problem`, `tab:params`).
+Builds: 13 pages incl. guidelines and appendix, 0 errors; the only undefined citation is the guidelines' own
+`di_maio_upsides_2023`. Missing from the template: the `report/` folder (`report.tex`, the thesis wrapper).
+The user pasted the Overleaf token into the chat on 2026-11-25: revoke it after the deadline.
+
+**ONE Overleaf project (ADM, 2026-11-25; supersedes the two-project plan below).** *"I am not a big fan of having
+multiple projects because it's easy to fork and lose track. I suggest placing all material in suitable tex files
+in only one project and delete all others. Pls use overleaf git integration if you're working with agents, and
+place code and latex in close folders so agent have full view."* Which project becomes the one, and whether the
+agent writes to it through Overleaf git (that would replace CLAUDE.md's read-only rule), is the user's decision,
+pending 2026-11-25. **His project template v0.18** (received 2026-11-25, pasted into the chat, not on disk) is the
+format: `paper.tex` (IEEEtran conference) + `report.tex` (the thesis report, in a `report/` folder; not yet
+received) share `content.tex`, `abstract.tex`, `acronyms.tex`, `appendix.tex`; `guidelines.tex` = the "violet
+text" (§4.1 #9). Its header says *"Please do not enter this draft in any third-party, non-self-hosted AI tool"*;
+his mail asks for agents to have full view; the user to confirm which applies. The rules the current
+`secon27/` draft breaks, from `guidelines.tex`:
+- **Sections:** Introduction (why it matters, challenges, ≤ 3 research questions that are not yes/no, ≤ 3
+  contributions as bullets, one per RQ; "extensive simulations" is not a contribution) · Related Works (their
+  common limitations = exactly our strengths; comparison table, no vertical lines) · System Model (method-agnostic,
+  simple to complex, "Let us define the …") · Problem Formulation (optional) · Methodology (**no "we"**, no
+  numbers) · Experimental Setup (Parameters, Datasets, Metrics — each with name, symbol, unit and on a y-axis of
+  some plot, Baselines; **numbers only here**) · Results Analysis (one paragraph per figure, "Figure 1 shows …",
+  say *why*; **confidence intervals always**; tables kept to a minimum) · Conclusion (incl. future work). No
+  Discussion section.
+- **Abstract:** ≈ 150 words, one paragraph, no math, symbols, citations or acronyms.
+- **Style:** at most one sentence per line; acronyms via `\ac{}` in `acronyms.tex`; active voice; text vs variable
+  subscripts; unnumbered equations unless referenced; floats before their first reference; "Figure 1", "Table 1"
+  capitalised; no `\resizebox`; no figure text smaller than the caption font; no sentence starting with a citation
+  or a formula; discouraged words *framework, manner, traditional, classic, vanilla, fashion, inspired* and
+  subjective adjectives (*obvious, clear, trivial, easy*). **"Classical jammer" (6 uses in `secon27`) has to go**;
+  name the family (e.g. "parametric jammers") instead.
+- **Comment colours:** `\general` violet (template), `\adm` orange (his), `\hiprio` purple, `\student` blue
+  (ours); after handling a comment, prefix it with `%` and leave it in place for him to remove.
+- **Thesis hand-in ("check with your supervisor first"):** at least two revision rounds of the PDF report and
+  slides plus one mock presentation; a 15-min talk + 15-min Q&A following the paper's sections; an archive of
+  everything (code, models, data, figures, LaTeX) to him; the report (first page: project type, name, title,
+  supervisors) + the signed declaration of originality to the professor, cc him, the second supervisor and the
+  D-INFK studies office (addresses in `guidelines.tex`). Packages the template needs (twemojis, orcidlink,
+  printlen, acronym, algorithm2e, pgfplots, siunitx) are all in the login node's TeX Live 2025.
+
+*Superseded 2026-11-25, kept for the record:* **Two Overleaf projects (decided with the user 2026-11-23; supersedes "upload the folder into the thesis
+project" of 2026-11-21):**
+- **The SECON paper goes into a NEW Overleaf project**, created by the user and shared with ADM. It receives
+  only the sections the user has read and approved, section by section, so ADM never sees unread text. The
+  whole draft stays in `secon27/` until then.
+- **The thesis project (ADM's link of 2026-11-21, `main.tex` titled "Adversarial and Adaptive Data-Driven
+  Cooperative PHY Attacks…", Experiment History A–M) stays the thesis record.** It gets the missing history entries
+  N–V from [`paper_drafts/overleaf_exphist_NV.tex`](paper_drafts/overleaf_exphist_NV.tex): paste-ready, to go
+  directly after "M. Timing among several jammers", no `\ref` to the new paper, compiled standalone without
+  errors. Its header comment holds the `xie2022adversarial` entry, which Overleaf's `refs.bib` lacks. The user
+  pastes both; this repo never writes to Overleaf. N–V = learned team policy, shadowing, listening jammer, the
+  15 dB operating point, noise uncertainty, D6 round 1, **the final experiment written out (T)**, quick D6, the
+  October M0 baselines (V). The CGAN track of late September is Q–U, the October baselines V.
 
 **Venues checked 2026-11-21 (official pages; full comparison in the session's chat, not repeated):**
 
 | venue | paper due | format | review | note |
 |---|---|---|---|---|
 | **IEEE SECON 2027** (Lisbon, 5–7 May) | **30 Nov 2026** (time zone not stated: check EDAS N35491) | 9 pp incl. refs, IEEEtran | double-blind, EDAS; author list frozen at registration | **chosen**; decision 15 Feb 2027; CCF B / CORE B |
-| ACM WiSec 2027 (Singapore, 29 Jun–2 Jul) | 30 Nov 2026 **or 15 Feb 2027** (AoE, firm) | 10 pp + refs/appendix (12 total), `acmart` sigconf | double-blind | best topical fit (jamming, ML attack detection); round-2 = fallback, but SECON decides on 15 Feb |
+| ACM WiSec 2027 (Singapore, 29 Jun–2 Jul) | 30 Nov 2026 **or 15 Feb 2027** (AoE, firm) | 10 pp + refs/appendix (12 total), `acmart` sigconf | double-blind | **dropped 2026-11-22**: closest topical fit, but not on ADM's shortlist, and no fallback, since SECON decides on 15 Feb, the day WiSec's round 2 closes (no dual submission) |
 | IEEE WoWMoM 2027 (Irvine, 21–24 Jun) | 1 Dec 2026; WIP 4 pp same day; workshop papers 19 Feb 2027 | 10 pp incl. refs | double-blind, in-person | the 19 Feb workshop deadline is the realistic post-SECON fallback |
 | IEEE VCC 2027 (virtual, 2–4 Mar) | 27 Nov 2026 | 6 pp | single-blind | low value; dropped |
 | ACM MobiSys / CoNEXT 2027 | 27 Nov abstract / 4 Dec | ACM | — | out of scope (systems; CoNEXT excludes PHY-only work) |
+
+**SECON topics, chosen 2026-11-23 from the 2027 list (user's screenshot; the site blocks automated fetches),
+picked at EDAS registration:** (1) *Security, privacy, trustworthiness, and dependability of wireless and sensing
+systems* (first); (2) *AI, machine learning, and data analytics for sensing and networking*; (3) *UAV-based sensing
+and networking*, only if the Introduction keeps the UAV C2 framing. Not chosen: "AI-enabled and AI-native
+communication and networking systems" (AI inside the system, not attacks on it) and "Novel experimental platforms
+and reproducibility studies" (expects testbeds). Hook: jamming detection is spectrum sensing. The fallback if
+SECON rejects is WoWMoM's workshops (19 Feb).
 
 Pessimistic acceptance estimate given to the user: SECON main track ≈ 5–7 %, a workshop or WIP ≈ 20–30 %
 (simulation only, no new method, mostly negative headline; see the gap check in §3.1). The user can travel any
@@ -778,6 +845,26 @@ losing to a CNN would mean the maths was wrong. `m0/verify.py` checks it.
   E2b, §3.3f and the older numbers in §3.1 still quote it; re-measuring them is on the list (§4.3).
   **The final experiment (§3.4) reports only (1) and (2);** ξ and the delay are dropped there (user,
   2026-09-29).
+- **Why the matched damage is a frame error rate, not BER or SER (2026-11-23; ADM asked for BER and SER, the user
+  prefers SER).**
+  - **Definition.** A frame (128 symbols, 256 bits; Zhou's 1024-sample segment) is in error if any of its bits is
+    (`defender.measure`: `any(bits != bits_hat)`). Calling it *lost* assumes an uncoded packet with an
+    error-detecting code (CRC) and retransmission. No pilots, preamble or synchronisation are modelled (the
+    receiver knows timing and phase), so a jammer can lose a frame only through its bits, and one wrong symbol is
+    enough. **The paper does not state this yet** (§3.1 pending edits).
+  - **BER and SER both leave the on/off loophole.** At base, matched QPSK at +15 dB makes BER 0.448, SER 0.696 and
+    89 wrong symbols per frame. Switched on for a fraction of frames, it reaches excess BER 3e-4 being on 1 frame in
+    1495, and excess SER 7.8e-4 (= FER 0.1 for a one-symbol-per-frame jammer) being on 1 frame in 891. Both times
+    P_det sits at the FAR: energy / kurtosis / CNN 0.053 / 0.056 / 0.054 and 0.054 / 0.057 / 0.054, against FAR
+    0.052 / 0.056 / 0.053. At excess FER 0.1 it must be on 1 frame in 10 and is flagged 0.147 / 0.150 / 0.148.
+    The loophole comes from damage counted per symbol while detection decides per frame. FER counts damage in the
+    detector's unit, which is the user's "one wrong symbol is enough" one level up.
+  - **For every other attacker FER ≈ 128 · SER.** At the matched point each breaks a frame with 1.00–1.07 wrong
+    symbols (matched QPSK 1.86, tone 2.27, comb 1.87; §3.3q "What spreading the budget costs"). So matching at FER
+    instead of SER moves only the on/off row.
+  - **The convention is load-bearing (§2.9 FEC mandate, §4.4).** On a coded link a one-wrong-symbol frame is
+    usually repaired: the generators and pulsed jammers would lose most of their damage, on/off would keep it. The
+    learned-vs-pulsed comparison does not depend on it, since both break frames the same way.
 - **P_det — the definition (settled 2026-09-29; answers the supervisor's "P_det not specified").**
   - **Statistic and threshold.** Per frame (N = 128 symbols), each detector computes a statistic T,
     larger = more suspicious. Its threshold τ_α is the (1 − α)-quantile of T over 20 000 clean frames.
@@ -918,7 +1005,7 @@ instructions but were filed as decisions. They are listed first here so this tab
 | Adaptation cost is the headline | G7 (R0/R1/R2); the NP−learned gap E1 already measures | **not started, and now in tension with RQ1** — the 2026-09-12 pivot makes the coordination gain the headline and demotes adaptation cost to the strongest *detector-facing* claim. He has to choose; §4.1 #0 |
 | Only 2–3 experiments in the main paper | triage table (§B.3); candidates E1/E2/E3 | **blocked on him** (§4.1 #4), and the candidate list changed on 2026-09-12: **E3 (coordination) is now the lead**, E1 demoted to a calibration/appendix result |
 | Omniscient jammer in **every** results figure | `m0/figures.py` | **PARTIAL — 2 of 4.** `fig_tradeoff` (L92) and `fig_frontier` (L135) carry `counter_flip`; **`fig_detectors` (L162) and `fig_stealth_vs_sigma` (L202) do not** — their attack lists omit `counter_null`/`counter_flip` |
-| Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3) | **not started** |
+| Intro scopes out FEC/ARQ, then motivates raw BER/SER | Intro rewrite (§B.3); for SECON, `secon27` Methodology + Discussion | **not started** — the SECON paper matches damage on FER (§2.7), so the scoping has to state the frame convention (uncoded link with error detection) and the coding limitation (§4.4); offered 2026-11-23 (§3.1 edit a/b) |
 | Put as much info as possible in Overleaf | assumption/baseline/ablation stubs (§B.3) | **not started** |
 | Noise sweep = primary ablation, log grid | G2 (M0) · §3.3c (sim08) · **E2 (§3.3g)** | **done on the live CGAN models 2026-09-23** (SNR 0–40 dB + noiseless anchor, all 21 generators, §3.3g) and on the sim08 stack 2026-09-16 (§3.3c). M0/E1's σ grid is still not log-spaced throughout (§3.2) — not selected for E2 |
 | Untrainability written up as a *result* | Experiment History summary (§3.5) | **drafted, not pasted** — one paragraph in `sec_exphist.tex`; the long write-up was cut 2026-09-15 for the page limit |
@@ -1156,9 +1243,44 @@ projection; `--power learned` makes it a capped choice (≤ per frame, §3.3f ru
 
 ## 3.1 Status line
 
-**STATE 2026-11-21: writing the paper. IEEE SECON 2027 and the thesis are both due Mon 30 Nov 2026; no new
-experiments (the user works full time elsewhere).** ADM's 2026-11-21 message and the reply sent the same day are
-in §B.1; venue facts and the draft's layout in §1.4.
+**STATE 2026-11-25 (block opened 2026-11-21): writing the paper. IEEE SECON 2027 and the thesis are both due Mon
+30 Nov 2026; no new experiments (the user works full time elsewhere).** ADM's 2026-11-21 message, the reply sent
+the same day and the 2026-11-23 email draft are in §B.1; venue facts, topics, the two Overleaf projects and the
+draft's layout in §1.4.
+- **Hand-in to ADM (decided 2026-11-23, §1.4 "Two Overleaf projects"):** not the whole draft. The SECON paper goes
+  section by section, as the user reads it, into a new Overleaf project. The thesis project gets Experiment
+  History N–V (`paper_drafts/overleaf_exphist_NV.tex` + the Xie bib entry, pasted by the user). The email is
+  sent; **ADM replied 2026-11-25 (§B.1): one Overleaf project only, his template v0.18 and writing guidelines
+  (§1.4), authors = the user + him, topics OK, and "show in which cases a learned jammer could have an
+  advantage".** Decided by the user 2026-11-25: the project made from his template is the one; the agent works in
+  an Overleaf-git clone next to the code and asks before every push (waiting on the user's one-time clone with his
+  token); his mail covers the template's AI-tool clause; both learned-advantage experiments run. **Sync test done:
+  imperfect timing costs the random-symbol jammer ≈ 0.5 dB and no stealth, so it opens no room for learning
+  (§3.3q "Synchronisation test"). `snr30` done: the detection term matters at high SNR (control 0.98 → 0.11 on the
+  CNN), yet the frame-timed pulse is flagged half as often as the generator (0.057 vs 0.114).** The Mon 23 Nov outline was folded into the email.
+- **Port into ADM's template (started 2026-11-25 evening, `paper_drafts/template_port/`, to be copied into the
+  Overleaf clone once it exists):** `acronyms.tex`, `sections/{sysmodel,problem,method,expsetup}.tex` are written
+  to his rules. The system model is method-agnostic with four tiers (T0 genie, T1 synchronised, T2 informed, T3
+  blind) and the frame-error convention. The problem formulation is P1 plus the matched-damage criterion and why
+  damage counts frames. Methodology: the generator, the training (Algorithm 1) and the scoring, with no "we" and
+  no numbers. Experimental Setup: parameters table, environments, datasets, metrics, and baselines incl. the
+  synchronised random symbol. "Classical" is now "parametric" (the *parametric envelope*). `bibtex/bib/references.bib`
+  = `secon27/bib/lit.bib` + `project.bib`. Compile-checked with a scratch harness (0 errors, 0 undefined, 0
+  overfull). **Still to port:** abstract (≈ 150 words, no acronyms), Introduction (RQs + contributions), Related
+  Works, Results Analysis (waits for `snr30`; confidence intervals on every figure), Conclusion (limitations:
+  coding, frame averaging, single carrier), the thesis appendix. `secon27/` stops being the source once the port
+  is complete.
+- **Paper edits offered on 2026-11-23, awaiting the user's OK (none applied):**
+  - (a) Methodology: the frame-error definition (any bit wrong = a lost packet on an uncoded link with error
+    detection, no synchronisation modelled, so one wrong symbol loses the frame) and the FER-matching sentence
+    (on/off reaches the same SER on 1 frame in ~900 with 89 errors, against 1 in 10 at FER 0.1; §2.7);
+  - (b) Discussion: the coding limitation (with FEC the sparse jammers lose most damage, on/off keeps it) and the
+    frame-averaging limitation (§4.4; possibly the one-job check, the user's call);
+  - (c) Fig. 1: restore excess BER (log) with SER dashed as a row above FER (`paper_figures.py` `fig_base`; the data
+    are in `eval.json`, no new simulation);
+  - (d) Results "Why the Detection Term Buys Nothing": the CNN mechanism with the 30 dB contrast (§B.1 2026-10-01,
+    ADM's question);
+  - (e) the frame-timed pulsed jammer in the abstract.
 - **Framing (settled with the user):** a performance-evaluation study, no new-method claim, on the template of
   Xu et al. MobiHoc 2005 (attacker ladder × detection statistics) and Flowers et al. TIFS 2020 (an ML attack
   re-evaluated with wireless realism). Question: does learning make a jammer stealthier against deployed
@@ -1200,10 +1322,14 @@ in §B.1; venue facts and the draft's layout in §1.4.
   not the paper's); "your GAN is under-tuned" is answered by the steps/init ablation and the all-detectors
   training. Missing baselines and "only kurtosis" are NOT gaps: the final roster has barrage, tone, pulse comb,
   Amuru p 0.01–1, on/off, random push, genie flip and Zhou's CGAN against energy, kurtosis and the CNN.
-- **NEXT, in order:** (1) ~~Results~~ done 2026-11-21; (2) Introduction + Related Work; (3) the one-page
-  outline to ADM **Mon 23 Nov** (title, abstract, contributions, figure list); (4) full draft to ADM **Thu 26
-  Nov**; (5) the ETH wrapper once the template/guidelines arrive (§4.1 #9); (6) EDAS registration with the author
-  list ADM gives (§4.1 #10); (7) anonymise, submit, hand in the thesis **Mon 30 Nov**.
+  **Two real gaps, found 2026-11-23 (§4.4):** every detector averages over the frame, so a per-symbol test would
+  plausibly catch the one-burst jammers (untested); and the frame-error convention assumes an uncoded link,
+  which the paper does not state yet (§2.9's FEC mandate).
+- **NEXT, in order:** (1) ~~Results~~ done 2026-11-21; (2) the user's decision on the offered edits (a)–(e) above
+  and on the per-symbol check; (3) Introduction (advised: in the user's own words) + Related Work; (4) full draft to ADM **Thu 26
+  Nov**, through the new Overleaf; (5) the ETH wrapper once the template/guidelines arrive (§4.1 #9); (6) EDAS
+  registration with the author list ADM gives (§4.1 #10) and the three topics (§1.4); (7) anonymise, submit, hand
+  in the thesis **Mon 30 Nov**. ~~One-page outline Mon 23 Nov~~: folded into the 2026-11-23 email.
 
 **STATE 2026-10-17: reset after the 2026-10-01 meeting (§B.1). The target is a submission at the end of
 November 2026, and the study restarts from the attacks.** Nothing was submitted to ICC (2026-10-02).
@@ -3495,6 +3621,128 @@ thresholds; generator = cnn_b10, grey-box):
 3. **Kurtosis is the one detector where learning gains something:** the control is 1–4 pp below the frame-timed
    jammer in five environments (fading +1.4), as it is 3–7 pp below the envelope; the detection term adds nothing.
 
+**Synchronisation test and the high-SNR environment (ADM 2026-11-25: "show in which cases a learned jammer could have
+an advantage"; both DONE 2026-11-25).** Two experiments, the user's choice, sync test first. **Answer for ADM: at high
+SNR, learning against the detector beats learning without it by 87 pp on the CNN, and beats the pulsed jammers that
+ignore the frame by ≈ 3 pp. But no environment and no synchronisation level gives it an advantage over the parametric
+jammer with the same information, the frame-timed pulse.**
+- **Synchronisation test.** His hypothesis: with uniform symbols the random jamming-symbol attack is hard to beat,
+  but it needs the jammer to land exactly on the victim's symbols, which hardware may not allow. The test is the
+  random-symbol jammer of `pulsed_sync_tx` (k random QPSK symbols per frame, the frame's budget on them) with
+  `attacks._sync_override`: timing misalignment uniform over [0, m·T], phase locked to R's axes or random.
+  Tags `rsym_k{k}_m{m}_{phase}` (`evaluate.sync_test`): k 1 × m ∈ {0, 0.125, 0.25, 0.5} locked, k 1 m 0 random,
+  k 128 (every symbol, M0's "random symbol" at waveform level) × m ∈ {0, 0.25} locked. The existing
+  `pulsed_sync_k1` is k 1, async (same misalignment law as m 0.5), random phase. Measured into the deployed-CNN files
+  `eval_cnn_s13/14.json` of all six environments with `--only` (backups of the 12 files in the session scratchpad).
+  Read-out: JSR at excess FER 0.1 and P_det there, per detector, against `cnn_b10` and `pulsed_sync_k1`.
+  **Result (2026-11-25; read-out script `sync_read.py` in the session scratchpad; CNN = mean over s13 / s14).**
+  P_det of the CNN at excess FER 0.1:
+
+  | | base | noise | noise_1db | fading | fading_k28 | both |
+  |---|---|---|---|---|---|---|
+  | learned (`cnn_b10`, seed mean) | 0.113 | 0.086 | 0.051 | 0.100 | 0.135 | 0.203 |
+  | frame-timed pulse (`pulsed_sync_k1`: async, random phase) | 0.072 | 0.055 | 0.059 | 0.050 | 0.062 | 0.045 |
+  | random symbol on R's grid, phase locked | 0.062 | 0.058 | 0.062 | 0.069 | 0.070 | 0.061 |
+  | on the grid, random phase | 0.056 | 0.063 | 0.057 | 0.045 | 0.048 | 0.055 |
+  | misaligned ≤ T/8 / ≤ T/4 / ≤ T/2, locked | 0.066 / 0.073 / 0.074 | 0.065 / 0.067 / 0.068 | 0.064 / 0.066 / 0.070 | 0.052 / 0.036 / 0.059 | 0.063 / 0.079 / 0.066 | 0.053 / 0.048 / 0.053 |
+  | every symbol, on the grid / ≤ T/4, locked | 1.000 / 0.982 | 0.999 / 0.972 | 0.998 / 0.967 | 0.286 / 0.188 | 0.995 / 0.935 | 0.223 / 0.186 |
+
+  At base, JSR at FER 0.1 and P_det energy / kurtosis: learned −21.7 dB, 0.240 / 0.108; frame-timed −23.1 dB,
+  0.245 / 0.115; on the grid, locked −21.7 dB, 0.333 / 0.193; ≤ T/8 / T/4 / T/2 locked −21.6 / −21.5 / −21.2 dB,
+  energy 0.33–0.35, kurtosis 0.19–0.20; on the grid, random phase −24.0 dB, 0.241 / 0.071; every symbol −1.8 dB
+  (locked), −3.9 dB (≤ T/4), 1.00 / 1.00. The other environments follow the same pattern.
+  1. **Symbol timing is worth about 0.5 dB to the random-symbol jammer and no stealth.** Misaligned by up to half a
+     symbol, it needs 0.5 dB more power, and every detector flags it as before (CNN 0.06–0.07 → 0.07). So imperfect
+     timing opens no room for learning. The learned jammer is below the misaligned random symbol on the CNN only at
+     `noise_1db` (0.051 vs 0.062–0.070) and below the on-grid random-phase one by 0.6 pp there; elsewhere it is flagged
+     as often or more.
+  2. **Locking the phase hurts a blind jammer.** On the grid, the locked symbol needs 2.3 dB more power than a random
+     phase (−21.7 vs −24.0 dB) and is flagged more by energy (0.33 vs 0.24) and kurtosis (0.19 vs 0.07). A locked QPSK
+     point splits its amplitude over both decision axes (a flip needs a > 1); a rotated one can put it on one axis
+     (a > 0.71). "Perfect overlap" is the best case only for a jammer that knows the symbol (the genie, NWSE).
+  3. **What makes the random-symbol attack hard to beat is concentration, not synchronisation.** On every symbol it
+     needs −1.8 dB and is flagged on every frame except where fading blinds energy and the CNN (`fading`, `both`:
+     0.19–0.29; kurtosis still 1.00). On one symbol per frame it needs −21 to −24 dB and sits within a few points of
+     the FAR on the CNN.
+  4. **So the sync test does not find a regime where learning wins**; `snr30` is the remaining candidate.
+  Caveats: a constant offset per frame (no jitter, drift or carrier-frequency offset within a frame), misalignment
+  uniform over [0, m·T], the generators are not retrained (they are asynchronous already; S2, §3.3l, retrained
+  them synchronously and found no gain).
+- **High-SNR environment `snr30`** (base at SNR 30 dB, Es/N0 39 dB): the full chain on the `final/` pipeline, CNN
+  seed 11 (surrogate, sets the bands) → bands → the eight generators → evaluate, plus CNN seeds 13 / 14 and their
+  evaluates (the grey-box read-out), every attacker including the frame-timed and sync-test ones. It tests whether
+  §3.3g's 30 dB result (CNN-targeted 0.11 vs Amuru 0.45 vs control 1.00 at matched BER 3e-4) survives FER
+  matching, the frame-timed baseline and a grey-box CNN.
+- **Jobs** (both TITAN RTX nodes were full at submission): verify 2472663 (adds `test_sync_and_snr`), then, afterok:
+  sync test base s13 / s14 2472664 / 65, noise 66 / 67, noise_1db 68 / 69, fading 70 / 71, fading_k28 72 / 73,
+  both 74 / 75; snr30 chain cnn 2472676 → bands 2472677 → gan 2472678 (array 0–7) → eval 2472679; snr30 CNN
+  seed 13 2472680 → eval 2472681, seed 14 2472682 → eval 2472683 (each after the generators). Generator task 7
+  (`kurtosis_b10`) hit `TaskProlog failed` at 0 s, so the three evaluates were cancelled; resubmitted unchanged
+  2026-11-25 evening: task 7 2473525 → evaluates s11 / s13 / s14 2473526 / 27 / 28. snr30 white-noise transitions
+  (`bands.json`): CNN −30.2 dB (−20.9 at 15 dB), energy −19.0, kurtosis −13.6; CNN training band (−48.3, −16.3).
+
+**`snr30` result (2026-11-25; P_det at excess FER 0.1; CNN = mean over deployed s13 / s14, generators trained against
+s11 at SNR 30 dB with the 30 dB band; `artifacts/final/snr30/{eval,eval_cnn_s13,eval_cnn_s14}.json`, `table.md`, `fig1-2`).**
+
+| | CNN, snr30 | CNN, base | energy, snr30 | kurtosis, snr30 |
+|---|---|---|---|---|
+| `cnn_b10` (grey-box; white-box 0.143) | **0.114** (s13 0.113, s14 0.114) | 0.113 | 0.586 | 0.110 |
+| control (β 0) | **0.983** | 0.169 | 0.611 | 0.110 |
+| frame-timed pulse k 1 | **0.057** | 0.072 | 0.514 | 0.108 |
+| random symbol on the grid, random phase | 0.063 | 0.056 | 0.553 | 0.112 |
+| Amuru p 0.01 / 0.02 / 0.05 | 0.142 / 0.157 / 0.288 | 0.118 / 0.109 / 0.149 | 0.510 / 0.621 / 0.801 | 0.161 / 0.170 / 0.369 |
+| on/off | 0.149 | 0.145 | 0.148 | 0.146 |
+| random push η 0.1 / genie flip | 0.069 / 0.056 | 0.075 / 0.056 | 0.779 / 0.055 | 0.278 / 0.046 |
+| `energy_b10` / `kurtosis_b10` | 0.990 / 1.000 | 0.089 / 0.570 | 0.596 / 0.636 | 0.118 / 0.116 |
+| Zhou's CGAN | 1.000 | 1.000 | 0.998 | 1.000 |
+
+FAR 0.054 for all three. JSR at FER 0.1: `cnn_b10` −22.9 dB, control −20.1, frame-timed −23.1. White-noise transitions
+(`bands.json`): CNN −30.2 dB (−20.9 at base), energy −19.0 (−10.0), kurtosis −13.6 (−13.2).
+1. **At high SNR the CNN sees what a damage-only waveform does, and the detection term removes it:** control 0.983 vs
+   `cnn_b10` 0.114, grey-box, the same on both deployed seeds. This reproduces §3.3g's 30 dB result (1.00 → 0.11) on the
+   `final/` pipeline. It is the one case where the detector term buys something; at 15 dB the control already hides
+   (0.169).
+2. **Against the parametric jammers it gains little, and against the frame-timed one it loses.** It is 2.8 pp below
+   Amuru's best (p 0.01, 0.142) and 3.5 pp below on/off, about 1.4 seed standard deviations (std 0.02). But the
+   frame-timed pulse, with the same information, is flagged on 5.7 %, half as often as the generator, and the
+   synchronised random symbol on 6.3 %.
+3. **High SNR makes energy the strong detector against every burst:** 0.51–0.61 for the one-burst jammers (0.24 at
+   base), while on/off sits at 0.148, the stealthiest against energy, and kurtosis stays at 0.11.
+   Training against energy or kurtosis buys nothing there either (`energy_b10` 0.596 vs control 0.611).
+4. **So the answer to ADM's question is narrow.** A learned jammer has an advantage over a *naive* learned jammer at
+   high SNR, and a few points over jammers that ignore the frame. It has none over a parametric jammer given the
+   same frame timing, in seven environments and five synchronisation levels.
+Caveats: one SNR above the operating point; generators one recipe (4000 steps, β 10); the frame-timed pulse sits
+outside the parametric envelope by the 2026-11-22 convention, so a table that reads only the envelope shows the
+learned jammer ahead at snr30.
+
+**What spreading the budget costs: JSR to break 10 % of frames at base (read from `base/eval.json`, 2026-11-23).**
+Every jammer is rescaled to its JSR frame by frame (`channel.receive` → `_scale` → `link.scale_to_jsr`). The
+exceptions are the analytic on/off, whose budget is an average over frames, and the genie and random push, which
+spend it in whole symbols (`floor(δN)` per frame, so their FER is a step, not a crossing). So the only
+concentration a jammer has is within the frame.
+
+| attacker | where the frame's power goes | JSR at excess FER 0.1 | wrong symbols per broken frame |
+|---|---|---|---|
+| barrage (`noise`) | every symbol | −1.6 dB | 1.07 |
+| tone / pulse comb | every symbol / an impulse every 8 symbols | −4.3 / −4.2 dB | 2.27 / 1.87 |
+| matched QPSK (`pulsed_p1`, Zhou's "optimal") | every symbol | −6.7 dB | 1.86 |
+| Amuru p 0.1 / 0.02 / 0.01 | 10 / 2 / 1 % of symbols | −14.3 / −20.6 / −21.9 dB | 1.84 / 1.04 / 1.00 |
+| `cnn_b10` r0 / r1 / r2 | one burst per frame | −22.4 / −21.2 / −21.5 dB | 1.00 |
+| `control_r0` | one burst per frame | −22.5 dB | 1.00 |
+| genie flip / genie push η 0.1 / random push η 0.1 | one whole symbol (step) | −15.0 / −20.0 / −20.0 dB | 1.00 |
+
+1. **Attacking every symbol costs 15–20 dB.** At Es/N0 24 dB a symbol flips only when the push crosses the decision
+   boundary: small pushes on every symbol do nothing, one large push does. This is a threshold in the link, not
+   a property of the pulsed baseline.
+2. **The generator chose concentration itself, and not because of the FER metric.** It is trained on log E[BER]
+   (`train_gan.py`, default `damage`), which does not see frames, and it could put its power anywhere in the
+   segment. The per-frame budget makes one burst per frame the most concentrated waveform available. The burst
+   stays at a fixed index because nothing rewards moving it. The fixed index is not what hides it: the frame-timed
+   pulsed jammer draws a random position every frame and is as stealthy (table above).
+3. **The burst is diluted only by the detectors' frame averaging.** At −22 dB per frame and p_eff ≈ 0.011 the
+   burst is about −2 dB on the one or two symbols it hits. See §4.4 "every detector averages over the frame".
+
 **Caveats.**
 - **Every generator here is white-box against seed 11** (trained on it) and grey-box against seeds 13 and 14
   (block above, the paper's numbers). Grey-box costs the CNN-targeted GAN nothing (≤ 2 pp, five environments;
@@ -4348,8 +4596,8 @@ calibration for the m2 detector; extending the sim08 suite with more classical d
 | 5 | **Single-round evasion on a frozen detector, or fully co-adaptive?** | His 2026-08-03 phrasing leans co-adaptive (*"one can always fine-tune a defender on an attacker and vice versa"*) but was never a direct answer. RQ2 assumes round-based-and-offline. **Proposed 2026-09-28:** round-based co-adaptation, measured by D6 (§3.4). |
 | 6 | ~~**Is he comfortable leading with detector characterization as the solid core** and the cooperative learned jammer as the high-upside extension?~~ **MOOT as posed, 2026-09-12.** The pivot answers it the other way round: the cooperative jammer *is* the core and characterisation is appendix. Still worth flagging in #0 that this is a reversal of the mid-July proposal he never answered. |
 | 7 | ~~**His September availability / feedback cadence**~~ **ANSWERED 2026-10-01: a weekly meeting whenever there are results** (§B.1). | — |
-| **9** | **The ETH thesis guidelines ("violet text") and the Distributed Computing group's thesis template** (OPEN 2026-11-21, on the user) | The thesis build needs its wrapper (title page, declaration of originality). The user sent only the template's README (`\frontmatter`/`\mainmatter`/`\appendix`, `\TODO`/`\REMARK`); the violet instructions are probably inside its `.tex`. Ask for the whole template folder. |
-| **10** | **Author list for SECON** (asked in the 2026-11-21 reply) | EDAS freezes it at registration; register early once he answers. |
+| **9** | **The ETH thesis guidelines ("violet text") and the Distributed Computing group's thesis template** (OPEN 2026-11-21, on the user; **PARTLY RESOLVED 2026-11-25:** the violet text is ADM's `guidelines.tex` in template v0.18, summarised in §1.4; still missing: the `report/` folder with `report.tex`, the thesis wrapper) | The thesis build needs its wrapper (title page, declaration of originality). The user sent only the template's README (`\frontmatter`/`\mainmatter`/`\appendix`, `\TODO`/`\REMARK`); the violet instructions are probably inside its `.tex`. Ask for the whole template folder. |
+| **10** | ~~**Author list for SECON**~~ **RESOLVED 2026-11-25: the user and ADM, nobody else.** Topics accepted. | EDAS freezes it at registration; register early once he answers. |
 | **11** | **SECON deadline time zone** | Not stated on the site; visible in EDAS (N35491) after login. Do not assume AoE. |
 | 8 | ~~**Inter-jammer coordination assumption** — shared backhaul / shared clock only / fully independent?~~ **ANSWERED 2026-09-12, and reframed.** He does not pick from that menu; he says the interesting thing is that the inter-jammer link *"introduces desynchronization"* through **communication delay** (§B.2). So the assumption is a link with a delay parameter, and the delay is swept rather than assumed (§2.3 RQ1, §2.4). Residual open question, much smaller: what delay *range* is realistic — worth one line in the reply to #0. | — |
 
@@ -5183,6 +5431,22 @@ queue. Items specified elsewhere are only pointed to.
 
 ## 4.4 Known limitations to keep visible
 
+- **Every detector of the final experiment averages over the frame (raised 2026-11-23, untested; the strongest
+  objection a reviewer can make to the paper).** Energy is the mean |z_k|² over 128 symbols, kurtosis one statistic
+  over the frame, the CNN one score per spectrogram. One burst per frame at −22 dB is about −2 dB on the symbols it
+  hits (§3.3q "What spreading the budget costs"). A detector that tests every symbol would see it undiluted, e.g.
+  the largest |(|z_k|² − 1)| in the frame. *Back-of-envelope, not measured:* clean |z_k|² at Es/N0 24 dB is
+  1 ± 0.089; a 5 % frame FAR over 128 symbols puts the threshold near ±0.31; a −2 dB push (|j| ≈ 0.76) at random
+  phase exceeds it for about 85 % of phases. Such a detector would plausibly flag the generators and the pulsed
+  jammers on most frames, while the genie flip, which lands on a constellation point, stays invisible. Options,
+  the user's call: (a) a Discussion limitation (offered, §3.1); (b) one `final/` job, adding the statistic,
+  calibrating it on clean frames and re-evaluating `base`. That is a new detector and widens the paper's scope;
+  (c) leave it to the symbol-level M0 restart (§3.1 STATE 2026-10-17), which is built for it.
+- **The frame-error convention assumes an uncoded link with error detection** (§2.7 "Why the matched damage is a
+  frame error rate"). The generators and pulsed jammers break a frame with exactly one wrong symbol. With FEC
+  they would lose most of their damage and on/off would keep it (89 wrong symbols per frame). Coded links are
+  future work; §2.9's FEC mandate asks the paper to state the assumption, and it does not yet.
+
 - **No results from a lossless channel make scientific claims.** sim06/07's lossless channel is a
   controlled simplification for isolating observation-model and training-algorithm effects.
 - **Single-round, frozen detector** (§2.1). RQ2 partially buys this back but does not make it an
@@ -5296,6 +5560,8 @@ forwarding — the forwarded port appears in the Ports tab, no manual `ssh -L` n
 | **final** | base · Li readout (`eval_li.json`, `li/`, `Li_base/`) | **the CNN scored per sample the way Li et al. do** (argmax, DR/precision/recall/F, matched PER 0.1/0.5/0.9, damage at detection budget); surrogate CNN seed 12 → grey-box cnnGAN1; cnnGAN2 (frame damage at −10…0 dB, warm start) white + grey, dropped; IQ and pulse pictures | **grey-box cnnGAN1 flagged 0.026 / 0.09 at PER 0.1 / 0.5 (Li's four 0.37–1.00 / 0.52–1.00), 1.00 at PER 0.9; Amuru p 0.02–0.05 beats it at every budget; it is one pulse per frame at a fixed symbol (p_eff 0.011); cnnGAN2's white-box stealth does not transfer**; §3.3r | 2278626–27, 2278683–85, 2278690–97, 2278731 |
 | **final** | base · quick D6 (`cnn_d6/`, `eval_d6.json`, `d6/`) | the CNN retrained once with cnnGAN1 grey-box r0, r1 as a fifth jammed type (r2 held out), all 31 attackers re-scored on the same frames | **at α 0.05 no cost on Li's four (pooled DR 93.5 → 93.6 %); cnnGAN1 at matched PER 0.5 0.26 → 0.39 seen, 0.37 → 0.56 held out; at argmax clean FAR 0.8 → 2.0 %**; §3.3s | 2279746, 2279747 |
 | **final** | all six · CNN seeds 13 / 14 (`cnn_s13/`, `cnn_s14/`, `eval_cnn_s13.json`, `eval_cnn_s14.json`; 2026-11-21) | `train_cnn.py --seed 13/14 --name cnn_s13/14` (Li's recipe, the deployed CNN's only change is the seed), then `evaluate.py --cnn cnn_s1x --out eval_cnn_s1x.json`: every attacker on the same frames as `eval.json`, against the new CNN and its own CFAR thresholds | **CNN-seed spread ≤ 1.2–1.3 pp (envelope, cnn_b10 seed mean) in five envs; grey-box (generators trained vs s11, scored vs s13/s14) = white-box within 2 pp; gain over the envelope +0.4 / −0.7 / −4.7 / +1.4 / +3.9 / +11.1 pp (`both`: the two badly trained seeds); the paper's CNN numbers**; §3.3q "CNN seeds 13 and 14" | 2454497 verify · train/eval pairs base 2454498/99, 2454500/01 · noise 02/03, 04/05 · noise_1db 06/07, 08/09 · fading 10/11, 12/13 · fading_k28 14/15, 16/17 · both 18/19, 20/21 (s13 first) |
+| **final** | all six · synchronisation test (`rsym_*` in `eval_cnn_s13/14.json`; 2026-11-25) | `evaluate.py --cnn cnn_s1x --out eval_cnn_s1x.json --only rsym_…`: the random-symbol jammer (k 1 / 128 per frame) on R's grid or misaligned ≤ T/8, T/4, T/2, phase locked or random (`attacks._sync_override`, `evaluate.sync_test`) | **timing is worth ≈ 0.5 dB and no stealth; a locked phase costs 2.3 dB; every-symbol needs −1.8 dB and is caught; no learned advantage**; §3.3q "Synchronisation test" | 2472663 verify (+ `test_sync_and_snr`) · 2472664–75 (env × s13/s14) |
+| **final** | `snr30` (base at SNR 30 dB = Es/N0 39 dB; 2026-11-25) | full chain + CNN seeds 13/14: `train_cnn` → `bands` → 8 generators → `evaluate`, all attackers incl. frame-timed and `rsym_*` | **CNN: control 0.983 → `cnn_b10` 0.114 (the detection term matters at high SNR), Amuru p 0.01 0.142, frame-timed pulse 0.057; energy catches every burst (0.51–0.61)**; §3.3q "`snr30` result" | cnn 2472676, bands 2472677, gan 2472678 (task 7 `TaskProlog` → 2473525), eval 2473526; s13 cnn 2472680 → eval 2473527; s14 cnn 2472682 → eval 2473528 |
 | **final** | base · suite training (`eval_suite.json`; exploratory) | **does penalising the whole detector suite help?** new `suite_*` task (detector term = worst-of-three soft P_det per frame), white-box, β 10/30/100 + a CNN-band control, 1500 steps | **no — worse than single-target `cnn_b10` at matched damage (worst detector 0.46 vs 0.24 at PER 0.1); the 3 detectors transition ≈ 11 dB apart, so at low damage only the CNN is active and single-target already evades the suite; "detector term buys nothing" is structural**; §3.3q | 2279480 (17–19), 2279481, 2279509, 2279510 |
 
 **The attacker's objective at each step** — re-read from the code 2026-09-10, because the Overleaf
@@ -5930,6 +6196,24 @@ and m0 rows are on the cluster; the sim06 and frontier rows are in git only (§1
     - **Plots.** Excess SER and excess BER vs N0 ("e" = excess, §2.7), with detection beside them.
     - **Assumptions.** The jammer is able to sync with the receiver; fixed modulation; no directional
       antennas. To do: a sweep to check the impact of NWSE's parameters.
+  - **His question, recalled by the user on 2026-11-22 (not in the meeting notes): does the CNN look at anything
+    the GAN can learn from?** Answer, from the code and the training logs (2026-11-22):
+    - **What it reads.** The CNN sees how the received power spreads over time and frequency: a complex two-sided
+      STFT (n_fft 64, hop 16 → 77 × 64 cells, 8 symbols long, phase discarded), on a fixed dB scale, through a
+      256-level LUT (≈ 0.27 dB per step). That is exactly what the generator controls. It is blind to whether a
+      symbol was pushed across a boundary, and nearly blind to weak power under the signal. A −20 dB in-band
+      jammer adds ≈ 0.04 dB where the signal sits 24 dB above the noise. The same jammer white raises the
+      out-of-band floor by ≈ 1.2 dB (back-of-envelope), which is why the CNN catches barrage at −21 dB.
+    - **The gradient reaches G and is used.** The straight-through LUT bridges the quantisation. In the base logs
+      the soft P_det fell from ≈ 0.8–1.0 to ≈ 0.6 while the damage rose. At 30 dB the term cut CNN detection at
+      matched BER 3e-4 from 1.00 (the control) to 0.11 (§3.3g E2 run003).
+    - **Why it buys nothing at 15 dB.** Damage alone already drives the waveform in band, under the signal, and
+      concentrated in time, where the CNN is weakest.
+    - **Two sentences for him:** *"The CNN sees the jammer's power over time and frequency, which is exactly what
+      the generator controls, and the gradient works: at 30 dB it cut CNN detection from 1.00 to 0.11. At our
+      24 dB the damage objective alone already puts the power where the CNN can't see it, so the detection term
+      has nothing left to do."* Offered for the paper's "Why the Detection Term Buys Nothing" (§3.1 pending
+      edits).
 - **2026-10-02 — his first mail after the meeting.** It names the venue for the end-of-November target.
   Text not yet added. *(The venue was settled on 2026-11-21 as SECON 2027, from his shortlist; see below.)*
 - **2026-10-07 — his second mail: naive baselines first, and a supervised problem instead of a GAN.** Verbatim, except that the LaTeX delimiters (`$`, `$$`, `\boxed{}` around the last form) are
@@ -6035,6 +6319,35 @@ and m0 rows are on the cluster; the sim06 and frontier rows are in git only (§1
   (30 Nov, 9 pages, double-blind), a one-page outline on Monday and the full draft by Thu 26 Nov, and a request
   for the author list. "Keep it updated" (his phrase, as relayed) is read as: keep the Overleaf draft current.
   The emailed post-meeting results are the October M0 baselines (§3.1 steps 0–1; user-confirmed 2026-11-21).
+- **2026-11-25 — his reply to the update email (verbatim, as pasted by the user), with his template v0.18.**
+  *"SECON sounds okay, I also thought it would be a suitable venue. I am not a big fan of having multiple projects
+  because it's easy to fork and lose track. I suggest placing all material in suitable tex files in only one
+  project and delete all others. Pls use overleaf git integration if you're working with agents, and place code
+  and latex in close folders so agent have full view. Authors can be just you and me. Topics are okay but negative
+  results have a much harder chance to get accepted: we could still try if experiments are solid and serious.
+  Ideally we could show in which cases a learned jammer could have an advantage. If tx symbols are uniformly
+  distributed then the simple random jamming-symbol attack is hard to beat. However this assumes that the attacker
+  can accurately synchronize tx to perfectly overlap symbol at receiver, which may not always be feasible depending
+  on the hardware. Please follow the attached guidelines on writing as closely as possible."*
+  So the email of 2026-11-23 was sent. What changed: one Overleaf project (§1.4); authors = the user + ADM (§4.1
+  #10); topics OK; his template and guidelines are binding (§1.4); and **a new content request: show where a
+  learned jammer has an advantage.** His hypothesis is imperfect synchronisation. The evidence we already have
+  points against it in our model: S2's synchronous and asynchronous generators tie (§3.3l), and the synchronised
+  random push ties the asynchronous frame-timed pulse against the CNN (0.04–0.08 vs 0.05–0.07, §3.3q). The one
+  regime where learning won is high SNR: at 30 dB (Es/N0 39 dB), on `cgan/` run003 at matched BER 3e-4, CNN-targeted
+  0.11 vs Amuru 0.45 vs control 1.00 (§3.3g E2). It has never been measured on the `final/` pipeline (FER matching,
+  frame-timed baseline, grey-box). Both ran on 2026-11-25 (§3.3q "Synchronisation test and the high-SNR
+  environment"): neither finds an advantage over the frame-timed pulse; at 30 dB the detection term beats the
+  damage-only control (0.98 → 0.11 on the CNN).
+- **2026-11-23 — update email, sent** (his reply of 2026-11-25 answers it; final text in the 2026-11-23 chat). The user did not want to send the whole SECON draft. The plan is to send what was promised, show what
+  will be handed in, and then add sections as the user reads them (§1.4 "Two Overleaf projects"). Content, kept
+  short in the user's voice, detail in the drafts:
+  - SECON 2027 and why: his preferred option, the deadline matches the thesis, a performance evaluation as he
+    suggested, the question and its answer in two sentences, and the three topics;
+  - a new Overleaf for the paper ([link], once the user creates it) and why: the old draft's multi-agent framing
+    and template no longer fit, so it stays the thesis record, and its Experiment History now runs to V;
+  - the plan: section by section this week, full draft Thu 26 Nov, submit on the 30th;
+  - two questions: the author list (EDAS freezes it) and whether the topics are OK.
 
 *(A note for the record: earlier drafts of the project notes speculated about a "Thu 13 Aug" meeting,
 picked up from a date we had proposed to ourselves. That meeting never happened; **21 Aug is the real,

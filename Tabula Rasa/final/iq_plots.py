@@ -69,13 +69,13 @@ def draw(env, ops, out_npz):
     device = lk.setup(seed=777)
     L = E.apply(lk.Link(**lk.LINK), env)
     specs = dict(evaluate.classical())
-    n0 = L.noise_var(E.SNR_DB)
+    n0 = L.noise_var(E.snr(env))
     act = L.active(E.N_SYM)
     rng = np.random.default_rng(0)
     save = {}
 
     def one(key, spec, jsr):
-        out = attacks.frames(L, N_FRAMES, spec, None if spec is None else [jsr], E.SNR_DB, keep_jammer=True)
+        out = attacks.frames(L, N_FRAMES, spec, None if spec is None else [jsr], E.snr(env), keep_jammer=True)
         z = out["z"].cpu().numpy().ravel()
         wrong = (out["bits"] != out["bits_hat"]).reshape(N_FRAMES, -1, 2).any(-1).cpu().numpy().ravel()
         save[f"{key}__z"], save[f"{key}__wrong"] = z.astype(np.complex64), wrong

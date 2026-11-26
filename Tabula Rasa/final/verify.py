@@ -367,6 +367,35 @@ def test_training_step(dfds):
     check("keep_jammer: returned jammer's power over the active window == JSR (-10 dB)", pj, 0.1, 1e-4)
 
 
+def test_sync_and_snr():
+    """The synchronisation test and the per-environment SNR (added 2026-11-25, README §3.3q)."""
+    check("E.snr: the paper's six environments sit at SNR 15 dB",
+          float(all(E.snr(e) == 15.0 for e in E.PAPER_ENVS)), 1.0, 0)
+    check("E.snr: snr30 sits at SNR 30 dB (Es/N0 39 dB)", E.snr("snr30"), 30.0, 0)
+    L = fresh_link()
+    d0, p0 = torch.rand(64, device=L.device), torch.rand(64, device=L.device)
+    d1, p1 = attacks._sync_override(L, dict(name="pulsed_sync", hits=1), d0, p0)
+    check("sync override: a pulsed_sync spec without mis/phase is unchanged",
+          float(torch.equal(d0, d1) and torch.equal(p0, p1)), 1.0, 0)
+    for mis, want_share, cmp in ((0.0, 0.99, ">="), (0.5, 0.95, "<")):
+        with torch.no_grad():
+            out = attacks.frames(L, 512, dict(name="pulsed_sync", hits=1, mis=mis, phase="locked"), [-20.0],
+                                 E.SNR_DB, keep_jammer=True)
+            zj = L.matched_filter(out["j"], E.N_SYM)               # the jammer alone at the decision points
+        e = zj.abs().pow(2)
+        share = float((e.max(dim=-1).values / e.sum(dim=-1)).mean())
+        ok = share >= want_share if cmp == ">=" else share < want_share
+        check(f"rsym k1, misalignment {mis:g} T, phase locked: mean share of the jammer's decision-point energy "
+              f"on its largest symbol {cmp} {want_share}", float(ok), 1.0, 0, note=f"share {share:.4f}")
+        if mis == 0.0:
+            k = e.argmax(dim=-1)
+            ang = torch.angle(zj.gather(1, k[:, None]).squeeze(1))
+            off = torch.remainder(ang - math.pi / 4, math.pi / 2)
+            off = torch.minimum(off, math.pi / 2 - off)
+            check("rsym k1 on the grid, phase locked: the hit lands on a QPSK axis pair (max angle error, rad)",
+                  float(off.max()), 0.0, 0.01)
+
+
 def main():
     global VERBOSE
     ap = argparse.ArgumentParser()
@@ -384,6 +413,7 @@ def main():
     test_bands(dfds["base"])
     test_baselines(dfds)
     test_training_step(dfds)
+    test_sync_and_snr()
     print("\n" + ("ALL CHECKS PASS" if not FAILURES else f"{len(FAILURES)} FAILED:\n  " + "\n  ".join(FAILURES)))
     return 0 if not FAILURES else 1
 

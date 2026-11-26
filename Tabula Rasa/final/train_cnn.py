@@ -134,7 +134,7 @@ def main():
 
     device = lk.setup(seed=args.seed)
     L = E.apply(lk.Link(**lk.LINK), args.env)
-    snr = E.SNR_DB
+    snr = E.snr(args.env)
     gen = torch.Generator(device=device).manual_seed(args.seed)
     t0 = time.time()
     print(f"env {args.env} = {E.ENVS[args.env]} | SNR {snr:g} dB (Es/N0 {snr + E.ESN0_OFFSET_DB:.2f} dB) "

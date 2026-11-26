@@ -186,7 +186,7 @@ def main():
 
     device = lk.setup(seed=seed)
     L = E.apply(lk.Link(**lk.LINK), args.env)
-    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, det_dir))
+    dfd = defender.Defender.load(L, E.snr(args.env), E.art(args.env, det_dir))
     init = "random"
     if task.get("init"):                                     # warm start from an earlier generator
         init = E.art(args.env, "gan", f"{tag(task['init'], args.rep)}_G.pt")
@@ -200,11 +200,11 @@ def main():
     print(f"env {args.env} = {E.ENVS[args.env]} | task {name} = {task} | seed {seed} | band {band} | "
           f"{frames} frames/step | {args.steps} steps | init {init} | damage {damage} | device {device}", flush=True)
     t0 = time.time()
-    G, hist = train(L, dfd, G, task["target"], task["beta"], args.steps, frames, band, seed, E.SNR_DB, damage)
+    G, hist = train(L, dfd, G, task["target"], task["beta"], args.steps, frames, band, seed, E.snr(args.env), damage)
     recipe = dict(env=args.env, env_config=E.ENVS[args.env], task=args.task, rep=args.rep,
                   target=task["target"], beta=task["beta"], cgan_task=task["cgan_task"], seed=seed,
                   steps=args.steps, frames=frames, lr=LR, jsr_band=list(band), alpha=E.ALPHA,
-                  init=init, damage=damage, snr_db=E.SNR_DB, defender=os.path.relpath(E.art(args.env, det_dir)),
+                  init=init, damage=damage, snr_db=E.snr(args.env), defender=os.path.relpath(E.art(args.env, det_dir)),
                   runtime_s=time.time() - t0)
     G.eval()
     E.save_big({"state_dict": G.state_dict(), "n_classes": 1, "seg_len": models.SEG_LEN, "scale": 1.0,

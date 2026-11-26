@@ -304,7 +304,7 @@ def fig_vs_jsr(env, d, out):
     ax[2, 0].set_ylabel("P_det")
     fig.legend(*ax[0, 0].get_legend_handles_labels(), loc="lower center", ncol=3, fontsize=8, frameon=False,
                labelcolor=INK2, bbox_to_anchor=(0.5, 0.0))
-    fig.suptitle(f"(1) Damage and detection vs JSR — env {env} ({E.LABEL[env]}), SNR 15 dB = Es/N0 24 dB\n"
+    fig.suptitle(f"(1) Damage and detection vs JSR — env {env} ({E.LABEL[env]}), SNR {E.snr(env):g} dB = Es/N0 {E.snr(env) + E.ESN0_OFFSET_DB:.0f} dB\n"
                  f"Read down a column: at one JSR, how much damage and how often flagged. Thick: seed mean; thin: seeds; "
                  f"grey rules: BER 3·10⁻⁴, PER 0.1", fontsize=9.5, color=INK, x=0.01, ha="left", y=0.995)
     fig.tight_layout(rect=(0, 0.055, 1, 0.97))
@@ -361,7 +361,7 @@ def label_of(key):
 
 def summary(env, d):
     """Every matched-damage number of one environment, per seed, as a dict."""
-    dets = d["meta"]["dets"]
+    dets = [det for det in d["meta"]["dets"] if det in DET_LABEL]   # full-band 'power' (regression only) is not tabled
     out = dict(env=env, far={det: pd(d["clean"], det) for det in dets}, clean=d["clean"], dets=dets, rows={})
     for key in TABLE_KEYS:
         if key not in ("envelope", "amuru", "onoff") and not seeds(d, key):

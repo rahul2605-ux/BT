@@ -81,6 +81,20 @@ def frame_sync():
     return [(f"pulsed_sync_k{k}", dict(name="pulsed_sync", hits=k)) for k in (1, 2, 3)]
 
 
+SYNC_TEST = [(1, 0.0, "locked"), (1, 0.0, "random"), (1, 0.125, "locked"), (1, 0.25, "locked"),
+             (1, 0.5, "locked"), (128, 0.0, "locked"), (128, 0.25, "locked")]
+
+
+def sync_test():
+    """The synchronisation test (ADM 2026-11-25): the random-symbol jammer -- k random QPSK
+    symbols per frame, the frame's budget on them (pulsed_sync_tx) -- on R's symbol grid or
+    misaligned by up to `mis` symbols, phase locked to R's axes or random. k 128 = every symbol
+    (the M0 'random symbol' baseline at waveform level). pulsed_sync_k1 = (1, async, random).
+    Appended last so no earlier attacker's seed moves; for --only into eval_cnn_s13/14.json."""
+    return [(f"rsym_k{k}_m{m:g}_{ph}", dict(name="pulsed_sync", hits=k, mis=m, phase=ph))
+            for k, m, ph in SYNC_TEST]
+
+
 def generators(env):
     return [("zhou_cgan", ZHOU_G)] + [(train_gan.tag(t, r), E.art(env, "gan", f"{train_gan.tag(t, r)}_G.pt"))
                                       for t, r in train_gan.ARRAY]
@@ -112,7 +126,7 @@ def main():
     t0 = time.time()
     device = lk.setup(seed=SEED)
     L = E.apply(lk.Link(**lk.LINK), args.env)
-    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, args.cnn))
+    dfd = defender.Defender.load(L, E.snr(args.env), E.art(args.env, args.cnn))
     if "power" not in dfd.thr:  # full-band power (user, 2026-10-01): its own clean frames, seed apart
         lk.setup(device, seed=SEED - 2)
         dfd.calibrate_power(n_cal=1024 if E.SMOKE else defender.N_CALIBRATION)
@@ -124,8 +138,8 @@ def main():
         with open(out_path) as f:
             res = json.load(f)
     else:
-        res = dict(meta=dict(env=args.env, env_config=E.ENVS[args.env], snr_db=E.SNR_DB,
-                             esn0_db=E.SNR_DB + E.ESN0_OFFSET_DB, jsr_db=grid, n_frames=n, n_clean=N_CLEAN,
+        res = dict(meta=dict(env=args.env, env_config=E.ENVS[args.env], snr_db=E.snr(args.env),
+                             esn0_db=E.snr(args.env) + E.ESN0_OFFSET_DB, jsr_db=grid, n_frames=n, n_clean=N_CLEAN,
                              alphas=[0.01, 0.05], alpha=E.ALPHA, dets=dfd.dets, seed=SEED, cnn=args.cnn,
                              n_sym=E.N_SYM, thresholds={k: v for k, v in dfd.thr.items() if k != "clean_stat_q"},
                              bands=bands, gpu=torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"),
@@ -150,7 +164,8 @@ def main():
                + [(t, "classical", s) for t, s in added()]
                + [(t, "generator", p) for t, p in extra_generators(args.env)]
                + [(t, "generator", p) for t, p in suite_generators(args.env)]
-               + [(t, "classical", s) for t, s in frame_sync()])
+               + [(t, "classical", s) for t, s in frame_sync()]
+               + [(t, "classical", s) for t, s in sync_test()])
     for i, (tag, group, what) in enumerate(entries):
         if only is not None and tag not in only:
             continue

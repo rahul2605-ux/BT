@@ -65,7 +65,7 @@ def draw(env, out_npz):
             G, scale, _ = models.load_generator(E.art(env, "gan", f"{tag}_G.pt"), device)
             spec = dict(name="gan", G=G, scale=scale, tag=tag)
         with torch.no_grad():
-            out = attacks.frames(L, N_FRAMES, spec, [jsr], E.SNR_DB, keep_jammer=True)
+            out = attacks.frames(L, N_FRAMES, spec, [jsr], E.snr(env), keep_jammer=True)
             zj = L.matched_filter(out["j"], E.N_SYM).cpu().numpy()          # [F, N]
         e = np.abs(zj) ** 2
         pushes = (np.abs(zj) > HARD).sum(axis=1)

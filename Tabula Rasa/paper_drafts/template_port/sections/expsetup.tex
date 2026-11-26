@@ -1,0 +1,104 @@
+% Ported 2026-11-25 from secon27/sec/method.tex (values, roster, environments) + the sync test (README 3.3q
+% "Synchronisation test") + the frame-error convention (README 2.7). Values: final/env.py, final/train_gan.py,
+% final/train_cnn.py, final/evaluate.py, artifacts/final/<env>/bands.json.
+\section{Experimental Setup} \label{sec:expsetup}
+
+\subsection{Parameters} \label{sec:expsetup:params}
+
+\begin{table}[t]
+\centering
+\caption{Experimental Parameters}
+\label{tab:exp_params}
+    \begin{tabular}{@{}p{89pt}p{40pt}p{60pt}p{25pt}@{}}
+    \toprule
+    \multicolumn{2}{c}{\textbf{Link and scoring}} & \multicolumn{2}{c}{\textbf{Generator training}} \\
+    \midrule
+    Symbols per frame $N$ & $128$ & Parameters & $8.6\times10^{6}$ \\
+    Samples per symbol $L$ & $8$ & Latent size & $400$ \\
+    \ac{rrc} roll-off & $0.35$ & Optimiser & Adam \\
+    $E_\text{s}/N_0$ & \SI{24}{\decibel} & Learning rate & $2\times10^{-4}$ \\
+    \ac{far} $\alpha$ & $0.05$ & Steps $S$ & $4000$ \\
+    Clean calibration frames & $20\,000$ & Frames per step & $128$ ($32$)$^{\dagger}$ \\
+    \ac{jsr} sweep & \SIrange{-50}{15}{\decibel} & Weight $\beta$ & $\{0,10\}$ \\
+    Frames per \ac{jsr} point & $512$ & Seeds & $3$ ($1$)$^{\ddagger}$ \\
+    \bottomrule
+    \end{tabular}
+    \\[2pt]{\footnotesize $^{\dagger}$against the classifier. $^{\ddagger}$against energy and kurtosis.}
+\end{table}
+
+Table~\ref{tab:exp_params} lists the parameters.
+The \ac{jsr} sweep runs in steps of \SI{1}{\decibel}.
+At $P_\text{det}=0.1$, the binomial standard error of one point with $512$ frames is $1.3$ percentage points.
+The generator's training band starts \SIrange{15}{18}{\decibel} below the \ac{jsr} at which its target detector flags half of the frames jammed by white noise, and spans at most \SI{32}{\decibel} up to \SI{0}{\decibel}; at the ideal link it is \SIrange{-39}{-7}{\decibel} for the classifier and \SIrange{-25}{0}{\decibel} for energy, and the control uses \SIrange{-32}{0}{\decibel}.
+% bands.json, every environment: lower edge = transition - 15.1 (energy), - 18.4 (kurtosis), - 18.1 dB (classifier).
+
+\subsection{Environments} \label{sec:expsetup:env}
+The victim is the \ac{c2} link of an \ac{uav}, which uses one fixed modulation; prototype radios for it use Gaussian minimum-shift keying~\cite{bishop2017cnpc}, for which \ac{qpsk}, with a closed-form error rate, stands in.
+A line-of-sight budget for such a link closes at the edge of its range at an \ac{snr} of \SI{14}{\decibel}~\cite{kakar2015uav}.
+The operating point, $E_\text{s}/N_0=\SI{24}{\decibel}$, lies \SI{10}{\decibel} above that edge, where uncoded \ac{qpsk} makes practically no errors without a jammer, so every error counted is the jammer's.
+Air-to-ground measurements in the bands allocated to these links~\cite{kerczewski2015cosite} found Rician factors of \SIrange{12}{15}{\decibel} in L-band and \SIrange{27}{31}{\decibel} in C-band~\cite{matolak2017airground1,sun2017airground2,matolak2017airground3,khawaja2019survey}; the experiments use $K=\SI{12}{\decibel}$ and $K=\SI{28}{\decibel}$.
+A receiver's noise level is uncertain to about $\pm$\SI{1}{\decibel} after calibration~\cite{shellhammer2006noise,tandra2008snr}; with the log-normal model~\cite{sonnenschein1992radiometric,he2017covert}, $\sigma_\text{N}=\SI{0.5}{\decibel}$ keeps $95\%$ of frames within $\pm$\SI{1}{\decibel}~\cite{nikonowicz2019noise}, and $\sigma_\text{N}=\SI{1}{\decibel}$ represents a receiver facing in-band interference.
+Six environments result: the ideal link (\emph{base}), noise-level uncertainty of \SI{0.5}{\decibel} and \SI{1}{\decibel} (\emph{noise}, \emph{noise\,1\,dB}), fading with $K=\SI{12}{\decibel}$ and \SI{28}{\decibel} (\emph{fading}, \emph{fading\,K28}), and both impairments at their main levels (\emph{both}).
+\todo{a seventh, high-SNR environment ($E_\text{s}/N_0=\SI{39}{\decibel}$, ideal link) is running; add it here if it enters the results}
+
+\subsection{Datasets} \label{sec:expsetup:data}
+All data are simulated.
+In every environment, $20\,000$ clean frames set each detector's threshold at $\alpha=0.05$ per frame, the value at which learned jamming detectors have been evaluated~\cite{arcangeloni2024jamming}.
+The classifier is retrained in every environment with the recipe of Li et al.~\cite{li2022jamming_ofdm}: EfficientNet-B0 with two classes, $762$ clean and $204$ jammed images per jammer type, the \ac{jsr} uniform over \SIrange{-20}{10}{\decibel}, and $100$ epochs.
+Its spectrogram uses a 64-point \ac{stft} with a hop of $16$ samples, a decibel scale fixed on clean frames, and a 256-level colour map.
+Three classifiers per environment differ only in their random seed: the surrogate, which trains the generators and sets their band, and two deployed classifiers, over which every classifier result is averaged.
+% SGD lr 1e-3, batch 32, 70/30 split (final/train_cnn.py). Seeds 11 (surrogate), 13, 14 (deployed). README 3.3q.
+The generators draw fresh frames at every training step.
+
+\subsection{Metrics} \label{sec:expsetup:metrics}
+\begin{itemize}
+    \item \textit{Excess \ac{fer}} $D_\text{F}$ (dimensionless): the fraction of frames with at least one bit in error, minus the same fraction on clean frames of the environment; the damage $D_\pi$ of Section~\ref{sec:problem_formulation}.
+    It counts a lost packet on an uncoded link with an error-detecting code.
+    \item \textit{Excess \ac{ber}} $D_\text{B}$ and \textit{excess \ac{ser}} $D_\text{S}$ (dimensionless): the bit and symbol error rates minus their clean values.
+    \item \textit{Detection probability} $P_\text{det}$ (dimensionless): the per-frame probability of~\eqref{eq:pdet}, at $\alpha=0.05$.
+    \item \textit{Matched-damage detection probability} $P^{\star}_\text{det}$ (dimensionless): $P_\text{det}$ at the first \ac{jsr} where $D_\text{F}=0.1$, i.e., where the jammer breaks one frame in ten.
+\end{itemize}
+Seeded generators are reported as mean $\pm$ standard deviation over seeds.
+\todo{confidence intervals on every figure (ADM's guideline): binomial for $P_\text{det}$, seed spread for the generators}
+
+\subsection{Baselines} \label{sec:expsetup:baselines}
+
+\begin{table}[t]
+\centering
+\caption{Jammers, ordered by the information they use}
+\label{tab:attackers}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Jammer & Tier & Parameters \\
+\midrule
+Genie flip & T0 & fraction of symbols \\
+Random push & T1 & fraction of symbols \\
+Random symbol, synchronised & T1 & $k$, offset, phase \\
+Pulsed~\cite{amuru2015optimal} & T2 & $p$, seven values in $[0.01,1]$ \\
+Pulsed, frame-timed & T2 & $k\in\{1,2,3\}$ per frame \\
+On/off & T2 & fraction $f$ of frames \\
+Zhou et al.~\cite{11184988} & T2 & as published \\
+\textbf{Generators} & T2 & target, $\beta\in\{0,10\}$ \\
+Barrage, tone, pulse comb~\cite{li2022jamming_ofdm} & T3 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:attackers} lists the jammers.
+Three are Li et al.'s jammer types~\cite{li2022jamming_ofdm}: barrage noise, a tone with its phase drawn per frame, and a pulse comb with an impulse every $64$ samples.
+The pulsed jammer transmits the victim's modulation and pulse with its own random symbols, each on with probability $p$ at amplitude $1/\sqrt p$, so its mean power does not depend on $p$.
+At $p=1$ it is the matched jammer that Zhou et al.\ call optimal~\cite{11184988}, at $p=0.25$ it is Li et al.'s protocol-aware type, and $p<1$ spans the pulsed family that contains the error-maximising jammer against a known modulation~\cite{amuru2015optimal}.
+Its pulses ignore the frame, so at $p=0.01$ about $28\%$ of the frames receive none.
+The frame-timed pulsed jammer uses the frame timing that the generator exploits: it sends exactly $k$ random symbols at random positions in every frame, with the frame's whole budget on them.
+The on/off jammer sends the matched jammer at \SI{15}{\decibel} on a fraction $f$ of the frames and nothing on the rest, so its budget holds on average over frames rather than per frame; its damage and $P_\text{det}$ follow from the \SI{15}{\decibel} point by averaging over frames.
+The parametric envelope takes the lowest $P^{\star}_\text{det}$ of barrage, tone, pulse comb, the pulsed and the on/off jammer; the frame-timed jammer is reported beside it.
+
+The synchronised random-symbol jammer tests whether the generator's lack of synchronisation leaves it room to gain.
+It is the frame-timed jammer given the receiver's symbol timing: its $k\in\{1,128\}$ symbols land on the receiver's symbol grid, or late by up to $1/8$, $1/4$ or $1/2$ of a symbol, with its phase either locked to the receiver's decision axes or random.
+% final/attacks._sync_override, evaluate.sync_test (tags rsym_k{k}_m{m}_{phase}); README 3.3q "Synchronisation test".
+Two references are not realisable.
+The genie flip sends $-2\rho\,s[k]$ on a fraction of the symbols, synchronously; it inverts them, leaves the received distribution unchanged, and so is invisible to any detector, which makes it an upper bound on damage at any $P_\text{det}$.
+The random push has the genie's timing and phase but neither the symbols nor the channel gain, and adds $1.1$ times a random \ac{qpsk} symbol to a fraction of the symbols.
+Both act on whole symbols, so they meet the budget only up to a whole number of symbols per frame.
+Zhou et al.'s generator~\cite{11184988}, trained to imitate the victim's waveform without a link or a detector, is evaluated as published, in a reproduction.
+The study's own generators, trained by Algorithm~\ref{alg:train} in each environment, are a damage-only control ($\beta=0$) and detector-aware generators ($\beta=10$) against energy, kurtosis and the classifier.

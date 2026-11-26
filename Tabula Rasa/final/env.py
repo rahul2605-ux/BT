@@ -35,9 +35,13 @@ ENVS = {
     "fading":     dict(noise_unc_db=0.0, rician_k_db=12.0),
     "fading_k28": dict(noise_unc_db=0.0, rician_k_db=28.0),
     "both":       dict(noise_unc_db=0.5, rician_k_db=12.0),
+    # the high-SNR environment (ADM 2026-11-25: where can a learned jammer win?): base at SNR 30 dB
+    # = Es/N0 39 dB, the operating point of cgan/'s E2 where the detector term mattered (README §3.3g)
+    "snr30":      dict(noise_unc_db=0.0, rician_k_db=None, snr_db=30.0),
 }
+PAPER_ENVS = ["base", "noise", "noise_1db", "fading", "fading_k28", "both"]   # Table II / Fig. 2 columns
 LABEL = {"base": "base", "noise": "σN 0.5 dB", "noise_1db": "σN 1 dB", "fading": "Rician K 12 dB",
-         "fading_k28": "Rician K 28 dB", "both": "σN 0.5 + K 12"}
+         "fading_k28": "Rician K 28 dB", "both": "σN 0.5 + K 12", "snr30": "SNR 30 dB"}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ART_ROOT = os.path.join(HERE, "..", "artifacts", "final")
@@ -49,6 +53,11 @@ SMOKE = os.environ.get("FINAL_SMOKE") == "1"
 if SMOKE:
     ART_ROOT = os.path.join(ART_ROOT, "_smoke")
     SCRATCH_ROOT = os.path.join(SCRATCH_ROOT, "_smoke")
+
+
+def snr(env):
+    """The environment's SNR [dB, power per sample over the simulated band]; SNR_DB unless it sets snr_db."""
+    return ENVS[env].get("snr_db", SNR_DB)
 
 
 def faded(env):

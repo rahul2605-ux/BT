@@ -1,0 +1,10 @@
+node: tikgpu04.ee.ethz.ch | gpu: NVIDIA TITAN RTX
+env noise_1db = {'noise_unc_db': 1.0, 'rician_k_db': None} | detectors ['energy', 'energy_2s', 'kurtosis', 'spec_cnn', 'power'] | 66 JSR points x 512 frames | NVIDIA TITAN RTX
+  rsym_k1_m0_locked  done (22s): max BER 4.219e-03, PER at +15 dB 0.748, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.68 power 1.00, DC share 0.008
+  rsym_k1_m0_random  done (17s): max BER 4.135e-03, PER at +15 dB 0.729, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.68 power 1.00, DC share 0.008
+  rsym_k1_m0.125_locked done (17s): max BER 1.588e-02, PER at +15 dB 0.963, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.69 power 1.00, DC share 0.008
+  rsym_k1_m0.25_locked done (18s): max BER 1.885e-02, PER at +15 dB 0.984, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.64 power 1.00, DC share 0.008
+  rsym_k1_m0.5_locked done (18s): max BER 2.163e-02, PER at +15 dB 0.982, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 1.00 spec_cnn 0.65 power 1.00, DC share 0.008
+  rsym_k128_m0_locked done (18s): max BER 5.029e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.17 spec_cnn 1.00 power 1.00, DC share 0.008
+  rsym_k128_m0.25_locked done (18s): max BER 5.018e-01, PER at +15 dB 1.000, P_det at +15 dB energy 1.00 energy_2s 1.00 kurtosis 0.19 spec_cnn 1.00 power 1.00, DC share 0.008
+wrote ../artifacts/final/noise_1db/eval_cnn_s13.json in 129s

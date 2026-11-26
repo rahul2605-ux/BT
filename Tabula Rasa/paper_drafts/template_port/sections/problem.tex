@@ -1,0 +1,38 @@
+% Ported 2026-11-25 from secon27/sec/system.tex "Problem Formulation" (+ the matched-damage rule of sec/method.tex),
+% in the template's problem environment (needs \newcounter{problem} from the template's paper.tex).
+\section{Problem Formulation} \label{sec:problem_formulation}
+
+Let us define the \textit{jammer law} $\pi$ as the distribution of the jamming waveform $c$ given the information of its tier, and the \textit{damage} $D_\pi(J)$ as the excess \ac{fer} it causes at \ac{jsr} $J$ over clean frames of the same environment.
+The jammer solves
+
+\begin{subequations}
+\refstepcounter{problem} \label{opt_problem:jammer}
+\begingroup
+\renewcommand{\theequation}{\theproblem}
+\renewcommand{\theparentequation}{\theproblem}
+\renewcommand{\theequation}{\theparentequation\alph{equation}}
+    \begin{align}
+        \underset{\pi}{\text{maximize}} \quad
+        & \mathbb{E}[\mathrm{BER}] - \beta\,P_\text{det} \label{pb:objective} \\
+        \text{subject to} \quad
+        & \frac{1}{NL}\sum_{n}|c[n]|^2=J\,P_\text{rx} \quad \text{for every frame,} \label{cn:power}
+    \end{align}
+\endgroup
+\end{subequations}
+
+\noindent where $\beta\ge0$ weighs detection against damage.
+Constraint~\ref{cn:power} (\textit{Power}) is the budget of~\eqref{eq:power}, so power never enters the objective.
+Each $\beta$ reaches only the upper concave envelope of the achievable damage--detection pairs, so Problem~\ref{opt_problem:jammer} describes how a jammer is trained, not how jammers are compared.
+% README 2.8: reward = BER - beta * detections, power a hard constraint.
+
+Jammers choose their power, so a comparison at equal \ac{jsr} or equal configuration favours whichever jammer happens to be more efficient at that setting.
+Let us define the \textit{matched-damage detection probability} of a jammer at damage level $d$ as
+\begin{equation*}
+P^{\star}_\text{det}(d)=P_\text{det}\bigl(J^{\star}(d)\bigr),\qquad J^{\star}(d)=\min\{J : D_\pi(J)\ge d\},
+\end{equation*}
+the detection probability at the lowest \ac{jsr} at which the jammer reaches damage $d$.
+A jammer is stealthier than another at damage $d$ when its $P^{\star}_\text{det}(d)$ is lower.
+The question this work answers is how much lower a learned jammer's $P^{\star}_\text{det}$ is than the lowest one any parametric jammer reaches, for each detector and environment.
+Damage is counted in frames because the detectors decide per frame: counted per bit or per symbol, a jammer that is loud on a few frames and silent on the rest reaches any small average error rate while the detectors flag it at their false-alarm rate.
+% README 2.7 "Why the matched damage is a frame error rate": on/off reaches excess BER 3e-4 on 1 frame in 1495 and
+% excess SER 7.8e-4 on 1 in 891, P_det at the FAR; at excess FER 0.1 it is on 1 frame in 10, P_det 0.15.

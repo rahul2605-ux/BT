@@ -8,7 +8,7 @@ figures.py / README §3.3q report.
 Grey-box (README §2.8, §3.3q "CNN seeds 13 and 14"): the generators were trained against CNN seed 11 (the
 surrogate), so every CNN number here is against the two DEPLOYED CNNs, seeds 13 and 14 (eval_cnn_s13/14.json,
 same frames as eval.json; damage is identical across the three files). A generator seed's P_det is its mean
-over the two deployed CNNs; ± is the std over generator seeds. Classical attackers: mean over the two CNNs.
+over the two deployed CNNs; ± is the std over generator seeds. Parametric attackers: mean over the two CNNs.
 The white-box value (against seed 11) is tabled as a reference. Energy and kurtosis numbers are eval.json's,
 except the frame-timed pulsed jammer (pulsed_sync_k1), which only the deployed-CNN files hold: its energy and
 kurtosis numbers are the mean over those two files (same frames, thresholds from their own clean draws).
@@ -120,12 +120,12 @@ def env_numbers(env, measure="per", ref=F.PER_REF):
 
 
 def fig_envs(N):
-    envs = list(E.ENVS)
+    envs = list(E.PAPER_ENVS)
     x = np.arange(len(envs))
     fig, ax = plt.subplots(1, 3, figsize=(7.16, 2.3), sharey=True)
     marks = [("omniscient_e1", "genie flip (bound)", F.INK, "*"),
              ("random_push_e0.1", "random push", F.INK2, "x"),
-             ("envelope", "best classical", "#1baf7a", "D"),
+             ("envelope", "best parametric", "#1baf7a", "D"),
              (SYNC, "pulsed, frame-timed (1 per frame)", "#1baf7a", "d"),
              ("control", r"generator, $\beta=0$", "#eb6834", "o"),
              ("conditioned", r"generator vs this detector, $\beta=10$", "#2a78d6", "s")]
@@ -167,21 +167,21 @@ def cell(v, pm=True):
 
 def tab_envs(N):
     """LaTeX rows: P_det at excess FER 0.1, per detector block, six environments."""
-    envs = list(E.ENVS)
+    envs = list(E.PAPER_ENVS)
     rows = [("spec_cnn", "CNN classifier (deployed, grey-box)",
-             [("envelope", "best classical"), (SYNC, "pulsed, frame-timed ($k=1$)"), ("control", r"generator, $\beta=0$"),
+             [("envelope", "best parametric"), (SYNC, "pulsed, frame-timed ($k=1$)"), ("control", r"generator, $\beta=0$"),
               ("cnn_b10", r"generator vs CNN, $\beta=10$"), ("zhou_cgan", "Zhou et al.\\ CGAN"),
               ("random_push_e0.1", "random push"), ("omniscient_e1", "genie flip")]),
             ("spec_cnn_white", "CNN the generators trained against (white-box reference)",
              [("cnn_b10", r"generator vs CNN, $\beta=10$")]),
             ("energy", "Energy (one-sided, after the matched filter)",
-             [("envelope", "best classical"), (SYNC, "pulsed, frame-timed ($k=1$)"), ("control", r"generator, $\beta=0$"),
+             [("envelope", "best parametric"), (SYNC, "pulsed, frame-timed ($k=1$)"), ("control", r"generator, $\beta=0$"),
               ("energy_b10", r"generator vs energy, $\beta=10$"), ("cnn_b10", r"generator vs CNN, $\beta=10$")]),
             ("energy_csi", "Energy, channel gain known (fading environments)",
-             [("envelope", "best classical"), ("control", r"generator, $\beta=0$"),
+             [("envelope", "best parametric"), ("control", r"generator, $\beta=0$"),
               ("cnn_b10", r"generator vs CNN, $\beta=10$")]),
             ("kurtosis", "Kurtosis",
-             [("envelope", "best classical"), (SYNC, "pulsed, frame-timed ($k=1$)"), ("control", r"generator, $\beta=0$"),
+             [("envelope", "best parametric"), (SYNC, "pulsed, frame-timed ($k=1$)"), ("control", r"generator, $\beta=0$"),
               ("kurtosis_b10", r"generator vs kurtosis, $\beta=10$"), ("cnn_b10", r"generator vs CNN, $\beta=10$")])]
     L = []
     for det, head, items in rows:
@@ -199,7 +199,7 @@ def tab_envs(N):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    N = {e: env_numbers(e) for e in E.ENVS}
+    N = {e: env_numbers(e) for e in E.PAPER_ENVS}
     with open(os.path.join(OUT, "numbers.json"), "w") as f:
         json.dump(N, f, indent=1, default=float)
     fig_base()

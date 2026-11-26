@@ -151,9 +151,9 @@ def main():
 
     lk.setup(device, seed=REF_SEED + 1)
     L = E.apply(lk.Link(**lk.LINK), args.env)
-    dfd = defender.Defender.load(L, E.SNR_DB, E.art(args.env, args.cnn))
+    dfd = defender.Defender.load(L, E.snr(args.env), E.art(args.env, args.cnn))
     dets = ["energy", "kurtosis", "spec_cnn"]
-    curves = noise_curve(L, dfd, dets, E.SNR_DB, GRID, n)
+    curves = noise_curve(L, dfd, dets, E.snr(args.env), GRID, n)
     trans = {d: crossing(GRID, c) for d, c in curves.items()}
     print(f"  env {args.env} white-noise transitions: "
           + "  ".join(f"{d} {v:+.2f}" if v is not None else f"{d} none" for d, v in trans.items()), flush=True)
@@ -163,7 +163,7 @@ def main():
               flush=True)
     for s in notes:
         print(f"  NOTE {s}", flush=True)
-    res = dict(env=args.env, env_config=E.ENVS[args.env], snr_db=E.SNR_DB, grid=GRID, n_frames=n,
+    res = dict(env=args.env, env_config=E.ENVS[args.env], snr_db=E.snr(args.env), grid=GRID, n_frames=n,
                level=LEVEL, curves=curves, transition=trans, bands=bands, notes=notes,
                band30=BAND30, control_band=CONTROL_BAND, runtime_s=time.time() - t0)
     res["cnn"] = args.cnn

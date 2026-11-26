@@ -20,11 +20,13 @@ at our SNR 15 dB (Es/N0 24 dB), in six environments: `base`, `noise` (σ_N 0.5 d
 of it.
 
 **Since 2026-11-21 the paper is being written for IEEE SECON 2027, due Mon 30 Nov 2026 together with the
-thesis** (README §1.4, §3.1). It is a performance-evaluation study of the final experiment, and no new
-experiments are planned. It lives in `paper_drafts/secon27/`: one body, two builds. `paper.tex` is the anonymous
-submission (IEEEtran, 9 pages **including** references). `thesis.tex` adds the author and the full experiment
-history appendix. Mark gaps with `\todo{}`. Build on the login node (LaTeX is not compute):
-`cd paper_drafts/secon27 && latexmk -g -pdf paper.tex thesis.tex`.
+thesis** (README §1.4, §3.1). It is a performance-evaluation study of the final experiment. **Since 2026-11-25 it
+lives in `overleaf/`**, an Overleaf-git clone of the ONE project ADM asked for (README §1.4), on his template v0.18:
+`paper.tex` (SECON, IEEEtran, 9 pages **including** references) reads `content.tex` → `sections/*.tex`;
+`appendix.tex` = the experiment history A–V (thesis); `guidelines.tex` = his writing rules, which every section
+must follow (summary in README §1.4). Mark gaps with `\todo{}`, notes with `\student{}`. Build on the login node,
+aux files out of the clone: `cd overleaf && LATEXMK_USE_OUTDIR=1 BIBINPUTS=.: latexmk -pdf -outdir=<scratch> paper.tex`.
+`paper_drafts/secon27/` and `paper_drafts/template_port/` are superseded sources.
 
 **`README.md` is the single source of truth** for goals, state, results and open questions. Read it
 before planning anything. It is deliberately structured as: 1. whole picture · 2. goal & approach ·
@@ -33,10 +35,12 @@ C (engineering notes).
 
 ## Rules that override normal instincts
 
-- **`../paper/main.tex` and `../paper/refs.bib` are READ-ONLY here.** They are a git subtree of the
-  author's Overleaf document. Never edit, never push. LaTeX drafts are written in
-  `paper_drafts/*.tex` and pasted into Overleaf **by the user**. The `.md` files in `../paper/` are
-  ours and may be edited.
+- **`overleaf/` is the paper (since 2026-11-25, user's decision): edit and commit there, but `git push` ONLY after the
+  user says yes, every time.** It is excluded from the BT repo (`.git/info/exclude`). Authentication is git's
+  in-memory credential cache (1 week); never put a token in a URL, a file or a config. `git pull` before editing:
+  ADM and the user edit on Overleaf too.
+- **`../paper/main.tex` and `../paper/refs.bib` are a READ-ONLY archive** (the old GitHub-synced subtree). Never edit,
+  never push. The `.md` files in `../paper/` are ours and may be edited.
 - **`simulation00`–`simulation08` and `frontier/` are FROZEN.** They are appendix material. Do not
   extend, re-run sweeps, or "improve" them — the supervisor's standing mandate is *simplify, as much
   as possible*. Live work happens in `m0/`, `cgan/`, `sim08_ablation/` and `final/` only. **`sim08_ablation/`
@@ -104,7 +108,7 @@ tail -f runs/verify_<JOBID>.out
 
 `final/` (built 2026-09-30; files in README §1.3, results in §3.3q) uses the same layout. Run from
 inside `final/`, Sionna scripts via sbatch only (all pinned `titan_rtx`), and choose the environment
-with `--env {base,noise,noise_1db,fading,fading_k28,both}`:
+with `--env {base,noise,noise_1db,fading,fading_k28,both,snr30}` (`snr30` = base at SNR 30 dB, added 2026-11-25, not in the paper's Table II yet):
 
 ```bash
 cd final
@@ -123,13 +127,12 @@ tail -f runs/train_cnn_base_<JOBID>.out
 A failed generator task leaves its environment's evaluate job waiting forever (afterok): resubmit the task,
 then `sbatch submit_evaluate.sh <env>` by hand.
 
-Reading the live paper draft (never touches the working tree):
+Reading the live paper (the Overleaf clone; pull first, push only with the user's yes):
 
 ```bash
-cd /home/rrahman/BT
-git fetch overleaf
-git show overleaf/main:main.tex
-git log -1 --format='%h %ad %s' overleaf/main
+cd overleaf
+git pull
+git log -3 --format='%h %ad %s'
 ```
 
 `verify.py` is the closest thing to a test suite: it checks measured quantities against closed-form

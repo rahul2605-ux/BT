@@ -1,0 +1,81 @@
+% Ported 2026-11-25 from secon27/sec/system.tex into ADM's template v0.18 (README 1.4 "ONE Overleaf project").
+% Method-agnostic: the generator and its training moved to Methodology, every value to Experimental Setup.
+% Symbols: g = RRC pulse; rho = fading amplitude; nu = noise factor; T = statistic; tau_alpha = threshold.
+\section{System Model} \label{sec:sysmodel}
+
+A legitimate transmitter sends \ac{qpsk} frames over a single-carrier link to a receiver that also monitors the link for interference.
+A jammer tries to raise the receiver's error rate, and the receiver's detectors try to flag the frames it jams.
+The transmitter, the receiver and its detectors stay fixed, and only the jammer adapts.
+
+\subsection{Legitimate Link} \label{sec:sysmodel:link}
+Let us define the \textit{frame} as a block of $N$ unit-energy \ac{qpsk} symbols $s[k]\in\{\tfrac{1}{\sqrt2}(\pm1\pm\mathrm{j})\}$, $k\in\{1,\ldots,N\}$, drawn independently and uniformly.
+The transmitter upsamples each frame by $L$ samples per symbol and shapes it with a unit-energy \ac{rrc} pulse $g$, which gives the transmit waveform
+\begin{equation}
+x[n]=\sum_{k=1}^{N} s[k]\,g[n-kL].
+\label{eq:tx}
+\end{equation}
+The receiver filters with $g$, samples at the symbol instants to obtain $z_k$, and decides each axis by its sign.
+The pulse $g$ is real, even and root-Nyquist, so the matched filter is $g$ itself and the cascade is free of inter-symbol interference up to truncation.
+A frame is in error when any of its $2N$ bits is.
+The link carries no channel code, preamble or pilot symbols, and the receiver knows its frame timing and carrier phase, so a jammer can corrupt a frame only through its bits, and one wrong symbol suffices.
+
+\subsection{Channel} \label{sec:sysmodel:channel}
+The receiver observes
+\begin{equation}
+r[n]=\rho\,x[n]+c[n]+w[n],\qquad w[n]\sim\mathcal{CN}(0,\nu N_0),
+\label{eq:rx}
+\end{equation}
+where $c$ is the jammer's waveform at the receiver and $N_0$ the nominal noise power per sample.
+The amplitude $\rho=|h|$, with $h$ Rician with factor $K$ and $\mathbb{E}[\rho^2]=1$, models small-scale fading of the legitimate link.
+The factor $\nu$, log-normal with $\mathbb{E}[\nu]=1$ and standard deviation $\sigma_\text{N}$ in decibels, models a noise level that the receiver does not know exactly.
+The channel draws $\rho$ and $\nu$ once per frame, and no detector knows them; $K\to\infty$ and $\sigma_\text{N}=0$ give the ideal link.
+Every power is a mean per sample at the receiver input.
+With $P_\text{rx}$ the mean received signal power, the \ac{snr} is $P_\text{rx}/N_0$ and the symbol energy ratio is $E_\text{s}/N_0=L\,P_\text{rx}/N_0$.
+
+\subsection{Jammer} \label{sec:sysmodel:jammer}
+Let us define the \textit{\ac{jsr}} $J$ as the jammer's received power relative to $P_\text{rx}$.
+The power budget is a hard constraint on every frame,
+\begin{equation}
+\frac{1}{NL}\sum_{n}|c[n]|^2=J\,P_\text{rx},
+\label{eq:power}
+\end{equation}
+so a jammer can redistribute its power within a frame but cannot move it between frames or trade it against a penalty.
+% final/channel.py receive -> link.scale_to_jsr, per frame. Exceptions: the analytic on/off baseline (budget averaged over
+% frames) and the genie / random push (whole symbols, floor(delta N)); both are stated in Sec. expsetup.
+A jammer is asynchronous unless stated otherwise: its timing offset is uniform over one symbol and its carrier phase uniform over $[0,2\pi)$, both drawn per frame.
+Four tiers describe what a jammer knows.
+A genie (T0) knows the current symbols and the channel gain and arrives synchronously.
+A synchronised attacker (T1) knows the receiver's symbol timing and carrier phase but not the symbols.
+An informed attacker (T2) knows the modulation, pulse, symbol rate and frame timing, but arrives asynchronously, so it knows the timing only to within one symbol.
+A blind attacker (T3) knows none of these.
+
+\subsection{Detectors} \label{sec:sysmodel:detectors}
+The receiver tests one frame at a time, without channel state information.
+Each detector reduces the frame to a scalar statistic $T$, built so that a larger value is more suspicious, and decides alone.
+Let us define the \textit{threshold} $\tau_\alpha$ as the $(1-\alpha)$-quantile of $T$ over clean frames of the environment the detector is deployed in, including the fading and noise draws it cannot know.
+The \ac{far} therefore stays at $\alpha$ in every environment, a \ac{cfar} design in which an impairment raises the threshold instead of the false alarms.
+Let us define the \textit{detection probability} at \ac{jsr} $J$ as
+\begin{equation}
+P_\text{det}(J)=\Pr\bigl[T(r)>\tau_\alpha\mid\text{jammer at }J\bigr],
+\label{eq:pdet}
+\end{equation}
+where the probability runs over everything random in the environment: bits, noise, channel, and the jammer's own randomness, delay and phase.
+The detection probability is per frame, not the probability that the jammer is ever caught.
+
+The receiver runs three detectors.
+The energy detector~\cite{urkowitz1967energy} thresholds the mean symbol energy after the matched filter, $T_\text{E}=\frac1N\sum_k|z_k|^2$, which excludes the noise outside the signal's band and flags excess energy.
+Under fading, a gain-aware variant that is handed $\rho$ and removes it from the signal term bounds what a receiver that estimates its gain could achieve.
+% energy_csi subtracts (rho^2 - 1) c0^2 (final/detectors.py); a bracket, not a deployable detector.
+The kurtosis detector thresholds the deviation of $\kappa(r)=\mathbb{E}|r|^4/(\mathbb{E}|r|^2)^2$ from its clean mean in both directions.
+The kurtosis $\kappa$ is scale-free, so it responds to the shape of the amplitude distribution, which energy cannot see.
+The learned detector is the spectrogram classifier of Li et al.~\cite{li2022jamming_ofdm}, a \ac{cnn} applied to the two-sided complex \ac{stft} of $r$ on a fixed decibel scale.
+Its statistic is the difference of its two output logits.
+All three detectors average over the whole frame.
+
+\subsection{Threat Model} \label{sec:sysmodel:threat}
+The detectors are calibrated, and the classifier trained, before any attack and then frozen.
+A trained jammer is frozen at deployment, so all adaptation is offline.
+A white-box jammer differentiates the deployed detector's statistic, including the classifier's weights.
+A grey-box jammer knows the classifier's architecture and training recipe but not its weights, and trains against a surrogate of its own~\cite{papernot2017practical}.
+For the energy and kurtosis detectors, which have no weights, the two coincide.
+A jammer observes the victim's error rate only in simulation, during training.

@@ -203,6 +203,25 @@ def random_push_rx(link, sym, jsr_db, eta):
     return link.filt(link.upsample((1.0 + eta) * u * mask), padding="full")
 
 
+def _sync_override(link, spec, delay, phase):
+    """
+    The synchronisation test (ADM 2026-11-25, README §3.3q "Synchronisation test"): how much
+    of the random-symbol jammer's effect rests on landing exactly on the victim's symbols.
+    Without the keys it is a no-op (pulsed_sync_k{1,2,3} stay as evaluated).
+      mis:   largest timing misalignment, in symbols. The offset is uniform over
+             [0, mis * T]: 0 = on R's symbol grid; 0.5 has the same misalignment law
+             (uniform over [0, T/2] from the nearest grid point) as the async draw.
+      phase: "locked" -> 0, the jammer's QPSK points on R's decision axes (R knows its
+             own phase, link.fading_gain is real); otherwise the async uniform phase.
+    The async draw is made first either way, so the random stream up to here is unchanged.
+    """
+    if "mis" in spec:
+        delay = torch.rand(delay.shape[0], device=link.device) * (spec["mis"] * link.sps)
+    if spec.get("phase") == "locked":
+        phase = torch.zeros_like(phase)
+    return delay, phase
+
+
 def jammer_at_rx(link, spec, sym, jsr_db_k):
     """
     Sum of K jammers at R for one attack spec. jsr_db_k: list of K scalars, or a
@@ -226,6 +245,7 @@ def jammer_at_rx(link, spec, sym, jsr_db_k):
             j = channel.receive(link, pulsed_tx(link, F, N, spec["p"]), jsr[:, k], delay, phase)
         elif name == "pulsed_sync":
             delay, phase = channel.async_draw(link, F)
+            delay, phase = _sync_override(link, spec, delay, phase)
             j = channel.receive(link, pulsed_sync_tx(link, F, N, spec["hits"]), jsr[:, k], delay, phase)
         elif name == "onoff":
             delay, phase = channel.async_draw(link, F)

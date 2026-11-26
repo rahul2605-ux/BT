@@ -1,0 +1,61 @@
+% Ported 2026-11-25 from secon27/sec/system.tex (generator) + sec/method.tex (training, matched damage, grey-box).
+% ADM's rules here: no "we", no numerical values (they are in Sec. expsetup). Code: final/attacks.gan_tx,
+% final/train_gan.train, final/detectors.soft_pdet, final/figures.matched.
+\section{Methodology} \label{sec:method}
+
+The study compares a learned jammer with parametric jammers at matched damage, against each detector, in each environment.
+This section describes the learned jammer, how it is trained, and how every jammer is scored.
+
+\subsection{Learned Jammer} \label{sec:method:generator}
+The learned jammer is a generator network $G$ that maps a latent vector $\mathbf{u}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ to a segment $G(\mathbf{u})\in\mathbb{C}^{M}$ of complex baseband samples, with the layout of Zhou et al.~\cite{11184988}.
+Its transmission is a stream of independent segments, delayed and rotated asynchronously and scaled to the budget of~\eqref{eq:power},
+\begin{equation*}
+c[n]=a\,e^{\mathrm{j}\phi}\,v[n-\tau],\qquad v=\bigl[G(\mathbf{u}_1),G(\mathbf{u}_2),\ldots\bigr],
+\end{equation*}
+with $(\tau,\phi)$ the per-frame offset and phase of Section~\ref{sec:sysmodel:jammer} and $a>0$ the amplitude that meets the budget.
+Each segment is one frame long, $M=NL$, and keeps a fixed position relative to the victim's frames before the offset $\tau$, so the generator can place its power on the same symbol of every frame.
+The generator therefore uses the frame timing, which places it in tier T2, and never observes the victim's symbols.
+
+\subsection{Training} \label{sec:method:training}
+The generator starts from random weights and learns only from a differentiable form of Problem~\ref{opt_problem:jammer}, back-propagated through the link and the frozen detector; no discriminator is trained.
+Two quantities are replaced by surrogates.
+The expected \ac{ber} is numerically zero wherever the jammer is weak, so the objective uses $\log\mathbb{E}[\mathrm{BER}]$, computed exactly over the receiver noise.
+A bit whose noiseless matched-filter sample lies at signed distance $m_b$ from its decision boundary is in error with probability $Q(m_b/\sigma)$, with $\sigma^2=\nu N_0/2$, and a log-sum-exp evaluates the logarithm of the mean without underflow.
+The detection probability is replaced by
+\begin{equation}
+\tilde P_\text{det}=\mathbb{E}\Bigl[\bigl(1+e^{-(T(r)-\tau_\alpha)/s_T}\bigr)^{-1}\Bigr],
+\label{eq:softpdet}
+\end{equation}
+with $s_T$ the standard deviation of $T$ on clean frames, which tends to $P_\text{det}$ as $s_T\to0$.
+The classifier maps its spectrogram onto a colour map with a finite number of levels, whose gradient is zero; a straight-through estimator~\cite{bengio2013estimating} keeps the exact image in the forward pass and uses the colour map's slope in the backward pass, so the gradient reaches the generator through the classifier's own weights.
+
+\begin{algorithm}[t]
+    \DontPrintSemicolon
+    \KwInput{detector statistic $T$, threshold $\tau_\alpha$, clean spread $s_T$, weight $\beta$, \ac{jsr} band $[J_\text{lo},J_\text{hi}]$, steps $S$}
+    \KwOutput{generator $G$}
+    Initialise $G$ with random weights\;
+    \For{$i\in\{1,\ldots,S\}$}{
+        Draw $J$ uniformly in decibels from $[J_\text{lo},J_\text{hi}]$\; \label{alg:train:jsr}
+        Draw a batch of frames: bits, $\rho$, $\nu$, noise, latents $\mathbf{u}$, offsets $(\tau,\phi)$\;
+        $c\gets$ the stream of $G(\mathbf{u})$, delayed, rotated and scaled to $J$ by~\eqref{eq:power}\; \label{alg:train:power}
+        $r\gets\rho\,x+c+w$\;
+        $\mathcal{L}\gets-\log\mathbb{E}[\mathrm{BER}]+\beta\,\tilde P_\text{det}$\; \label{alg:train:loss}
+        Update $G$ by one Adam step on $\nabla\mathcal{L}$\; \label{alg:train:step}
+    }
+    \caption{Training of a generator against one detector\label{alg:train}}
+\end{algorithm}
+
+Algorithm~\ref{alg:train} lists the training loop.
+Each step draws the received \ac{jsr} from a band (Algorithm~\ref{alg:train}, Line~\ref{alg:train:jsr}) that starts below the \ac{jsr} at which the target detector begins to flag white noise in that environment, because where the detector flags every frame the logistic term of~\eqref{eq:softpdet} is flat and carries no gradient.
+The power constraint acts inside the forward pass (Line~\ref{alg:train:power}): it removes the generator's overall gain, so the gradient changes only the shape of the waveform, never its power.
+The loss (Line~\ref{alg:train:loss}) takes the logarithm of the damage, so $\beta$ has a different numerical range than in Problem~\ref{opt_problem:jammer}, and $\beta=0$ gives a damage-only control that shares everything with the detector-aware generators except the detection term.
+The difference between the two is what the detection term buys.
+Training draws the environment's own fading and noise-level factors, so each generator is trained for the environment it is scored in.
+
+\subsection{Scoring} \label{sec:method:scoring}
+Every jammer is swept over the \ac{jsr}, and at each point the same frames give its damage and each detector's $P_\text{det}$.
+The matched-damage detection probability $P^{\star}_\text{det}(d)$ of Section~\ref{sec:problem_formulation} is read at the first \ac{jsr} where the damage reaches $d$, interpolated in the logarithm of the damage.
+The \textit{parametric envelope} is the lowest $P^{\star}_\text{det}$ that any parametric jammer of a family reaches at that damage, each with its best parameter.
+The classifier enters the comparison grey-box: one classifier, the surrogate, sets the generators' training band and trains them, and their detection is scored on independently trained classifiers of the same recipe, the deployed ones.
+A white-box score on the surrogate serves as a reference.
+Every threshold is set on clean frames of the environment being scored, so all detectors operate at the same \ac{far}.
