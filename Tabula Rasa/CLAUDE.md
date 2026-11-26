@@ -26,7 +26,10 @@ lives in `overleaf/`**, an Overleaf-git clone of the ONE project ADM asked for (
 `appendix.tex` = the experiment history A–V (thesis); `guidelines.tex` = his writing rules, which every section
 must follow (summary in README §1.4). Mark gaps with `\todo{}`, notes with `\student{}`. Build on the login node,
 aux files out of the clone: `cd overleaf && LATEXMK_USE_OUTDIR=1 BIBINPUTS=.: latexmk -pdf -outdir=<scratch> paper.tex`.
-`paper_drafts/secon27/` and `paper_drafts/template_port/` are superseded sources.
+`paper_drafts/secon27/` and `paper_drafts/template_port/` are superseded sources. **Every LaTeX change gets a
+compiled preview** (user, 2026-11-26): `paper_drafts/build_preview.sh` builds `overleaf/paper.tex` and
+`overleaf/report/report.tex` into `paper_drafts/preview/{paper,report}.pdf`; a Stop hook in
+`.claude/settings.local.json` runs it at the end of every turn and it rebuilds only when a source changed.
 
 **`README.md` is the single source of truth** for goals, state, results and open questions. Read it
 before planning anything. It is deliberately structured as: 1. whole picture · 2. goal & approach ·

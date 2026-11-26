@@ -219,3 +219,6 @@ Tabula Rasa/artifacts/cgan/baselines/snr/*/clean_lrt_parts.pt
 
 # /arena skill run state (tournament scratch, hundreds of sub-agent files per run)
 .arena/
+
+# personal Claude Code settings (the paper-preview Stop hook)
+Tabula Rasa/.claude/settings.local.json

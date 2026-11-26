@@ -314,15 +314,17 @@ dropped; its header lists the superseded keys: cite `pirayesh2022jamming`, `li20
 Build on the login node (LaTeX is not compute): `cd paper_drafts/secon27 && latexmk -g -pdf paper.tex thesis.tex`.
 **THE PAPER IS IN `overleaf/` (2026-11-25):** an Overleaf-git clone of the project ADM already had the link to
 (project 6936be81…, the old "Cooperative Multi-Agent Generative Jamming" draft), restructured into his template
-v0.18 in local commit 58e9882 (**not pushed yet**; push only on the user's yes). The old `main.tex` and `refs.bib`
-are in `archive/`; after the push the user sets Overleaf's main document to `paper.tex`. Layout: `paper.tex` →
+v0.18 and **pushed 2026-11-26** (58e9882..0952c6c; every later push only on the user's yes). The old `main.tex` and
+`refs.bib` are in `archive/`; the user sets Overleaf's main document to `paper.tex`. The literature review of the old
+draft (Related Works, Literature Review, Old Related Works; 5,625 words with ADM's 60 `\adm` comments) is
+`literature.tex`, a thesis-only appendix chapter input by `report/report.tex` (with `discothesis.cls` and the ETH /
+DISCO logos). Previews: `paper_drafts/preview/{paper,report}.pdf`, rebuilt by a Stop hook (CLAUDE.md). Layout: `paper.tex` →
 `content.tex` → `sections/{intro,related,sysmodel,problem,method,expsetup,results,conclusion}.tex`; `abstract.tex`,
 `acronyms.tex`, `appendix.tex` (history A–V), `guidelines.tex` (his; one fix: an unclosed `\begingroup` in its
 example problem), `figures/{styles,tikz,data}`, `bibtex/bib/references.bib` (refs.bib + project.bib, 84 entries).
 Our labels avoid the guidelines' (`sec:system`, `sec:methodology`, `sec:setup`, `sec:problem`, `tab:params`).
 Builds: 13 pages incl. guidelines and appendix, 0 errors; the only undefined citation is the guidelines' own
-`di_maio_upsides_2023`. Missing from the template: the `report/` folder (`report.tex`, the thesis wrapper).
-The user pasted the Overleaf token into the chat on 2026-11-25: revoke it after the deadline.
+`di_maio_upsides_2023`. The user pasted the Overleaf token into the chat on 2026-11-25: revoke it after the deadline.
 
 **ONE Overleaf project (ADM, 2026-11-25; supersedes the two-project plan below).** *"I am not a big fan of having
 multiple projects because it's easy to fork and lose track. I suggest placing all material in suitable tex files
